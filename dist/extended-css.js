@@ -150,7 +150,7 @@ var ExtendedSelector = (function () { // jshint ignore:line
         };
     };
 })();
-/* global ExtendedSelector */
+/* global CssParser, ExtendedSelector */
 
 /**
  * Extended css class
@@ -164,35 +164,22 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
     var domObserver;
 
     /**
-         * Parses specified styleSheet in a number of rules
-         *
-         * @param styleSheet String with the stylesheet
-         */
+     * Parses specified styleSheet in a number of rule objects
+     *
+     * @param styleSheet String with the stylesheet
+     */ 
     var parse = function (styleSheet) {
 
-        var rulesForCssText = function (styleContent) {
-            var doc = document.implementation.createHTMLDocument(""),
-                styleElement = document.createElement("style");
-
-            styleElement.textContent = styleContent;
-            // the style will only be parsed once it is added to a document
-            doc.body.appendChild(styleElement);
-
-            return styleElement.sheet.cssRules;
-        };
-
-        var rules = rulesForCssText(styleSheet);
-
         var result = [];
-        for (var i = 0; i < rules.length; i++) {
-            var rule = rules[i];
-            var selector = rule.selectorText;
-            if (selector && (selector.indexOf('-ext-has') >= 0 || selector.indexOf('-ext-contains') >= 0)) {
-                result.push({
-                    selector: new ExtendedSelector(rule.selectorText),
-                    style: {display: 'none! important;'}
-                });
-            }
+        var cssRules = CssParser.parse(styleSheet);
+        var iCssRules = cssRules.length;
+        while (iCssRules--) {
+            var cssRule = cssRules[iCssRules];
+
+            var ruleObject = Object.create(null);
+            ruleObject.selector = new ExtendedSelector(cssRule.selectors);
+            ruleObject.style = cssRule.style;
+            result.push(ruleObject);
         }
 
         return result;
@@ -213,17 +200,41 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
             var iElements = elements.length;
             while (iElements--) {
                 var el = elements[iElements];
-                var originalStyle = el.style;
-
-                el.style = rule.style;
+                var originalStyle = el.style.cssText;
+                applyStyle(el, rule.style);
 
                 affectedElements.push({
                     element: el,
-                    matchedSelector: selector,
+                    rule: rule,
                     originalStyle: originalStyle
                 });
             }
         }
+    };
+
+    /**
+     * Applies style to an element
+     * 
+     * @element DOM node
+     * @style   Plain JS object with styles
+     */
+    var applyStyle = function(element, style) {
+        
+        for (var prop in style) {
+            if (element.style.hasOwnProperty(prop)) {
+                var value = style[prop];
+                // First we should remove !important attribute (or it won't be applied')
+                value = value.split("!")[0].trim();
+                element.style[prop] = value;
+            }
+        }
+    };
+
+    /**
+     * Reverts style for the affected object
+     */
+    var revertStyle = function(affectedElement) {
+        affectedElement.element.style.cssText = affectedElement.originalStyle;
     };
 
     /**
@@ -233,10 +244,13 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
         var iElements = affectedElements.length;
         while (iElements--) {
             var obj = affectedElements[iElements];
-            if (obj.matchedSelector.matches(obj.element)) {
-                // We're good, do nothing (or maybe apply it again?)
+            var matchedSelector = obj.rule.selector;
+            if (matchedSelector.matches(obj.element)) {
+                // We're good, re-apply that style
+                applyStyle(obj.element, obj.rule.style);
             } else {
-                obj.element.style = obj.originalStyle;
+                revertStyle(obj);
+                affectedElements.slice(iElements, 1);
             }
         }
     };
@@ -247,6 +261,11 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
     var observe = function () {
         if (domObserver) {
             // Observer is already here
+            return;
+        }
+
+        // TODO: Handle this case
+        if (typeof MutationObserver === 'undefined') {
             return;
         }
 
@@ -297,8 +316,7 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
         var iElements = affectedElements.length;
         while (iElements--) {
             var obj = affectedElements[iElements];
-
-            obj.element.style = obj.originalStyle;
+            revertStyle(obj);
         }
     };
 
