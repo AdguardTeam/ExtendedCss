@@ -1,7 +1,7 @@
 /*! extended-css - v1.0.0 - 2016-08-17
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2016 ; Licensed Apache License 2.0 */
-(function(window) {
+var ExtendedCss = (function(window) {
 /**
  * Very simple and lightweight CSS parser.
  * <br/>
@@ -392,8 +392,11 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
  */
 
 /**
+ * PATCH: Do not expose Sizzle to the global scope
+ */
+
+/**
  * Sizzle selector library.
- * Patched to change expose to not to expose in global document.window.
  */
 var Sizzle = (function( window ) {
 
@@ -2642,5 +2645,5 @@ return Sizzle;
 })( window );
 
 // EXPOSE
-window.ExtendedCss = ExtendedCss;
+return ExtendedCss;
 })(window);
