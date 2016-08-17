@@ -2623,5 +2623,6 @@ return Sizzle;
 
 })( window );
 
+// EXPOSE
 window.ExtendedCss = ExtendedCss;
 })(window);

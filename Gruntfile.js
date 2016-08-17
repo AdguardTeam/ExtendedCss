@@ -14,9 +14,10 @@ module.exports = function(grunt) {
     concat: {
       options: {
         banner: '<%= banner %>' + '(function(window) {\n',
-        footer: '\n' + 
+        footer: '\n' +
+          '// EXPOSE\n' + 
           'window.ExtendedCss = ExtendedCss;\n' + 
-          '})(window);',        
+          '})(window);',
         stripBanners: true
       },
       dist: {
