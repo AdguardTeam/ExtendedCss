@@ -24,7 +24,7 @@
  *      ]
  * </pre>
  */
-var CssParser = (function() {
+var CssParser = (function() { // jshint ignore:line
 
     /**
      * Transforms style text into a plain JS object.
@@ -86,7 +86,7 @@ var CssParser = (function() {
         parse: parseCss
     };
 })();
-/* global Sizzle */
+/* global Sizzle, console */
 
 /**
  * Extended selector class.
@@ -101,7 +101,7 @@ var CssParser = (function() {
  * [-ext-has="selector"] - the same as :has() pseudo class from CSS4 specification
  * [-ext-contains="string"] - allows to select elements containing specified string
  */
-var ExtendedSelector = (function () {
+var ExtendedSelector = (function () { // jshint ignore:line
 
     /**
      * Prepares specified selector and compiles it with the Sizzle engine.
@@ -139,7 +139,7 @@ var ExtendedSelector = (function () {
          * Selects all DOM nodes matching this selector.
          */
         this.querySelectorAll = function() {
-            return Sizzle(compiledSelector);
+            return Sizzle(compiledSelector); // jshint ignore:line
         };
 
         /**
@@ -158,7 +158,7 @@ var ExtendedSelector = (function () {
  * @param styleSheet
  * @constructor
  */
-var ExtendedCss = function (styleSheet) {
+var ExtendedCss = function (styleSheet) { // jshint ignore:line
     var rules = [];
     var affectedElements = [];
     var domObserver;
@@ -251,7 +251,7 @@ var ExtendedCss = function (styleSheet) {
         }
 
         // Handle dynamically added elements
-        var domObserver = new MutationObserver(onDomChanged);
+        domObserver = new MutationObserver(onDomChanged);
 
         if (document.body) {
             domObserver.observe(document.body, {
@@ -318,6 +318,11 @@ var ExtendedCss = function (styleSheet) {
  * http://jquery.org/license
  *
  * Date: 2016-08-08
+ */
+
+/**
+ * Sizzle selector library.
+ * Patched to change expose to not to expose in global document.window.
  */
 var Sizzle = (function( window ) {
 
