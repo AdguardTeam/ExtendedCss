@@ -1,3 +1,6 @@
+/* global QUnit */
+/* global CssParser */
+
 QUnit.test( "Simple CSS", function(assert) {
   
     var cssText = 'body { display:none; }';

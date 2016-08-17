@@ -18,13 +18,17 @@
 /* global ExtendedSelector */
 
 QUnit.test( "Test ExtendedSelector", function( assert ) {
+    var checkElements = function (elements, selector) {
+        for (var i = 0; i < elements.length; i++) {
+            assert.ok(selector.matches(elements[i]));
+        }
+    };
+
     var elements;
     var selector;
 
     selector = new ExtendedSelector('div a[-ext-contains="adg-test"]');
     elements = selector.querySelectorAll();
-
-    console.log(elements);
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
@@ -43,35 +47,25 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
     selector = new ExtendedSelector('[-ext-has="div.test-class-two"]');
     elements = selector.querySelectorAll();
     assert.equal(5, elements.length);
-    for (var i = 0; i < elements.length; i++) {
-        assert.ok(selector.matches(elements[i]));
-    }
+    checkElements(elements, selector);
 
     selector = new ExtendedSelector('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"]');
     elements = selector.querySelectorAll();
     assert.equal(3, elements.length);
-    for (var i = 0; i < elements.length; i++) {
-        assert.ok(selector.matches(elements[i]));
-    }
+    checkElements(elements, selector);
 
     selector = new ExtendedSelector('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"][i18n]');
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
-    for (var i = 0; i < elements.length; i++) {
-        assert.ok(selector.matches(elements[i]));
-    }
+    checkElements(elements, selector);
 
     selector = new ExtendedSelector('div[-ext-has="div.test-class-two"]');
     elements = selector.querySelectorAll();
     assert.equal(3, elements.length);
-    for (var i = 0; i < elements.length; i++) {
-        assert.ok(selector.matches(elements[i]));
-    }
+    checkElements(elements, selector);
 
     selector = new ExtendedSelector('div[-ext-has="div.test-class-two"] > .test-class[-ext-contains="adg-test"]');
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
-    for (var i = 0; i < elements.length; i++) {
-        assert.ok(selector.matches(elements[i]));
-    }
+    checkElements(elements, selector);
 });
