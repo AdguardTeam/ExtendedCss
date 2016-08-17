@@ -50,7 +50,7 @@ module.exports = function(grunt) {
         src: 'Gruntfile.js'
       },
       lib_test: {
-        src: ['lib/**/*.js', 'test/**/*.js']
+        src: ['lib/**/*.js', '!lib/sizzle.patched.js']
       }
     },
     qunit: {
