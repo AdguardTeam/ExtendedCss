@@ -330,6 +330,7 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
      * Called on any DOM change, we should examine extended CSS again
      */
     var onDomChanged = function () {
+        
         // TODO: Throttle this call
         applyRules(rules);
         checkAffectedElements();
