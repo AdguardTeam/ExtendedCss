@@ -15,7 +15,7 @@ QUnit.test( "Simple CSS", function(assert) {
 
 QUnit.test("Parse stylesheet", function(assert) {
 
-    var cssText = 'body { background: none!important; }\n div.wrapper { display: block; position: absolute; top:-2000px; }';
+    var cssText = 'body { background: none!important; }\n div.wrapper { display: block!important; position: absolute; top:-2000px; }';
     var cssObject = CssParser.parse(cssText);
     assert.ok(cssObject instanceof Array);
     assert.equal(cssObject.length, 2);
@@ -28,7 +28,7 @@ QUnit.test("Parse stylesheet", function(assert) {
     assert.ok(cssObject[1]);
     assert.equal(cssObject[1].selectors, 'div.wrapper');
     assert.ok(cssObject[1].style);
-    assert.equal(cssObject[1].style.display, 'block');
+    assert.equal(cssObject[1].style.display, 'block!important');
     assert.equal(cssObject[1].style.position, 'absolute');
     assert.equal(cssObject[1].style.top, '-2000px');
 });
