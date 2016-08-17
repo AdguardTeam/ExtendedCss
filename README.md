@@ -7,7 +7,7 @@ These extended properties are defined in the following github issues:
 Selector property | Source
 --- | ---
 `-ext-has (:has)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/321
-`-ext-contains (:contains)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/321
+`-ext-contains (:contains)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/322
 
 ### Usage
 ```
