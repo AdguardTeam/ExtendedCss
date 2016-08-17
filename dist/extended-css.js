@@ -1,6 +1,7 @@
 /*! extended-css - v1.0.0 - 2016-08-17
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2016 ; Licensed Apache License 2.0 */
+(function(window) {
 /**
  * Very simple and lightweight CSS parser.
  * <br/>
@@ -86,6 +87,62 @@ var CssParser = (function() { // jshint ignore:line
         parse: parseCss
     };
 })();
+/**
+ * Helper class that uses either MutationObserver or DOMNode* events to keep an eye on DOM changes
+ * <br/>
+ * Two public methods:
+ * <br/>
+ * <pre>observe</pre> starts observing the DOM changes
+ * <pre>dispose</pre> stops doing it
+ */
+var DomObserver = (function() { // jshint ignore:line
+
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    var eventListenerSupported = window.addEventListener;
+
+    return function(callback) {
+
+        var mutationObserver;
+
+        var observeDom = function(callback) {
+            if (!document.body) {
+                return;
+            }
+
+            if (MutationObserver) {
+                mutationObserver = new MutationObserver(function(mutations) {
+                    if (mutations && mutations.length) {
+                        callback();
+                    }
+                });
+                mutationObserver.observe(document.body, { childList:true, subtree:true });
+            } else if (eventListenerSupported) {
+                document.addEventListener('DOMNodeInserted', callback, false);
+                document.addEventListener('DOMNodeRemoved', callback, false);
+            }
+        };
+        
+        // EXPOSE
+        this.observe = function() {
+            if (!document.body) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    observeDom(callback);
+                });
+            } else {
+                observeDom(callback);
+            }
+        };
+
+        this.dispose = function() {
+            if (mutationObserver) {
+                mutationObserver.disconnect();
+            } else if (eventListenerSupported) {
+                document.removeEventListener('DOMNodeInserted', callback, false);
+                document.removeEventListener('DOMNodeRemoved', callback, false);
+            }
+        };
+    };
+})();
 /* global Sizzle, console */
 
 /**
@@ -150,7 +207,7 @@ var ExtendedSelector = (function () { // jshint ignore:line
         };
     };
 })();
-/* global CssParser, ExtendedSelector */
+/* global CssParser, DomObserver, ExtendedSelector */
 
 /**
  * Extended css class
@@ -264,40 +321,18 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
             return;
         }
 
-        // TODO: Handle this case
-        if (typeof MutationObserver === 'undefined') {
-            return;
-        }
-
         // Handle dynamically added elements
-        domObserver = new MutationObserver(onDomChanged);
-
-        if (document.body) {
-            domObserver.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        } else {
-            document.addEventListener('DOMContentLoaded', function () {
-                domObserver.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-            });
-        }
+        domObserver = new DomObserver(onDomChanged);
+        domObserver.observe();
     };
 
     /**
      * Called on any DOM change, we should examine extended CSS again
-     *
-     * @param mutations
      */
-    var onDomChanged = function (mutations) {
-
-        if (mutations.length) {
-            applyRules(rules);
-            checkAffectedElements();
-        }
+    var onDomChanged = function () {
+        // TODO: Throttle this call
+        applyRules(rules);
+        checkAffectedElements();
     };
 
     /**
@@ -312,7 +347,7 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
      * Disposes ExtendedCss and removes our styles from matched elements
      */
     var dispose = function () {
-        domObserver.disconnect();
+        domObserver.dispose();
         var iElements = affectedElements.length;
         while (iElements--) {
             var obj = affectedElements[iElements];
@@ -2587,3 +2622,6 @@ return Sizzle;
 // EXPOSE
 
 })( window );
+
+window.ExtendedCss = ExtendedCss;
+})(window);
