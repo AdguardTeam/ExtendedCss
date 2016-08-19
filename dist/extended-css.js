@@ -1,4 +1,4 @@
-/*! extended-css - v1.0.0 - 2016-08-18
+/*! extended-css - v1.0.1 - 2016-08-19
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2016 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -243,6 +243,21 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
     };
 
     /**
+     * Checks if specified element is already in the affectedElements collection
+     * 
+     * @param element
+     */
+    var checkElementIsAffected = function(element) {
+        var iAffectedElements = affectedElements.length;
+        while (iAffectedElements--) {
+            if (affectedElements[iAffectedElements].element === element) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    /**
      * Applies filtering rules
      *
      * @param rules Rules to apply
@@ -256,12 +271,17 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
 
             var iElements = elements.length;
             while (iElements--) {
-                var el = elements[iElements];
-                var originalStyle = el.style.cssText;
-                applyStyle(el, rule.style);
+                var element = elements[iElements];
+                if (checkElementIsAffected(element)) {
+                    // We have already applied style to this element
+                    continue;
+                }
+
+                var originalStyle = element.style.cssText;
+                applyStyle(element, rule.style);
 
                 affectedElements.push({
-                    element: el,
+                    element: element,
                     rule: rule,
                     originalStyle: originalStyle
                 });
@@ -307,7 +327,7 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
                 applyStyle(obj.element, obj.rule.style);
             } else {
                 revertStyle(obj);
-                affectedElements.slice(iElements, 1);
+                affectedElements.splice(iElements, 1);
             }
         }
     };
@@ -385,6 +405,9 @@ var ExtendedCss = function (styleSheet) { // jshint ignore:line
     // EXPOSE
     this.dispose = dispose;
     this.apply = apply;
+    this.getAffectedElements = function() {
+        return affectedElements;
+    };
 };
 /*!
  * Sizzle CSS Selector Engine v2.3.4-pre
