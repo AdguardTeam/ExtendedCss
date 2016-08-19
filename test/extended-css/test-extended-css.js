@@ -45,3 +45,34 @@ QUnit.test("Reaction on DOM modification", function(assert) {
         done();
     }, 100);
 });
+
+QUnit.test("Affected elements length", function(assert) {
+
+    var done = assert.async();
+
+    var affectedLength;
+    var startLength = extendedCss.getAffectedElements().length;
+    assert.ok(1, "Start test: " + startLength + " elements affected");
+    var toBeBlocked = document.getElementById("case6-blocked");
+    assertElementStyle("case6-blocked", { "display": "" }, assert);
+    
+    var banner = document.createElement("div");
+    banner.setAttribute("class", "banner");
+    toBeBlocked.appendChild(banner);
+
+    setTimeout(function() {
+        assertElementStyle("case6-blocked", { "display": "none" }, assert);
+        affectedLength = extendedCss.getAffectedElements().length
+        assert.equal(affectedLength, startLength + 1);
+        assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
+        
+        toBeBlocked.removeChild(banner);
+        setTimeout(function() {
+            assertElementStyle("case6-blocked", { "display": "" }, assert);
+            affectedLength = extendedCss.getAffectedElements().length
+            assert.equal(affectedLength, startLength);
+            assert.ok(1, "Element unblocked: " + affectedLength + " elements affected");
+            done();
+        }, 100);
+    }, 100);
+});
