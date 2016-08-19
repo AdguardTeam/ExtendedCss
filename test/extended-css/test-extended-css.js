@@ -46,7 +46,7 @@ QUnit.test("Reaction on DOM modification", function(assert) {
     }, 100);
 });
 
-QUnit.test("Affected elements length", function(assert) {
+QUnit.test("Affected elements length (simple)", function(assert) {
 
     var done = assert.async();
 
@@ -74,5 +74,25 @@ QUnit.test("Affected elements length", function(assert) {
             assert.ok(1, "Element unblocked: " + affectedLength + " elements affected");
             done();
         }, 100);
+    }, 100);
+});
+
+QUnit.test("Affected elements length (root element removal)", function(assert) {
+
+    var done = assert.async();
+
+    var affectedLength;
+    var startLength = extendedCss.getAffectedElements().length;
+    assert.ok(1, "Start test: " + startLength + " elements affected");
+    assertElementStyle("case7-blocked", { "display": "none" }, assert);
+
+    var root = document.getElementById("case7");
+    root.parentNode.removeChild(root);
+
+    setTimeout(function() {
+        affectedLength = extendedCss.getAffectedElements().length
+        assert.equal(affectedLength, startLength - 1);
+        assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
+        done();
     }, 100);
 });
