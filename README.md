@@ -1,6 +1,6 @@
 # Extended Css engine
 
-Module which applies CSS styles with extended selection properties.
+Module for applying CSS styles with extended selection properties.
 
 These extended properties are defined in the following github issues:
 

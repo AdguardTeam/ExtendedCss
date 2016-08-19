@@ -1,7 +1,7 @@
 {
   "name": "extended-css",
   "version": "1.0.1",
-  "description": "Module which applies CSS styles with extended selection properties",
+  "description": "Module for applying CSS styles with extended selection properties.",
   "main": "extended-css.js",
   "directories": {
     "test": "test"
