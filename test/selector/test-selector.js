@@ -69,3 +69,51 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
     assert.equal(1, elements.length);
     checkElements(elements, selector);
 });
+
+QUnit.test( "Test -ext-style-properties", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-style-properties div[-ext-style-properties="background-image: url(about:*)"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-background"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-style-properties div:style-properties(background-image: url(about:*))');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-background"));    
+});
+
+QUnit.test( "Test -ext-style-properties-before", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-style-properties div[-ext-style-properties-before="content: *find me*"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-before"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-style-properties div:style-properties-before(content: *find me*)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-before"));    
+});
+
+QUnit.test( "Test -ext-style-properties-after", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-style-properties div[-ext-style-properties-after="content: *find me*"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-after"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-style-properties div:style-properties-after(content: *find me*)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-after"));    
+});

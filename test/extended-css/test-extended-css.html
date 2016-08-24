@@ -18,10 +18,14 @@
     #case5>div[-ext-contains="Block this"] { display: none!important }
     #case6>div[-ext-has=".banner"] { display: none; }
     #case7>div[-ext-contains="Block this"] { display: none; }
+    #case8>div[-ext-has=":style-properties-before(content: *block me*)"] { display: none; }
   </style>
 
   <style type="text/css">
       body>.container { display:none!important; }
+      #case8-blocked>.before::before {
+        content: "Block me please"
+      }
   </style>
   <div id="container" class="container">
       <div id="case1">
@@ -58,12 +62,20 @@
       <div id="case7">
         <div id="case7-blocked">Block this</div>
       </div>
+      <div id="case8">
+        <div id="case8-blocked">
+          <div class="before">
+          </div>
+        </div>
+      </div>
   </div>
 
   <script src="https://code.jquery.com/qunit/qunit-2.0.1.js"></script>
   <script src="../../lib/sizzle.patched.js"></script>
+  <script src="../../lib/simple-regex.js"></script>
   <script src="../../lib/css-parser.js"></script>
   <script src="../../lib/dom-observer.js"></script>
+  <script src="../../lib/style-property-matcher.js"></script>
   <script src="../../lib/extended-css-selector.js"></script>
   <script src="../../lib/extended-css.js"></script>
   <script src="test-extended-css.js"></script>  
