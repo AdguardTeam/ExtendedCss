@@ -97,6 +97,6 @@ QUnit.test("Affected elements length (root element removal)", function(assert) {
     }, 100);
 });
 
-QUnit.test("Modifer -ext-style-properties-before", function(assert) {
+QUnit.test("Modifer -ext-matches-css-before", function(assert) {
     assertElementStyle("case8-blocked", { "display": "none" }, assert);
 });
