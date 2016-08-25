@@ -1,9 +1,11 @@
-/*global module:false*/
+/*global module:false,require*/
 module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    // Metadata.
+    // Helper libs
+    _: require('underscore'),
+    // Metadata.    
     pkg: grunt.file.readJSON('package.json'),
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
@@ -22,7 +24,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: ['lib/**.js'],
-        dest: 'dist/<%= pkg.name %>.js'
+        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
       }
     },
     uglify: {
@@ -31,7 +33,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>.min.js'
+        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
       }
     },
     jshint: {
