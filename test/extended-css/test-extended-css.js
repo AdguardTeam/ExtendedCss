@@ -11,7 +11,7 @@ var assertElementStyle = function(id, expectedStyle, assert) {
     assert.ok(element);
 
     for (var prop in expectedStyle) {
-        assert.equal(element.style[Utils.lowerCamelCase(prop)], expectedStyle[prop]);
+        assert.equal(element.style.getPropertyValue(prop) || "", expectedStyle[prop]);
     }
 }
 

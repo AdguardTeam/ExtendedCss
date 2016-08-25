@@ -23,7 +23,14 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['lib/**.js'],
+        src: [
+          'lib/**.js',
+          // All files in alpha order with these two at the end
+          '!lib/extended-css-selector.js',
+          '!lib/extended-css.js',
+          'lib/extended-css-selector.js',
+          'lib/extended-css.js'          
+        ],
         dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
       }
     },
