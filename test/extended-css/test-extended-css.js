@@ -96,3 +96,7 @@ QUnit.test("Affected elements length (root element removal)", function(assert) {
         done();
     }, 100);
 });
+
+QUnit.test("Font-size style", function(assert) {
+    assertElementStyle("case9-notblocked", { "display": "", "font-size": "16px" }, assert);
+});
