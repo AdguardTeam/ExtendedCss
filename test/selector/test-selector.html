@@ -10,7 +10,10 @@
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
 <script src="https://code.jquery.com/qunit/qunit-2.0.1.js"></script>
+<script src="../../lib/utils.js"></script>
 <script src="../../lib/sizzle.patched.js"></script>
+<script src="../../lib/simple-regex.js"></script>
+<script src="../../lib/style-property-matcher.js"></script>
 <script src="../../lib/extended-css-selector.js"></script>
 <script src="test-selector.js"></script>
 <style type="text/css">
@@ -33,7 +36,25 @@
                 </div>
             </h2>
         </div>
+    </div>
 
+    <style type="text/css">
+        #test-matches-css > #test-div-background {
+            background: url(about:blank);
+        }
+        #test-matches-css > #test-div-before::before {
+            content: "Try to find me";
+            color: #fff;
+        }
+        #test-matches-css > #test-div-after::after {
+            content: "Try to find me";
+            color: #fff;
+        }
+    </style>
+    <div id="test-matches-css">
+        <div id="test-div-background"></div>
+        <div id="test-div-before"></div>
+        <div id="test-div-after"></div>
     </div>
 
 </div>

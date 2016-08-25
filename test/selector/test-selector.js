@@ -69,3 +69,51 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
     assert.equal(1, elements.length);
     checkElements(elements, selector);
 });
+
+QUnit.test( "Test -ext-matches-css", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css="background-image: url(about:*)"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-background"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-matches-css div:matches-css(background-image: url(about:*))');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-background"));    
+});
+
+QUnit.test( "Test -ext-matches-css-before", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css-before="content: *find me*"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-before"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-matches-css div:matches-css-before(content: *find me*)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-before"));    
+});
+
+QUnit.test( "Test -ext-matches-css-after", function(assert) {
+    // Compatible syntax
+    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css-after="content: *find me*"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-after"));
+
+    // Standard syntax
+    selector = new ExtendedSelector('#test-matches-css div:matches-css-after(content: *find me*)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-div-after"));    
+});

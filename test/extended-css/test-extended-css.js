@@ -96,7 +96,9 @@ QUnit.test("Affected elements length (root element removal)", function(assert) {
         done();
     }, 100);
 });
-
+QUnit.test("Modifer -ext-matches-css-before", function(assert) {
+    assertElementStyle("case8-blocked", { "display": "none" }, assert);
+});
 QUnit.test("Font-size style", function(assert) {
     assertElementStyle("case9-notblocked", { "display": "", "font-size": "16px" }, assert);
 });

@@ -1,77 +1,90 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>QUnit Example</title>
   <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.0.1.css">
 </head>
+
 <body>
   <div id="qunit"></div>
   <div id="qunit-fixture"></div>
 
   <style id="extendedCss" type="text/extended-css">
-    #case1>div[-ext-has=".banner"] { display:none !important; }
-    #case2>div[-ext-contains="Block this"] { display: none!important }
-    #case3>div[-ext-has=".banner"] { visibility: hidden; }
-    #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }
-    #case5>div[-ext-contains="Block this"] { display: none!important }
-    #case6>div[-ext-has=".banner"] { display: none; }
-    #case7>div[-ext-contains="Block this"] { display: none; }
-    
-    #case9>div[-ext-contains="Another text"] { font-size: 16px; }
+    #case1>div[-ext-has=".banner"] { display:none !important; } #case2>div[-ext-contains="Block this"] { display: none!important
+    } #case3>div[-ext-has=".banner"] { visibility: hidden; } #case4 div[-ext-has=".banner:contains(Banner)"] { display: none;
+    } #case5>div[-ext-contains="Block this"] { display: none!important } #case6>div[-ext-has=".banner"] { display: none;
+    } #case7>div[-ext-contains="Block this"] { display: none; }
+    <<<<<<< HEAD #case9>div[-ext-contains="Another text"] { font-size: 16px; } ======= #case8>div[-ext-has=":matches-css-before(content: *block
+      me*)"] { display: none; } >>>>>>> feature/issues/7
   </style>
 
   <style type="text/css">
-      body>.container { display:none!important; }
+    body>.container {
+      display: none!important;
+    }
+    
+    #case8-blocked>.before::before {
+      content: "Block me please"
+    }
   </style>
   <div id="container" class="container">
-      <div id="case1">
-          <div id="case1-blocked">
-            <div class="banner"></div>
-          </div>
+    <div id="case1">
+      <div id="case1-blocked">
+        <div class="banner"></div>
       </div>
-      <div id="case2">
-          <div id="case2-blocked1" class="banner">Block this</div>
-          <div id="case2-blocked2" class="banner">Block this also</div>
-          <div id="case2-notblocked" class="banner">Leave it be</div>
+    </div>
+    <div id="case2">
+      <div id="case2-blocked1" class="banner">Block this</div>
+      <div id="case2-blocked2" class="banner">Block this also</div>
+      <div id="case2-notblocked" class="banner">Leave it be</div>
+    </div>
+    <div id="case3">
+      <div id="case3-modified" style="display: block;">
+        <div class="banner"></div>
       </div>
-      <div id="case3">
-        <div id="case3-modified" style="display: block;">
-          <div class="banner"></div>
+    </div>
+    <div id="case4">
+      <div id="case4-root">
+        <div id="case4-blocked">
+          <div class="banner">Banner</div>
+        </div>
+        <div id="case4-notblocked">
+          <div class="banner">Another text</div>
         </div>
       </div>
-      <div id="case4">
-        <div id="case4-root">
-          <div id="case4-blocked">
-            <div class="banner">Banner</div>
-          </div>
-          <div id="case4-notblocked">
-            <div class="banner">Another text</div>
-          </div>
+    </div>
+    <div id="case5">
+      <div id="case5-blocked" class="banner">Block this</div>
+    </div>
+    <div id="case6">
+      <div id="case6-blocked"></div>
+    </div>
+    <div id="case7">
+      <div id="case7-blocked">Block this</div>
+    </div>
+    <div id="case8">
+      <div id="case8-blocked">
+        <div class="before">
         </div>
       </div>
-      <div id="case5">
-          <div id="case5-blocked" class="banner">Block this</div>
-      </div>
-      <div id="case6">
-        <div id="case6-blocked"></div>
-      </div>
-      <div id="case7">
-        <div id="case7-blocked">Block this</div>
-      </div>
-      
-      <div id="case9">
-          <div id="case9-notblocked">Another text</div>
-      </div>
-  </div>
+    </div>
+    <div id="case9">
+      <div id="case9-notblocked">Another text</div>
+    </div>
 
-  <script src="https://code.jquery.com/qunit/qunit-2.0.1.js"></script>
-  <script src="../../lib/sizzle.patched.js"></script>
-  <script src="../../lib/css-parser.js"></script>
-  <script src="../../lib/dom-observer.js"></script>
-  <script src="../../lib/extended-css-selector.js"></script>
-  <script src="../../lib/extended-css.js"></script>
-  <script src="test-extended-css.js"></script>  
+    <script src="https://code.jquery.com/qunit/qunit-2.0.1.js"></script>
+    <script src="../../lib/sizzle.patched.js"></script>
+    <script src="../../lib/utils.js"></script>
+    <script src="../../lib/simple-regex.js"></script>
+    <script src="../../lib/css-parser.js"></script>
+    <script src="../../lib/dom-observer.js"></script>
+    <script src="../../lib/style-property-matcher.js"></script>
+    <script src="../../lib/extended-css-selector.js"></script>
+    <script src="../../lib/extended-css.js"></script>
+    <script src="test-extended-css.js"></script>
 </body>
+
 </html>
