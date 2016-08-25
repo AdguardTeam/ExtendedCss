@@ -8,6 +8,7 @@ Selector property | Description
 --- | ---
 `-ext-has (:has)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/321
 `-ext-contains (:contains)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/322
+`-ext-matches-css (:matches-css)` | https://github.com/AdguardTeam/ExtendedCss/issues/7
 
 ### Usage
 ```
