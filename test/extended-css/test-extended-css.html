@@ -22,6 +22,7 @@
     #case7>div[-ext-contains="Block this"] { display: none; } 
     #case8>div[-ext-has=":matches-css-before(content: *block me*)"] { display: none; } 
     #case9>div[-ext-contains="Another text"] { font-size: 16px; }
+    #case10>div[-ext-contains="Block this"] { display: none; }
   </style>
 
   <style type="text/css">
@@ -76,6 +77,9 @@
     </div>
     <div id="case9">
       <div id="case9-notblocked">Another text</div>
+    </div>
+    <div id="case10">
+      <div id="case10-blocked">Block this</div>
     </div>
 
     <script src="https://code.jquery.com/qunit/qunit-2.0.1.js"></script>
