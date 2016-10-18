@@ -8,11 +8,21 @@ extendedCss.apply();
  */
 var assertElementStyle = function(id, expectedStyle, assert) {
     var element = document.getElementById(id);
-    assert.ok(element);
+    var resultOk = true;
+    if (!element) {
+        resultOk = false;
+    }
 
     for (var prop in expectedStyle) {
-        assert.equal(element.style.getPropertyValue(prop) || "", expectedStyle[prop]);
+        var left = element.style.getPropertyValue(prop) || "";
+        var right = expectedStyle[prop];
+
+        if (left != right) {
+            resultOk = false;
+        }
     }
+
+    assert.ok(resultOk, id + ' element either does not exist or has different style.');
 }
 
 QUnit.test("Modifer -ext-has", function(assert) {  
@@ -103,4 +113,19 @@ QUnit.test("Modifer -ext-matches-css-before", function(assert) {
 
 QUnit.test("Font-size style", function(assert) {
     assertElementStyle("case9-notblocked", { "display": "", "font-size": "16px" }, assert);
+});
+
+QUnit.test("Test attribute protection", function(assert) {
+
+    var done = assert.async();
+    assertElementStyle("case10-blocked", { "display": "none" }, assert);
+
+    setTimeout(function() {
+        var node = document.getElementById("case10-blocked");
+        node.style.display = 'block';
+        setTimeout(function() {
+            assertElementStyle("case10-blocked", { "display": "none" }, assert);
+            done();
+        }, 100);
+    }, 100);
 });
