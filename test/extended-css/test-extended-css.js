@@ -22,7 +22,7 @@ var assertElementStyle = function(id, expectedStyle, assert) {
         }
     }
 
-    assert.ok(resultOk, id + ' element either does not exist or has different style.');
+    assert.ok(resultOk, id + (resultOk ? ' ok' : ' element either does not exist or has different style.'));
 }
 
 QUnit.test("Modifer -ext-has", function(assert) {  
