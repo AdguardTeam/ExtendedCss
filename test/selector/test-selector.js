@@ -117,3 +117,47 @@ QUnit.test( "Test -ext-matches-css-after", function(assert) {
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById("test-div-after"));    
 });
+
+QUnit.test( "Test tokenize selector", function(assert) {
+    var selectorText = "#test";
+    var compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, selectorText);
+    assert.notOk(compiled.relation);
+    assert.notOk(compiled.complex);
+
+    selectorText = "div span.className > a[href^='http'] > #banner";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, selectorText);
+    assert.notOk(compiled.relation);
+    assert.notOk(compiled.complex);
+
+    selectorText = "div span.className + a[href^='http'] ~ #banner";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "div");
+    assert.equal(compiled.relation, " ");
+    assert.equal(compiled.complex, "span.className + a[href^='http'] ~ #banner");
+
+    selectorText = "#banner div:first-child > div:has(.banner)";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "#banner div:first-child");
+    assert.equal(compiled.relation, ">");
+    assert.equal(compiled.complex, "div:has(.banner)");
+
+    selectorText = "#banner div:first-child > div > :has(.banner) > div";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "#banner div:first-child > div");
+    assert.equal(compiled.relation, ">");
+    assert.equal(compiled.complex, ":has(.banner) > div");
+
+    selectorText = "#banner :not(div) div:matches-css(background: blank)";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "#banner :not(div)");
+    assert.equal(compiled.relation, " ");
+    assert.equal(compiled.complex, "div:matches-css(background: blank)");
+
+    selectorText = ":not(div .banner:has(test))";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.notOk(compiled.simple);
+    assert.notOk(compiled.relation);
+    assert.equal(compiled.complex, ":not(div .banner:has(test))");    
+});
