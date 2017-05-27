@@ -27,26 +27,34 @@ QUnit.test("Test simple selector", function(assert) {
     testPerformance(selector, assert);
 });
 
-QUnit.test("Test :has performance", function(assert) {
+QUnit.test("Case 1. :has performance", function(assert) {
     var selectorText = ".container #case1 div div:has(.banner)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Test :contains performance", function(assert) {
+QUnit.test("Case 2. :contains performance", function(assert) {
     var selectorText = ".container #case2 div div:contains(Block this)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Test :matches-css performance", function(assert) {
+QUnit.test("Case 3. :matches-css performance", function(assert) {
     var selectorText = ".container #case3 div div:matches-css(background: about:blank)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Test :has and :contains composite performance", function(assert) {
+QUnit.test("Case 4. :has and :contains composite performance", function(assert) {
     var selectorText = ".container #case4 div div:has(.banner:contains(Block this))";
+    var selector = new ExtendedSelector(selectorText);
+    testPerformance(selector, assert);
+});
+
+QUnit.test("Case 5. complicated selector", function(assert) {
+    // https://github.com/AdguardTeam/ExtendedCss/issues/25
+    
+    var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
