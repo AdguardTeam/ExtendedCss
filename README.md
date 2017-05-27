@@ -6,9 +6,9 @@ These extended properties are defined in the following github issues:
 
 Selector property | Description
 --- | ---
-`-ext-has (:has)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/321
-`-ext-contains (:contains)` | https://github.com/AdguardTeam/AdguardBrowserExtension/issues/322
-`-ext-matches-css (:matches-css)` | https://github.com/AdguardTeam/ExtendedCss/issues/7
+`-ext-has (:has)` | https://adguard.com/en/filterrules.html#pseudo-class-has
+`-ext-contains (:contains)` | https://adguard.com/en/filterrules.html#pseudo-class-contains
+`-ext-matches-css (:matches-css)` | https://adguard.com/en/filterrules.html#pseudo-class-matches-css
 
 ### Usage
 ```
