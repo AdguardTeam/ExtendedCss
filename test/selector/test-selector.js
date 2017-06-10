@@ -161,3 +161,24 @@ QUnit.test( "Test tokenize selector", function(assert) {
     assert.notOk(compiled.relation);
     assert.equal(compiled.complex, ":not(div .banner:has(test))");    
 });
+
+QUnit.test( "Test regular expressions support in :contains", function(assert) {
+    var selectorText = '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)';
+    var selector = new ExtendedSelector(selectorText);
+    var elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+});
+
+QUnit.test( "Test regular expressions support in :matches-css", function(assert) {
+    var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+    var selector = new ExtendedSelector(selectorText);
+    var elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+});
+
+QUnit.test( "Test simple regex support in :matches-css, when ()[] characters are escaped", function(assert) {
+    var selectorText = ':matches-css(background-image:url\(about:blank\))';
+    var selector = new ExtendedSelector(selectorText);
+    var elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+});
