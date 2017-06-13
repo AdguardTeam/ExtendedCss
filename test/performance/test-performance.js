@@ -40,7 +40,7 @@ QUnit.test("Case 2. :contains performance", function(assert) {
 });
 
 QUnit.test("Case 3. :matches-css performance", function(assert) {
-    var selectorText = ".container #case3 div div:matches-css(background: about:blank)";
+    var selectorText = ".container #case3 div div:matches-css(background-image: about:blank)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
