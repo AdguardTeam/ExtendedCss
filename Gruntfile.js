@@ -67,7 +67,7 @@ module.exports = function(grunt) {
       }
     },
     qunit: {
-      files: ['test/**/*.html']
+      files: ['test/*/*.html']
     },
     watch: {
       gruntfile: {
