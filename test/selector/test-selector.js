@@ -165,6 +165,7 @@ QUnit.test( "Test tokenize selector", function(assert) {
 QUnit.test( "Test regular expressions support in :contains", function(assert) {
     var selectorText = '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)';
     var selector = new ExtendedSelector(selectorText);
+    window.fdsa = selector;
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
