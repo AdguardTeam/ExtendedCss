@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+  - "4.1"
+install:
+  - npm install
+script:
+  - grunt build
+deploy:
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    on:
+      branch: master
+  - provider: releases
+    api_key: "GITHUB OAUTH TOKEN"
+    file: dist/extended-css.min.js
+    skip_cleanup: true
+    on:
+      tags: true
