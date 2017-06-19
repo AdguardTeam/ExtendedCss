@@ -31,7 +31,7 @@ module.exports = function(grunt) {
           'lib/extended-css-selector.js',
           'lib/extended-css.js'          
         ],
-        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+        dest: 'dist/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -40,7 +40,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
+        dest: 'dist/<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -67,7 +67,7 @@ module.exports = function(grunt) {
       }
     },
     qunit: {
-      files: ['test/**/*.html']
+      files: ['test/*/*.html']
     },
     watch: {
       gruntfile: {
