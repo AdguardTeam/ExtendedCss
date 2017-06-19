@@ -1,4 +1,5 @@
 # Extended Css engine
+[![Build Status](https://travis-ci.org/AdguardTeam/ExtendedCss.svg?branch=master)](https://travis-ci.org/AdguardTeam/ExtendedCss)
 
 Module for applying CSS styles with extended selection properties.
 
@@ -23,4 +24,14 @@ Selector property | Description
     extendedCss.dispose();
   }, 10 * 1000);
 })();
+```
+
+### Debugging extended selectors
+
+[Here](https://AdguardTeam.github.io/ExtendedCss/dist/bookmarklet.html) is a bookmarklet that loads ExtendedCss to the page. You can use the `ExtendedCss` constructor in a global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
+
+```
+var selectorText = "div.block[-ext-has='.header:matches-css-after(content: \"Anzeige\")']";
+
+ExtendedCss.query(selectorText) // returns an array of Elements matching selectorText
 ```
