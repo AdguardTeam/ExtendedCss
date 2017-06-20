@@ -84,7 +84,8 @@ module.exports = function(grunt) {
       '*.md',
       '*.yml',
       'LICENSE',
-      '.gitignore'
+      '.gitignore',
+      'node_modules/'
     ]
   });
 
