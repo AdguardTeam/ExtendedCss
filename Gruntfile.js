@@ -31,7 +31,7 @@ module.exports = function(grunt) {
           'lib/extended-css-selector.js',
           'lib/extended-css.js'          
         ],
-        dest: 'dist/<%= pkg.name %>.js'
+        dest: '<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -40,7 +40,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>.min.js'
+        dest: '<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -78,7 +78,14 @@ module.exports = function(grunt) {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
       }
-    }
+    },
+    clean: [
+      '*.json',
+      '*.md',
+      '*.yml',
+      'LICENSE',
+      '.gitignore'
+    ]
   });
 
   // These plugins provide necessary tasks.
@@ -87,6 +94,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit']);

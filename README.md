@@ -28,11 +28,11 @@ Selector property | Description
 
 ### Debugging extended selectors
 
-To load ExtendedCss to a current page, run the following code in a browser console:
+To load ExtendedCss to a current page, copy and execute the following code in a browser console:
 ```
 !function(E,x,t,C,s,s_){C=E.createElement(x),s=E.getElementsByTagName(x)[0],C.src=t,
 C.onload=function(){alert('ExtCss loaded successfully')},s.parentNode.insertBefore(C,s)}
-(document,'script','https://AdguardTeam.github.io/ExtendedCss/dist/extended-css.min.js')
+(document,'script','https://AdguardTeam.github.io/ExtendedCss/extended-css.min.js')
 ```
 You can use the `ExtendedCss` constructor in a global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
 ```
