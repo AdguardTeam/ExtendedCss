@@ -28,10 +28,19 @@ Selector property | Description
 
 ### Debugging extended selectors
 
-[Here](https://AdguardTeam.github.io/ExtendedCss/dist/bookmarklet.html) is a bookmarklet that loads ExtendedCss to the page. You can use the `ExtendedCss` constructor in a global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
-
+To load ExtendedCss to a current page, run the following code in a browser console:
+```
+!function(E,x,t,C,s,s_){C=E.createElement(x),s=E.getElementsByTagName(x)[0],C.src=t,
+C.onload=function(){alert('ExtCss loaded successfully')},s.parentNode.insertBefore(C,s)}
+(document,'script','https://AdguardTeam.github.io/ExtendedCss/dist/extended-css.min.js')
+```
+You can use the `ExtendedCss` constructor in a global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
 ```
 var selectorText = "div.block[-ext-has='.header:matches-css-after(content: \"Anzeige\")']";
 
 ExtendedCss.query(selectorText) // returns an array of Elements matching selectorText
 ```
+
+### Test page
+
+[Link](https://AdguardTeam.github.io/ExtendedCss/tests/index.html)

@@ -5,6 +5,7 @@ install:
   - npm install
 script:
   - grunt build
+  - grunt clean
 deploy:
   - provider: pages
     skip_cleanup: true
