@@ -9,15 +9,14 @@
   "engines": {
     "node": ">= 0.10.0"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "grunt": "~1.0.1",
-    "grunt-contrib-jshint": "~1.0.0",
+    "grunt-contrib-jshint": "~1.1.0",
     "grunt-contrib-watch": "~1.0.0",
-    "grunt-contrib-qunit": "~1.2.0",
+    "grunt-contrib-qunit": "~2.0.0",
     "grunt-contrib-concat": "~1.0.1",
-    "grunt-contrib-uglify": "~2.0.0",
+    "grunt-contrib-uglify": "~3.0.1",
     "underscore": "~1.8.3"
   },
   "scripts": {
