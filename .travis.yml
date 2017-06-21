@@ -9,12 +9,7 @@ script:
 deploy:
   - provider: pages
     skip_cleanup: true
+    local_dir: 'dist'
     github_token: $GITHUB_TOKEN
     on:
       branch: master
-  - provider: releases
-    api_key: $GITHUB_OAUTH_TOKEN
-    file: extended-css.min.js
-    skip_cleanup: true
-    on:
-      tags: true

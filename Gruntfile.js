@@ -1,4 +1,6 @@
 /*global module:false,require*/
+const fs = require('fs-extra');
+
 module.exports = function(grunt) {
 
   // Project configuration.
@@ -78,15 +80,7 @@ module.exports = function(grunt) {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
       }
-    },
-    clean: [
-      '*.json',
-      '*.md',
-      '*.yml',
-      'LICENSE',
-      '.gitignore',
-      'node_modules/'
-    ]
+    }
   });
 
   // These plugins provide necessary tasks.
@@ -95,9 +89,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-clean');
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit']);
   grunt.registerTask('build', ['jshint', 'qunit', 'concat', 'uglify']);
+
+  // Prepare gh-pages branch
+  grunt.registerTask('gh-pages', function() {
+    fs.moveSync('/lib', '/dist/lib');
+    fs.moveSync('/test', '/dist/test');
+    fs.moveSync('/index.html', '/dist/index.html');
+  });
 };
