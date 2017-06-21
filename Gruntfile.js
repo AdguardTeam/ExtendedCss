@@ -96,8 +96,8 @@ module.exports = function(grunt) {
 
   // Prepare gh-pages branch
   grunt.registerTask('gh-pages', function() {
-    fs.moveSync('/lib', '/dist/lib');
-    fs.moveSync('/test', '/dist/test');
-    fs.moveSync('/index.html', '/dist/index.html');
+    fs.moveSync('/test', '/test/test');
+    fs.moveSync('/lib', '/test/lib');
+    fs.moveSync('/index.html', '/test/index.html');
   });
 };
