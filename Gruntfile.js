@@ -1,5 +1,5 @@
 /*global module:false,require*/
-const fs = require('fs-extra');
+var fs = require('fs-extra');
 
 module.exports = function(grunt) {
 
