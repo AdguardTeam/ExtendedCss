@@ -14,7 +14,7 @@ deploy:
       branch: master
   - provider: releases
     api_key: $GITHUB_OAUTH_TOKEN
-    file: dist/extended-css.min.js
+    file: extended-css.min.js
     skip_cleanup: true
     on:
       tags: true
