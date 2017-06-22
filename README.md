@@ -36,7 +36,7 @@ C.onload=function(){alert('ExtCss loaded successfully')},s.parentNode.insertBefo
 ```
 You can use the `ExtendedCss` constructor in a global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
 ```
-var selectorText = "div.block[-ext-has='.header:matches-css-after(content: \"Anzeige\")']";
+var selectorText = "div.block[-ext-has='.header:matches-css-after(content: Anzeige)']";
 
 ExtendedCss.query(selectorText) // returns an array of Elements matching selectorText
 ```
