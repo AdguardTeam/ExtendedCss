@@ -42,4 +42,4 @@ ExtendedCss.query(selectorText) // returns an array of Elements matching selecto
 
 ### Test page
 
-[Link](https://AdguardTeam.github.io/ExtendedCss/tests/index.html)
+[Link](https://AdguardTeam.github.io/ExtendedCss)
