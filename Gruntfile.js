@@ -1,4 +1,6 @@
 /*global module:false,require*/
+var fs = require('fs-extra');
+
 module.exports = function(grunt) {
 
   // Project configuration.
@@ -31,7 +33,7 @@ module.exports = function(grunt) {
           'lib/extended-css-selector.js',
           'lib/extended-css.js'          
         ],
-        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+        dest: '<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -40,7 +42,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
+        dest: '<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -67,7 +69,7 @@ module.exports = function(grunt) {
       }
     },
     qunit: {
-      files: ['test/**/*.html']
+      files: ['test/*/*.html']
     },
     watch: {
       gruntfile: {
@@ -91,4 +93,11 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit']);
   grunt.registerTask('build', ['jshint', 'qunit', 'concat', 'uglify']);
+
+  // Prepare gh-pages branch
+  grunt.registerTask('gh-pages', function() {
+    fs.moveSync('test', 'dist/test');
+    fs.moveSync('lib', 'dist/lib');
+    fs.moveSync('index.html', 'dist/index.html');
+  });
 };
