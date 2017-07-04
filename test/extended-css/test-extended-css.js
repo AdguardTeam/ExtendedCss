@@ -26,7 +26,7 @@ var assertElementStyle = function(id, expectedStyle, assert) {
 }
 
 /**
- * We throttles MO callbacks in ExtCss with requestAnimationFrame and setTimeout.
+ * We throttle MO callbacks in ExtCss with requestAnimationFrame and setTimeout.
  * Browsers postpone rAF callbacks in inactive tabs for a long time.
  * It throttles setTimeout callbacks as well, but it is called within a
  * relatively short time. (within several seconds)
@@ -34,11 +34,11 @@ var assertElementStyle = function(id, expectedStyle, assert) {
  */
 var safeSetTimeout = function(fn, timeout) {
     if (window.requestAnimationFrame) {
-        return requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
             setTimeout(fn, timeout);
         });
     } else {
-        return setTimeout(fn, timeout);
+        setTimeout(fn, timeout);
     }
 };
 
