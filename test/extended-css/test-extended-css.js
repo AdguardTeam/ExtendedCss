@@ -25,6 +25,23 @@ var assertElementStyle = function(id, expectedStyle, assert) {
     assert.ok(resultOk, id + (resultOk ? ' ok' : ' element either does not exist or has different style.'));
 }
 
+/**
+ * We throttle MO callbacks in ExtCss with requestAnimationFrame and setTimeout.
+ * Browsers postpone rAF callbacks in inactive tabs for a long time.
+ * It throttles setTimeout callbacks as well, but it is called within a
+ * relatively short time. (within several seconds)
+ * We apply rAF in tests as well to postpone test for similar amount of time.
+ */
+var lazySetTimeout = function(fn, timeout) {
+    if (window.requestAnimationFrame) {
+        requestAnimationFrame(function() {
+            setTimeout(fn, timeout);
+        });
+    } else {
+        setTimeout(fn, timeout);
+    }
+};
+
 QUnit.test("Modifer -ext-has", function(assert) {  
     assertElementStyle("case1-blocked", { display: "none" }, assert);
 });
@@ -50,7 +67,7 @@ QUnit.test("Reaction on DOM modification", function(assert) {
     var el = document.getElementById("case5-blocked");
     document.getElementById("container").appendChild(el);
 
-    setTimeout(function() {
+    lazySetTimeout(function() {
         assertElementStyle("case5-blocked", { display: "" }, assert);
         done();
     }, 100);
@@ -70,14 +87,14 @@ QUnit.test("Affected elements length (simple)", function(assert) {
     banner.setAttribute("class", "banner");
     toBeBlocked.appendChild(banner);
 
-    setTimeout(function() {
+    lazySetTimeout(function() {
         assertElementStyle("case6-blocked", { "display": "none" }, assert);
         affectedLength = extendedCss.getAffectedElements().length
         assert.equal(affectedLength, startLength + 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
         
         toBeBlocked.removeChild(banner);
-        setTimeout(function() {
+        lazySetTimeout(function() {
             assertElementStyle("case6-blocked", { "display": "" }, assert);
             affectedLength = extendedCss.getAffectedElements().length
             assert.equal(affectedLength, startLength);
@@ -99,7 +116,7 @@ QUnit.test("Affected elements length (root element removal)", function(assert) {
     var root = document.getElementById("case7");
     root.parentNode.removeChild(root);
 
-    setTimeout(function() {
+    lazySetTimeout(function() {
         affectedLength = extendedCss.getAffectedElements().length
         assert.equal(affectedLength, startLength - 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
@@ -120,10 +137,10 @@ QUnit.test("Test attribute protection", function(assert) {
     var done = assert.async();
     assertElementStyle("case10-blocked", { "display": "none" }, assert);
 
-    setTimeout(function() {
+    lazySetTimeout(function() {
         var node = document.getElementById("case10-blocked");
         node.style.display = 'block';
-        setTimeout(function() {
+        lazySetTimeout(function() {
             assertElementStyle("case10-blocked", { "display": "none" }, assert);
             done();
         }, 100);
