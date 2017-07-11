@@ -192,7 +192,7 @@ QUnit.test( "Test -abp-has and -abp-has-text", function(assert) {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
-    selector = new ExtendedSelector('div:-abp-has(div.test-class-two) > .test-class:-abp-has-text(adg-test)');
+    selector = new ExtendedSelector('div:-abp-has(div.test-class-two) > .test-class:-abp-contains(adg-test)');
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
