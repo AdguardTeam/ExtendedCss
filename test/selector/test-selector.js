@@ -182,3 +182,18 @@ QUnit.test( "Test simple regex support in :matches-css, when ()[] characters are
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
+
+QUnit.test( "Test -abp-has and -abp-has-text", function(assert) {
+    var elements;
+    var selector;
+
+    selector = new ExtendedSelector('div.test-class:-abp-has(time.g-time)');
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+
+    selector = new ExtendedSelector('div:-abp-has(div.test-class-two) > .test-class:-abp-contains(adg-test)');
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+});
