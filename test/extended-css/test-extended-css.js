@@ -146,12 +146,3 @@ QUnit.test("Test attribute protection", function(assert) {
         }, 100);
     }, 100);
 });
-
-QUnit.test("Modifier -abp-has", function(assert) {
-    assertElementStyle("case11-blocked", { display: "none" }, assert);
-});
-
-QUnit.test("Modifier -abp-has with :has-text", function(assert) {
-    assertElementStyle("case12-blocked", { "display": "none" }, assert);
-    assertElementStyle("case12-notblocked", { "display": "" }, assert);
-});
