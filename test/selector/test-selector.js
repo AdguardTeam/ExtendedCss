@@ -133,9 +133,10 @@ QUnit.test( "Test tokenize selector", function(assert) {
 
     selectorText = "div span.className + a[href^='http'] ~ #banner";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.equal(compiled.simple, "div");
-    assert.equal(compiled.relation, " ");
-    assert.equal(compiled.complex, "span.className + a[href^='http'] ~ #banner");
+
+    assert.equal(compiled.simple, selectorText);
+    assert.notOk(compiled.relation);
+    assert.notOk(compiled.complex);
 
     selectorText = "#banner div:first-child > div:has(.banner)";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
@@ -143,10 +144,22 @@ QUnit.test( "Test tokenize selector", function(assert) {
     assert.equal(compiled.relation, ">");
     assert.equal(compiled.complex, "div:has(.banner)");
 
+    selectorText = "#banner div:first-child ~ div:has(.banner)";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "#banner div:first-child");
+    assert.equal(compiled.relation, '~');
+    assert.equal(compiled.complex, 'div:has(.banner)');
+
     selectorText = "#banner div:first-child > div > :has(.banner) > div";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
     assert.equal(compiled.simple, "#banner div:first-child > div");
     assert.equal(compiled.relation, ">");
+    assert.equal(compiled.complex, ":has(.banner) > div");
+
+    selectorText = "#banner div:first-child > div + :has(.banner) > div";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.equal(compiled.simple, "#banner div:first-child > div");
+    assert.equal(compiled.relation, "+");
     assert.equal(compiled.complex, ":has(.banner) > div");
 
     selectorText = "#banner :not(div) div:matches-css(background: blank)";
@@ -193,6 +206,22 @@ QUnit.test( "Test -abp-has and -abp-has-text", function(assert) {
     assert.ok(selector.matches(elements[0]));
 
     selector = new ExtendedSelector('div:-abp-has(div.test-class-two) > .test-class:-abp-contains(adg-test)');
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+});
+
+QUnit.test( "Test + and ~ combinators matching", function(assert) {
+    var selectorText, selector, elements;
+
+    selectorText = "* > p ~ #test-id-div a:contains('adg-test')";
+    selector = new ExtendedSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+
+    selectorText = "* > .lead ~ div:has(a[href^='/t'])";
+    selector = new ExtendedSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
