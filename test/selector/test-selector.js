@@ -220,6 +220,12 @@ QUnit.test( "Test + and ~ combinators matching", function(assert) {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
+    selectorText = "* > div + style:matches-css(display:none) ~ div > *:matches-css-after(content:/y\\st/)"
+    selector = new ExtendedSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+
     selectorText = "* > .lead ~ div:has(a[href^='/t'])";
     selector = new ExtendedSelector(selectorText);
     elements = selector.querySelectorAll();
