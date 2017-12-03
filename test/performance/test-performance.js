@@ -14,7 +14,7 @@ var testPerformance = function(selector, assert) {
     var msg = 'Elapsed: ' + elapsed + ' ms\n';
     msg += 'Count: ' + LOOP_COUNT + '\n';
     msg += 'Average: ' + elapsed / LOOP_COUNT + ' ms';
-
+    console.log(msg);
     assert.ok(resultOk, msg);
 };
 

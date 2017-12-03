@@ -133,7 +133,6 @@ QUnit.test( "Test tokenize selector", function(assert) {
 
     selectorText = "div span.className + a[href^='http'] ~ #banner";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
-
     assert.equal(compiled.simple, selectorText);
     assert.notOk(compiled.relation);
     assert.notOk(compiled.complex);
@@ -152,16 +151,24 @@ QUnit.test( "Test tokenize selector", function(assert) {
 
     selectorText = "#banner div:first-child > div > :has(.banner) > div";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.notOk(compiled.simple);
+    assert.notOk(compiled.relation);
+    assert.equal(compiled.complex, selectorText);
+/*
     assert.equal(compiled.simple, "#banner div:first-child > div");
     assert.equal(compiled.relation, ">");
     assert.equal(compiled.complex, ":has(.banner) > div");
-
+*/
     selectorText = "#banner div:first-child > div + :has(.banner) > div";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.notOk(compiled.simple);
+    assert.notOk(compiled.relation);
+    assert.equal(compiled.complex, selectorText);
+/*
     assert.equal(compiled.simple, "#banner div:first-child > div");
     assert.equal(compiled.relation, "+");
     assert.equal(compiled.complex, ":has(.banner) > div");
-
+*/
     selectorText = "#banner :not(div) div:matches-css(background: blank)";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
     assert.equal(compiled.simple, "#banner :not(div)");
