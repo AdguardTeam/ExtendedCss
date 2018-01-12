@@ -184,7 +184,6 @@ QUnit.test( "Test regular expressions support in :contains", function(assert) {
 QUnit.test( "Test regular expressions support in :matches-css", function(assert) {
     var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
     var selector = new ExtendedSelector(selectorText);
-    console.log(selector.compiledSelector.selectorText);
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
