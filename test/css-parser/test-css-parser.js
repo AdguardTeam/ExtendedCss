@@ -36,9 +36,7 @@ QUnit.test("Parse stylesheet", function(assert) {
 QUnit.test("Parse stylesheet with extended selectors", function(assert) {
 
     var cssText = 
-        ':contains(/[\\w]{9,}/) {\
-            display:none!important;\
-        }\
+        ':contains(/[\\w]{9,}/){display:none!important;visibility:hidden!important}\
         :matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\'] {\
             width: 500px;height: 500px;\
             -webkit-border-radius: 30px;\
@@ -56,6 +54,7 @@ QUnit.test("Parse stylesheet with extended selectors", function(assert) {
     assert.equal(cssObject[0].selector.compiledSelector.selectorText, ':contains("/[\\\\w]{9,}/")');
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.display, 'none!important');
+    assert.equal(cssObject[0].style.visibility, 'hidden!important');
 
     assert.ok(cssObject[1]);
     assert.equal(cssObject[1].selector.compiledSelector.selectorText, ':matches-css("    background-image: /^url\\\\((.)[a-z]{4}:[a-z]{2}\\\\1nk\\\\)$/    ") + :matches-css-before("content:  /^[A-Z][a-z]{2}\\\\s/  "):has(+:matches-css-after(" content  :   /(\\\\d+\\\\s)*me/  "):contains("/^(?![\\\\s\\\\S])/"))')
