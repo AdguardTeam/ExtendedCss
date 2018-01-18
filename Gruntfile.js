@@ -26,6 +26,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
+          'lib/utils.js',
           'lib/**.js',
           // All files in alpha order with these two at the end
           '!lib/extended-css-selector.js',

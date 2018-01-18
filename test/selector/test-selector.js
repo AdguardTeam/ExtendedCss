@@ -237,3 +237,29 @@ QUnit.test( "Test + and ~ combinators matching", function(assert) {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 });
+
+QUnit.test( "Test + and ~ combinators matching", function(assert) {
+    var selectorTexts = [
+        ':properties(background-color: rgb\(0, 0, 0\))',
+        'div:has(> :properties(background-color: rgb\(0, 0, 0\)))'
+    ];
+
+    var selectors = selectorTexts.map(function(selectorText) {
+        return new ExtendedSelector(selectorText);
+    });
+
+    var elements;
+
+    StyleObserver.initialize();
+
+    elements = selectors[0].querySelectorAll();
+    assert.ok(containsElement(window['test-properties-background'], elements));
+
+    elements = selectors[1].querySelectorAll();
+    console.log(elements);
+    assert.ok(containsElement(window['test-properties-has'], elements));
+});
+
+function containsElement(element, list) {
+    return Array.prototype.indexOf.call(list, element) !== -1;
+}

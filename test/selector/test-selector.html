@@ -9,13 +9,6 @@
 <body>
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
-<script src="../qunit/qunit-2.0.1.js"></script>
-<script src="../../lib/sizzle.patched.js"></script>
-<script src="../../lib/simple-regex.js"></script>
-<script src="../../lib/style-property-matcher.js"></script>
-<script src="../../lib/extended-css-parser.js"></script>
-<script src="../../lib/extended-css-selector.js"></script>
-<script src="test-selector.js"></script>
 <style type="text/css">
     body>.container { display:none!important; }
 </style>
@@ -58,7 +51,26 @@
         <div id="test-div-after"></div>
     </div>
 
+    <div id="test-properties">
+        <div id="test-properties-background"></div>
+        <div id="test-properties-has">
+            <div id="test-properties-has-child"></div>
+        </div>
+    </div>
+    <style>
+        #test-properties-background { background: #000; }
+        #test-properties-has-child { background: #000; }
+    </style>
+
 </div>
 
+<script src="../qunit/qunit-2.0.1.js"></script>
+<script src="../../lib/sizzle.patched.js"></script>
+<script src="../../lib/utils.js"></script>
+<script src="../../lib/style-property-matcher.js"></script>
+<script src="../../lib/style-observer.js"></script>
+<script src="../../lib/extended-css-parser.js"></script>
+<script src="../../lib/extended-css-selector.js"></script>
+<script src="test-selector.js"></script>
 </body>
 </html>
