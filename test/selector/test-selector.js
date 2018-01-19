@@ -238,28 +238,63 @@ QUnit.test( "Test + and ~ combinators matching", function(assert) {
     assert.ok(selector.matches(elements[0]));
 });
 
-QUnit.test( "Test + and ~ combinators matching", function(assert) {
+QUnit.test( "Test :properties", function(assert) {
+    var done = assert.async();
+
     var selectorTexts = [
-        ':properties(background-color: rgb\(0, 0, 0\))',
-        'div:has(> :properties(background-color: rgb\(0, 0, 0\)))'
+        ':properties(background-color: rgb\(17, 17, 17\))',
+        'div:has(> :properties(background-color: rgb\(17, 17, 17\)))',
+        '#test-properties :properties(content:*publicite) + div'
     ];
 
     var selectors = selectorTexts.map(function(selectorText) {
         return new ExtendedSelector(selectorText);
     });
 
-    var elements;
-
     StyleObserver.initialize();
+
+    var elements;
+    var tempStyle;
 
     elements = selectors[0].querySelectorAll();
     assert.ok(containsElement(window['test-properties-background'], elements));
 
     elements = selectors[1].querySelectorAll();
-    console.log(elements);
     assert.ok(containsElement(window['test-properties-has'], elements));
+
+    elements = selectors[2].querySelectorAll();
+    assert.notOk(containsElement(window['test-properties-dynamic-next'], elements));
+    tempStyle = addStyle('#test-properties-dynamic::after { content: "publicite" }');
+    setTimeout(function() {
+        elements = selectors[2].querySelectorAll();
+        assert.ok(containsElement(window['test-properties-dynamic-next'], elements));
+        done();
+    });
 });
 
 function containsElement(element, list) {
     return Array.prototype.indexOf.call(list, element) !== -1;
 }
+
+function addStyle(cssText) {
+    var style = document.createElement('style');
+    style.appendChild(document.createTextNode(cssText));
+    return document.body.appendChild(style);
+}
+
+/**
+ * We throttle MO callbacks in ExtCss with requestAnimationFrame and setTimeout.
+ * Browsers postpone rAF callbacks in inactive tabs for a long time.
+ * It throttles setTimeout callbacks as well, but it is called within a
+ * relatively short time. (within several seconds)
+ * We apply rAF in tests as well to postpone test for similar amount of time.
+ */
+var lazySetTimeout = function(fn, timeout) {
+    if (window.requestAnimationFrame) {
+        requestAnimationFrame(function() {
+            setTimeout(fn, timeout);
+        });
+    } else {
+        setTimeout(fn, timeout);
+    }
+};
