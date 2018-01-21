@@ -2,11 +2,13 @@
 var fs = require('fs-extra');
 
 module.exports = function(grunt) {
+  require('load-grunt-tasks')(grunt);
+
 
   // Project configuration.
   grunt.initConfig({
     // Helper libs
-    _: require('underscore'),
+    // _: require('underscore'),
     // Metadata.    
     pkg: grunt.file.readJSON('package.json'),
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
@@ -26,13 +28,13 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
-          'lib/utils.js',
-          'lib/**.js',
+          'dist/utils.js',
+          'dist/**.js',
           // All files in alpha order with these two at the end
-          '!lib/extended-css-selector.js',
-          '!lib/extended-css.js',
-          'lib/extended-css-selector.js',
-          'lib/extended-css.js'          
+          '!dist/extended-css-selector.js',
+          '!dist/extended-css.js',
+          'dist/extended-css-selector.js',
+          'dist/extended-css.js'          
         ],
         dest: '<%= pkg.name %>.js'
       }
@@ -50,8 +52,9 @@ module.exports = function(grunt) {
       options: {
         curly: true,
         eqeqeq: true,
+        esversion: 6,
         immed: true,
-        latedef: true,
+        // latedef: true,
         newcap: true,
         noarg: true,
         sub: true,
@@ -81,19 +84,32 @@ module.exports = function(grunt) {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
       }
+    },
+    babel: {
+      options: {
+        plugins: [
+          ["transform-es2015-block-scoping", {
+            "throwIfClosureRequired": true
+          }],
+          "transform-for-of-as-array"
+        ]
+      },
+      files: {
+        expand: true,
+        cwd: 'lib',
+        src: '**.js',
+        dest: 'dist/',
+        ext: '.js',
+        extDot: 'last'
+      }
     }
   });
 
   // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
 
   // Default task.
-  grunt.registerTask('default', ['jshint', 'qunit']);
-  grunt.registerTask('build', ['jshint', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'babel', 'qunit']);
+  grunt.registerTask('build', ['jshint', 'babel', 'qunit', 'concat', 'uglify']);
 
   // Prepare gh-pages branch
   grunt.registerTask('gh-pages', function() {

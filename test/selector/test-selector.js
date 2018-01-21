@@ -244,7 +244,9 @@ QUnit.test( "Test :properties", function(assert) {
     var selectorTexts = [
         ':properties(background-color: rgb\(17, 17, 17\))',
         'div:has(> :properties(background-color: rgb\(17, 17, 17\)))',
-        '#test-properties :properties(content:*publicite) + div'
+        '#test-properties :properties(content:*publicite) + div',
+        '#test-properties :properties(content:*publicite)',
+        '#test-properties :properties(content:*publicite)'
     ];
 
     var selectors = selectorTexts.map(function(selectorText) {
@@ -253,23 +255,66 @@ QUnit.test( "Test :properties", function(assert) {
 
     StyleObserver.initialize();
 
-    var elements;
-    var tempStyle;
+    var elements, tempStyle;
 
     elements = selectors[0].querySelectorAll();
-    assert.ok(containsElement(window['test-properties-background'], elements));
+    assert.ok(containsElement(
+        window['test-properties-background'],
+        elements
+    ));
 
     elements = selectors[1].querySelectorAll();
-    assert.ok(containsElement(window['test-properties-has'], elements));
+    assert.ok(containsElement(
+        window['test-properties-has'],
+        elements
+    ));
 
     elements = selectors[2].querySelectorAll();
-    assert.notOk(containsElement(window['test-properties-dynamic-next'], elements));
+    assert.notOk(containsElement(
+        window['test-properties-dynamic-next'],
+        elements
+    ));
+
     tempStyle = addStyle('#test-properties-dynamic::after { content: "publicite" }');
-    setTimeout(function() {
+
+    rAF(function() {
         elements = selectors[2].querySelectorAll();
-        assert.ok(containsElement(window['test-properties-dynamic-next'], elements));
-        done();
+        assert.ok(containsElement(
+            window['test-properties-dynamic-next'],
+            elements
+        ));
+        tempStyle.parentNode.removeChild(tempStyle);
     });
+
+    elements = selectors[3].querySelectorAll();
+    assert.notOk(containsElement(
+        window['test-properties-dynamic-2'],
+        elements
+    ));
+
+    window['dynamic-style-2'].innerHTML =
+        '#test-properties-dynamic-2::before { content: "publicite" }';
+
+    rAF(function() {
+        elements = selectors[3].querySelectorAll();
+        assert.ok(containsElement(window['test-properties-dynamic-2'], elements));
+    });
+
+    elements = selectors[4].querySelectorAll();
+    assert.notOk(containsElement(
+        window['test-properties-dynamic-3'],
+        elements
+    ));
+
+    window['dynamic-style-3'].firstChild.nodeValue =
+        '#test-properties-dynamic-3::before { content: "publicite" }';
+
+    rAF(function() {
+        elements = selectors[4].querySelectorAll();
+        assert.ok(containsElement(window['test-properties-dynamic-3'], elements));
+    });
+
+    rAF(done);
 });
 
 function containsElement(element, list) {
@@ -289,12 +334,10 @@ function addStyle(cssText) {
  * relatively short time. (within several seconds)
  * We apply rAF in tests as well to postpone test for similar amount of time.
  */
-var lazySetTimeout = function(fn, timeout) {
+var rAF = function(fn, timeout) {
     if (window.requestAnimationFrame) {
-        requestAnimationFrame(function() {
-            setTimeout(fn, timeout);
-        });
+        requestAnimationFrame(fn);
     } else {
-        setTimeout(fn, timeout);
+        setTimeout(fn);
     }
 };

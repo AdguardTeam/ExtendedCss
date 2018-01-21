@@ -58,6 +58,16 @@
         </div>
         <div id="test-properties-dynamic"></div>
         <div id="test-properties-dynamic-next"></div>
+        <div id="test-properties-dynamic-2">
+            <style id="dynamic-style-2">
+                #test-properties-dynamic-2::after { content: " " }
+            </style>
+        </div>
+        <div id="test-properties-dynamic-3">
+            <style id="dynamic-style-3">
+                #test-properties-dynamic-3::before {content: " " }
+            </style>
+        </div>
     </div>
     <style>
         #test-properties-background { background: #111; }
@@ -67,12 +77,12 @@
 </div>
 
 <script src="../qunit/qunit-2.0.1.js"></script>
-<script src="../../lib/sizzle.patched.js"></script>
-<script src="../../lib/utils.js"></script>
-<script src="../../lib/style-property-matcher.js"></script>
-<script src="../../lib/style-observer.js"></script>
-<script src="../../lib/extended-css-parser.js"></script>
-<script src="../../lib/extended-css-selector.js"></script>
+<script src="../../dist/sizzle.patched.js"></script>
+<script src="../../dist/utils.js"></script>
+<script src="../../dist/style-property-matcher.js"></script>
+<script src="../../dist/style-observer.js"></script>
+<script src="../../dist/extended-css-parser.js"></script>
+<script src="../../dist/extended-css-selector.js"></script>
 <script src="test-selector.js"></script>
 </body>
 </html>

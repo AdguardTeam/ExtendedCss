@@ -11,14 +11,18 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-es2015-block-scoping": "^6.26.0",
+    "babel-plugin-transform-for-of-as-array": "^1.0.4",
     "fs-extra": "^3.0.1",
     "grunt": "^1.0.1",
+    "grunt-babel": "^7.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-jshint": "~1.1.0",
-    "grunt-contrib-qunit": "~2.0.0",
+    "grunt-contrib-qunit": "^2.0.0",
     "grunt-contrib-uglify": "~3.0.1",
     "grunt-contrib-watch": "~1.0.0",
-    "underscore": "~1.8.3"
+    "load-grunt-tasks": "^3.5.2"
   },
   "scripts": {
     "test": "grunt"
