@@ -19,9 +19,9 @@
     "grunt-babel": "^7.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-jshint": "~1.1.0",
+    "grunt-contrib-qunit": "^2.0.0",
     "grunt-contrib-uglify": "~3.0.1",
     "grunt-contrib-watch": "~1.0.0",
-    "grunt-qunit-puppeteer": "^1.0.10",
     "load-grunt-tasks": "^3.5.2"
   },
   "scripts": {
