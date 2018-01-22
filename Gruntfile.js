@@ -8,7 +8,7 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     // Helper libs
-    // _: require('underscore'),
+    _: require('underscore'),
     // Metadata.    
     pkg: grunt.file.readJSON('package.json'),
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
@@ -110,6 +110,7 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('default', ['jshint', 'babel', 'qunit']);
   grunt.registerTask('build', ['jshint', 'babel', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('build-minus-qunit', ['jshint', 'babel', 'concat', 'uglify']);
 
   // Prepare gh-pages branch
   grunt.registerTask('gh-pages', function() {
