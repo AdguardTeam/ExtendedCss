@@ -89,10 +89,10 @@ QUnit.test("Affected elements length (simple)", function(assert) {
 
     rAF(function() {
         assertElementStyle("case6-blocked", { "display": "none" }, assert);
-        affectedLength = extendedCss.getAffectedElements().length
+        affectedLength = extendedCss.getAffectedElements().length;
         assert.equal(affectedLength, startLength + 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
-        
+
         toBeBlocked.removeChild(banner);
         rAF(function() {
             assertElementStyle("case6-blocked", { "display": "" }, assert);

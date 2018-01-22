@@ -338,6 +338,6 @@ var rAF = function(fn, timeout) {
     if (window.requestAnimationFrame) {
         requestAnimationFrame(fn);
     } else {
-        setTimeout(fn);
+        setTimeout(fn, 100);
     }
 };
