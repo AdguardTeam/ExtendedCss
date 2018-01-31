@@ -31,6 +31,7 @@ module.exports = function(grunt) {
           'dist/utils.js',
           'dist/**.js',
           // All files in alpha order with these two at the end
+          '!dist/utils.js',
           '!dist/extended-css-selector.js',
           '!dist/extended-css.js',
           'dist/extended-css-selector.js',
@@ -54,7 +55,6 @@ module.exports = function(grunt) {
         eqeqeq: true,
         esversion: 6,
         immed: true,
-        // latedef: true,
         newcap: true,
         noarg: true,
         sub: true,
@@ -114,9 +114,11 @@ module.exports = function(grunt) {
 
   // Prepare gh-pages branch
   grunt.registerTask('gh-pages', function() {
-    fs.moveSync('test', 'dist/test');
-    fs.moveSync('lib', 'dist/lib');
-    fs.moveSync('index.html', 'dist/index.html');
+    fs.moveSync('dist', '_dist');
+    fs.copySync('test', 'dist/test');
+    fs.copySync('lib', 'dist/lib');
+    fs.copySync('index.html', 'dist/index.html');
+    fs.moveSync('_dist', 'dist/dist');
     fs.moveSync('extended-css.js', 'dist/extended-css.js');
     fs.moveSync('extended-css.min.js', 'dist/extended-css.min.js');
   });
