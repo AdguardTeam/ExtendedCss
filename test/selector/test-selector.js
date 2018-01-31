@@ -164,6 +164,18 @@ QUnit.test( "Test tokenize selector", function(assert) {
     assert.equal(compiled.simple, "#banner :not(div)");
     assert.equal(compiled.relation, " ");
     assert.equal(compiled.complex, "div:matches-css(background: blank)");
+
+    selectorText = "#banner span[-abp-properties='*']";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.ok(compiled.usePropertiesReverseSearch);
+
+    selectorText = "[-abp-properties='data']";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.ok(compiled.usePropertiesReverseSearch);
+
+    selectorText = "#right .widget:properties(margin-top:*)";
+    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    assert.notOk(compiled.usePropertiesReverseSearch);
 });
 
 QUnit.test( "Test regular expressions support in :contains", function(assert) {
@@ -244,6 +256,7 @@ QUnit.test( "Test :properties", function(assert) {
     var selectors = selectorTexts.map(function(selectorText) {
         return new ExtendedSelector(selectorText);
     });
+    window.selectors = selectors;
 
     assert.ok(StyleObserver.initialize() !== false);
 
