@@ -151,27 +151,19 @@ QUnit.test( "Test tokenize selector", function(assert) {
 
     selectorText = "#banner div:first-child > div > :has(.banner) > div";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.simple);
-    assert.notOk(compiled.relation);
-    assert.equal(compiled.complex, selectorText);
+    assert.notOk(compiled.useComplexSearch);
+    assert.equal(compiled.selectorText, selectorText);
 
     selectorText = "#banner div:first-child > div + :has(.banner) > div";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.simple);
-    assert.notOk(compiled.relation);
-    assert.equal(compiled.complex, selectorText);
+    assert.notOk(compiled.useComplexSearch);
+    assert.equal(compiled.selectorText, selectorText);
 
     selectorText = "#banner :not(div) div:matches-css(background: blank)";
     compiled = new ExtendedSelector(selectorText).compiledSelector;
     assert.equal(compiled.simple, "#banner :not(div)");
     assert.equal(compiled.relation, " ");
     assert.equal(compiled.complex, "div:matches-css(background: blank)");
-
-    selectorText = ":not(div .banner:has(test))";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.simple);
-    assert.notOk(compiled.relation);
-    assert.equal(compiled.complex, ":not(div .banner:has(test))");    
 });
 
 QUnit.test( "Test regular expressions support in :contains", function(assert) {
@@ -253,7 +245,7 @@ QUnit.test( "Test :properties", function(assert) {
         return new ExtendedSelector(selectorText);
     });
 
-    StyleObserver.initialize();
+    assert.ok(StyleObserver.initialize() !== false);
 
     var elements, tempStyle;
 
@@ -310,6 +302,7 @@ QUnit.test( "Test :properties", function(assert) {
         '#test-properties-dynamic-3::before { content: "publicite" }';
 
     rAF(function() {
+        console.log('test 8');
         elements = selectors[4].querySelectorAll();
         assert.ok(containsElement(window['test-properties-dynamic-3'], elements));
     });
