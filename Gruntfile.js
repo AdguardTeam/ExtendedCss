@@ -31,7 +31,6 @@ module.exports = function(grunt) {
           'dist/utils.js',
           'dist/**.js',
           // All files in alpha order with these two at the end
-          '!dist/utils.js',
           '!dist/extended-css-selector.js',
           '!dist/extended-css.js',
           'dist/extended-css-selector.js',
