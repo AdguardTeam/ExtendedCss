@@ -109,6 +109,7 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('default', ['jshint', 'babel', 'qunit']);
   grunt.registerTask('build', ['jshint', 'babel', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('build-dist', ['jshint', 'babel']);
   grunt.registerTask('build-minus-qunit', ['jshint', 'babel', 'concat', 'uglify']);
 
   // Prepare gh-pages branch
