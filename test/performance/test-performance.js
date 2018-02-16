@@ -58,11 +58,10 @@ QUnit.test("Case 5. complicated selector", function(assert) {
     testPerformance(selector, assert);
 });
 
+var selectorText6 = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
+var selector6 = new ExtendedSelector(selectorText6);
+
 QUnit.test("Case 6. :properties selector", function(assert) {
-    var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
-    var selector = new ExtendedSelector(selectorText);
-
     StyleObserver.initialize();
-
-    testPerformance(selector, assert);
+    testPerformance(selector6, assert);
 });
