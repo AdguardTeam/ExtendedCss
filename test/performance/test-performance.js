@@ -67,3 +67,14 @@ QUnit.test("Case 6. :properties selector", function(assert) {
     StyleObserver.initialize();
     testPerformance(selector, assert);
 });
+
+
+QUnit.test("Case 7. :properties selector wihout seed", function(assert) {
+
+    var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
+    var selector = new ExtendedSelector(selectorText);
+
+    // TODO: Should be initialized implicitly in the ExtendedSelector
+    StyleObserver.initialize();
+    testPerformance(selector, assert);
+});
