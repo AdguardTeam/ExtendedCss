@@ -58,7 +58,7 @@ QUnit.test("Case 5. complicated selector", function(assert) {
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 6. :properties selector", function(assert) {
+QUnit.test("Case 6.1. :properties selector", function(assert) {
 
     var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
     var selector = new ExtendedSelector(selectorText);
@@ -69,7 +69,7 @@ QUnit.test("Case 6. :properties selector", function(assert) {
 });
 
 
-QUnit.test("Case 7. :properties selector wihout seed", function(assert) {
+QUnit.test("Case 6.2. :properties selector wihout seed", function(assert) {
 
     var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
     var selector = new ExtendedSelector(selectorText);
