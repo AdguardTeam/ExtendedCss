@@ -17,6 +17,26 @@ var testPerformance = function(selector, assert) {
     assert.ok(resultOk, msg);
 };
 
+QUnit.test("Tokenize performance", function(assert) {
+
+    var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
+    var startTime = new Date().getTime();
+    
+    var resultOk = true;
+    var iCount = LOOP_COUNT;
+    while (iCount--) {
+        var tokens = Sizzle.tokenize(selectorText, false, { noCache: true });
+        if (!tokens || !tokens.length) {
+            resultOk = false;
+        }
+    }
+    var elapsed = new Date().getTime() - startTime;
+    var msg = 'Elapsed: ' + elapsed + ' ms\n';
+    msg += 'Count: ' + LOOP_COUNT + '\n';
+    msg += 'Average: ' + elapsed / LOOP_COUNT + ' ms';
+    assert.ok(resultOk, msg);
+});
+
 QUnit.test("Test simple selector", function(assert) {
     var selector = {
         querySelectorAll: function() {
