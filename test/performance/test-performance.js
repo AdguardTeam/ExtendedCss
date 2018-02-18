@@ -25,7 +25,7 @@ QUnit.test("Tokenize performance", function(assert) {
     var resultOk = true;
     var iCount = LOOP_COUNT;
     while (iCount--) {
-        var tokens = Sizzle.tokenize(selectorText, false, { noCache: true });
+        var tokens = Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
         if (!tokens || !tokens.length) {
             resultOk = false;
         }
