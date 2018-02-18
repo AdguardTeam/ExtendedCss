@@ -1,19 +1,35 @@
-/* global QUnit */
+/* global QUnit, Sizzle */
 /* global ExtendedCssParser */
 
-QUnit.test( "Simple CSS", function(assert) {
-  
-    var cssText = 'body { display:none; }';
-    var cssObject = ExtendedCssParser.parseCss(cssText);    
+QUnit.test("Test Sizzle tokenize cache", function (assert) {
+
+    var selector = 'body';
+    var cssText = selector + ' { display:none; }';
+    var parseResult = Sizzle.tokenize(cssText, false, {
+        tolerant: true,
+        returnUnsorted: true
+    });
+
+    var tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
+    assert.ok(tokens);
+    assert.equal(tokens.length, 1);
+    assert.equal(tokens[0].length, 1);
+});
+
+QUnit.test("Simple CSS", function (assert) {
+
+    var selector = 'body';
+    var cssText = selector + ' { display:none; }';
+    var cssObject = ExtendedCssParser.parseCss(cssText);
     assert.ok(cssObject instanceof Array);
     assert.equal(cssObject.length, 1);
     assert.ok(cssObject[0]);
-    assert.equal(cssObject[0].selector.compiledSelector.selectorText, 'body');
+    assert.equal(cssObject[0].selector.compiledSelector.selectorText, selector);
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.display, 'none');
 });
 
-QUnit.test("Parse stylesheet", function(assert) {
+QUnit.test("Parse stylesheet", function (assert) {
 
     var cssText = 'body { background: none!important; }\n div.wrapper { display: block!important; position: absolute; top:-2000px; }';
     var cssObject = ExtendedCssParser.parseCss(cssText);
@@ -33,9 +49,9 @@ QUnit.test("Parse stylesheet", function(assert) {
     assert.equal(cssObject[1].style.top, '-2000px');
 });
 
-QUnit.test("Parse stylesheet with extended selectors", function(assert) {
+QUnit.test("Parse stylesheet with extended selectors", function (assert) {
 
-    var cssText = 
+    var cssText =
         ':contains(/[\\w]{9,}/){display:none!important;visibility:hidden!important}\
         :matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\'] {\
             width: 500px;height: 500px;\
