@@ -119,7 +119,7 @@ module.exports = function(grunt) {
     fs.copySync('lib', 'dist/lib');
     fs.copySync('index.html', 'dist/index.html');
     fs.moveSync('_dist', 'dist/dist');
-    fs.moveSync('extended-css.js', 'dist/extended-css.js');
-    fs.moveSync('extended-css.min.js', 'dist/extended-css.min.js');
+    fs.moveSync('build/extended-css.js', 'dist/extended-css.js');
+    fs.moveSync('build/extended-css.min.js', 'dist/extended-css.min.js');
   });
 };
