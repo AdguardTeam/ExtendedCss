@@ -36,7 +36,7 @@ module.exports = function(grunt) {
           'dist/extended-css-selector.js',
           'dist/extended-css.js'          
         ],
-        dest: '<%= pkg.name %>.js'
+        dest: 'build/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -45,7 +45,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: '<%= pkg.name %>.min.js'
+        dest: 'build/<%= pkg.name %>.min.js'
       }
     },
     jshint: {

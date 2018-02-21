@@ -1,21 +1,6 @@
 /* global QUnit, Sizzle */
 /* global ExtendedCssParser */
 
-QUnit.test("Test Sizzle tokenize cache", function (assert) {
-
-    var selector = 'body';
-    var cssText = selector + ' { display:none; }';
-    var parseResult = Sizzle.tokenize(cssText, false, {
-        tolerant: true,
-        returnUnsorted: true
-    });
-
-    var tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
-    assert.ok(tokens);
-    assert.equal(tokens.length, 1);
-    assert.equal(tokens[0].length, 1);
-});
-
 QUnit.test("Simple CSS", function (assert) {
 
     var selector = 'body';
@@ -27,6 +12,38 @@ QUnit.test("Simple CSS", function (assert) {
     assert.equal(cssObject[0].selector.compiledSelector.selectorText, selector);
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.display, 'none');
+});
+
+QUnit.test("Test Sizzle tokenize cache", function (assert) {
+
+    var selector = 'body';
+    var cssText = selector + ' { display:none; }';
+    var cssObject = ExtendedCssParser.parseCss(cssText);
+
+    // Check the tokens cache only now
+    var tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
+    assert.ok(tokens);
+    assert.equal(tokens.length, 1);
+    assert.equal(tokens[0].length, 1);
+});
+
+QUnit.test("Parse an invalid selector", function (assert) {
+
+    assert.expect(1);
+    assert.throws(function () {
+        var cssText = 'div > { display:none; }';
+        var cssObject = ExtendedCssParser.parseCss(cssText);
+    }, function (error) {
+        return !!error;
+    }, "Expected ExtendedCssParser to throw on an invalid selector");
+});
+
+QUnit.test("Single invalid selector in a stylesheet", function(assert) {
+
+    var cssText = "body:has(div:invalid-pseudo(1)), div { display: none }";
+    var cssObject = ExtendedCssParser.parseCss(cssText);
+    assert.ok(cssObject instanceof Array);
+    assert.equal(cssObject.length, 1);
 });
 
 QUnit.test("Parse stylesheet", function (assert) {
