@@ -140,3 +140,10 @@ QUnit.test("Case 6.2. :properties selector wihout seed", function(assert) {
     StyleObserver.initialize();
     testPerformance(selector, assert);
 });
+
+QUnit.test("Case 6.3. :properties selector with necessary reverse search", function(assert) {
+
+    var selectorText = 'div:properties(content:*test)';
+    var selector = new ExtendedSelector(selectorText);
+    testPerformance(selector, assert);
+});
