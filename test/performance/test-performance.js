@@ -141,9 +141,22 @@ QUnit.test("Case 6.2. :properties selector wihout seed", function(assert) {
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 6.3. :properties selector with necessary reverse search", function(assert) {
+QUnit.test("Case 6.3. :properties selector with simple reverse search", function(assert) {
 
     var selectorText = 'div:properties(content:*test)';
     var selector = new ExtendedSelector(selectorText);
+
+    // TODO: Should be removed after merge with #65
+    StyleObserver.initialize();
+    testPerformance(selector, assert);
+});
+
+QUnit.test("Case 6.4. :properties selector with complex reverse search", function(assert) {
+
+    var selectorText = 'div:has(:properties(content:*test))';
+    var selector = new ExtendedSelector(selectorText);
+
+    // TODO: Should be removed after merge with #65
+    StyleObserver.initialize();    
     testPerformance(selector, assert);
 });
