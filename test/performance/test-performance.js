@@ -1,6 +1,6 @@
 var LOOP_COUNT = 10000;
 
-var testPerformance = function(selector, assert) {
+var testPerformance = function (selector, assert) {
     var startTime = new Date().getTime();
     var iCount = LOOP_COUNT;
     var resultOk = true;
@@ -17,11 +17,11 @@ var testPerformance = function(selector, assert) {
     assert.ok(resultOk, msg);
 };
 
-QUnit.test("Tokenize performance", function(assert) {
+QUnit.test("Tokenize performance", function (assert) {
 
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var startTime = new Date().getTime();
-    
+
     var resultOk = true;
     var iCount = LOOP_COUNT;
     while (iCount--) {
@@ -37,64 +37,59 @@ QUnit.test("Tokenize performance", function(assert) {
     assert.ok(resultOk, msg);
 });
 
-QUnit.test("Test simple selector", function(assert) {
+QUnit.test("Test simple selector", function (assert) {
     var selector = {
-        querySelectorAll: function() {
+        querySelectorAll: function () {
             return document.querySelectorAll(".container #case1 div div");
         }
     }
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 1. :has performance", function(assert) {
+QUnit.test("Case 1. :has performance", function (assert) {
     var selectorText = ".container #case1 div div:has(.banner)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 2. :contains performance", function(assert) {
+QUnit.test("Case 2. :contains performance", function (assert) {
     var selectorText = ".container #case2 div div:contains(Block this)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 3. :matches-css performance", function(assert) {
+QUnit.test("Case 3. :matches-css performance", function (assert) {
     var selectorText = ".container #case3 div div:matches-css(background-image: about:blank)";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 4. :has and :contains composite performance", function(assert) {
+QUnit.test("Case 4. :has and :contains composite performance", function (assert) {
     var selectorText = ".container #case4 div div:has(.banner:contains(Block this))";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 5. complicated selector", function(assert) {
+QUnit.test("Case 5. complicated selector", function (assert) {
     // https://github.com/AdguardTeam/ExtendedCss/issues/25
-    
+
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var selector = new ExtendedSelector(selectorText);
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 6.1. :properties selector", function(assert) {
+QUnit.test("Case 6.1. :properties selector", function (assert) {
 
     var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
     var selector = new ExtendedSelector(selectorText);
-
-    // TODO: Should be initialized implicitly in the ExtendedSelector
-    StyleObserver.initialize();
     testPerformance(selector, assert);
 });
 
 
-QUnit.test("Case 6.2. :properties selector wihout seed", function(assert) {
+QUnit.test("Case 6.2. :properties selector wihout seed", function (assert) {
 
     var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
     var selector = new ExtendedSelector(selectorText);
 
-    // TODO: Should be initialized implicitly in the ExtendedSelector
-    StyleObserver.initialize();
     testPerformance(selector, assert);
 });
