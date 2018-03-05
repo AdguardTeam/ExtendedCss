@@ -17,6 +17,26 @@ var testPerformance = function(selector, assert) {
     assert.ok(resultOk, msg);
 };
 
+QUnit.test("Tokenize performance", function(assert) {
+
+    var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
+    var startTime = new Date().getTime();
+    
+    var resultOk = true;
+    var iCount = LOOP_COUNT;
+    while (iCount--) {
+        var tokens = Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
+        if (!tokens || !tokens.length) {
+            resultOk = false;
+        }
+    }
+    var elapsed = new Date().getTime() - startTime;
+    var msg = 'Elapsed: ' + elapsed + ' ms\n';
+    msg += 'Count: ' + LOOP_COUNT + '\n';
+    msg += 'Average: ' + elapsed / LOOP_COUNT + ' ms';
+    assert.ok(resultOk, msg);
+});
+
 QUnit.test("Test simple selector", function(assert) {
     var selector = {
         querySelectorAll: function() {
@@ -55,5 +75,26 @@ QUnit.test("Case 5. complicated selector", function(assert) {
     
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var selector = new ExtendedSelector(selectorText);
+    testPerformance(selector, assert);
+});
+
+QUnit.test("Case 6.1. :properties selector", function(assert) {
+
+    var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
+    var selector = new ExtendedSelector(selectorText);
+
+    // TODO: Should be initialized implicitly in the ExtendedSelector
+    StyleObserver.initialize();
+    testPerformance(selector, assert);
+});
+
+
+QUnit.test("Case 6.2. :properties selector wihout seed", function(assert) {
+
+    var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
+    var selector = new ExtendedSelector(selectorText);
+
+    // TODO: Should be initialized implicitly in the ExtendedSelector
+    StyleObserver.initialize();
     testPerformance(selector, assert);
 });

@@ -36,7 +36,7 @@ module.exports = function(grunt) {
           'dist/extended-css-selector.js',
           'dist/extended-css.js'          
         ],
-        dest: '<%= pkg.name %>.js'
+        dest: 'build/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -45,7 +45,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: '<%= pkg.name %>.min.js'
+        dest: 'build/<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -109,6 +109,7 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('default', ['jshint', 'babel', 'qunit']);
   grunt.registerTask('build', ['jshint', 'babel', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('build-dist', ['jshint', 'babel']);
   grunt.registerTask('build-minus-qunit', ['jshint', 'babel', 'concat', 'uglify']);
 
   // Prepare gh-pages branch
@@ -118,7 +119,7 @@ module.exports = function(grunt) {
     fs.copySync('lib', 'dist/lib');
     fs.copySync('index.html', 'dist/index.html');
     fs.moveSync('_dist', 'dist/dist');
-    fs.moveSync('extended-css.js', 'dist/extended-css.js');
-    fs.moveSync('extended-css.min.js', 'dist/extended-css.min.js');
+    fs.moveSync('build/extended-css.js', 'dist/extended-css.js');
+    fs.moveSync('build/extended-css.min.js', 'dist/extended-css.min.js');
   });
 };
