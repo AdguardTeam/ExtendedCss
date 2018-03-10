@@ -258,8 +258,6 @@ QUnit.test( "Test :properties", function(assert) {
     });
     window.selectors = selectors;
 
-    assert.ok(StyleObserver.initialize() !== false);
-
     var elements, tempStyle;
 
     elements = selectors[0].querySelectorAll();
@@ -321,6 +319,25 @@ QUnit.test( "Test :properties", function(assert) {
     });
 
     rAF(done);
+});
+
+QUnit.test( "Test :properties with ignored stylesheets", function(assert) {
+
+    var selector = new ExtendedSelector(":properties(background-color: rgb\(51, 51, 51\))");
+
+    // First test the regular selector
+    var elements = selector.querySelectorAll();
+    assert.equal(elements.length, 1);
+    assert.equal(elements[0], window['test-properties-ignored-stylesheets-background']);
+
+    // Now set the ignored stylsheets and re-test
+    var ignoredStyleNodes = document.querySelectorAll("#ignored-stylesheet");
+    assert.ok(ignoredStyleNodes.length);
+    StyleObserver.setIgnoredStyleNodes(ignoredStyleNodes);
+
+    // The matching style was in the ignored stylesheet so nothing is selected
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 0);
 });
 
 function containsElement(element, list) {
