@@ -27,44 +27,44 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
     var elements;
     var selector;
 
-    selector = new ExtendedSelector('div a[-ext-contains="adg-test"]');
+    selector = new ExtendedSelectorFactory('div a[-ext-contains="adg-test"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
-    selector = new ExtendedSelector('div.test-class[-ext-has="time.g-time"]');
+    selector = new ExtendedSelectorFactory('div.test-class[-ext-has="time.g-time"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
-    selector = new ExtendedSelector('div#test-div[-ext-has="test"]');
+    selector = new ExtendedSelectorFactory('div#test-div[-ext-has="test"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(0, elements.length);
 
-    elements = new ExtendedSelector('[-ext-has="div.advert"]').querySelectorAll();
+    elements = new ExtendedSelectorFactory('[-ext-has="div.advert"]').getInstance().querySelectorAll();
     assert.equal(0, elements.length);
 
-    selector = new ExtendedSelector('[-ext-has="div.test-class-two"]');
+    selector = new ExtendedSelectorFactory('[-ext-has="div.test-class-two"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(5, elements.length);
     checkElements(elements, selector);
 
-    selector = new ExtendedSelector('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"]');
+    selector = new ExtendedSelectorFactory('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(3, elements.length);
     checkElements(elements, selector);
 
-    selector = new ExtendedSelector('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"][i18n]');
+    selector = new ExtendedSelectorFactory('div[-ext-contains="adg-test"][-ext-has="div.test-class-two"][i18n]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     checkElements(elements, selector);
 
-    selector = new ExtendedSelector('div[-ext-has="div.test-class-two"]');
+    selector = new ExtendedSelectorFactory('div[-ext-has="div.test-class-two"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(3, elements.length);
     checkElements(elements, selector);
 
-    selector = new ExtendedSelector('div[-ext-has="div.test-class-two"] > .test-class[-ext-contains="adg-test"]');
+    selector = new ExtendedSelectorFactory('div[-ext-has="div.test-class-two"] > .test-class[-ext-contains="adg-test"]').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     checkElements(elements, selector);
@@ -72,14 +72,14 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
 
 QUnit.test( "Test -ext-matches-css", function(assert) {
     // Compatible syntax
-    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css="background-image: url(about:*)"]');
+    var selector = new ExtendedSelectorFactory('#test-matches-css div[-ext-matches-css="background-image: url(about:*)"]').getInstance();
     var elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById("test-div-background"));
 
     // Standard syntax
-    selector = new ExtendedSelector('#test-matches-css div:matches-css(background-image: url(about:*))');
+    selector = new ExtendedSelectorFactory('#test-matches-css div:matches-css(background-image: url(about:*))').getInstance();
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
@@ -88,14 +88,14 @@ QUnit.test( "Test -ext-matches-css", function(assert) {
 
 QUnit.test( "Test -ext-matches-css-before", function(assert) {
     // Compatible syntax
-    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css-before="content: *find me*"]');
+    var selector = new ExtendedSelectorFactory('#test-matches-css div[-ext-matches-css-before="content: *find me*"]').getInstance();
     var elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById("test-div-before"));
 
     // Standard syntax
-    selector = new ExtendedSelector('#test-matches-css div:matches-css-before(content: *find me*)');
+    selector = new ExtendedSelectorFactory('#test-matches-css div:matches-css-before(content: *find me*)').getInstance();
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
@@ -104,14 +104,14 @@ QUnit.test( "Test -ext-matches-css-before", function(assert) {
 
 QUnit.test( "Test -ext-matches-css-after", function(assert) {
     // Compatible syntax
-    var selector = new ExtendedSelector('#test-matches-css div[-ext-matches-css-after="content: *find me*"]');
+    var selector = new ExtendedSelectorFactory('#test-matches-css div[-ext-matches-css-after="content: *find me*"]').getInstance();
     var elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById("test-div-after"));
 
     // Standard syntax
-    selector = new ExtendedSelector('#test-matches-css div:matches-css-after(content: *find me*)');
+    selector = new ExtendedSelectorFactory('#test-matches-css div:matches-css-after(content: *find me*)').getInstance();
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
@@ -120,81 +120,81 @@ QUnit.test( "Test -ext-matches-css-after", function(assert) {
 
 QUnit.test( "Test tokenize selector", function(assert) {
     var selectorText = "#test";
-    var compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.equal(compiled.simple, selectorText);
+    var compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notOk(compiled.simple);
     assert.notOk(compiled.relation);
     assert.notOk(compiled.complex);
 
     selectorText = "div span.className > a[href^='http'] > #banner";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.equal(compiled.simple, selectorText);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notOk(compiled.simple);
     assert.notOk(compiled.relation);
     assert.notOk(compiled.complex);
 
     selectorText = "div span.className + a[href^='http'] ~ #banner";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.equal(compiled.simple, selectorText);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notOk(compiled.simple);
     assert.notOk(compiled.relation);
     assert.notOk(compiled.complex);
 
     selectorText = "#banner div:first-child > div:has(.banner)";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
     assert.equal(compiled.simple, "#banner div:first-child");
     assert.equal(compiled.relation, ">");
     assert.equal(compiled.complex, "div:has(.banner)");
 
     selectorText = "#banner div:first-child ~ div:has(.banner)";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
     assert.equal(compiled.simple, "#banner div:first-child");
     assert.equal(compiled.relation, '~');
     assert.equal(compiled.complex, 'div:has(.banner)');
 
     selectorText = "#banner div:first-child > div > :has(.banner) > div";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.useComplexSearch);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notEqual(compiled.constructor.name, "DissectedSelector");
     assert.equal(compiled.selectorText, selectorText);
 
     selectorText = "#banner div:first-child > div + :has(.banner) > div";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.useComplexSearch);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notEqual(compiled.constructor.name, "DissectedSelector");
     assert.equal(compiled.selectorText, selectorText);
 
     selectorText = "#banner :not(div) div:matches-css(background: blank)";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
     assert.equal(compiled.simple, "#banner :not(div)");
     assert.equal(compiled.relation, " ");
     assert.equal(compiled.complex, "div:matches-css(background: blank)");
 
     selectorText = "#banner span[-abp-properties='*']";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.ok(compiled.usePropertiesReverseSearch);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.equal(compiled.constructor.name, "PropertiesHeavySelector");
 
     selectorText = "[-abp-properties='data']";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.ok(compiled.usePropertiesReverseSearch);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.equal(compiled.constructor.name, "PropertiesHeavySelector");
 
     selectorText = "#right .widget:properties(margin-top:*)";
-    compiled = new ExtendedSelector(selectorText).compiledSelector;
-    assert.notOk(compiled.usePropertiesReverseSearch);
+    compiled = new ExtendedSelectorFactory(selectorText).getInstance();
+    assert.notEqual(compiled.constructor.name, "PropertiesHeavySelector");
 });
 
 QUnit.test( "Test regular expressions support in :contains", function(assert) {
     var selectorText = '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
 
 QUnit.test( "Test regular expressions support in :matches-css", function(assert) {
     var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
 
 QUnit.test( "Test simple regex support in :matches-css, when ()[] characters are escaped", function(assert) {
     var selectorText = ':matches-css(background-image:url\(about:blank\))';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
@@ -203,12 +203,12 @@ QUnit.test( "Test -abp-has and -abp-has-text", function(assert) {
     var elements;
     var selector;
 
-    selector = new ExtendedSelector('div.test-class:-abp-has(time.g-time)');
+    selector = new ExtendedSelectorFactory('div.test-class:-abp-has(time.g-time)').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
-    selector = new ExtendedSelector('div:-abp-has(div.test-class-two) > .test-class:-abp-contains(adg-test)');
+    selector = new ExtendedSelectorFactory('div:-abp-has(div.test-class-two) > .test-class:-abp-contains(adg-test)').getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
@@ -218,25 +218,25 @@ QUnit.test( "Test + and ~ combinators matching", function(assert) {
     var selectorText, selector, elements;
 
     selectorText = "* > p ~ #test-id-div a:contains('adg-test')";
-    selector = new ExtendedSelector(selectorText);
+    selector = new ExtendedSelectorFactory(selectorText).getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
     selectorText = "* > div + style:matches-css(display:none) ~ div > *:matches-css-after(content:/y\\st/)"
-    selector = new ExtendedSelector(selectorText);
+    selector = new ExtendedSelectorFactory(selectorText).getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
     selectorText = "* > .lead ~ div:has(a[href^='/t'])";
-    selector = new ExtendedSelector(selectorText);
+    selector = new ExtendedSelectorFactory(selectorText).getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 
     selectorText = "* > .lead + div:has(a[href^='/t'])";
-    selector = new ExtendedSelector(selectorText);
+    selector = new ExtendedSelectorFactory(selectorText).getInstance();
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
@@ -254,7 +254,7 @@ QUnit.test( "Test :properties", function(assert) {
     ];
 
     var selectors = selectorTexts.map(function(selectorText) {
-        return new ExtendedSelector(selectorText);
+        return new ExtendedSelectorFactory(selectorText).getInstance();
     });
     window.selectors = selectors;
 
@@ -323,7 +323,7 @@ QUnit.test( "Test :properties", function(assert) {
 
 QUnit.test( "Test :properties with ignored stylesheets", function(assert) {
 
-    var selector = new ExtendedSelector(":properties(background-color: rgb\(51, 51, 51\))");
+    var selector = new ExtendedSelectorFactory(':properties(background-color: rgb\(51, 51, 51\))').getInstance();
 
     // First test the regular selector
     var elements = selector.querySelectorAll();

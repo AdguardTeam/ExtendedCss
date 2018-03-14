@@ -1,5 +1,6 @@
 /* global QUnit, Sizzle */
 /* global ExtendedCssParser */
+ExtendedSelectorFactory.initialize();
 
 QUnit.test("Simple CSS", function (assert) {
 
@@ -9,7 +10,7 @@ QUnit.test("Simple CSS", function (assert) {
     assert.ok(cssObject instanceof Array);
     assert.equal(cssObject.length, 1);
     assert.ok(cssObject[0]);
-    assert.equal(cssObject[0].selector.compiledSelector.selectorText, selector);
+    assert.equal(cssObject[0].selector.selectorText, selector);
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.display, 'none');
 });
@@ -39,7 +40,6 @@ QUnit.test("Parse an invalid selector", function (assert) {
 });
 
 QUnit.test("Single invalid selector in a stylesheet", function(assert) {
-
     var cssText = "body:has(div:invalid-pseudo(1)), div { display: none }";
     var cssObject = ExtendedCssParser.parseCss(cssText);
     assert.ok(cssObject instanceof Array);
@@ -54,12 +54,12 @@ QUnit.test("Parse stylesheet", function (assert) {
     assert.equal(cssObject.length, 2);
 
     assert.ok(cssObject[0]);
-    assert.equal(cssObject[0].selector.compiledSelector.selectorText, 'body');
+    assert.equal(cssObject[0].selector.selectorText, 'body');
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.background, 'none!important');
 
     assert.ok(cssObject[1]);
-    assert.equal(cssObject[1].selector.compiledSelector.selectorText, 'div.wrapper');
+    assert.equal(cssObject[1].selector.selectorText, 'div.wrapper');
     assert.ok(cssObject[1].style);
     assert.equal(cssObject[1].style.display, 'block!important');
     assert.equal(cssObject[1].style.position, 'absolute');
@@ -84,13 +84,13 @@ QUnit.test("Parse stylesheet with extended selectors", function (assert) {
     assert.equal(cssObject.length, 2);
 
     assert.ok(cssObject[0]);
-    assert.equal(cssObject[0].selector.compiledSelector.selectorText, ':contains("/[\\\\w]{9,}/")');
+    assert.equal(cssObject[0].selector.selectorText, ':contains("/[\\\\w]{9,}/")');
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.display, 'none!important');
     assert.equal(cssObject[0].style.visibility, 'hidden!important');
 
     assert.ok(cssObject[1]);
-    assert.equal(cssObject[1].selector.compiledSelector.selectorText, ':matches-css("    background-image: /^url\\\\((.)[a-z]{4}:[a-z]{2}\\\\1nk\\\\)$/    ") + :matches-css-before("content:  /^[A-Z][a-z]{2}\\\\s/  "):has(+:matches-css-after(" content  :   /(\\\\d+\\\\s)*me/  "):contains("/^(?![\\\\s\\\\S])/"))')
+    assert.equal(cssObject[1].selector.selectorText, ':matches-css("    background-image: /^url\\\\((.)[a-z]{4}:[a-z]{2}\\\\1nk\\\\)$/    ") + :matches-css-before("content:  /^[A-Z][a-z]{2}\\\\s/  "):has(+:matches-css-after(" content  :   /(\\\\d+\\\\s)*me/  "):contains("/^(?![\\\\s\\\\S])/"))')
 
     assert.ok(cssObject[1].style);
     assert.equal(cssObject[1].style.width, '500px');

@@ -18,7 +18,7 @@ var testPerformance = function (selector, assert) {
 };
 
 QUnit.test("Tokenize performance", function (assert) {
-
+    ExtendedSelectorFactory.initialize(); // Force Sizzle to be initialized
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var startTime = new Date().getTime();
 
@@ -48,25 +48,25 @@ QUnit.test("Test simple selector", function (assert) {
 
 QUnit.test("Case 1. :has performance", function (assert) {
     var selectorText = ".container #case1 div div:has(.banner)";
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
 QUnit.test("Case 2. :contains performance", function (assert) {
     var selectorText = ".container #case2 div div:contains(Block this)";
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
 QUnit.test("Case 3. :matches-css performance", function (assert) {
     var selectorText = ".container #case3 div div:matches-css(background-image: about:blank)";
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
 QUnit.test("Case 4. :has and :contains composite performance", function (assert) {
     var selectorText = ".container #case4 div div:has(.banner:contains(Block this))";
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
@@ -74,14 +74,14 @@ QUnit.test("Case 5. complicated selector", function (assert) {
     // https://github.com/AdguardTeam/ExtendedCss/issues/25
 
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
 QUnit.test("Case 6.1. :properties selector", function (assert) {
 
     var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
@@ -89,7 +89,7 @@ QUnit.test("Case 6.1. :properties selector", function (assert) {
 QUnit.test("Case 6.2. :properties selector wihout seed", function (assert) {
 
     var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
 
     testPerformance(selector, assert);
 });
@@ -97,12 +97,12 @@ QUnit.test("Case 6.2. :properties selector wihout seed", function (assert) {
 
 QUnit.test("Case 6.3. :properties selector with reverse search", function(assert) {
     var selectorText = 'div:properties(content:*test)';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
 
 QUnit.test("Case 6.4. :properties selector without reverse search", function(assert) {
     var selectorText = 'div:has(:properties(content:*test))';
-    var selector = new ExtendedSelector(selectorText);
+    var selector = new ExtendedSelectorFactory(selectorText).getInstance();
     testPerformance(selector, assert);
 });
