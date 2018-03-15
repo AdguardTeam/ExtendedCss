@@ -1,6 +1,5 @@
 /* global QUnit, Sizzle */
 /* global ExtendedCssParser */
-ExtendedSelectorFactory.initialize();
 
 QUnit.test("Simple CSS", function (assert) {
 
