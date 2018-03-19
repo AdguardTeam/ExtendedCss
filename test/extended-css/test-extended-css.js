@@ -175,6 +175,7 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     setTimeout(function () {
         tamperObserver.disconnect();
         assert.ok(styleTamperCount < 60);
+        assert.ok(styleTamperCount >= 50);
         assert.notOk(testNode.hasAttribute('style'));
         done();
     }, 1000);
