@@ -9,6 +9,7 @@ Selector property | Description
 `-ext-has (:has)` | https://adguard.com/en/filterrules.html#pseudo-class-has
 `-ext-contains (:contains)` | https://adguard.com/en/filterrules.html#pseudo-class-contains
 `-ext-matches-css (:matches-css)` | https://adguard.com/en/filterrules.html#pseudo-class-matches-css
+`-ext-properties (:properties)` | https://github.com/AdguardTeam/ExtendedCss/issues/56
 
 ### Usage
 ```
