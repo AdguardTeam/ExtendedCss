@@ -45,7 +45,6 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
     assert.equal(0, elements.length);
 
     selector = ExtendedSelectorFactory.createSelector('[-ext-has="div.test-class-two"]');
-    debugger;
     elements = selector.querySelectorAll();
 
     assert.equal(5, elements.length);
