@@ -42,7 +42,7 @@ var rAF = function(fn, timeout) {
     }
 };
 
-QUnit.test("Modifer -ext-has", function(assert) {  
+QUnit.test("Modifer -ext-has", function(assert) {
     assertElementStyle("case1-blocked", { display: "none" }, assert);
 });
 
@@ -82,7 +82,7 @@ QUnit.test("Affected elements length (simple)", function(assert) {
     assert.ok(1, "Start test: " + startLength + " elements affected");
     var toBeBlocked = document.getElementById("case6-blocked");
     assertElementStyle("case6-blocked", { "display": "" }, assert);
-    
+
     var banner = document.createElement("div");
     banner.setAttribute("class", "banner");
     toBeBlocked.appendChild(banner);
@@ -152,17 +152,15 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
 
     var testNode = document.getElementById('case11');
 
-    var styleTamperCount = 0;
-
     var tamperStyle = function () {
         if (testNode.hasAttributes('style')) {
             testNode.removeAttribute('style');
-            styleTamperCount++;
         }
     };
 
     var TamperObserver = new MutationObserver(tamperStyle);
-    
+
+    // Tamper with the style applied by extendedCss
     tamperStyle();
     TamperObserver.observe(
         testNode,
@@ -172,9 +170,29 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
         }
     );
 
-    setTimeout(function () {
-        TamperObserver.disconnect();
-        assert.ok(styleTamperCount < 60);
-        done();
-    }, 1000);
+    // Copy-pasted from lib/extended-css.js
+    var MAX_STYLE_PROTECTION_COUNT = 50;
+
+    function areWeDone() {
+        var affectedElement = extendedCss.findAffectedElement(testNode);
+        var styleProtectionCount = affectedElement.protectionObserver.styleProtectionCount;
+        if (styleProtectionCount >= MAX_STYLE_PROTECTION_COUNT) {
+            setTimeout(function() {
+                TamperObserver.disconnect();
+                // styleProtectionCount should stop increasing at
+                // MAX_STYLE_PROTECTION_COUNT
+                assert.equal(
+                    affectedElement.protectionObserver.styleProtectionCount,
+                    MAX_STYLE_PROTECTION_COUNT
+                );
+                done();
+            }, 50); // After the next style fix is applied
+        } else {
+            areWeDoneScheduler.run();
+        }
+    }
+
+    var areWeDoneScheduler = new utils.AsyncWrapper(areWeDone, 10);
+
+    areWeDoneScheduler.run();
 });
