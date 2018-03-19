@@ -152,19 +152,19 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
 
     var testNode = document.getElementById('case11');
 
-    var styleTemperCount = 0;
+    var styleTamperCount = 0;
 
-    var temperStyle = function () {
+    var tamperStyle = function () {
         if (testNode.hasAttributes('style')) {
             testNode.removeAttribute('style');
-            styleTemperCount++;
+            styleTamperCount++;
         }
     };
 
-    var observer = new MutationObserver(temperStyle);
+    var TamperObserver = new MutationObserver(tamperStyle);
     
-    temperStyle();
-    observer.observe(
+    tamperStyle();
+    TamperObserver.observe(
         testNode,
         {
             attributes: true,
@@ -173,8 +173,8 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     );
 
     setTimeout(function () {
-        observer.disconnect();
-        assert.ok(styleTemperCount < 60);
+        TamperObserver.disconnect();
+        assert.ok(styleTamperCount < 60);
         done();
     }, 1000);
 });
