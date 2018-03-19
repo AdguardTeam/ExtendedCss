@@ -42,7 +42,7 @@ var rAF = function(fn, timeout) {
     }
 };
 
-QUnit.test("Modifer -ext-has", function(assert) {  
+QUnit.test("Modifer -ext-has", function(assert) {
     assertElementStyle("case1-blocked", { display: "none" }, assert);
 });
 
@@ -82,7 +82,7 @@ QUnit.test("Affected elements length (simple)", function(assert) {
     assert.ok(1, "Start test: " + startLength + " elements affected");
     var toBeBlocked = document.getElementById("case6-blocked");
     assertElementStyle("case6-blocked", { "display": "" }, assert);
-    
+
     var banner = document.createElement("div");
     banner.setAttribute("class", "banner");
     toBeBlocked.appendChild(banner);
@@ -145,4 +145,36 @@ QUnit.test("Test attribute protection", function(assert) {
             done();
         }, 100);
     }, 100);
+});
+
+QUnit.test("Protection from recurring style fixes", function (assert) {
+    var done = assert.async();
+
+    var testNode = document.getElementById('case11');
+
+    var styleTamperCount = 0;
+
+    var tamperStyle = function () {
+        if (testNode.hasAttributes('style')) {
+            testNode.removeAttribute('style');
+            styleTamperCount++;
+        }
+    };
+
+    var tamperObserver = new MutationObserver(tamperStyle);
+    
+    tamperStyle();
+    tamperObserver.observe(
+        testNode,
+        {
+            attributes: true,
+            attributeFilter: ['style']
+        }
+    );
+
+    setTimeout(function () {
+        tamperObserver.disconnect();
+        assert.ok(styleTamperCount < 60);
+        done();
+    }, 1000);
 });
