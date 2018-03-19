@@ -155,7 +155,7 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     var styleTamperCount = 0;
 
     var tamperStyle = function () {
-        if (testNode.hasAttributes('style')) {
+        if (testNode.hasAttribute('style')) {
             testNode.removeAttribute('style');
             styleTamperCount++;
         }
@@ -175,6 +175,8 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     setTimeout(function () {
         tamperObserver.disconnect();
         assert.ok(styleTamperCount < 60);
+        assert.ok(styleTamperCount >= 50);
+        assert.notOk(testNode.hasAttribute('style'));
         done();
     }, 1000);
 });
