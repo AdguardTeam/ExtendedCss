@@ -146,3 +146,35 @@ QUnit.test("Test attribute protection", function(assert) {
         }, 100);
     }, 100);
 });
+
+QUnit.test("Protection from recurring style fixes", function (assert) {
+    var done = assert.async();
+
+    var testNode = document.getElementById('case11');
+
+    var styleTemperCount = 0;
+
+    var temperStyle = function () {
+        if (testNode.hasAttributes('style')) {
+            testNode.removeAttribute('style');
+            styleTemperCount++;
+        }
+    };
+
+    var observer = new MutationObserver(temperStyle);
+    
+    temperStyle();
+    observer.observe(
+        testNode,
+        {
+            attributes: true,
+            attributeFilter: ['style']
+        }
+    );
+
+    setTimeout(function () {
+        observer.disconnect();
+        assert.ok(styleTemperCount < 60);
+        done();
+    }, 1000);
+});
