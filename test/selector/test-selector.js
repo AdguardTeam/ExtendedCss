@@ -216,6 +216,21 @@ QUnit.test( "Test -abp-has and -abp-has-text", function(assert) {
     assert.ok(selector.matches(elements[0]));
 });
 
+QUnit.test( "Test if and if-not", function(assert) {
+    var elements;
+    var selector;
+
+    selector = ExtendedSelectorFactory.createSelector('div.test-class:if(time.g-time)');
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+
+    selector = ExtendedSelectorFactory.createSelector('#test-if-not > *:if-not(> .test-class)');
+    elements = selector.querySelectorAll();
+    assert.equal(2, elements.length);
+    assert.ok(selector.matches(elements[0]));
+});
+
 QUnit.test( "Test + and ~ combinators matching", function(assert) {
     var selectorText, selector, elements;
 
