@@ -180,6 +180,8 @@ div.banner[-ext-matches-css-before="content: block me"]
 <a id="extended-css-properties"></a>
 ### Pseudo-class `:properties()`
 
+Originally, this pseudo-class was [introduced by ABP](https://adblockplus.org/development-builds/new-css-property-filter-syntax).
+
 On the surface this pseudo class is somewhat similar to [`:matches-css`](#extended-css-matches-css). However, it is very different under the hood. `:matches-css` is based on using [`window.getComputedStyle`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) while `:properties` is based on scanning page stylesheets and using them to lookup elements.
 
 In short, `:matches-css` is about "Computed" tab of the dev tools while `:properties` is about "Styles" tab:
@@ -188,7 +190,9 @@ In short, `:matches-css` is about "Computed" tab of the dev tools while `:proper
 
 Another notable difference is that there is no special "-before"/"-after" pseudo-classes. `:properties` matching strips both `::before` and `::after` pseudo-elements from the selectors found in the stylesheets.
 
-> Warning: note that `:properties` pseudo-class ignores cross-origin stylesheets.
+> **Limitations** 
+> * Cross-origin stylesheets are ignored
+> * [At-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are also ignored. This means that imported (`@import`) stylesheets and `@media` groups are ignored.
 
 #### `:properties()` syntax
 
