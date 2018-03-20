@@ -224,11 +224,14 @@ QUnit.test("Test global debugging", function (assert) {
     var done = assert.async();
 
     var selectors = [
+        "#case14:not(without-debug-before-global) { display:none; }",
         "#case14:not(with-global-debug) { display:none; debug: global }",
-        "#case14:not(without-debug) { display:none; }"
+        "#case14:not(without-debug-after-global) { display:none; }"
     ];
+
     var extendedCss = new ExtendedCss(selectors.join("\n"));
 
+    // Spy on console.info
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
@@ -236,14 +239,18 @@ QUnit.test("Test global debugging", function (assert) {
             var timings = arguments[2];
             assert.ok(timings);
             assert.ok(timings.stats);
-            assert.equal(timings.stats.length, 2, JSON.stringify(timings));
+            assert.equal(timings.stats.length, 3, JSON.stringify(timings));
 
-            assert.equal(timings.stats.filter(function (item) {
-                return item.selectorText.indexOf("without-debug") !== -1;
-            }).length, 1, JSON.stringify(timings));
             assert.equal(timings.stats.filter(function (item) {
                 return item.selectorText.indexOf("with-global-debug") !== -1;
             }).length, 1, JSON.stringify(timings));
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-before-global") !== -1;
+            }).length, 1, JSON.stringify(timings));
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-after-global") !== -1;
+            }).length, 1, JSON.stringify(timings));
+
 
             // Cleanup
             utils.logInfo = utilsLogInfo;
