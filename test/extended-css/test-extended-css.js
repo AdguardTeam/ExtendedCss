@@ -231,7 +231,6 @@ QUnit.test("Test global debugging", function (assert) {
 
     var extendedCss = new ExtendedCss(selectors.join("\n"));
 
-    // Spy on console.info
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
