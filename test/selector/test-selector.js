@@ -329,7 +329,6 @@ QUnit.test( "Test :properties", function(assert) {
         '#test-properties-dynamic-3::before { content: "publicite" }';
 
     rAF(function() {
-        console.log('test 8');
         elements = selectors[4].querySelectorAll();
         assert.ok(containsElement(window['test-properties-dynamic-3'], elements));
     });

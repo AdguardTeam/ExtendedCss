@@ -180,3 +180,86 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
         done();
     }, 1000);
 });
+
+
+QUnit.test("Test ExtendedCss.query", function (assert) {
+
+    var elements = ExtendedCss.query("#case12>div:contains(Block me)");
+    assert.ok(elements);
+    assert.ok(elements.length === 1);
+});
+
+QUnit.test("Test debugging", function (assert) {
+    assert.timeout(1000);
+    var done = assert.async();
+
+    var extendedCss = new ExtendedCss('\
+        #case13:not(with-debug) { display:none; debug:"" }\
+        #case13:not(without-debug) { display:none; }\
+    ');
+
+    // Spy on console.info
+
+    var consoleInfo = console.info;
+    console.info = function() {
+        var message = arguments[0];
+        if (typeof message === 'string') {
+            assert.notOk(message.indexOf('without-debug') > -1);
+            if (message.indexOf('with-debug') > -1) {
+                // Cleanup
+                console.info = consoleInfo;
+                extendedCss.dispose();
+
+                done();
+            }
+        }
+
+        return consoleInfo.call(this, arguments);
+    };
+
+    extendedCss.apply();
+});
+
+QUnit.test("Test global debugging", function (assert) {
+    assert.timeout(1000);
+    assert.expect(0);
+    var done = assert.async();
+
+    var extendedCss = new ExtendedCss('\
+        #case14:not(with-global-debug) { display:none; debug: global }\
+        #case14:not(without-debug) { display:none; }\
+    ');
+
+    // Spy on console.info
+    var consoleInfo = console.info;
+    console.info = function() {
+        var message = arguments[0];
+        if (typeof message === 'string') {
+            if (message.indexOf('with-global-debug') > -1) {
+                foundWithGlobalDebug = true;
+                checkDone();
+            }
+            if (message.indexOf('without-debug') > -1) {
+                foundWithoutDebug = true;
+                checkDone();
+            }
+        }
+
+        return consoleInfo.call(this, arguments);
+    };
+
+    var foundWithGlobalDebug = false;
+    var foundWithoutDebug = false;
+
+    var checkDone = function() {
+        if (foundWithGlobalDebug === foundWithoutDebug === true) {
+            // Cleanup
+            console.info = consoleInfo;
+            extendedCss.dispose();
+
+            done();
+        }
+    };
+
+    extendedCss.apply();
+})
