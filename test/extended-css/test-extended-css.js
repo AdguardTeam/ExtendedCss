@@ -187,3 +187,71 @@ QUnit.test("Test ExtendedCss.query", function (assert) {
     assert.ok(elements);
     assert.ok(elements.length === 1);
 });
+
+QUnit.test("Test debugging", function (assert) {
+    assert.timeout(1000);
+    var done = assert.async();
+
+    var selectors = [
+        "#case13:not(with-debug) { display:none; debug:\"\" }",
+        "#case13:not(without-debug) { display:none; }"
+    ];
+    var extendedCss = new ExtendedCss(selectors.join("\n"));
+
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (arguments.length == 3) {
+            var timings = arguments[2];
+            assert.ok(timings);
+            assert.ok(timings.stats);
+            assert.equal(timings.stats.length, 1, JSON.stringify(timings));
+            assert.ok(timings.stats[0].selectorText.indexOf("with-debug") !== -1, JSON.stringify(timings));
+
+            // Cleanup
+            utils.logInfo = utilsLogInfo;
+            extendedCss.dispose();
+            done();
+        }
+        return utilsLogInfo.apply(this, arguments);
+    };
+
+    extendedCss.apply();
+});
+
+QUnit.test("Test global debugging", function (assert) {
+    assert.timeout(1000);
+    var done = assert.async();
+
+    var selectors = [
+        "#case14:not(with-global-debug) { display:none; debug: global }",
+        "#case14:not(without-debug) { display:none; }"
+    ];
+    var extendedCss = new ExtendedCss(selectors.join("\n"));
+
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (arguments.length == 3) {
+            var timings = arguments[2];
+            assert.ok(timings);
+            assert.ok(timings.stats);
+            assert.equal(timings.stats.length, 2, JSON.stringify(timings));
+
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug") !== -1;
+            }).length, 1, JSON.stringify(timings));
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("with-global-debug") !== -1;
+            }).length, 1, JSON.stringify(timings));
+
+            // Cleanup
+            utils.logInfo = utilsLogInfo;
+            extendedCss.dispose();
+            done();
+        }
+        return utilsLogInfo.apply(this, arguments);
+    };
+
+    extendedCss.apply();
+})
