@@ -21,12 +21,12 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://drafts.csswg
 
 #### `:has()` syntax
 
-```
+```css
 :has(selector)
 ```
 
 Backward compatible syntax:
-```
+```css
 [-ext-has="selector"]
 ```
 
@@ -123,7 +123,7 @@ These pseudo-classes allow to select an element by its current style property. T
 
 #### `:matches-css()` syntax
 
-```
+```css
 /* element style matching */
 selector:matches-css(property-name ":" pattern)
 
@@ -135,7 +135,7 @@ selector:matches-css-after(property-name ":" pattern)
 ```
 
 Backward compatible syntax:
-```
+```css
 selector[-ext-matches-css="property-name ":" pattern"]
 selector[-ext-matches-css-after="property-name ":" pattern"]
 selector[-ext-matches-css-before="property-name ":" pattern"]
@@ -145,7 +145,7 @@ selector[-ext-matches-css-before="property-name ":" pattern"]
 A name of CSS property to check the element for.
 
 ##### `pattern`
-This can be either a value pattern that is using the same simple wildcard matching as in the basic url filtering rules or it can be a regular expression.
+This can be either a value pattern that is using the same simple wildcard matching as in the basic url filtering rules or it can be a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner.
 
 In the case of a regular expression, the pattern looks like `/regex/`.
 
@@ -169,16 +169,26 @@ In the case of a regular expression, the pattern looks like `/regex/`.
 
 **Selector**
 ```css
+// Simple matching
 div.banner:matches-css-before(content: block me)
+
+// Regular expressions
+div.banner:matches-css-before(content: /block me/)
 ```
 
 Backward compatible syntax:
 ```css
+// Simple matching
 div.banner[-ext-matches-css-before="content: block me"]
+
+// Regular expressions
+div.banner[-ext-matches-css-before="content: /block me/"]
 ```
 
 <a id="extended-css-properties"></a>
 ### Pseudo-class `:properties()`
+
+Originally, this pseudo-class was [introduced by ABP](https://adblockplus.org/development-builds/new-css-property-filter-syntax).
 
 On the surface this pseudo class is somewhat similar to [`:matches-css`](#extended-css-matches-css). However, it is very different under the hood. `:matches-css` is based on using [`window.getComputedStyle`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) while `:properties` is based on scanning page stylesheets and using them to lookup elements.
 
@@ -188,17 +198,19 @@ In short, `:matches-css` is about "Computed" tab of the dev tools while `:proper
 
 Another notable difference is that there is no special "-before"/"-after" pseudo-classes. `:properties` matching strips both `::before` and `::after` pseudo-elements from the selectors found in the stylesheets.
 
-> Warning: note that `:properties` pseudo-class ignores cross-origin stylesheets.
+> **Limitations** 
+> * Cross-origin stylesheets are ignored
+> * [At-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are also ignored. This means that imported (`@import`) stylesheets and `@media` groups are ignored.
 
 #### `:properties()` syntax
 
-```
+```css
 /* element style matching */
 selector:properties(property-name ":" pattern)
 ```
 
 Backward compatible syntax:
-```
+```css
 selector[-ext-properties="property-name ":" pattern"]
 ```
 
@@ -206,7 +218,7 @@ selector[-ext-properties="property-name ":" pattern"]
 A name of CSS property to check the element for.
 
 ##### `pattern`
-This can be either a value pattern that is using the same simple wildcard matching as in the basic url filtering rules or it can be a regular expression.
+This can be either a value pattern that is using the same simple wildcard matching as in the basic url filtering rules or it can be a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner.
 
 In the case of a regular expression, the pattern looks like `/regex/`.
 
@@ -230,12 +242,20 @@ In the case of a regular expression, the pattern looks like `/regex/`.
 
 **Selector**
 ```css
+// Simple matching
 div.banner:properties(content: block me)
+
+// Regular expressions
+div.banner:properties(content: /block me/)
 ```
 
 Backward compatible syntax:
 ```css
+// Simple matching
 div.banner[-ext-properties="content: block me"]
+
+// Regular expressions
+div.banner:properties(content: /block me/)
 ```
 
 ### Selectors debug mode
