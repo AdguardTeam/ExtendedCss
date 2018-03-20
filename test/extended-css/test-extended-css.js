@@ -226,8 +226,9 @@ QUnit.test("Test global debugging", function (assert) {
     var done = assert.async();
 
     var extendedCss = new ExtendedCss('\
+        #case14:not(without-debug-before-global) { display:none; }\
         #case14:not(with-global-debug) { display:none; debug: global }\
-        #case14:not(without-debug) { display:none; }\
+        #case14:not(without-debug-after-global) { display:none; }\
     ');
 
     // Spy on console.info
@@ -239,8 +240,12 @@ QUnit.test("Test global debugging", function (assert) {
                 foundWithGlobalDebug = true;
                 checkDone();
             }
-            if (message.indexOf('without-debug') > -1) {
-                foundWithoutDebug = true;
+            if (message.indexOf('without-debug-before-global') > -1) {
+                foundWithoutDebugBefore = true;
+                checkDone();
+            }
+            if (message.indexOf('without-debug-after-global') > -1) {
+                foundWithoutDebugAfter = true;
                 checkDone();
             }
         }
@@ -249,10 +254,11 @@ QUnit.test("Test global debugging", function (assert) {
     };
 
     var foundWithGlobalDebug = false;
-    var foundWithoutDebug = false;
+    var foundWithoutDebugBefore = false;
+    var foundWithoutDebugAfter = false;
 
     var checkDone = function() {
-        if (foundWithGlobalDebug === foundWithoutDebug === true) {
+        if (foundWithGlobalDebug === foundWithoutDebugBefore === foundWithoutDebugAfter === true) {
             // Cleanup
             console.info = consoleInfo;
             extendedCss.dispose();
