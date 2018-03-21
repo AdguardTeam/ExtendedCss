@@ -6,7 +6,7 @@ extendedCss.apply();
 /**
  * Asserts that specified function has specified expected styles
  */
-var assertElementStyle = function(id, expectedStyle, assert) {
+var assertElementStyle = function (id, expectedStyle, assert) {
     var element = document.getElementById(id);
     var resultOk = true;
     if (!element) {
@@ -32,9 +32,9 @@ var assertElementStyle = function(id, expectedStyle, assert) {
  * relatively short time. (within several seconds)
  * We apply rAF in tests as well to postpone test for similar amount of time.
  */
-var rAF = function(fn, timeout) {
+var rAF = function (fn, timeout) {
     if (window.requestAnimationFrame) {
-        requestAnimationFrame(function() {
+        requestAnimationFrame(function () {
             setTimeout(fn, timeout);
         });
     } else {
@@ -42,43 +42,43 @@ var rAF = function(fn, timeout) {
     }
 };
 
-QUnit.test("Modifer -ext-has", function(assert) {
+QUnit.test("Modifer -ext-has", function (assert) {
     assertElementStyle("case1-blocked", { display: "none" }, assert);
 });
 
-QUnit.test("Modifer -ext-contains", function(assert) {
+QUnit.test("Modifer -ext-contains", function (assert) {
     assertElementStyle("case2-blocked1", { display: "none" }, assert);
     assertElementStyle("case2-blocked2", { display: "none" }, assert);
     assertElementStyle("case2-notblocked", { display: "" }, assert);
 });
 
-QUnit.test("Append our style", function(assert) {
+QUnit.test("Append our style", function (assert) {
     assertElementStyle("case3-modified", { "display": "block", "visibility": "hidden" }, assert);
 });
 
-QUnit.test("Composite style", function(assert) {
+QUnit.test("Composite style", function (assert) {
     assertElementStyle("case4-blocked", { "display": "none" }, assert);
     assertElementStyle("case4-notblocked", { "display": "" }, assert);
 });
 
-QUnit.test("Reaction on DOM modification", function(assert) {
+QUnit.test("Reaction on DOM modification", function (assert) {
     var done = assert.async();
     assertElementStyle("case5-blocked", { display: "none" }, assert);
     var el = document.getElementById("case5-blocked");
     document.getElementById("container").appendChild(el);
 
-    rAF(function() {
+    rAF(function () {
         assertElementStyle("case5-blocked", { display: "" }, assert);
         done();
     }, 100);
 });
 
-QUnit.test("Affected elements length (simple)", function(assert) {
+QUnit.test("Affected elements length (simple)", function (assert) {
 
     var done = assert.async();
 
     var affectedLength;
-    var startLength = extendedCss.getAffectedElements().length;
+    var startLength = extendedCss._getAffectedElements().length;
     assert.ok(1, "Start test: " + startLength + " elements affected");
     var toBeBlocked = document.getElementById("case6-blocked");
     assertElementStyle("case6-blocked", { "display": "" }, assert);
@@ -87,16 +87,16 @@ QUnit.test("Affected elements length (simple)", function(assert) {
     banner.setAttribute("class", "banner");
     toBeBlocked.appendChild(banner);
 
-    rAF(function() {
+    rAF(function () {
         assertElementStyle("case6-blocked", { "display": "none" }, assert);
-        affectedLength = extendedCss.getAffectedElements().length;
+        affectedLength = extendedCss._getAffectedElements().length;
         assert.equal(affectedLength, startLength + 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
 
         toBeBlocked.removeChild(banner);
-        rAF(function() {
+        rAF(function () {
             assertElementStyle("case6-blocked", { "display": "" }, assert);
-            affectedLength = extendedCss.getAffectedElements().length;
+            affectedLength = extendedCss._getAffectedElements().length;
             assert.equal(affectedLength, startLength);
             assert.ok(1, "Element unblocked: " + affectedLength + " elements affected");
             done();
@@ -104,43 +104,43 @@ QUnit.test("Affected elements length (simple)", function(assert) {
     }, 100);
 });
 
-QUnit.test("Affected elements length (root element removal)", function(assert) {
+QUnit.test("Affected elements length (root element removal)", function (assert) {
 
     var done = assert.async();
 
     var affectedLength;
-    var startLength = extendedCss.getAffectedElements().length;
+    var startLength = extendedCss._getAffectedElements().length;
     assert.ok(1, "Start test: " + startLength + " elements affected");
     assertElementStyle("case7-blocked", { "display": "none" }, assert);
 
     var root = document.getElementById("case7");
     root.parentNode.removeChild(root);
 
-    rAF(function() {
-        affectedLength = extendedCss.getAffectedElements().length
+    rAF(function () {
+        affectedLength = extendedCss._getAffectedElements().length
         assert.equal(affectedLength, startLength - 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
         done();
     }, 100);
 });
 
-QUnit.test("Modifer -ext-matches-css-before", function(assert) {
+QUnit.test("Modifer -ext-matches-css-before", function (assert) {
     assertElementStyle("case8-blocked", { "display": "none" }, assert);
 });
 
-QUnit.test("Font-size style", function(assert) {
+QUnit.test("Font-size style", function (assert) {
     assertElementStyle("case9-notblocked", { "display": "", "font-size": "16px" }, assert);
 });
 
-QUnit.test("Test attribute protection", function(assert) {
+QUnit.test("Test attribute protection", function (assert) {
 
     var done = assert.async();
     assertElementStyle("case10-blocked", { "display": "none" }, assert);
 
-    rAF(function() {
+    rAF(function () {
         var node = document.getElementById("case10-blocked");
         node.style.display = 'block';
-        rAF(function() {
+        rAF(function () {
             assertElementStyle("case10-blocked", { "display": "none" }, assert);
             done();
         }, 100);
@@ -162,7 +162,7 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     };
 
     var tamperObserver = new MutationObserver(tamperStyle);
-    
+
     tamperStyle();
     tamperObserver.observe(
         testNode,
@@ -181,7 +181,6 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
     }, 1000);
 });
 
-
 QUnit.test("Test ExtendedCss.query", function (assert) {
 
     var elements = ExtendedCss.query("#case12>div:contains(Block me)");
@@ -193,28 +192,28 @@ QUnit.test("Test debugging", function (assert) {
     assert.timeout(1000);
     var done = assert.async();
 
-    var extendedCss = new ExtendedCss('\
-        #case13:not(with-debug) { display:none; debug:"" }\
-        #case13:not(without-debug) { display:none; }\
-    ');
+    var selectors = [
+        "#case13:not(with-debug) { display:none; debug:\"\" }",
+        "#case13:not(without-debug) { display:none; }"
+    ];
+    var extendedCss = new ExtendedCss(selectors.join("\n"));
 
-    // Spy on console.info
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (arguments.length == 3) {
+            var timings = arguments[2];
+            assert.ok(timings);
+            assert.ok(timings.stats);
+            assert.equal(timings.stats.length, 1, JSON.stringify(timings));
+            assert.ok(timings.stats[0].selectorText.indexOf("with-debug") !== -1, JSON.stringify(timings));
 
-    var consoleInfo = console.info;
-    console.info = function() {
-        var message = arguments[0];
-        if (typeof message === 'string') {
-            assert.notOk(message.indexOf('without-debug') > -1);
-            if (message.indexOf('with-debug') > -1) {
-                // Cleanup
-                console.info = consoleInfo;
-                extendedCss.dispose();
-
-                done();
-            }
+            // Cleanup
+            utils.logInfo = utilsLogInfo;
+            extendedCss.dispose();
+            done();
         }
-
-        return consoleInfo.call(this, arguments);
+        return utilsLogInfo.apply(this, arguments);
     };
 
     extendedCss.apply();
@@ -222,49 +221,42 @@ QUnit.test("Test debugging", function (assert) {
 
 QUnit.test("Test global debugging", function (assert) {
     assert.timeout(1000);
-    assert.expect(0);
     var done = assert.async();
 
-    var extendedCss = new ExtendedCss('\
-        #case14:not(without-debug-before-global) { display:none; }\
-        #case14:not(with-global-debug) { display:none; debug: global }\
-        #case14:not(without-debug-after-global) { display:none; }\
-    ');
+    var selectors = [
+        "#case14:not(without-debug-before-global) { display:none; }",
+        "#case14:not(with-global-debug) { display:none; debug: global }",
+        "#case14:not(without-debug-after-global) { display:none; }"
+    ];
 
-    // Spy on console.info
-    var consoleInfo = console.info;
-    console.info = function() {
-        var message = arguments[0];
-        if (typeof message === 'string') {
-            if (message.indexOf('with-global-debug') > -1) {
-                foundWithGlobalDebug = true;
-                checkDone();
-            }
-            if (message.indexOf('without-debug-before-global') > -1) {
-                foundWithoutDebugBefore = true;
-                checkDone();
-            }
-            if (message.indexOf('without-debug-after-global') > -1) {
-                foundWithoutDebugAfter = true;
-                checkDone();
-            }
-        }
+    var extendedCss = new ExtendedCss(selectors.join("\n"));
 
-        return consoleInfo.call(this, arguments);
-    };
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (arguments.length == 3) {
+            var timings = arguments[2];
+            assert.ok(timings);
+            assert.ok(timings.stats);
+            assert.equal(timings.stats.length, 3, JSON.stringify(timings));
 
-    var foundWithGlobalDebug = false;
-    var foundWithoutDebugBefore = false;
-    var foundWithoutDebugAfter = false;
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("with-global-debug") !== -1;
+            }).length, 1, JSON.stringify(timings));
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-before-global") !== -1;
+            }).length, 1, JSON.stringify(timings));
+            assert.equal(timings.stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-after-global") !== -1;
+            }).length, 1, JSON.stringify(timings));
 
-    var checkDone = function() {
-        if (foundWithGlobalDebug === foundWithoutDebugBefore === foundWithoutDebugAfter === true) {
+
             // Cleanup
-            console.info = consoleInfo;
+            utils.logInfo = utilsLogInfo;
             extendedCss.dispose();
-
             done();
         }
+        return utilsLogInfo.apply(this, arguments);
     };
 
     extendedCss.apply();
