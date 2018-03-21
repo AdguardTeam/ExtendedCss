@@ -214,6 +214,8 @@ Backward compatible syntax:
 selector[-ext-properties="property-name ":" pattern"]
 ```
 
+Supported synonyms for better compatibility: `:-abp-properties`.
+
 ##### `property-name`
 A name of CSS property to check the element for.
 
