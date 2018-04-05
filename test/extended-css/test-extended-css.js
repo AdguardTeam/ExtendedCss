@@ -139,11 +139,15 @@ QUnit.test("Test attribute protection", function (assert) {
 
     rAF(function () {
         var node = document.getElementById("case10-blocked");
-        node.style.display = 'block';
-        rAF(function () {
-            assertElementStyle("case10-blocked", { "display": "none" }, assert);
-            done();
+        node.style.cssText = "display: block!important;"
+        rAF(function() {
+            node.style.cssText = "display: block!important; visibility: visible!important;";
+            rAF(function () {
+                assertElementStyle("case10-blocked", { "display": "none" }, assert);
+                done();
+            }, 100);
         }, 100);
+        
     }, 100);
 });
 
@@ -201,12 +205,14 @@ QUnit.test("Test debugging", function (assert) {
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
-        if (arguments.length == 3) {
-            var timings = arguments[2];
-            assert.ok(timings);
-            assert.ok(timings.stats);
-            assert.equal(timings.stats.length, 1, JSON.stringify(timings));
-            assert.ok(timings.stats[0].selectorText.indexOf("with-debug") !== -1, JSON.stringify(timings));
+        if (
+            arguments.length == 3 &&
+            typeof arguments[0] === 'string' &&
+            arguments[0].indexOf('Timings for') !== -1
+        ) {
+            var stats = arguments[2];
+            assert.ok(stats);
+            assert.ok(stats[0].selectorText.indexOf('with-debug') !== -1);
 
             // Cleanup
             utils.logInfo = utilsLogInfo;
@@ -234,22 +240,25 @@ QUnit.test("Test global debugging", function (assert) {
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
-        if (arguments.length == 3) {
-            var timings = arguments[2];
-            assert.ok(timings);
-            assert.ok(timings.stats);
-            assert.equal(timings.stats.length, 3, JSON.stringify(timings));
+        if (
+            arguments.length == 3 &&
+            typeof arguments[0] === 'string' &&
+            arguments[0].indexOf('Timings for') !== -1
+        ) {
+            var stats = arguments[2];
 
-            assert.equal(timings.stats.filter(function (item) {
+            assert.ok(stats);
+            assert.ok(stats.length, 3);
+
+            assert.equal(stats.filter(function (item) {
                 return item.selectorText.indexOf("with-global-debug") !== -1;
-            }).length, 1, JSON.stringify(timings));
-            assert.equal(timings.stats.filter(function (item) {
+            }).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter(function (item) {
                 return item.selectorText.indexOf("without-debug-before-global") !== -1;
-            }).length, 1, JSON.stringify(timings));
-            assert.equal(timings.stats.filter(function (item) {
+            }).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter(function (item) {
                 return item.selectorText.indexOf("without-debug-after-global") !== -1;
-            }).length, 1, JSON.stringify(timings));
-
+            }).length, 1, JSON.stringify(stats));
 
             // Cleanup
             utils.logInfo = utilsLogInfo;

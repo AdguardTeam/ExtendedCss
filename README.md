@@ -21,12 +21,12 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://drafts.csswg
 
 #### `:has()` syntax
 
-```css
+```
 :has(selector)
 ```
 
 Backward compatible syntax:
-```css
+```
 [-ext-has="selector"]
 ```
 
@@ -45,12 +45,12 @@ Pseudo-class `:has()` selects the elements that includes the elements that fit t
 ```
 
 **Selector**
-```css
+```
 div:has(.banner)
 ```
 
 Backward compatible syntax:
-```css
+```
 div[-ext-has=".banner"]
 ```
 
@@ -66,7 +66,7 @@ This pseudo-class principle is very simple: it allows to select the elements tha
 
 #### `:contains()` syntax
 
-```css
+```
 // matching by plain text
 :contains(text)
 
@@ -75,7 +75,7 @@ This pseudo-class principle is very simple: it allows to select the elements tha
 ```
 
 Backward compatible syntax:
-```css
+```
 // matching by plain text
 [-ext-contains="text"]
 
@@ -97,7 +97,7 @@ Supported synonyms for better compatibility: `:-abp-contains`, `:has-text`.
 ```
 
 **Selector**
-```css
+```
 // matching by plain text
 div:contains(banner)
 
@@ -106,7 +106,7 @@ div:contains(/this .* banner/)
 ```
 
 Backward compatible syntax:
-```css
+```
 // matching by plain text
 div[-ext-contains="banner"]
 
@@ -123,7 +123,7 @@ These pseudo-classes allow to select an element by its current style property. T
 
 #### `:matches-css()` syntax
 
-```css
+```
 /* element style matching */
 selector:matches-css(property-name ":" pattern)
 
@@ -135,7 +135,7 @@ selector:matches-css-after(property-name ":" pattern)
 ```
 
 Backward compatible syntax:
-```css
+```
 selector[-ext-matches-css="property-name ":" pattern"]
 selector[-ext-matches-css-after="property-name ":" pattern"]
 selector[-ext-matches-css-before="property-name ":" pattern"]
@@ -168,7 +168,7 @@ In the case of a regular expression, the pattern looks like `/regex/`.
 ```
 
 **Selector**
-```css
+```
 // Simple matching
 div.banner:matches-css-before(content: block me)
 
@@ -177,7 +177,7 @@ div.banner:matches-css-before(content: /block me/)
 ```
 
 Backward compatible syntax:
-```css
+```
 // Simple matching
 div.banner[-ext-matches-css-before="content: block me"]
 
@@ -204,13 +204,13 @@ Another notable difference is that there is no special "-before"/"-after" pseudo
 
 #### `:properties()` syntax
 
-```css
+```
 /* element style matching */
 selector:properties(property-name ":" pattern)
 ```
 
 Backward compatible syntax:
-```css
+```
 selector[-ext-properties="property-name ":" pattern"]
 ```
 
@@ -241,7 +241,7 @@ In the case of a regular expression, the pattern looks like `/regex/`.
 ```
 
 **Selector**
-```css
+```
 // Simple matching
 div.banner:properties(content: block me)
 
@@ -250,7 +250,7 @@ div.banner:properties(content: /block me/)
 ```
 
 Backward compatible syntax:
-```css
+```
 // Simple matching
 div.banner[-ext-properties="content: block me"]
 
@@ -263,12 +263,12 @@ div.banner:properties(content: /block me/)
 Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with javascript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables the "debug"-mode either for a single selector or for all selectors depending on the `debug` value.
 
 **Debugging a single selector**
-```css
+```
 .banner { display: none; debug: true; }
 ```
 
 **Enabling global debug**
-```css
+```
 .banner { display: none; debug: global; }
 ```
 
