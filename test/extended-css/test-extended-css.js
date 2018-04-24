@@ -186,10 +186,10 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
 });
 
 QUnit.test("Test ExtendedCss.query", function (assert) {
-
     var elements = ExtendedCss.query("#case12>div:contains(Block me)");
     assert.ok(elements);
     assert.ok(elements.length === 1);
+    assert.ok((elements instanceof Array) || (elements instanceof NodeList));
 });
 
 QUnit.test("Test using ExtendedCss.query for selectors validation", function (assert) {
