@@ -192,12 +192,24 @@ QUnit.test("Test ExtendedCss.query", function (assert) {
     assert.ok(elements.length === 1);
 });
 
-QUnit.test("Text ExtendedCss.isValid", function (assert) {
+QUnit.test("Test using ExtendedCss.query for selectors validation", function (assert) {
 
-    assert.ok(ExtendedCss.isValid("div"));
-    assert.ok(ExtendedCss.isValid("#banner"));
-    assert.ok(ExtendedCss.isValid("#banner:has(div) > #banner:contains(test)"));
-    assert.notOk(ExtendedCss.isValid("#banner:whatisthispseudo(div)"));
+    function isValid(selectorText) {
+        try {
+            var matched = ExtendedCss.query(selectorText, true);
+            return (matched instanceof Array) || (matched instanceof NodeList);
+        } catch (ex) {
+            return false;
+        }
+    }
+
+    assert.notOk(isValid());
+    assert.ok(isValid("div"));
+    assert.ok(isValid("#banner"));
+    assert.ok(isValid("#banner:has(div) > #banner:contains(test)"));
+    assert.ok(isValid("#banner[-ext-properties='content:*test']"));
+    assert.ok(isValid("#banner[-ext-has='test']"));
+    assert.notOk(isValid("#banner:whatisthispseudo(div)"));
 });
 
 QUnit.test("Test debugging", function (assert) {
