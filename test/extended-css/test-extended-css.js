@@ -140,14 +140,14 @@ QUnit.test("Test attribute protection", function (assert) {
     rAF(function () {
         var node = document.getElementById("case10-blocked");
         node.style.cssText = "display: block!important;"
-        rAF(function() {
+        rAF(function () {
             node.style.cssText = "display: block!important; visibility: visible!important;";
             rAF(function () {
                 assertElementStyle("case10-blocked", { "display": "none" }, assert);
                 done();
             }, 100);
         }, 100);
-        
+
     }, 100);
 });
 
@@ -186,10 +186,30 @@ QUnit.test("Protection from recurring style fixes", function (assert) {
 });
 
 QUnit.test("Test ExtendedCss.query", function (assert) {
-
     var elements = ExtendedCss.query("#case12>div:contains(Block me)");
     assert.ok(elements);
     assert.ok(elements.length === 1);
+    assert.ok((elements instanceof Array) || (elements instanceof NodeList));
+});
+
+QUnit.test("Test using ExtendedCss.query for selectors validation", function (assert) {
+
+    function isValid(selectorText) {
+        try {
+            ExtendedCss.query(selectorText, true);
+            return true;
+        } catch (ex) {
+            return false;
+        }
+    }
+
+    assert.notOk(isValid());
+    assert.ok(isValid("div"));
+    assert.ok(isValid("#banner"));
+    assert.ok(isValid("#banner:has(div) > #banner:contains(test)"));
+    assert.ok(isValid("#banner[-ext-properties='content:*test']"));
+    assert.ok(isValid("#banner[-ext-has='test']"));
+    assert.notOk(isValid("#banner:whatisthispseudo(div)"));
 });
 
 QUnit.test("Test debugging", function (assert) {
