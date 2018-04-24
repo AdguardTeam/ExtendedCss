@@ -196,8 +196,8 @@ QUnit.test("Test using ExtendedCss.query for selectors validation", function (as
 
     function isValid(selectorText) {
         try {
-            var matched = ExtendedCss.query(selectorText, true);
-            return (matched instanceof Array) || (matched instanceof NodeList);
+            ExtendedCss.query(selectorText, true);
+            return true;
         } catch (ex) {
             return false;
         }
