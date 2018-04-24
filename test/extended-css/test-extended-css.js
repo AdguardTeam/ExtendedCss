@@ -140,14 +140,14 @@ QUnit.test("Test attribute protection", function (assert) {
     rAF(function () {
         var node = document.getElementById("case10-blocked");
         node.style.cssText = "display: block!important;"
-        rAF(function() {
+        rAF(function () {
             node.style.cssText = "display: block!important; visibility: visible!important;";
             rAF(function () {
                 assertElementStyle("case10-blocked", { "display": "none" }, assert);
                 done();
             }, 100);
         }, 100);
-        
+
     }, 100);
 });
 
@@ -190,6 +190,14 @@ QUnit.test("Test ExtendedCss.query", function (assert) {
     var elements = ExtendedCss.query("#case12>div:contains(Block me)");
     assert.ok(elements);
     assert.ok(elements.length === 1);
+});
+
+QUnit.test("Text ExtendedCss.isValid", function (assert) {
+
+    assert.ok(ExtendedCss.isValid("div"));
+    assert.ok(ExtendedCss.isValid("#banner"));
+    assert.ok(ExtendedCss.isValid("#banner:has(div) > #banner:contains(test)"));
+    assert.notOk(ExtendedCss.isValid("#banner:whatisthispseudo(div)"));
 });
 
 QUnit.test("Test debugging", function (assert) {
