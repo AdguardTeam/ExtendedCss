@@ -28,7 +28,8 @@
   "scripts": {
     "test": "grunt",
     "build-minus-qunit": "grunt build-minus-qunit",
-    "build": "grunt build"
+    "build": "grunt build",
+    "build-dist": "grunt build-dist"
   },
   "repository": {
     "type": "git",
