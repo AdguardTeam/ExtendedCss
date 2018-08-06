@@ -87,6 +87,22 @@ QUnit.test( "Test -ext-matches-css", function(assert) {
     assert.equal(elements[0], document.getElementById("test-div-background"));
 });
 
+QUnit.test( "Test -ext-matches-css with opacity property", function(assert) {
+    // Compatible syntax
+    var selector = ExtendedSelectorFactory.createSelector('#test-opacity-property[-ext-matches-css="opacity: 0.9"]');
+    var elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-opacity-property"));
+
+    // Standard syntax
+    selector = ExtendedSelectorFactory.createSelector('#test-opacity-property:matches-css(opacity: 0.9)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById("test-opacity-property"));
+});
+
 QUnit.test( "Test -ext-matches-css-before", function(assert) {
     // Compatible syntax
     var selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css-before="content: *find me*"]');
