@@ -1,6 +1,6 @@
 {
   "name": "extended-css",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Module for applying CSS styles with extended selection properties.",
   "main": "extended-css.js",
   "directories": {
@@ -26,7 +26,10 @@
     "underscore": "^1.8.3"
   },
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "build-minus-qunit": "grunt build-minus-qunit",
+    "build": "grunt build",
+    "build-dist": "grunt build-dist"
   },
   "repository": {
     "type": "git",
