@@ -1,6 +1,6 @@
 /* Start with creating ExtendedCss */
 var cssText = document.getElementById("extendedCss").innerHTML;
-var extendedCss = new ExtendedCss(cssText);
+var extendedCss = new ExtendedCss({ styleSheet: cssText });
 extendedCss.apply();
 
 /**
@@ -220,7 +220,7 @@ QUnit.test("Test debugging", function (assert) {
         "#case13:not(with-debug) { display:none; debug:\"\" }",
         "#case13:not(without-debug) { display:none; }"
     ];
-    var extendedCss = new ExtendedCss(selectors.join("\n"));
+    var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
 
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
@@ -255,7 +255,7 @@ QUnit.test("Test global debugging", function (assert) {
         "#case14:not(without-debug-after-global) { display:none; }"
     ];
 
-    var extendedCss = new ExtendedCss(selectors.join("\n"));
+    var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
 
     // Spy on utils.logInfo
     var utilsLogInfo = utils.logInfo;
