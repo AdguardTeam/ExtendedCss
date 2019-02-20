@@ -289,4 +289,16 @@ QUnit.test("Test global debugging", function (assert) {
     };
 
     extendedCss.apply();
-})
+});
+
+QUnit.test('Test style remove property', (assert) => {
+    assert.timeout(1000);
+    const done = assert.async();
+
+    const styleSheet = '#case-remove-property { remove: true }';
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+    const targetElement = document.querySelector('#case-remove-property');
+    assert.notOk(targetElement);
+    done();
+});
