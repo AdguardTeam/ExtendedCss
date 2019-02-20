@@ -300,5 +300,15 @@ QUnit.test('Test style remove property', (assert) => {
     extendedCss.apply();
     const targetElement = document.querySelector('#case-remove-property');
     assert.notOk(targetElement);
-    done();
+
+    const nodeHtml = `<div id="case-remove-property"></div>`;
+    rAF(() => {
+        document.body.insertAdjacentHTML('beforeend', nodeHtml);
+        rAF(function () {
+            const targetElement = document.querySelector('#case-remove-property');
+            assert.notOk(targetElement);
+            done();
+        }, 100);
+    }, 100);
+    // done();
 });
