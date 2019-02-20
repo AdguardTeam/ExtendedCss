@@ -11,6 +11,8 @@ Module for applying CSS styles with extended selection properties.
   * [Selectors debug mode](#selectors-debug-mode)
 * [Usage](#usage)
 * [Debugging extended selectors](#debugging-extended-selectors)
+* [Projects using Extended Css](#projects-using-extended-css)
+* [Test page](#test-page)
 
 ## Extended capabilities
 
@@ -306,6 +308,11 @@ var selectorText = "div.block[-ext-has='.header:matches-css-after(content: Anzei
 
 ExtendedCss.query(selectorText) // returns an array of Elements matching selectorText
 ```
+
+### Projects using Extended Css
+* [CoreLibs](https://github.com/AdguardTeam/CoreLibs)
+* [AdguardBrowserExtension](https://github.com/AdguardTeam/AdguardBrowserExtension)
+* [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari)
 
 ### Test page
 
