@@ -73,14 +73,14 @@ QUnit.test( "Test ExtendedSelector", function( assert ) {
 
 QUnit.test( "Test -ext-matches-css", function(assert) {
     // Compatible syntax
-    var selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(about:*)"]');
+    var selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]');
     var elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById("test-div-background"));
 
     // Standard syntax
-    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url(about:*))');
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url(data:*))');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
@@ -203,14 +203,15 @@ QUnit.test( "Test regular expressions support in :contains", function(assert) {
 });
 
 QUnit.test( "Test regular expressions support in :matches-css", function(assert) {
-    var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+    // var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+    var selectorText = ':matches-css(    background-image: /^url\\([a-z]{4}:[a-z]{5}\\/[gif;base].*\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
     var selector = ExtendedSelectorFactory.createSelector(selectorText);
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
 
 QUnit.test( "Test simple regex support in :matches-css, when ()[] characters are escaped", function(assert) {
-    var selectorText = ':matches-css(background-image:url\(about:blank\))';
+    var selectorText = ':matches-css(background-image:url\(data:*\))';
     var selector = ExtendedSelectorFactory.createSelector(selectorText);
     var elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
