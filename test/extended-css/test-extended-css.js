@@ -310,5 +310,37 @@ QUnit.test('Test style remove property', (assert) => {
             done();
         }, 100);
     }, 100);
-    // done();
+});
+
+QUnit.test("protected elements are removed only 50 times", function (assert) {
+    const done = assert.async();
+    const protectorNode = document.getElementById('protect-node-inside');
+    const id = 'case-remove-property-repeatedly';
+    const testNodeElement = document.createElement('div');
+    testNodeElement.id = id;
+
+    let elementAddCounter = 0;
+
+    const protectElement = () => {
+        const testNode = protectorNode.querySelector(`#${id}`);
+        if (!testNode) {
+            protectorNode.appendChild(testNodeElement);
+            elementAddCounter += 1;
+        }
+    };
+
+    const observer = new MutationObserver(protectElement);
+    observer.observe(protectorNode, { childList: true });
+
+    const styleSheet = `#${id} { remove: true }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    setTimeout(function () {
+        observer.disconnect();
+        assert.ok(elementAddCounter < 60);
+        assert.ok(elementAddCounter >= 50);
+        assert.ok(protectorNode.querySelector(`#${id}`));
+        done();
+    }, 3000);
 });
