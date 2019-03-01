@@ -22,14 +22,15 @@
     "grunt-contrib-qunit": "^3.1.0",
     "grunt-contrib-uglify": "~3.0.1",
     "grunt-contrib-watch": "~1.0.0",
+    "grunt-contrib-clean": "^1.1.0",
     "load-grunt-tasks": "^3.5.2",
     "underscore": "^1.8.3"
   },
   "scripts": {
     "test": "grunt",
-    "build-minus-qunit": "grunt build-minus-qunit",
     "build": "grunt build",
-    "build-dist": "grunt build-dist"
+    "build-dist": "grunt build-dist",
+    "build-dist-minus-test": "grunt build-dist-minus-qunit"
   },
   "repository": {
     "type": "git",

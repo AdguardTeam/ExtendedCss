@@ -9,7 +9,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     // Helper libs
     _: require('underscore'),
-    // Metadata.    
+    // Metadata.
     pkg: grunt.file.readJSON('package.json'),
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
@@ -21,22 +21,22 @@ module.exports = function(grunt) {
       options: {
         banner: '<%= banner %>' + 'var ExtendedCss = (function(window) {\n',
         footer: '\n' +
-          '// EXPOSE\n' + 
-          'return ExtendedCss;\n' + 
+          '// EXPOSE\n' +
+          'return ExtendedCss;\n' +
           '})(window);',
         stripBanners: true
       },
       dist: {
         src: [
-          'dist/utils.js',
-          'dist/**.js',
+          'build/utils.js',
+          'build/**.js',
           // All files in alpha order with these two at the end
-          '!dist/extended-css-selector.js',
-          '!dist/extended-css.js',
-          'dist/extended-css-selector.js',
-          'dist/extended-css.js'          
+          '!build/extended-css-selector.js',
+          '!build/extended-css.js',
+          'build/extended-css-selector.js',
+          'build/extended-css.js'
         ],
-        dest: 'build/<%= pkg.name %>.js'
+        dest: 'dist/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -45,7 +45,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'build/<%= pkg.name %>.min.js'
+        dest: 'dist/<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -97,29 +97,30 @@ module.exports = function(grunt) {
         expand: true,
         cwd: 'lib',
         src: '**.js',
-        dest: 'dist/',
+        dest: 'build/',
         ext: '.js',
         extDot: 'last'
       }
-    }
+    },
+    clean: ['build']
   });
 
   // These plugins provide necessary tasks.
 
   // Default task.
-  grunt.registerTask('default', ['jshint', 'babel', 'qunit']);
-  grunt.registerTask('build', ['jshint', 'babel', 'qunit', 'concat', 'uglify']);
-  grunt.registerTask('build-dist', ['jshint', 'babel']);
-  grunt.registerTask('build-minus-qunit', ['jshint', 'babel', 'concat', 'uglify']);
+  grunt.registerTask('default', ['clean', 'jshint', 'babel', 'qunit']);
+  grunt.registerTask('build', ['clean', 'jshint', 'babel']);
+  grunt.registerTask('build-dist', ['clean', 'jshint', 'babel', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('build-dist-minus-tests', ['clean', 'jshint', 'babel', 'concat', 'uglify']);
 
   // Prepare gh-pages branch
   grunt.registerTask('gh-pages', function() {
-    fs.moveSync('dist', '_dist');
-    fs.copySync('test', 'dist/test');
-    fs.copySync('lib', 'dist/lib');
-    fs.copySync('index.html', 'dist/index.html');
-    fs.moveSync('_dist', 'dist/dist');
-    fs.moveSync('build/extended-css.js', 'dist/extended-css.js');
-    fs.moveSync('build/extended-css.min.js', 'dist/extended-css.min.js');
+    fs.moveSync('build', '_build');
+    fs.copySync('test', 'build/test');
+    fs.copySync('lib', 'build/lib');
+    fs.copySync('index.html', 'build/index.html');
+    fs.moveSync('_build', 'build/build');
+    fs.moveSync('dist/extended-css.js', 'build/extended-css.js');
+    fs.moveSync('dist/extended-css.min.js', 'build/extended-css.min.js');
   });
 };
