@@ -4,12 +4,12 @@ node_js:
 install:
   - npm install
 script:
-  - grunt build
+  - grunt build-dist
   - grunt gh-pages
 deploy:
   - provider: pages
     skip_cleanup: true
-    local_dir: 'dist'
+    local_dir: 'build'
     github_token: $GITHUB_TOKEN
     on:
       branch: master

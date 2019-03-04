@@ -9,6 +9,7 @@ Module for applying CSS styles with extended selection properties.
   * [Pseudo-class :matches-css()](#extended-css-matches-css)
   * [Pseudo-class :properties()](#extended-css-properties)
   * [Selectors debug mode](#selectors-debug-mode)
+  * [Pseudo-property `remove`](#pseudo-property-remove)
 * [Usage](#usage)
 * [Debugging extended selectors](#debugging-extended-selectors)
 * [Projects using Extended Css](#projects-using-extended-css)
@@ -275,6 +276,13 @@ Sometimes, you might need to check the performance of a given selector or a styl
 ```
 .banner { display: none; debug: global; }
 ```
+
+### Pseudo-property `remove`
+Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use a special style property: `remove`.
+
+`.banner { remove: true; }`
+
+> Please note, that other style properties will be ignored if `remove` is specified.
 
 ### Usage
 ```

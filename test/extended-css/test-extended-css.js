@@ -289,4 +289,58 @@ QUnit.test("Test global debugging", function (assert) {
     };
 
     extendedCss.apply();
-})
+});
+
+QUnit.test('Test style remove property', (assert) => {
+    assert.timeout(1000);
+    const done = assert.async();
+
+    const styleSheet = '#case-remove-property { remove: true }';
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+    const targetElement = document.querySelector('#case-remove-property');
+    assert.notOk(targetElement);
+
+    const nodeHtml = `<div id="case-remove-property"></div>`;
+    rAF(() => {
+        document.body.insertAdjacentHTML('beforeend', nodeHtml);
+        rAF(function () {
+            const targetElement = document.querySelector('#case-remove-property');
+            assert.notOk(targetElement);
+            done();
+        }, 100);
+    }, 100);
+});
+
+QUnit.test("protected elements are removed only 50 times", function (assert) {
+    const done = assert.async();
+    const protectorNode = document.getElementById('protect-node-inside');
+    const id = 'case-remove-property-repeatedly';
+    const testNodeElement = document.createElement('div');
+    testNodeElement.id = id;
+
+    let elementAddCounter = 0;
+
+    const protectElement = () => {
+        const testNode = protectorNode.querySelector(`#${id}`);
+        if (!testNode) {
+            protectorNode.appendChild(testNodeElement);
+            elementAddCounter += 1;
+        }
+    };
+
+    const observer = new MutationObserver(protectElement);
+    observer.observe(protectorNode, { childList: true });
+
+    const styleSheet = `#${id} { remove: true }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    setTimeout(function () {
+        observer.disconnect();
+        assert.ok(elementAddCounter < 60);
+        assert.ok(elementAddCounter >= 50);
+        assert.ok(protectorNode.querySelector(`#${id}`));
+        done();
+    }, 3000);
+});

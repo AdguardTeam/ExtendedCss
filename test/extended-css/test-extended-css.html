@@ -13,14 +13,14 @@
   <div id="qunit-fixture"></div>
 
   <style id="extendedCss" type="text/extended-css">
-    #case1>div[-ext-has=".banner"] { display:none !important; } 
+    #case1>div[-ext-has=".banner"] { display:none !important; }
     #case2>div[-ext-contains="Block this"] { display: none!important }
-    #case3>div[-ext-has=".banner"] { visibility: hidden; } 
-    #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; } 
-    #case5>div[-ext-contains="Block this"] { display: none!important } 
-    #case6>div[-ext-has=".banner"] { display: none; } 
-    #case7>div[-ext-contains="Block this"] { display: none; } 
-    #case8>div[-ext-has=":matches-css-before(content: *block me*)"] { display: none; } 
+    #case3>div[-ext-has=".banner"] { visibility: hidden; }
+    #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }
+    #case5>div[-ext-contains="Block this"] { display: none!important }
+    #case6>div[-ext-has=".banner"] { display: none; }
+    #case7>div[-ext-contains="Block this"] { display: none; }
+    #case8>div[-ext-has=":matches-css-before(content: *block me*)"] { display: none; }
     #case9>div[-ext-contains="Another text"] { font-size: 16px; }
     #case10>div[-ext-contains="Block this"] { display: none; }
     #case11 { display: none; }
@@ -30,7 +30,7 @@
     body>.container {
       display: none!important;
     }
-    
+
     #case8-blocked>.before::before {
       content: "Block me please"
     }
@@ -89,14 +89,20 @@
     <div id="case13"></div>
     <div id="case14"></div>
 
+    <div id="case-remove-property"></div>
+
+    <div id="protect-node-inside">
+      <div id="case-remove-property-repeatedly"></div>
+    </div>
+
     <script src="../qunit/qunit-2.5.1.js"></script>
-    <script src="../../dist/sizzle.patched.js"></script>
-    <script src="../../dist/utils.js"></script>
-    <script src="../../dist/extended-css-parser.js"></script>
-    <script src="../../dist/style-property-matcher.js"></script>
-    <script src="../../dist/style-observer.js"></script>
-    <script src="../../dist/extended-css-selector.js"></script>
-    <script src="../../dist/extended-css.js"></script>
+    <script src="../../build/sizzle.patched.js"></script>
+    <script src="../../build/utils.js"></script>
+    <script src="../../build/extended-css-parser.js"></script>
+    <script src="../../build/style-property-matcher.js"></script>
+    <script src="../../build/style-observer.js"></script>
+    <script src="../../build/extended-css-selector.js"></script>
+    <script src="../../build/extended-css.js"></script>
     <script src="test-extended-css.js"></script>
 </body>
 
