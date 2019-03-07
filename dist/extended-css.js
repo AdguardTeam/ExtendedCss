@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.0 - 2019-03-01
+/*! extended-css - v1.1.1 - 2019-03-07
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -4368,6 +4368,11 @@ function ExtendedCss(configuration) {
     var domObserved = void 0;
     var eventListenerSupported = window.addEventListener;
     var domMutationObserver = void 0;
+    var domMutationObserverConfig = {
+        childList: true,
+        subtree: true,
+        attributeFilter: ['id', 'class']
+    };
 
     function observeDocument(callback) {
         // We are trying to limit the number of callback calls by not calling it on all kind of "hover" events.
@@ -4395,11 +4400,7 @@ function ExtendedCss(configuration) {
                 callback();
             });
 
-            domMutationObserver.observe(document.documentElement, {
-                childList: true,
-                subtree: true,
-                attributeFilter: ['id', 'class']
-            });
+            domMutationObserver.observe(document.documentElement, domMutationObserverConfig);
         } else if (eventListenerSupported) {
             document.addEventListener('DOMNodeInserted', callback, false);
             document.addEventListener('DOMNodeRemoved', callback, false);
@@ -4600,6 +4601,12 @@ function ExtendedCss(configuration) {
      */
     function applyRules() {
         var elementsIndex = [];
+        // some rules could make call - selector.querySelectorAll() temporarily to change node id attribute
+        // this caused MutationObserver to call recursively
+        // https://github.com/AdguardTeam/ExtendedCss/issues/81
+        if (domMutationObserver) {
+            domMutationObserver.disconnect();
+        }
 
         for (var _i4 = 0, _rules = rules; _i4 < _rules.length; _i4++) {
             var rule = _rules[_i4];
@@ -4607,9 +4614,11 @@ function ExtendedCss(configuration) {
             Array.prototype.push.apply(elementsIndex, nodes);
         }
 
+        if (domMutationObserver) {
+            domMutationObserver.observe(document.documentElement, domMutationObserverConfig);
+        }
+
         // Now revert styles for elements which are no more affected
-
-
         var l = affectedElements.length;
         while (l--) {
             var obj = affectedElements[l];
