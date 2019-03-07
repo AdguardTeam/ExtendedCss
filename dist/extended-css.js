@@ -4653,7 +4653,6 @@ function ExtendedCss(configuration) {
 
     function apply() {
         applyRules();
-        observe();
 
         if (document.readyState !== "complete") {
             document.addEventListener("DOMContentLoaded", applyRules);
@@ -4664,10 +4663,7 @@ function ExtendedCss(configuration) {
      * Disposes ExtendedCss and removes our styles from matched elements
      */
     function dispose() {
-        if (domObserved) {
-            disconnectDocument(mainCallback);
-            domObserved = false;
-        }
+        stopObserve();
 
         for (var _i5 = 0; _i5 < affectedElements.length; _i5++) {
             var obj = affectedElements[_i5];
