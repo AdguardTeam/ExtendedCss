@@ -4368,11 +4368,6 @@ function ExtendedCss(configuration) {
     var domObserved = void 0;
     var eventListenerSupported = window.addEventListener;
     var domMutationObserver = void 0;
-    var domMutationObserverConfig = {
-        childList: true,
-        subtree: true,
-        attributeFilter: ['id', 'class']
-    };
 
     function observeDocument(callback) {
         // We are trying to limit the number of callback calls by not calling it on all kind of "hover" events.
@@ -4400,13 +4395,18 @@ function ExtendedCss(configuration) {
                 callback();
             });
 
-            domMutationObserver.observe(document.documentElement, domMutationObserverConfig);
+            domMutationObserver.observe(document.documentElement, {
+                childList: true,
+                subtree: true,
+                attributeFilter: ['id', 'class']
+            });
         } else if (eventListenerSupported) {
             document.addEventListener('DOMNodeInserted', callback, false);
             document.addEventListener('DOMNodeRemoved', callback, false);
             document.addEventListener('DOMAttrModified', callback, false);
         }
     }
+
     function disconnectDocument(callback) {
         if (domMutationObserver) {
             domMutationObserver.disconnect();
