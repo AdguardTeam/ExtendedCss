@@ -4604,9 +4604,7 @@ function ExtendedCss(configuration) {
         // some rules could make call - selector.querySelectorAll() temporarily to change node id attribute
         // this caused MutationObserver to call recursively
         // https://github.com/AdguardTeam/ExtendedCss/issues/81
-        if (domMutationObserver) {
-            domMutationObserver.disconnect();
-        }
+        stopObserve();
 
         for (var _i4 = 0, _rules = rules; _i4 < _rules.length; _i4++) {
             var rule = _rules[_i4];
@@ -4614,11 +4612,9 @@ function ExtendedCss(configuration) {
             Array.prototype.push.apply(elementsIndex, nodes);
         }
 
-        if (domMutationObserver) {
-            domMutationObserver.observe(document.documentElement, domMutationObserverConfig);
-        }
-
         // Now revert styles for elements which are no more affected
+
+
         var l = affectedElements.length;
         while (l--) {
             var obj = affectedElements[l];
@@ -4628,7 +4624,8 @@ function ExtendedCss(configuration) {
                 affectedElements.splice(l, 1);
             }
         }
-
+        // After styles are applied we can start observe again
+        observe();
         printTimingInfo();
     }
 
@@ -4644,6 +4641,14 @@ function ExtendedCss(configuration) {
         // Handle dynamically added elements
         domObserved = true;
         observeDocument(mainCallback);
+    }
+
+    function stopObserve() {
+        if (!domObserved) {
+            return;
+        }
+        domObserved = false;
+        disconnectDocument(mainCallback);
     }
 
     function apply() {
