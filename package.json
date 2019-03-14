@@ -9,6 +9,12 @@
   "engines": {
     "node": ">=10"
   },
+  "scripts": {
+    "test": "grunt",
+    "build": "grunt build",
+    "build-dist": "grunt build-dist",
+    "build-dist-minus-tests": "grunt build-dist-minus-tests"
+  },
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.0",
@@ -25,12 +31,6 @@
     "grunt-contrib-clean": "^1.1.0",
     "load-grunt-tasks": "^3.5.2",
     "underscore": "^1.8.3"
-  },
-  "scripts": {
-    "test": "grunt",
-    "build": "grunt build",
-    "build-dist": "grunt build-dist",
-    "build-dist-minus-test": "grunt build-dist-minus-qunit"
   },
   "repository": {
     "type": "git",

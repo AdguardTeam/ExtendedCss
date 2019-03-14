@@ -78,6 +78,12 @@ QUnit.test("Case 5. complicated selector", function (assert) {
     testPerformance(selector, assert);
 });
 
+QUnit.test("Case 5. split selectors with a lot of children", function(assert) {
+    var selectorText = '#case5 div > div:has(.target-banner)';
+    var selector = ExtendedSelectorFactory.createSelector(selectorText);
+    testPerformance(selector, assert);
+});
+
 QUnit.test("Case 6.1. :properties selector", function (assert) {
 
     var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
