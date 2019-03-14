@@ -11,9 +11,10 @@ var testPerformance = function (selector, assert) {
         }
     }
     var elapsed = new Date().getTime() - startTime;
-    var msg = 'Elapsed: ' + elapsed + ' ms\n';
-    msg += 'Count: ' + LOOP_COUNT + '\n';
+    var msg = 'Elapsed: ' + elapsed + ' ms ';
+    msg += 'Count: ' + LOOP_COUNT + ' ';
     msg += 'Average: ' + elapsed / LOOP_COUNT + ' ms';
+    console.log(msg, assert.test.testName);
     assert.ok(resultOk, msg);
 };
 
@@ -70,7 +71,7 @@ QUnit.test("Case 4. :has and :contains composite performance", function (assert)
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 5. complicated selector", function (assert) {
+QUnit.test("Case 5.1 complicated selector", function (assert) {
     // https://github.com/AdguardTeam/ExtendedCss/issues/25
 
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
@@ -78,8 +79,16 @@ QUnit.test("Case 5. complicated selector", function (assert) {
     testPerformance(selector, assert);
 });
 
-QUnit.test("Case 5. split selectors with a lot of children", function(assert) {
+// Previous test results: Average: 0.0665 ms -> Last test results Average: 0.0409 ms
+QUnit.test("Case 5.2 split selectors with a lot of children", function(assert) {
     var selectorText = '#case5 div > div:has(.target-banner)';
+    var selector = ExtendedSelectorFactory.createSelector(selectorText);
+    testPerformance(selector, assert);
+});
+
+// Prev test results: Average: 0.1101 ms -> Last test results Average: 0.0601 ms
+QUnit.test("Case 5.3 split selectors with a lot of children and matches-css", function(assert) {
+    var selectorText = '#case5 div > div:matches-css(background-image: data:*)';
     var selector = ExtendedSelectorFactory.createSelector(selectorText);
     testPerformance(selector, assert);
 });
