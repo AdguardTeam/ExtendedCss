@@ -14,4 +14,5 @@ deploy:
     on:
       branch: master
 notifications:
-  slack: $SLACK_TOKEN
+  slack: performix:yXTihlSzsLFSZiqbXMNzvTSX
+
