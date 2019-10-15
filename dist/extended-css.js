@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.3 - 2019-10-15
+/*! extended-css - v1.1.5 - 2019-10-15
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -4341,7 +4341,7 @@ function ExtendedCss(configuration) {
 
         return {
             isIgnoredEventType: function () {
-                return ignoredEventTypes.includes(getLastEventType()) && getTimeSinceLastEvent() < LAST_EVENT_TIMEOUT_MS;
+                return ignoredEventTypes.indexOf(getLastEventType()) > -1 && getTimeSinceLastEvent() < LAST_EVENT_TIMEOUT_MS;
             }
         };
     }();
