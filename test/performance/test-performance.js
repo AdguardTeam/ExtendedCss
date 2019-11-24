@@ -92,31 +92,3 @@ QUnit.test("Case 5.3 split selectors with a lot of children and matches-css", fu
     var selector = ExtendedSelectorFactory.createSelector(selectorText);
     testPerformance(selector, assert);
 });
-
-QUnit.test("Case 6.1. :properties selector", function (assert) {
-
-    var selectorText = 'div[id^="case6-"]:has(div[class]:properties(content:*test))';
-    var selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
-});
-
-
-QUnit.test("Case 6.2. :properties selector wihout seed", function (assert) {
-
-    var selectorText = '[id^="case6-"]:has([class]:properties(content:*test))';
-    var selector = ExtendedSelectorFactory.createSelector(selectorText);
-
-    testPerformance(selector, assert);
-});
-
-QUnit.test("Case 6.3. :properties selector with reverse search", function(assert) {
-    var selectorText = 'div:properties(content:*test)';
-    var selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
-});
-
-QUnit.test("Case 6.4. :properties selector without reverse search", function(assert) {
-    var selectorText = 'div:has(:properties(content:*test))';
-    var selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
-});

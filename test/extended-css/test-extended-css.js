@@ -207,7 +207,6 @@ QUnit.test("Test using ExtendedCss.query for selectors validation", function (as
     assert.ok(isValid("div"));
     assert.ok(isValid("#banner"));
     assert.ok(isValid("#banner:has(div) > #banner:contains(test)"));
-    assert.ok(isValid("#banner[-ext-properties='content:*test']"));
     assert.ok(isValid("#banner[-ext-has='test']"));
     assert.notOk(isValid("#banner:whatisthispseudo(div)"));
 });

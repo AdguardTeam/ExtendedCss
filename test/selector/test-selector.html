@@ -59,33 +59,6 @@
         <div id="test-div-after"></div>
     </div>
 
-    <div id="test-properties">
-        <div id="test-properties-background"></div>
-        <div id="test-properties-has">
-            <div id="test-properties-has-child"></div>
-        </div>
-        <div id="test-properties-dynamic"></div>
-        <div id="test-properties-dynamic-next"></div>
-        <div id="test-properties-dynamic-2">
-            <style id="dynamic-style-2">
-                #test-properties-dynamic-2::after { content: " " }
-            </style>
-        </div>
-        <div id="test-properties-dynamic-3">
-            <style id="dynamic-style-3">
-                #test-properties-dynamic-3::before {content: " " }
-            </style>
-        </div>
-    </div>
-    <style>
-        #test-properties-background { background: #111; }
-        #test-properties-has-child { background: #111; }
-    </style>
-
-    <div id="test-properties-ignored-stylesheets">
-        <div id="test-properties-ignored-stylesheets-background"></div>
-    </div>
-
     <div id="test-opacity-property">
         <style>
             #test-opacity-property { opacity: 0.9; }
@@ -101,7 +74,6 @@
 <script src="../../build/sizzle.patched.js"></script>
 <script src="../../build/utils.js"></script>
 <script src="../../build/style-property-matcher.js"></script>
-<script src="../../build/style-observer.js"></script>
 <script src="../../build/extended-css-parser.js"></script>
 <script src="../../build/extended-css-selector.js"></script>
 <script src="test-selector.js"></script>
