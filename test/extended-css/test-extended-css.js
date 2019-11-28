@@ -315,6 +315,23 @@ QUnit.test('Apply different rules to the same element', (assert) => {
     assertElementStyle("case15-inner", { "color": "red", "background": "white" }, assert);
 });
 
+QUnit.test('Protect only rule style', (assert) => {
+    var done = assert.async();
+    assertElementStyle("case16-inner", { "color": "red", "background": "white" }, assert);
+
+    rAF(function () {
+        var node = document.getElementById("case16-inner");
+        node.style.cssText = "background: green;";
+        rAF(function () {
+            rAF(function () {
+                assertElementStyle("case16-inner", { "color": "red", "background": "green" }, assert);
+                done();
+            }, 100);
+        }, 100);
+
+    }, 100);
+});
+
 QUnit.test("Protected elements are removed only 50 times", function (assert) {
     const done = assert.async();
     const protectorNode = document.getElementById('protect-node-inside');
