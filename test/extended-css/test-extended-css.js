@@ -311,7 +311,11 @@ QUnit.test('Test style remove property', (assert) => {
     }, 100);
 });
 
-QUnit.test("protected elements are removed only 50 times", function (assert) {
+QUnit.test('Apply different rules to the same element', (assert) => {
+    assertElementStyle("case15-inner", { "color": "red", "background": "white" }, assert);
+});
+
+QUnit.test("Protected elements are removed only 50 times", function (assert) {
     const done = assert.async();
     const protectorNode = document.getElementById('protect-node-inside');
     const id = 'case-remove-property-repeatedly';
