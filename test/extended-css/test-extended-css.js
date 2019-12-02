@@ -68,7 +68,7 @@ QUnit.test("Reaction on DOM modification", function (assert) {
     document.getElementById("container").appendChild(el);
 
     rAF(function () {
-        assertElementStyle("case5-blocked", { display: "none" }, assert);
+        assertElementStyle("case5-blocked", { display: "" }, assert);
         done();
     }, 100);
 });
