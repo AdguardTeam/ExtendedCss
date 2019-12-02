@@ -3639,7 +3639,7 @@ function ExtendedCss(configuration) {
     var EventTracker = function () {
 
         var ignoredEventTypes = ['mouseover', 'mouseleave', 'mouseenter', 'mouseout'];
-        var LAST_EVENT_TIMEOUT_MS = 10;
+        var LAST_EVENT_TIMEOUT_MS = 150;
 
         var TRACKED_EVENTS = [
         // keyboard events
