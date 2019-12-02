@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - 2019-11-26
+/*! extended-css - v1.1.6 - 2019-12-02
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -3479,6 +3479,7 @@ var ExtendedSelectorFactory = function () {
      * @param {string} selectorText
      * @param {string} simple
      * @param {string} relation
+     * @param {string} complex
      * @param {boolean=} debug
      * @constructor
      * @extends TraitLessSelector
@@ -3965,7 +3966,9 @@ function ExtendedCss(configuration) {
                 if (!obj.removed) {
                     // Add style protection observer
                     // Protect "style" attribute from changes
-                    obj.protectionObserver = protectStyleAttribute(obj.node, obj.rules);
+                    if (!obj.protectionObserver) {
+                        obj.protectionObserver = protectStyleAttribute(obj.node, obj.rules);
+                    }
                 }
             }
         }
