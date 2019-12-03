@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Extended CSS tests</title>
+  <link rel="stylesheet" href="../qunit/qunit-2.5.1.css">
+</head>
+
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+
+  <style id="extendedCss" type="text/extended-css">
+    #case1>div[-ext-has=".banner"] { display:none !important; }
+    #case3>div[-ext-has=".banner"] { visibility: hidden; }
+  </style>
+
+  <style type="text/css">
+    body>.container {
+      display: none!important;
+    }
+  </style>
+
+  <div id="container" class="container">
+    <div id="case1">
+      <div id="case1-blocked">
+        <div class="banner"></div>
+      </div>
+    </div>
+    <div id="case3">
+      <div id="case3-modified" style="display: block;">
+        <div class="banner"></div>
+      </div>
+    </div>
+
+    <script src="../qunit/qunit-2.5.1.js"></script>
+    <script src="../../dist/extended-css.js"></script>
+    <script src="test-dist.js"></script>
+</body>
+
+</html>

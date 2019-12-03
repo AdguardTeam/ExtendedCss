@@ -30,6 +30,7 @@ const runQunit = async (testFilePath) => {
         await runQunit('../test/extended-css/test-extended-css.html');
         await runQunit('../test/performance/test-performance.html');
         await runQunit('../test/selector/test-selector.html');
+        await runQunit('../test/dist/test-dist.html');
 
         console.log('Tests passed OK');
     } catch (ex) {
