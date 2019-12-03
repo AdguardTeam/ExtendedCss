@@ -13,7 +13,9 @@
     "test": "grunt",
     "build": "grunt build",
     "build-dist": "grunt build-dist",
-    "build-dist-minus-tests": "grunt build-dist-minus-tests"
+    "build-dist-minus-tests": "grunt build-dist-minus-tests",
+    "rtest": "node tasks/tests.js",
+    "rbuild": "node tasks/compile.js"
   },
   "dependencies": {},
   "devDependencies": {
@@ -30,7 +32,9 @@
     "grunt-contrib-watch": "~1.0.0",
     "grunt-contrib-clean": "^1.1.0",
     "load-grunt-tasks": "^3.5.2",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "node-qunit-puppeteer": "^1.0.6",
+    "rollup": "^1.21.0"
   },
   "repository": {
     "type": "git",
