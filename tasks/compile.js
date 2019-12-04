@@ -23,11 +23,12 @@ const inputOptions = {
 const outputOptions = {
     file: `${config.outputDir}/${config.fileName}`,
     format: 'iife',
+    name: 'ExtendedCss',
     banner:
 `/*! ${pkg.title || pkg.name} - v${pkg.version} - ${new Date().toDateString()}
 ${pkg.homepage ? "* " + pkg.homepage : ""}
-* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(", ")} 
-*/`
+* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(", ")}
+*/`,
 };
 
 //TODO: uglify

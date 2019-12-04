@@ -15,7 +15,8 @@
  */
 
 /* global QUnit */
-/* global ExtendedSelector */
+
+const ExtendedSelectorFactory = exports.ExtendedSelectorFactory;
 
 QUnit.test( "Test ExtendedSelector", function( assert ) {
     var checkElements = function (elements, selector) {
