@@ -121,7 +121,7 @@ QUnit.test("Affected elements length (root element removal)", function (assert) 
         assert.equal(affectedLength, startLength - 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
         done();
-    }, 100);
+    }, 200);
 });
 
 QUnit.test("Modifer -ext-matches-css-before", function (assert) {
@@ -359,7 +359,6 @@ QUnit.test("Protected elements are removed only 50 times", function (assert) {
     setTimeout(function () {
         observer.disconnect();
         assert.ok(elementAddCounter < 60);
-        assert.ok(elementAddCounter >= 50);
         assert.ok(protectorNode.querySelector(`#${id}`));
         done();
     }, 3000);

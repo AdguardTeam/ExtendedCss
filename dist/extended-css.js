@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - 2019-12-03
+/*! extended-css - v1.1.6 - 2019-12-04
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -3639,7 +3639,7 @@ function ExtendedCss(configuration) {
     var EventTracker = function () {
 
         var ignoredEventTypes = ['mouseover', 'mouseleave', 'mouseenter', 'mouseout'];
-        var LAST_EVENT_TIMEOUT_MS = 100;
+        var LAST_EVENT_TIMEOUT_MS = 20;
 
         var TRACKED_EVENTS = [
         // keyboard events
@@ -3977,7 +3977,7 @@ function ExtendedCss(configuration) {
         printTimingInfo();
     }
 
-    var APPLY_RULES_DELAY = 50;
+    var APPLY_RULES_DELAY = 150;
     var applyRulesScheduler = new utils.AsyncWrapper(applyRules, APPLY_RULES_DELAY);
     var mainCallback = applyRulesScheduler.run.bind(applyRulesScheduler);
 
