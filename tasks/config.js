@@ -2,6 +2,6 @@
  * Build configuration
  */
 module.exports = {
-    outputDir: 'rdist',
-    fileName: 'extended-css.js'
+    outputDir: 'dist',
+    fileName: 'r-extended-css.js'
 };
