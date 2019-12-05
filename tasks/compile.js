@@ -23,41 +23,34 @@ ${pkg.homepage ? "* " + pkg.homepage : ""}
 * Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(", ")}
 */`;
 
-const rollupConfigs = [
-    {
-        inputOptions: {
-            input: './index.js',
-        },
-        outputOptions: {
+const rollupConfig = {
+    input: "./index.js",
+    output: [
+        {
             file: `${config.outputDir}/${config.fileName}.js`,
             format: 'iife',
             name: 'ExtendedCss',
             banner: banner,
-        }
-    },
-    {
-        inputOptions: {
-            input: './index.js',
         },
-        outputOptions: {
+        {
             file: `${config.outputDir}/${config.fileName}.min.js`,
             format: 'iife',
             name: 'ExtendedCss',
             banner: banner,
-            plugins: [terser()]
-        }
-    },
-];
+            plugins: [terser()],
+        },
+    ],
+};
 
 (async () => {
     try {
         console.info('Start compiling sources');
 
-        rollupConfigs.forEach(async (option)=> {
-            const bundle = await rollup(option.inputOptions);
-            // an array of file names this bundle depends on
-            console.log(bundle.watchFiles);
-            await bundle.write(option.outputOptions);
+        const bundle = await rollup(rollupConfig);
+        console.log(bundle.watchFiles);
+
+        rollupConfig.output.forEach(async (option)=> {
+            await bundle.write(option);
         });
 
         console.info('Finished compiling sources');
