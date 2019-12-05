@@ -18,50 +18,10 @@ if (!fs.existsSync('build')) {
 const options = [
     {
         inputOptions: {
-            input: './lib/sizzle.patched.js',
+            input: './test/index.js',
         },
         outputOptions: {
-            file: `build/sizzle.patched.js`,
-            format: 'iife',
-            name: 'exportsSizzle',
-        }
-    },
-    {
-        inputOptions: {
-            input: './lib/utils.js',
-        },
-        outputOptions: {
-            file: `build/utils.js`,
-            format: 'iife',
-            name: 'exportsUtils',
-        }
-    },
-    {
-        inputOptions: {
-            input: './lib/extended-css-selector.js',
-        },
-        outputOptions: {
-            file: `build/extended-css-selector.js`,
-            format: 'iife',
-            name: 'exports'
-        }
-    },
-    {
-        inputOptions: {
-            input: './lib/extended-css-parser.js',
-        },
-        outputOptions: {
-            file: `build/extended-css-parser.js`,
-            format: 'iife',
-            name: 'exports',
-        }
-    },
-    {
-        inputOptions: {
-            input: './lib/extended-css.js',
-        },
-        outputOptions: {
-            file: `build/extended-css.js`,
+            file: `build/index.js`,
             format: 'iife',
             name: 'exports',
         }
@@ -92,7 +52,8 @@ const runQunit = async (testFilePath) => {
          */
         options.forEach(async (option)=> {
             const bundle = await rollup(option.inputOptions);
-            console.log(bundle.watchFiles); // an array of file names this bundle depends on
+            // an array of file names this bundle depends on
+            console.log(bundle.watchFiles);
             await bundle.write(option.outputOptions);
         });
 

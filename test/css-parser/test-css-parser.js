@@ -1,6 +1,6 @@
 /* global QUnit */
 const ExtendedCssParser = exports.ExtendedCssParser;
-const Sizzle = exportsSizzle.Sizzle;
+const Sizzle = exports.Sizzle;
 
 QUnit.test("Simple CSS", function (assert) {
 
@@ -15,19 +15,18 @@ QUnit.test("Simple CSS", function (assert) {
     assert.equal(cssObject[0].style.display, 'none');
 });
 
-//TODO: Fix
-// QUnit.test("Test Sizzle tokenize cache", function (assert) {
-//
-//     var selector = 'body';
-//     var cssText = selector + ' { display:none; }';
-//     var cssObject = ExtendedCssParser.parseCss(cssText);
-//
-//     // Check the tokens cache only now
-//     var tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
-//     assert.ok(tokens);
-//     assert.equal(tokens.length, 1);
-//     assert.equal(tokens[0].length, 1);
-// });
+QUnit.test("Test Sizzle tokenize cache", function (assert) {
+
+    var selector = 'body';
+    var cssText = selector + ' { display:none; }';
+    var cssObject = ExtendedCssParser.parseCss(cssText);
+
+    // Check the tokens cache only now
+    var tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
+    assert.ok(tokens);
+    assert.equal(tokens.length, 1);
+    assert.equal(tokens[0].length, 1);
+});
 
 QUnit.test("Parse an invalid selector", function (assert) {
 

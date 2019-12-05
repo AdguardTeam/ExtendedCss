@@ -1,5 +1,5 @@
 const ExtendedCss = exports.ExtendedCss;
-const utils = exportsUtils.utils;
+const utils = exports.utils;
 
 /* Start with creating ExtendedCss */
 var cssText = document.getElementById("extendedCss").innerHTML;
@@ -214,86 +214,84 @@ QUnit.test("Test using ExtendedCss.query for selectors validation", function (as
     assert.notOk(isValid("#banner:whatisthispseudo(div)"));
 });
 
-//TODO: Fix
+QUnit.test("Test debugging", function (assert) {
+    assert.timeout(1000);
+    var done = assert.async();
 
-// QUnit.test("Test debugging", function (assert) {
-//     assert.timeout(1000);
-//     var done = assert.async();
-//
-//     var selectors = [
-//         "#case13:not(with-debug) { display:none; debug:\"\" }",
-//         "#case13:not(without-debug) { display:none; }"
-//     ];
-//     var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
-//
-//     // Spy on utils.logInfo
-//     var utilsLogInfo = utils.logInfo;
-//     utils.logInfo = function () {
-//         if (
-//             arguments.length == 3 &&
-//             typeof arguments[0] === 'string' &&
-//             arguments[0].indexOf('Timings for') !== -1
-//         ) {
-//             var stats = arguments[2];
-//             assert.ok(stats);
-//             assert.ok(stats[0].selectorText.indexOf('with-debug') !== -1);
-//
-//             // Cleanup
-//             utils.logInfo = utilsLogInfo;
-//             extendedCss.dispose();
-//             done();
-//         }
-//         return utilsLogInfo.apply(this, arguments);
-//     };
-//
-//     extendedCss.apply();
-// });
-//
-// QUnit.test("Test global debugging", function (assert) {
-//     assert.timeout(1000);
-//     var done = assert.async();
-//
-//     var selectors = [
-//         "#case14:not(without-debug-before-global) { display:none; }",
-//         "#case14:not(with-global-debug) { display:none; debug: global }",
-//         "#case14:not(without-debug-after-global) { display:none; }"
-//     ];
-//
-//     var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
-//
-//     // Spy on utils.logInfo
-//     var utilsLogInfo = utils.logInfo;
-//     utils.logInfo = function () {
-//         if (
-//             arguments.length == 3 &&
-//             typeof arguments[0] === 'string' &&
-//             arguments[0].indexOf('Timings for') !== -1
-//         ) {
-//             var stats = arguments[2];
-//
-//             assert.ok(stats);
-//             assert.ok(stats.length, 3);
-//
-//             assert.equal(stats.filter(function (item) {
-//                 return item.selectorText.indexOf("with-global-debug") !== -1;
-//             }).length, 1, JSON.stringify(stats));
-//             assert.equal(stats.filter(function (item) {
-//                 return item.selectorText.indexOf("without-debug-before-global") !== -1;
-//             }).length, 1, JSON.stringify(stats));
-//             assert.equal(stats.filter(function (item) {
-//                 return item.selectorText.indexOf("without-debug-after-global") !== -1;
-//             }).length, 1, JSON.stringify(stats));
-//
-//             // Cleanup
-//             utils.logInfo = utilsLogInfo;
-//             extendedCss.dispose();
-//             done();
-//         }
-//         return utilsLogInfo.apply(this, arguments);
-//     };
-//
-//     extendedCss.apply();
-// });
+    var selectors = [
+        "#case13:not(with-debug) { display:none; debug:\"\" }",
+        "#case13:not(without-debug) { display:none; }"
+    ];
+    var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
+
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (
+            arguments.length == 3 &&
+            typeof arguments[0] === 'string' &&
+            arguments[0].indexOf('Timings for') !== -1
+        ) {
+            var stats = arguments[2];
+            assert.ok(stats);
+            assert.ok(stats[0].selectorText.indexOf('with-debug') !== -1);
+
+            // Cleanup
+            utils.logInfo = utilsLogInfo;
+            extendedCss.dispose();
+            done();
+        }
+        return utilsLogInfo.apply(this, arguments);
+    };
+
+    extendedCss.apply();
+});
+
+QUnit.test("Test global debugging", function (assert) {
+    assert.timeout(1000);
+    var done = assert.async();
+
+    var selectors = [
+        "#case14:not(without-debug-before-global) { display:none; }",
+        "#case14:not(with-global-debug) { display:none; debug: global }",
+        "#case14:not(without-debug-after-global) { display:none; }"
+    ];
+
+    var extendedCss = new ExtendedCss({ styleSheet: selectors.join("\n") });
+
+    // Spy on utils.logInfo
+    var utilsLogInfo = utils.logInfo;
+    utils.logInfo = function () {
+        if (
+            arguments.length == 3 &&
+            typeof arguments[0] === 'string' &&
+            arguments[0].indexOf('Timings for') !== -1
+        ) {
+            var stats = arguments[2];
+
+            assert.ok(stats);
+            assert.ok(stats.length, 3);
+
+            assert.equal(stats.filter(function (item) {
+                return item.selectorText.indexOf("with-global-debug") !== -1;
+            }).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-before-global") !== -1;
+            }).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter(function (item) {
+                return item.selectorText.indexOf("without-debug-after-global") !== -1;
+            }).length, 1, JSON.stringify(stats));
+
+            // Cleanup
+            utils.logInfo = utilsLogInfo;
+            extendedCss.dispose();
+            done();
+        }
+        return utilsLogInfo.apply(this, arguments);
+    };
+
+    extendedCss.apply();
+});
 
 QUnit.test('Test style remove property', (assert) => {
     assert.timeout(1000);
