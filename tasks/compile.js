@@ -3,49 +3,65 @@
 /**
  * This task compiles sources to javascript bundle
  */
-const fs = require('fs');
+const fs = require('fs-extra');
 const console = require('console');
 const { rollup } = require('rollup');
+const { terser } = require('rollup-plugin-terser');
+
 
 const pkg = require('../package.json');
 const config = require('./config');
 
-//TODO: Clean
-
 if (!fs.existsSync(config.outputDir)) {
     fs.mkdirSync(config.outputDir);
+} else {
+    fs.emptyDirSync(config.outputDir);
 }
 
-const inputOptions = {
-    input: 'index.js'
-};
-
-const outputOptions = {
-    file: `${config.outputDir}/${config.fileName}`,
-    format: 'iife',
-    name: 'ExtendedCss',
-    banner:
-`/*! ${pkg.title || pkg.name} - v${pkg.version} - ${new Date().toDateString()}
+const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}
 ${pkg.homepage ? "* " + pkg.homepage : ""}
 * Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(", ")}
-*/`,
-};
+*/`;
 
-//TODO: uglify
+const rollupConfigs = [
+    {
+        inputOptions: {
+            input: './index.js',
+        },
+        outputOptions: {
+            file: `${config.outputDir}/${config.fileName}.js`,
+            format: 'iife',
+            name: 'ExtendedCss',
+            banner: banner,
+        }
+    },
+    {
+        inputOptions: {
+            input: './index.js',
+        },
+        outputOptions: {
+            file: `${config.outputDir}/${config.fileName}.min.js`,
+            format: 'iife',
+            name: 'ExtendedCss',
+            banner: banner,
+            plugins: [terser()]
+        }
+    },
+];
 
-async function build() {
+(async () => {
     try {
         console.info('Start compiling sources');
 
-        const bundle = await rollup(inputOptions);
-        console.log(bundle.watchFiles); // an array of file names this bundle depends on
-        await bundle.write(outputOptions);
+        rollupConfigs.forEach(async (option)=> {
+            const bundle = await rollup(option.inputOptions);
+            // an array of file names this bundle depends on
+            console.log(bundle.watchFiles);
+            await bundle.write(option.outputOptions);
+        });
 
         console.info('Finished compiling sources');
-        console.info(`Output is ${outputOptions.file}`);
     } catch (ex) {
         console.error(ex);
     }
-}
-
-build();
+})();

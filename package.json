@@ -10,31 +10,16 @@
     "node": ">=10"
   },
   "scripts": {
-    "test": "grunt",
-    "build": "grunt build",
-    "build-dist": "grunt build-dist",
-    "build-dist-minus-tests": "grunt build-dist-minus-tests",
-    "rtest": "node tasks/tests.js",
-    "rbuild": "node tasks/compile.js"
+    "test": "node tasks/tests.js",
+    "build": "node tasks/compile.js"
   },
   "dependencies": {},
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-plugin-transform-es2015-block-scoping": "^6.26.0",
-    "babel-plugin-transform-for-of-as-array": "^1.0.4",
     "fs-extra": "^3.0.1",
-    "grunt": "^1.0.1",
-    "grunt-babel": "^7.0.0",
-    "grunt-contrib-concat": "~1.0.1",
-    "grunt-contrib-jshint": "~1.1.0",
-    "grunt-contrib-qunit": "^3.1.0",
-    "grunt-contrib-uglify": "~3.0.1",
-    "grunt-contrib-watch": "~1.0.0",
-    "grunt-contrib-clean": "^1.1.0",
-    "load-grunt-tasks": "^3.5.2",
-    "underscore": "^1.8.3",
     "node-qunit-puppeteer": "^1.0.6",
-    "rollup": "^1.21.0"
+    "rollup": "^1.21.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "underscore": "^1.8.3"
   },
   "repository": {
     "type": "git",

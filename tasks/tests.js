@@ -6,13 +6,15 @@
 const console = require('console');
 const path = require('path');
 const { runQunitPuppeteer, printOutput } = require('node-qunit-puppeteer');
-const fs = require('fs');
+const fs = require('fs-extra');
 const { rollup } = require('rollup');
 
-//TODO: Clean
+const BUILD_DIR = 'build';
 
-if (!fs.existsSync('build')) {
-    fs.mkdirSync('build');
+if (!fs.existsSync(BUILD_DIR)) {
+    fs.mkdirSync(BUILD_DIR);
+} else {
+    fs.emptyDirSync(BUILD_DIR);
 }
 
 const options = [
