@@ -498,152 +498,71 @@ var ExtendedCss = (function () {
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
+
     /**
-     * Class that extends Sizzle and adds support for "matches-css" pseudo element.
+     * Helper class css utils
+     *
+     * @type {{normalize}}
      */
-    const StylePropertyMatcher = (function (window, document) { // jshint ignore:line
-
-        const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
-            navigator.userAgent && !navigator.userAgent.match('CriOS');
-        const isPhantom = !!window._phantom;
-        const useFallback = isPhantom && !!window.getMatchedCSSRules;
-
+    const cssUtils = (() => {
         /**
-         * Unquotes specified value
-         * Webkit-based browsers singlequotes <string> content property values
-         * Other browsers doublequotes content property values.
+         * Regex that matches AdGuard's backward compatible syntaxes.
          */
-        const removeContentQuotes = function (value) {
-            if (typeof value === "string") {
-                return value.replace(/^(["'])([\s\S]*)\1$/, '$2');
-            }
-            return value;
-        };
+        const reAttrFallback = /\[-(?:ext|abp)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
 
         /**
-         * Unlike Safari, Chrome and FF doublequotes url() property value.
-         * I suppose it would be better to leave it unquoted.
-         */
-        const removeUrlQuotes = function (value) {
-            if (typeof value !== "string" || value.indexOf("url(\"") < 0) {
-                return value;
-            }
-
-            let re = /url\(\"(.*?)\"\)/g;
-            return value.replace(re, "url($1)");
-        };
-
-        const getComputedStyle = window.getComputedStyle.bind(window);
-        const getMatchedCSSRules = useFallback ? window.getMatchedCSSRules.bind(window) : null;
-
-        /**
-         * There is an issue in browsers based on old webkit:
-         * getComputedStyle(el, ":before") is empty if element is not visible.
+         * Complex replacement function.
+         * Unescapes quote characters inside of an extended selector.
          *
-         * To circumvent this issue we use getMatchedCSSRules instead.
-         *
-         * It appears that getMatchedCSSRules sorts the CSS rules
-         * in increasing order of specifities of corresponding selectors.
-         * We pick the css rule that is being applied to an element based on this assumption.
-         *
-         * @param element       DOM node
-         * @param pseudoElement Optional pseudoElement name
-         * @param propertyName  CSS property name
+         * @param match     Whole matched string
+         * @param name      Group 1
+         * @param quoteChar Group 2
+         * @param value     Group 3
          */
-        const getComputedStylePropertyValue = function (element, pseudoElement, propertyName) {
-            let value = '';
-            if (useFallback && pseudoElement) {
-                let cssRules = getMatchedCSSRules(element, pseudoElement) || [];
-                let i = cssRules.length;
-                while (i-- > 0 && !value) { value = cssRules[i].style.getPropertyValue(propertyName); }
-            } else {
-                let style = getComputedStyle(element, pseudoElement);
-                if (style) { 
-                    value = style.getPropertyValue(propertyName);
-                    // https://bugs.webkit.org/show_bug.cgi?id=93445
-                    if (propertyName === 'opacity' && isSafari) {
-                        value = (Math.round(parseFloat(value) * 100) / 100).toString();
-                    }
-                }
-            }
+        const evaluateMatch = function (match, name, quoteChar, value) {
+            // Unescape quotes
+            let re = new RegExp("([^\\\\]|^)\\\\" + quoteChar, "g");
+            value = value.replace(re, "$1" + quoteChar);
+            return ":" + name + "(" + value + ")";
+        };
 
-            value = removeUrlQuotes(value);
-            if (propertyName === "content") {
-                value = removeContentQuotes(value);
-            }
+        // Sizzle's parsing of pseudo class arguments is buggy on certain circumstances
+        // We support following form of arguments:
+        // 1. for :matches-css, those of a form {propertyName}: /.*/
+        // 2. for :contains, those of a form /.*/
+        // We transform such cases in a way that Sizzle has no ambiguity in parsing arguments.
+        const reMatchesCss = /\:(matches-css(?:-after|-before)?)\(([a-z-\s]*\:\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
+        const reContains = /:(?:-abp-)?(contains|has-text)\((\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
+        // Note that we require `/` character in regular expressions to be escaped.
 
-            return value;
+        /**
+         * Used for pre-processing pseudo-classes values with above two regexes.
+         */
+        const addQuotes = function (_, c1, c2) {
+            return ':' + c1 + '("' + c2.replace(/["\\]/g, '\\$&') + '")';
         };
 
         /**
-         * Class that matches element style against the specified expression
-         * @member {string} propertyName
-         * @member {string} pseudoElement
-         * @member {RegExp} regex
+         * Normalizes specified css text in a form that can be parsed by the
+         * Sizzle engine.
+         * Normalization means
+         *  1. transforming [-ext-*=""] attributes to pseudo classes
+         *  2. enclosing possibly ambiguous arguments of `:contains`,
+         *     `:matches-css` pseudo classes with quotes.
+         * @param {string} cssText
+         * @return {string}
          */
-        const Matcher = function (propertyFilter, pseudoElement) {
-            this.pseudoElement = pseudoElement;
-            try {
-                let index = propertyFilter.indexOf(":");
-                this.propertyName = propertyFilter.substring(0, index).trim();
-                let pattern = propertyFilter.substring(index + 1).trim();
-
-                // Unescaping pattern
-                // For non-regex patterns, (,),[,] should be unescaped, because we require escaping them in filter rules.
-                // For regex patterns, ",\ should be escaped, because we manually escape those in extended-css-selector.js.
-                if (/^\/.*\/$/.test(pattern)) {
-                    pattern = pattern.slice(1, -1);
-                    this.regex = utils.pseudoArgToRegex(pattern);
-                }
-                else {
-                    pattern = pattern.replace(/\\([\\()[\]"])/g, '$1');
-                    this.regex = utils.createURLRegex(pattern);
-                }
-            } catch (ex) {
-                utils.logError("StylePropertyMatcher: invalid match string " + propertyFilter);
-            }
+        const normalize = function (cssText) {
+            cssText = cssText.replace(reAttrFallback, evaluateMatch);
+            cssText = cssText.replace(reMatchesCss, addQuotes);
+            cssText = cssText.replace(reContains, addQuotes);
+            return cssText;
         };
 
-        /**
-         * Function to check if element CSS property matches filter pattern
-         * @param {Element} element to check
-         */
-        Matcher.prototype.matches = function (element) {
-            if (!this.regex || !this.propertyName) { return false; }
-            let value = getComputedStylePropertyValue(element, this.pseudoElement, this.propertyName);
-            return value && this.regex.test(value);
-        };
-
-        /**
-         * Creates a new pseudo-class and registers it in Sizzle
-         */
-        const extendSizzle = function (sizzle) {
-            // First of all we should prepare Sizzle engine
-            sizzle.selectors.pseudos["matches-css"] = sizzle.selectors.createPseudo(function (propertyFilter) {
-                let matcher = new Matcher(propertyFilter);
-                return function (element) {
-                    return matcher.matches(element);
-                };
-            });
-            sizzle.selectors.pseudos["matches-css-before"] = sizzle.selectors.createPseudo(function (propertyFilter) {
-                let matcher = new Matcher(propertyFilter, ":before");
-                return function (element) {
-                    return matcher.matches(element);
-                };
-            });
-            sizzle.selectors.pseudos["matches-css-after"] = sizzle.selectors.createPseudo(function (propertyFilter) {
-                let matcher = new Matcher(propertyFilter, ":after");
-                return function (element) {
-                    return matcher.matches(element);
-                };
-            });
-        };
-
-        // EXPOSE
         return {
-            extendSizzle: extendSizzle
-        };
-    })(window);
+            normalize
+        }
+    })();
 
     /*!
      * Sizzle CSS Selector Engine v2.3.4-pre-adguard
@@ -3067,246 +2986,152 @@ var ExtendedCss = (function () {
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-
     /**
-     * A helper class that parses stylesheets containing extended selectors
-     * into ExtendedSelector instances and key-value maps of style declarations.
-     * Please note, that it does not support any complex things like media queries and such.
+     * Class that extends Sizzle and adds support for "matches-css" pseudo element.
      */
-    const ExtendedCssParser = (function () { // jshint ignore:line
+    const StylePropertyMatcher = (function (window, document) { // jshint ignore:line
+
+        const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
+            navigator.userAgent && !navigator.userAgent.match('CriOS');
+        const isPhantom = !!window._phantom;
+        const useFallback = isPhantom && !!window.getMatchedCSSRules;
 
         /**
-         * Regex that matches AdGuard's backward compatible syntaxes.
+         * Unquotes specified value
+         * Webkit-based browsers singlequotes <string> content property values
+         * Other browsers doublequotes content property values.
          */
-        const reAttrFallback = /\[-(?:ext|abp)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
+        const removeContentQuotes = function (value) {
+            if (typeof value === "string") {
+                return value.replace(/^(["'])([\s\S]*)\1$/, '$2');
+            }
+            return value;
+        };
 
         /**
-         * Complex replacement function.
-         * Unescapes quote characters inside of an extended selector.
+         * Unlike Safari, Chrome and FF doublequotes url() property value.
+         * I suppose it would be better to leave it unquoted.
+         */
+        const removeUrlQuotes = function (value) {
+            if (typeof value !== "string" || value.indexOf("url(\"") < 0) {
+                return value;
+            }
+
+            let re = /url\(\"(.*?)\"\)/g;
+            return value.replace(re, "url($1)");
+        };
+
+        const getComputedStyle = window.getComputedStyle.bind(window);
+        const getMatchedCSSRules = useFallback ? window.getMatchedCSSRules.bind(window) : null;
+
+        /**
+         * There is an issue in browsers based on old webkit:
+         * getComputedStyle(el, ":before") is empty if element is not visible.
          *
-         * @param match     Whole matched string
-         * @param name      Group 1
-         * @param quoteChar Group 2
-         * @param value     Group 3
+         * To circumvent this issue we use getMatchedCSSRules instead.
+         *
+         * It appears that getMatchedCSSRules sorts the CSS rules
+         * in increasing order of specifities of corresponding selectors.
+         * We pick the css rule that is being applied to an element based on this assumption.
+         *
+         * @param element       DOM node
+         * @param pseudoElement Optional pseudoElement name
+         * @param propertyName  CSS property name
          */
-        const evaluateMatch = function (match, name, quoteChar, value) {
-            // Unescape quotes
-            let re = new RegExp("([^\\\\]|^)\\\\" + quoteChar, "g");
-            value = value.replace(re, "$1" + quoteChar);
-            return ":" + name + "(" + value + ")";
+        const getComputedStylePropertyValue = function (element, pseudoElement, propertyName) {
+            let value = '';
+            if (useFallback && pseudoElement) {
+                let cssRules = getMatchedCSSRules(element, pseudoElement) || [];
+                let i = cssRules.length;
+                while (i-- > 0 && !value) { value = cssRules[i].style.getPropertyValue(propertyName); }
+            } else {
+                let style = getComputedStyle(element, pseudoElement);
+                if (style) { 
+                    value = style.getPropertyValue(propertyName);
+                    // https://bugs.webkit.org/show_bug.cgi?id=93445
+                    if (propertyName === 'opacity' && isSafari) {
+                        value = (Math.round(parseFloat(value) * 100) / 100).toString();
+                    }
+                }
+            }
+
+            value = removeUrlQuotes(value);
+            if (propertyName === "content") {
+                value = removeContentQuotes(value);
+            }
+
+            return value;
         };
 
-        // Sizzle's parsing of pseudo class arguments is buggy on certain circumstances
-        // We support following form of arguments:
-        // 1. for :matches-css, those of a form {propertyName}: /.*/
-        // 2. for :contains, those of a form /.*/
-        // We transform such cases in a way that Sizzle has no ambiguity in parsing arguments.
-        const reMatchesCss = /\:(matches-css(?:-after|-before)?)\(([a-z-\s]*\:\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
-        const reContains = /:(?:-abp-)?(contains|has-text)\((\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
-        // Note that we require `/` character in regular expressions to be escaped.
-
         /**
-         * Used for pre-processing pseudo-classes values with above two regexes.
+         * Class that matches element style against the specified expression
+         * @member {string} propertyName
+         * @member {string} pseudoElement
+         * @member {RegExp} regex
          */
-        const addQuotes = function (_, c1, c2) {
-            return ':' + c1 + '("' + c2.replace(/["\\]/g, '\\$&') + '")';
-        };
+        const Matcher = function (propertyFilter, pseudoElement) {
+            this.pseudoElement = pseudoElement;
+            try {
+                let index = propertyFilter.indexOf(":");
+                this.propertyName = propertyFilter.substring(0, index).trim();
+                let pattern = propertyFilter.substring(index + 1).trim();
 
-        /**
-         * Normalizes specified css text in a form that can be parsed by the
-         * Sizzle engine.
-         * Normalization means
-         *  1. transforming [-ext-*=""] attributes to pseudo classes
-         *  2. enclosing possibly ambiguous arguments of `:contains`,
-         *     `:matches-css` pseudo classes with quotes.
-         * @param {string} cssText
-         * @return {string}
-         */
-        const normalize = function (cssText) {
-            cssText = cssText.replace(reAttrFallback, evaluateMatch);
-            cssText = cssText.replace(reMatchesCss, addQuotes);
-            cssText = cssText.replace(reContains, addQuotes);
-            return cssText;
-        };
-
-        const reDeclEnd = /[;}]/g;
-        const reDeclDivider = /[;:}]/g;
-        const reNonWhitespace = /\S/g;
-
-        /**
-         * @param {string} cssText
-         * @constructor
-         */
-        function Parser(cssText) {
-            this.cssText = cssText;
-        }
-
-        Parser.prototype = {
-            error: function (position) {
-                throw new Error('CssParser: parse error at position ' + (this.posOffset + position));
-            },
-
-            /**
-             * Validates that the tokens correspond to a valid selector.
-             * Sizzle is different from browsers and some selectors that it tolerates aren't actually valid.
-             * For instance, "div >" won't work in a browser, but it will in Sizzle (it'd be the same as "div > *").
-             *
-             * @param {*} selectors An array of SelectorData (selector, groups)
-             * @returns {boolean} false if any of the groups are invalid
-             */
-            validateSelectors: function (selectors) {
-
-                let iSelectors = selectors.length;
-                while (iSelectors--) {
-                    let groups = selectors[iSelectors].groups;
-                    let iGroups = groups.length;
-
-                    while (iGroups--) {
-                        let tokens = groups[iGroups];
-                        let lastToken = tokens[tokens.length - 1];
-                        if (Sizzle.selectors.relative[lastToken.type]) {
-                            return false;
-                        }
-                    }
+                // Unescaping pattern
+                // For non-regex patterns, (,),[,] should be unescaped, because we require escaping them in filter rules.
+                // For regex patterns, ",\ should be escaped, because we manually escape those in extended-css-selector.js.
+                if (/^\/.*\/$/.test(pattern)) {
+                    pattern = pattern.slice(1, -1);
+                    this.regex = utils.pseudoArgToRegex(pattern);
                 }
-
-                return true;
-            },
-
-            /**
-             * Parses a stylesheet and returns a list of pairs of an ExtendedSelector and a styles map.
-             * This method will throw an error in case of an obviously invalid input.
-             * If any of the selectors used in the stylesheet cannot be compiled into an ExtendedSelector, it will be ignored.
-             *
-             * @typedef {Object} ExtendedStyle
-             * @property {Object} selector An instance of the {@link ExtendedSelector} class
-             * @property {Object} styleMap A map of styles parsed
-             *
-             * @returns {Array.<ExtendedStyle>} An array of the styles parsed
-             */
-            parseCss: function () {
-                this.posOffset = 0;
-                if (!this.cssText) { this.error(0); }
-                let results = [];
-
-                while (this.cssText) {
-                    // Apply tolerant tokenization.
-                    let parseResult = Sizzle.tokenize(this.cssText, false, {
-                        tolerant: true,
-                        returnUnsorted: true
-                    });
-
-                    let selectorData = parseResult.selectors;
-                    this.nextIndex = parseResult.nextIndex;
-
-                    if (this.cssText.charCodeAt(this.nextIndex) !== 123 /* charCode of '{' */ ||
-                        !this.validateSelectors(selectorData)) {
-                        this.error(this.nextIndex);
-                    }
-
-                    this.nextIndex++; // Move the pointer to the start of style declaration.
-                    let styleMap = this.parseNextStyle();
-
-                    let debug = false;
-
-                    // If there is a style property 'debug', mark the selector
-                    // as a debuggable selector, and delete the style declaration.
-                    let debugPropertyValue = styleMap['debug'];
-                    if (typeof debugPropertyValue !== 'undefined') {
-                        if (debugPropertyValue === 'global') {
-                            ExtendedSelectorFactory.enableGlobalDebugging();
-                        }
-                        debug = true;
-                        delete styleMap['debug'];
-                    }
-
-                    // Creating an ExtendedSelector instance for every selector we got from Sizzle.tokenize.
-                    // This is quite important as Sizzle does a poor job at executing selectors like "selector1, selector2".
-                    for (let i = 0, l = selectorData.length; i < l; i++) {
-                        let data = selectorData[i];
-                        try {
-                            let extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
-                            results.push({
-                                selector: extendedSelector,
-                                style: styleMap
-                            });
-                        } catch (ex) {
-                            utils.logError("ExtendedCssParser: ignoring invalid selector " + data.selectorText);
-                        }
-                    }
+                else {
+                    pattern = pattern.replace(/\\([\\()[\]"])/g, '$1');
+                    this.regex = utils.createURLRegex(pattern);
                 }
-
-                return results;
-            },
-
-            parseNextStyle: function () {
-                let styleMap = Object.create(null);
-
-                let bracketPos = this.parseUntilClosingBracket(styleMap);
-
-                // Cut out matched portion from cssText.
-                reNonWhitespace.lastIndex = bracketPos + 1;
-                let match = reNonWhitespace.exec(this.cssText);
-                if (match === null) {
-                    this.cssText = '';
-                    return styleMap;
-                }
-                let matchPos = match.index;
-
-                this.cssText = this.cssText.slice(matchPos);
-                this.posOffset += matchPos;
-                return styleMap;
-            },
-
-            /**
-             * @return {number} an index of the next '}' in `this.cssText`.
-             */
-            parseUntilClosingBracket: function (styleMap) {
-                // Expects ":", ";", and "}".
-                reDeclDivider.lastIndex = this.nextIndex;
-                let match = reDeclDivider.exec(this.cssText);
-                if (match === null) {
-                    this.error(this.nextIndex);
-                }
-                let matchPos = match.index;
-                let matched = match[0];
-                if (matched === '}') {
-                    return matchPos;
-                }
-                if (matched === ':') {
-                    let colonIndex = matchPos;
-                    // Expects ";" and "}".
-                    reDeclEnd.lastIndex = colonIndex;
-                    match = reDeclEnd.exec(this.cssText);
-                    if (match === null) {
-                        this.error(colonIndex);
-                    }
-                    matchPos = match.index;
-                    matched = match[0];
-                    // Populates the `styleMap` key-value map.
-                    let property = this.cssText.slice(this.nextIndex, colonIndex).trim();
-                    let value = this.cssText.slice(colonIndex + 1, matchPos).trim();
-                    styleMap[property] = value;
-                    // If found "}", re-run the outer loop.
-                    if (matched === '}') {
-                        return matchPos;
-                    }
-                }
-                // matchPos is the position of the next ';'.
-                // Increase 'nextIndex' and re-run the loop.
-                this.nextIndex = matchPos + 1;
-                return this.parseUntilClosingBracket(styleMap); // Should be a subject of tail-call optimization.
+            } catch (ex) {
+                utils.logError("StylePropertyMatcher: invalid match string " + propertyFilter);
             }
         };
 
+        /**
+         * Function to check if element CSS property matches filter pattern
+         * @param {Element} element to check
+         */
+        Matcher.prototype.matches = function (element) {
+            if (!this.regex || !this.propertyName) { return false; }
+            let value = getComputedStylePropertyValue(element, this.pseudoElement, this.propertyName);
+            return value && this.regex.test(value);
+        };
+
+        /**
+         * Creates a new pseudo-class and registers it in Sizzle
+         */
+        const extendSizzle = function (sizzle) {
+            // First of all we should prepare Sizzle engine
+            sizzle.selectors.pseudos["matches-css"] = sizzle.selectors.createPseudo(function (propertyFilter) {
+                let matcher = new Matcher(propertyFilter);
+                return function (element) {
+                    return matcher.matches(element);
+                };
+            });
+            sizzle.selectors.pseudos["matches-css-before"] = sizzle.selectors.createPseudo(function (propertyFilter) {
+                let matcher = new Matcher(propertyFilter, ":before");
+                return function (element) {
+                    return matcher.matches(element);
+                };
+            });
+            sizzle.selectors.pseudos["matches-css-after"] = sizzle.selectors.createPseudo(function (propertyFilter) {
+                let matcher = new Matcher(propertyFilter, ":after");
+                return function (element) {
+                    return matcher.matches(element);
+                };
+            });
+        };
+
+        // EXPOSE
         return {
-            normalize: normalize,
-            parseCss: function (cssText) {
-                return (new Parser(normalize(cssText))).parseCss();
-            }
+            extendSizzle: extendSizzle
         };
-
-    })();
+    })(window);
 
     /**
      * Copyright 2016 Adguard Software Ltd
@@ -3429,7 +3254,7 @@ var ExtendedCss = (function () {
             initialize();
 
             if (typeof tokens === 'undefined') {
-                this.selectorText = ExtendedCssParser.normalize(selectorText);
+                this.selectorText = cssUtils.normalize(selectorText);
                 // Passing `returnUnsorted` in order to receive tokens in the order that's valid for the browser
                 // In Sizzle internally, the tokens are re-sorted: https://github.com/AdguardTeam/ExtendedCss/issues/55
                 this.tokens = Sizzle.tokenize(this.selectorText, false, { returnUnsorted: true });
@@ -3678,6 +3503,207 @@ var ExtendedCss = (function () {
                 globalDebuggingFlag = true;
             }
         };
+    })();
+
+    /**
+     * Copyright 2016 Adguard Software Ltd
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     * http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+
+    /**
+     * A helper class that parses stylesheets containing extended selectors
+     * into ExtendedSelector instances and key-value maps of style declarations.
+     * Please note, that it does not support any complex things like media queries and such.
+     */
+    const ExtendedCssParser = (function () { // jshint ignore:line
+
+        const reDeclEnd = /[;}]/g;
+        const reDeclDivider = /[;:}]/g;
+        const reNonWhitespace = /\S/g;
+
+        /**
+         * @param {string} cssText
+         * @constructor
+         */
+        function Parser(cssText) {
+            this.cssText = cssText;
+        }
+
+        Parser.prototype = {
+            error: function (position) {
+                throw new Error('CssParser: parse error at position ' + (this.posOffset + position));
+            },
+
+            /**
+             * Validates that the tokens correspond to a valid selector.
+             * Sizzle is different from browsers and some selectors that it tolerates aren't actually valid.
+             * For instance, "div >" won't work in a browser, but it will in Sizzle (it'd be the same as "div > *").
+             *
+             * @param {*} selectors An array of SelectorData (selector, groups)
+             * @returns {boolean} false if any of the groups are invalid
+             */
+            validateSelectors: function (selectors) {
+
+                let iSelectors = selectors.length;
+                while (iSelectors--) {
+                    let groups = selectors[iSelectors].groups;
+                    let iGroups = groups.length;
+
+                    while (iGroups--) {
+                        let tokens = groups[iGroups];
+                        let lastToken = tokens[tokens.length - 1];
+                        if (Sizzle.selectors.relative[lastToken.type]) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            },
+
+            /**
+             * Parses a stylesheet and returns a list of pairs of an ExtendedSelector and a styles map.
+             * This method will throw an error in case of an obviously invalid input.
+             * If any of the selectors used in the stylesheet cannot be compiled into an ExtendedSelector, it will be ignored.
+             *
+             * @typedef {Object} ExtendedStyle
+             * @property {Object} selector An instance of the {@link ExtendedSelector} class
+             * @property {Object} styleMap A map of styles parsed
+             *
+             * @returns {Array.<ExtendedStyle>} An array of the styles parsed
+             */
+            parseCss: function () {
+                this.posOffset = 0;
+                if (!this.cssText) { this.error(0); }
+                let results = [];
+
+                while (this.cssText) {
+                    // Apply tolerant tokenization.
+                    let parseResult = Sizzle.tokenize(this.cssText, false, {
+                        tolerant: true,
+                        returnUnsorted: true
+                    });
+
+                    let selectorData = parseResult.selectors;
+                    this.nextIndex = parseResult.nextIndex;
+
+                    if (this.cssText.charCodeAt(this.nextIndex) !== 123 /* charCode of '{' */ ||
+                        !this.validateSelectors(selectorData)) {
+                        this.error(this.nextIndex);
+                    }
+
+                    this.nextIndex++; // Move the pointer to the start of style declaration.
+                    let styleMap = this.parseNextStyle();
+
+                    let debug = false;
+
+                    // If there is a style property 'debug', mark the selector
+                    // as a debuggable selector, and delete the style declaration.
+                    let debugPropertyValue = styleMap['debug'];
+                    if (typeof debugPropertyValue !== 'undefined') {
+                        if (debugPropertyValue === 'global') {
+                            ExtendedSelectorFactory.enableGlobalDebugging();
+                        }
+                        debug = true;
+                        delete styleMap['debug'];
+                    }
+
+                    // Creating an ExtendedSelector instance for every selector we got from Sizzle.tokenize.
+                    // This is quite important as Sizzle does a poor job at executing selectors like "selector1, selector2".
+                    for (let i = 0, l = selectorData.length; i < l; i++) {
+                        let data = selectorData[i];
+                        try {
+                            let extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
+                            results.push({
+                                selector: extendedSelector,
+                                style: styleMap
+                            });
+                        } catch (ex) {
+                            utils.logError("ExtendedCssParser: ignoring invalid selector " + data.selectorText);
+                        }
+                    }
+                }
+
+                return results;
+            },
+
+            parseNextStyle: function () {
+                let styleMap = Object.create(null);
+
+                let bracketPos = this.parseUntilClosingBracket(styleMap);
+
+                // Cut out matched portion from cssText.
+                reNonWhitespace.lastIndex = bracketPos + 1;
+                let match = reNonWhitespace.exec(this.cssText);
+                if (match === null) {
+                    this.cssText = '';
+                    return styleMap;
+                }
+                let matchPos = match.index;
+
+                this.cssText = this.cssText.slice(matchPos);
+                this.posOffset += matchPos;
+                return styleMap;
+            },
+
+            /**
+             * @return {number} an index of the next '}' in `this.cssText`.
+             */
+            parseUntilClosingBracket: function (styleMap) {
+                // Expects ":", ";", and "}".
+                reDeclDivider.lastIndex = this.nextIndex;
+                let match = reDeclDivider.exec(this.cssText);
+                if (match === null) {
+                    this.error(this.nextIndex);
+                }
+                let matchPos = match.index;
+                let matched = match[0];
+                if (matched === '}') {
+                    return matchPos;
+                }
+                if (matched === ':') {
+                    let colonIndex = matchPos;
+                    // Expects ";" and "}".
+                    reDeclEnd.lastIndex = colonIndex;
+                    match = reDeclEnd.exec(this.cssText);
+                    if (match === null) {
+                        this.error(colonIndex);
+                    }
+                    matchPos = match.index;
+                    matched = match[0];
+                    // Populates the `styleMap` key-value map.
+                    let property = this.cssText.slice(this.nextIndex, colonIndex).trim();
+                    let value = this.cssText.slice(colonIndex + 1, matchPos).trim();
+                    styleMap[property] = value;
+                    // If found "}", re-run the outer loop.
+                    if (matched === '}') {
+                        return matchPos;
+                    }
+                }
+                // matchPos is the position of the next ';'.
+                // Increase 'nextIndex' and re-run the loop.
+                this.nextIndex = matchPos + 1;
+                return this.parseUntilClosingBracket(styleMap); // Should be a subject of tail-call optimization.
+            }
+        };
+
+        return {
+            parseCss: function (cssText) {
+                return (new Parser(cssUtils.normalize(cssText))).parseCss();
+            }
+        };
+
     })();
 
     /**
@@ -4159,6 +4185,8 @@ var ExtendedCss = (function () {
             }
         }
     };
+
+    // import './lib/utils';
 
     return ExtendedCss;
 
