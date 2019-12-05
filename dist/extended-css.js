@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - 2019-12-04
+/*! extended-css - v1.1.6 - 2019-12-05
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -3639,7 +3639,7 @@ function ExtendedCss(configuration) {
     var EventTracker = function () {
 
         var ignoredEventTypes = ['mouseover', 'mouseleave', 'mouseenter', 'mouseout'];
-        var LAST_EVENT_TIMEOUT_MS = 20;
+        var LAST_EVENT_TIMEOUT_MS = 10;
 
         var TRACKED_EVENTS = [
         // keyboard events

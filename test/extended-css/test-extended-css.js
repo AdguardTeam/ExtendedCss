@@ -359,7 +359,8 @@ QUnit.test("Protected elements are removed only 50 times", function (assert) {
     setTimeout(function () {
         observer.disconnect();
         assert.ok(elementAddCounter < 60);
+        assert.ok(elementAddCounter >= 50);
         assert.ok(protectorNode.querySelector(`#${id}`));
         done();
-    }, 3000);
+    }, 9000);
 });
