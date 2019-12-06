@@ -49,8 +49,8 @@ const rollupConfig = {
         const bundle = await rollup(rollupConfig);
         console.log(bundle.watchFiles);
 
-        rollupConfig.output.forEach(async (option)=> {
-            await bundle.write(option);
+        rollupConfig.output.forEach((option)=> {
+            bundle.write(option);
         });
 
         console.info('Finished compiling sources');
