@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "10"
 install:
-  - npm install
+  - yarn install
 script:
   - grunt build-dist
   - grunt gh-pages

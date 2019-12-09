@@ -1,4 +1,4 @@
-# Extended Css engine [![Build Status](https://travis-ci.org/AdguardTeam/ExtendedCss.svg?branch=master)](https://travis-ci.org/AdguardTeam/ExtendedCss)
+# Extended Css engine [![Build Status](https://travis-ci.com/AdguardTeam/ExtendedCss.svg?branch=master)](https://travis-ci.com/AdguardTeam/ExtendedCss)
 
 Module for applying CSS styles with extended selection properties.
 

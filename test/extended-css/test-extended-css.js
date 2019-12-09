@@ -73,7 +73,7 @@ QUnit.test("Reaction on DOM modification", function (assert) {
     rAF(function () {
         assertElementStyle("case5-blocked", { display: "" }, assert);
         done();
-    }, 100);
+    }, 200);
 });
 
 QUnit.test("Affected elements length (simple)", function (assert) {
@@ -103,8 +103,8 @@ QUnit.test("Affected elements length (simple)", function (assert) {
             assert.equal(affectedLength, startLength);
             assert.ok(1, "Element unblocked: " + affectedLength + " elements affected");
             done();
-        }, 100);
-    }, 100);
+        }, 300);
+    }, 300);
 });
 
 QUnit.test("Affected elements length (root element removal)", function (assert) {
@@ -124,7 +124,7 @@ QUnit.test("Affected elements length (root element removal)", function (assert) 
         assert.equal(affectedLength, startLength - 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
         done();
-    }, 100);
+    }, 200);
 });
 
 QUnit.test("Modifer -ext-matches-css-before", function (assert) {
@@ -365,5 +365,5 @@ QUnit.test("Protected elements are removed only 50 times", function (assert) {
         assert.ok(elementAddCounter >= 50);
         assert.ok(protectorNode.querySelector(`#${id}`));
         done();
-    }, 3000);
+    }, 9000);
 });
