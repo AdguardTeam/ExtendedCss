@@ -70,7 +70,7 @@ QUnit.test("Reaction on DOM modification", function (assert) {
     rAF(function () {
         assertElementStyle("case5-blocked", { display: "" }, assert);
         done();
-    }, 100);
+    }, 200);
 });
 
 QUnit.test("Affected elements length (simple)", function (assert) {
@@ -100,8 +100,8 @@ QUnit.test("Affected elements length (simple)", function (assert) {
             assert.equal(affectedLength, startLength);
             assert.ok(1, "Element unblocked: " + affectedLength + " elements affected");
             done();
-        }, 100);
-    }, 100);
+        }, 300);
+    }, 300);
 });
 
 QUnit.test("Affected elements length (root element removal)", function (assert) {

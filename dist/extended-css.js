@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - 2019-12-05
+/*! extended-css - v1.1.6 - 2019-12-09
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 ; Licensed Apache License 2.0 */
 var ExtendedCss = (function(window) {
@@ -3515,7 +3515,7 @@ var ExtendedSelectorFactory = function () {
 
         switch (relation) {
             case " ":
-                for (var _i = 0, _simpleNodes = simpleNodes; _i < _simpleNodes.length; _i++) {
+                for (var _i = 0, _simpleNodes = simpleNodes, _length = _simpleNodes.length; _i < _length; _i++) {
                     var node = _simpleNodes[_i];
                     this.relativeSearch(node, resultNodes);
                 }
@@ -3523,9 +3523,9 @@ var ExtendedSelectorFactory = function () {
                 break;
             case ">":
                 {
-                    for (var _i2 = 0, _simpleNodes2 = simpleNodes; _i2 < _simpleNodes2.length; _i2++) {
+                    for (var _i2 = 0, _simpleNodes2 = simpleNodes, _length2 = _simpleNodes2.length; _i2 < _length2; _i2++) {
                         var _node = _simpleNodes2[_i2];
-                        for (var _i3 = 0, _node$children = _node.children; _i3 < _node$children.length; _i3++) {
+                        for (var _i3 = 0, _node$children = _node.children, _length3 = _node$children.length; _i3 < _length3; _i3++) {
                             var childNode = _node$children[_i3];
                             if (this.matches(childNode)) {
                                 resultNodes.push(childNode);
@@ -3537,14 +3537,14 @@ var ExtendedSelectorFactory = function () {
                 }
             case "+":
                 {
-                    for (var _i4 = 0, _simpleNodes3 = simpleNodes; _i4 < _simpleNodes3.length; _i4++) {
+                    for (var _i4 = 0, _simpleNodes3 = simpleNodes, _length4 = _simpleNodes3.length; _i4 < _length4; _i4++) {
                         var _node2 = _simpleNodes3[_i4];
                         var parentNode = _node2.parentNode;
                         if (!parentNode) {
                             continue;
                         }
 
-                        for (var _i5 = 0, _parentNode$children = parentNode.children; _i5 < _parentNode$children.length; _i5++) {
+                        for (var _i5 = 0, _parentNode$children = parentNode.children, _length5 = _parentNode$children.length; _i5 < _length5; _i5++) {
                             var _childNode = _parentNode$children[_i5];
                             if (this.matches(_childNode) && _childNode.previousElementSibling === _node2) {
                                 resultNodes.push(_childNode);
@@ -3556,14 +3556,14 @@ var ExtendedSelectorFactory = function () {
                 }
             case "~":
                 {
-                    for (var _i6 = 0, _simpleNodes4 = simpleNodes; _i6 < _simpleNodes4.length; _i6++) {
+                    for (var _i6 = 0, _simpleNodes4 = simpleNodes, _length6 = _simpleNodes4.length; _i6 < _length6; _i6++) {
                         var _node3 = _simpleNodes4[_i6];
                         var _parentNode = _node3.parentNode;
                         if (!_parentNode) {
                             continue;
                         }
 
-                        for (var _i7 = 0, _parentNode$children2 = _parentNode.children; _i7 < _parentNode$children2.length; _i7++) {
+                        for (var _i7 = 0, _parentNode$children2 = _parentNode.children, _length7 = _parentNode$children2.length; _i7 < _length7; _i7++) {
                             var _childNode2 = _parentNode$children2[_i7];
                             if (this.matches(_childNode2) && _node3.compareDocumentPosition(_childNode2) === 4) {
                                 resultNodes.push(_childNode2);
@@ -3655,7 +3655,7 @@ function ExtendedCss(configuration) {
             lastEventTime = Date.now();
         };
 
-        for (var _i = 0; _i < TRACKED_EVENTS.length; _i++) {
+        for (var _i = 0, _length = TRACKED_EVENTS.length; _i < _length; _i++) {
             var evName = TRACKED_EVENTS[_i];
             document.documentElement.addEventListener(evName, trackEvent, true);
         }
@@ -3800,7 +3800,7 @@ function ExtendedCss(configuration) {
      * @returns     affectedElement found or null
      */
     function findAffectedElement(node) {
-        for (var _i2 = 0; _i2 < affectedElements.length; _i2++) {
+        for (var _i2 = 0, _length2 = affectedElements.length; _i2 < _length2; _i2++) {
             var affectedElement = affectedElements[_i2];
             if (affectedElement.node === node) {
                 return affectedElement;
@@ -3904,7 +3904,7 @@ function ExtendedCss(configuration) {
         var selector = rule.selector;
         var nodes = selector.querySelectorAll();
 
-        for (var _i3 = 0; _i3 < nodes.length; _i3++) {
+        for (var _i3 = 0, _length3 = nodes.length; _i3 < _length3; _i3++) {
             var node = nodes[_i3];
             var affectedElement = findAffectedElement(node);
 
@@ -3946,7 +3946,7 @@ function ExtendedCss(configuration) {
         // https://github.com/AdguardTeam/ExtendedCss/issues/81
         stopObserve();
 
-        for (var _i4 = 0, _rules = rules; _i4 < _rules.length; _i4++) {
+        for (var _i4 = 0, _rules = rules, _length4 = _rules.length; _i4 < _length4; _i4++) {
             var rule = _rules[_i4];
             var nodes = applyRule(rule);
             Array.prototype.push.apply(elementsIndex, nodes);
@@ -4013,7 +4013,7 @@ function ExtendedCss(configuration) {
     function dispose() {
         stopObserve();
 
-        for (var _i5 = 0; _i5 < affectedElements.length; _i5++) {
+        for (var _i5 = 0, _length5 = affectedElements.length; _i5 < _length5; _i5++) {
             var obj = affectedElements[_i5];
             revertStyle(obj);
         }
