@@ -4,8 +4,8 @@ node_js:
 install:
   - yarn install
 script:
-  - grunt build-dist
-  - grunt gh-pages
+  - yarn build
+  - yarn test
 deploy:
   - provider: pages
     skip_cleanup: true
