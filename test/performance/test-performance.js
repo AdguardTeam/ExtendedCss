@@ -1,5 +1,5 @@
 const ExtendedSelectorFactory = exports.ExtendedSelectorFactory;
-const Sizzle = exports.Sizzle;
+const initializeSizzle = exports.initializeSizzle;
 
 var LOOP_COUNT = 10000;
 
@@ -22,13 +22,15 @@ var testPerformance = function (selector, assert) {
 };
 
 QUnit.test("Tokenize performance", function (assert) {
+    initializeSizzle();
+
     var selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     var startTime = new Date().getTime();
 
     var resultOk = true;
     var iCount = LOOP_COUNT;
     while (iCount--) {
-        var tokens = Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
+        var tokens = exports.Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
         if (!tokens || !tokens.length) {
             resultOk = false;
         }
