@@ -24,6 +24,9 @@
     #case9>div[-ext-contains="Another text"] { font-size: 16px; }
     #case10>div[-ext-contains="Block this"] { display: none; }
     #case11 { display: none; }
+    #case15>div[-ext-has=".banner"] { color:red; }
+    #case15>div[-ext-has=".banner"] { background:white; }
+    #case16>div[-ext-has=".banner"] { color:red; }
   </style>
 
   <style type="text/css">
@@ -88,6 +91,16 @@
     </div>
     <div id="case13"></div>
     <div id="case14"></div>
+    <div id="case15">
+      <div id="case15-inner">
+        <div class="banner"></div>
+      </div>
+    </div>
+    <div id="case16">
+      <div id="case16-inner" style="background: white;">
+        <div class="banner"></div>
+      </div>
+    </div>
 
     <div id="case-remove-property"></div>
 
@@ -100,7 +113,6 @@
     <script src="../../build/utils.js"></script>
     <script src="../../build/extended-css-parser.js"></script>
     <script src="../../build/style-property-matcher.js"></script>
-    <script src="../../build/style-observer.js"></script>
     <script src="../../build/extended-css-selector.js"></script>
     <script src="../../build/extended-css.js"></script>
     <script src="test-extended-css.js"></script>

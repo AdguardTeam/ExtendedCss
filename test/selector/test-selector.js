@@ -181,18 +181,6 @@ QUnit.test( "Test tokenize selector", function(assert) {
     assert.equal(compiled.simple, "#banner :not(div)");
     assert.equal(compiled.relation, " ");
     assert.equal(compiled.complex, "div:matches-css(background: blank)");
-
-    selectorText = "#banner span[-abp-properties='*']";
-    compiled = ExtendedSelectorFactory.createSelector(selectorText);
-    assert.equal(compiled.constructor.name, "PropertiesHeavySelector");
-
-    selectorText = "[-abp-properties='data']";
-    compiled = ExtendedSelectorFactory.createSelector(selectorText);
-    assert.equal(compiled.constructor.name, "PropertiesHeavySelector");
-
-    selectorText = "#right .widget:properties(margin-top:*)";
-    compiled = ExtendedSelectorFactory.createSelector(selectorText);
-    assert.notEqual(compiled.constructor.name, "PropertiesHeavySelector");
 });
 
 QUnit.test( "Test regular expressions support in :contains", function(assert) {
@@ -274,113 +262,6 @@ QUnit.test( "Test + and ~ combinators matching", function(assert) {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 });
-
-QUnit.test( "Test :properties", function(assert) {
-    var done = assert.async();
-
-    var selectorTexts = [
-        ':properties(background-color: rgb\(17, 17, 17\))',
-        'div:has(> :properties(background-color: rgb\(17, 17, 17\)))',
-        '#test-properties :properties(content:*publicite) + div',
-        '#test-properties :properties(content:*publicite)',
-        '#test-properties :properties(content:*publicite)'
-    ];
-
-    var selectors = selectorTexts.map(function(selectorText) {
-        return ExtendedSelectorFactory.createSelector(selectorText);
-    });
-    window.selectors = selectors;
-
-    var elements, tempStyle;
-
-    elements = selectors[0].querySelectorAll();
-    assert.ok(containsElement(
-        window['test-properties-background'],
-        elements
-    ));
-
-    elements = selectors[1].querySelectorAll();
-    assert.ok(containsElement(
-        window['test-properties-has'],
-        elements
-    ));
-
-    elements = selectors[2].querySelectorAll();
-    assert.notOk(containsElement(
-        window['test-properties-dynamic-next'],
-        elements
-    ));
-
-    tempStyle = addStyle('#test-properties-dynamic::after { content: "publicite" }');
-
-    rAF(function() {
-        elements = selectors[2].querySelectorAll();
-        assert.ok(containsElement(
-            window['test-properties-dynamic-next'],
-            elements
-        ));
-        tempStyle.parentNode.removeChild(tempStyle);
-    });
-
-    elements = selectors[3].querySelectorAll();
-    assert.notOk(containsElement(
-        window['test-properties-dynamic-2'],
-        elements
-    ));
-
-    window['dynamic-style-2'].innerHTML =
-        '#test-properties-dynamic-2::before { content: "publicite" }';
-
-    rAF(function() {
-        elements = selectors[3].querySelectorAll();
-        assert.ok(containsElement(window['test-properties-dynamic-2'], elements));
-    });
-
-    elements = selectors[4].querySelectorAll();
-    assert.notOk(containsElement(
-        window['test-properties-dynamic-3'],
-        elements
-    ));
-
-    window['dynamic-style-3'].firstChild.nodeValue =
-        '#test-properties-dynamic-3::before { content: "publicite" }';
-
-    rAF(function() {
-        elements = selectors[4].querySelectorAll();
-        assert.ok(containsElement(window['test-properties-dynamic-3'], elements));
-    });
-
-    rAF(done);
-});
-
-QUnit.test( "Test :properties with ignored stylesheets", function(assert) {
-
-    var selector = ExtendedSelectorFactory.createSelector(':properties(background-color: rgb\(51, 51, 51\))');
-
-    // First test the regular selector
-    var elements = selector.querySelectorAll();
-    assert.equal(elements.length, 1);
-    assert.equal(elements[0], window['test-properties-ignored-stylesheets-background']);
-
-    // Now set the ignored stylsheets and re-test
-    var ignoredStyleNodes = document.querySelectorAll("#ignored-stylesheet");
-    assert.ok(ignoredStyleNodes.length);
-    StyleObserver.setIgnoredStyleNodes(ignoredStyleNodes);
-
-    // The matching style was in the ignored stylesheet so nothing is selected
-    elements = selector.querySelectorAll();
-    assert.equal(elements.length, 0);
-});
-
-function containsElement(element, list) {
-    return Array.prototype.indexOf.call(list, element) !== -1;
-}
-
-function addStyle(cssText) {
-    var style = document.createElement('style');
-    style.appendChild(document.createTextNode(cssText));
-    return document.body.appendChild(style);
-}
 
 /**
  * We throttle MO callbacks in ExtCss with requestAnimationFrame and setTimeout.

@@ -121,7 +121,7 @@ QUnit.test("Affected elements length (root element removal)", function (assert) 
         assert.equal(affectedLength, startLength - 1);
         assert.ok(1, "Element blocked: " + affectedLength + " elements affected");
         done();
-    }, 100);
+    }, 200);
 });
 
 QUnit.test("Modifer -ext-matches-css-before", function (assert) {
@@ -207,7 +207,6 @@ QUnit.test("Test using ExtendedCss.query for selectors validation", function (as
     assert.ok(isValid("div"));
     assert.ok(isValid("#banner"));
     assert.ok(isValid("#banner:has(div) > #banner:contains(test)"));
-    assert.ok(isValid("#banner[-ext-properties='content:*test']"));
     assert.ok(isValid("#banner[-ext-has='test']"));
     assert.notOk(isValid("#banner:whatisthispseudo(div)"));
 });
@@ -312,7 +311,28 @@ QUnit.test('Test style remove property', (assert) => {
     }, 100);
 });
 
-QUnit.test("protected elements are removed only 50 times", function (assert) {
+QUnit.test('Apply different rules to the same element', (assert) => {
+    assertElementStyle("case15-inner", { "color": "red", "background": "white" }, assert);
+});
+
+QUnit.test('Protect only rule style', (assert) => {
+    var done = assert.async();
+    assertElementStyle("case16-inner", { "color": "red", "background": "white" }, assert);
+
+    rAF(function () {
+        var node = document.getElementById("case16-inner");
+        node.style.cssText = "background: green;";
+        rAF(function () {
+            rAF(function () {
+                assertElementStyle("case16-inner", { "color": "red", "background": "green" }, assert);
+                done();
+            }, 100);
+        }, 100);
+
+    }, 100);
+});
+
+QUnit.test("Protected elements are removed only 50 times", function (assert) {
     const done = assert.async();
     const protectorNode = document.getElementById('protect-node-inside');
     const id = 'case-remove-property-repeatedly';
@@ -342,5 +362,5 @@ QUnit.test("protected elements are removed only 50 times", function (assert) {
         assert.ok(elementAddCounter >= 50);
         assert.ok(protectorNode.querySelector(`#${id}`));
         done();
-    }, 3000);
+    }, 9000);
 });
