@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Fri Dec 06 2019
+/*! extended-css - v1.1.6 - Wed Dec 11 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed Apache License 2.0
 */
@@ -587,7 +587,7 @@ var ExtendedCss = (function () {
      * 4. Added Sizzle.compile call to the `:has` pseudo definition.
      * 
      * Changes that are applied to the ADGUARD_EXTCSS build only:
-     * 1. Do not expose Sizzle to the global scope.
+     * 1. Do not expose Sizzle to the global scope. Initialize it lazily via initializeSizzle().
      * 2. Removed :contains pseudo declaration -- its syntax is changed and declared outside of Sizzle.
      * 3. Removed declarations for the following non-standard pseudo classes: 
      * :parent, :header, :input, :button, :text, :first, :last, :eq,
@@ -595,7 +595,20 @@ var ExtendedCss = (function () {
      * :password, :image, :submit, :reset
      */
 
-    const Sizzle =
+    let Sizzle;
+
+    /**
+     * Initializes Sizzle object.
+     * In the case of AdGuard ExtendedCss we want to avoid initializing Sizzle right away
+     * and exposing it to the global scope.
+     */
+    function initializeSizzle() { // jshint ignore:line
+        if (!Sizzle) {
+
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    Sizzle =
+
     (function( window ) {
 
     var support,
@@ -2971,6 +2984,14 @@ var ExtendedCss = (function () {
 
     })( window );
 
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+        }
+
+        return Sizzle;
+    }
+
     /**
      * Copyright 2016 Adguard Software Ltd
      *
@@ -3161,6 +3182,8 @@ var ExtendedCss = (function () {
         const PSEUDO_EXTENSIONS_MARKERS = [":has", ":contains", ":has-text", ":matches-css",
             ":-abp-has", ":-abp-has-text", ":if", ":if-not"];
         let initialized = false;
+
+        let Sizzle;
         /**
          * Lazy initialization of the ExtendedSelectorFactory and objects that might be necessary for creating and applying styles.
          * This method extends Sizzle engine that we use under the hood with our custom pseudo-classes.
@@ -3168,6 +3191,9 @@ var ExtendedCss = (function () {
         function initialize() {
             if (initialized) { return; }
             initialized = true;
+
+            // Our version of Sizzle is initialized lazily as well
+            Sizzle = initializeSizzle();
 
             // Add :matches-css-*() support
             StylePropertyMatcher.extendSizzle(Sizzle);
@@ -3532,6 +3558,8 @@ var ExtendedCss = (function () {
         const reDeclDivider = /[;:}]/g;
         const reNonWhitespace = /\S/g;
 
+        let Sizzle;
+
         /**
          * @param {string} cssText
          * @constructor
@@ -3700,6 +3728,7 @@ var ExtendedCss = (function () {
 
         return {
             parseCss: function (cssText) {
+                Sizzle = initializeSizzle();
                 return (new Parser(cssUtils.normalize(cssText))).parseCss();
             }
         };
@@ -3756,7 +3785,7 @@ var ExtendedCss = (function () {
         const EventTracker = (function() {
 
             const ignoredEventTypes = ['mouseover', 'mouseleave', 'mouseenter', 'mouseout'];
-            const LAST_EVENT_TIMEOUT_MS = 100;
+            const LAST_EVENT_TIMEOUT_MS = 10;
 
             const TRACKED_EVENTS = [
                 // keyboard events
@@ -4089,7 +4118,7 @@ var ExtendedCss = (function () {
             printTimingInfo();
         }
 
-        const APPLY_RULES_DELAY = 50;
+        const APPLY_RULES_DELAY = 150;
         const applyRulesScheduler = new utils.AsyncWrapper(applyRules, APPLY_RULES_DELAY);
         const mainCallback = applyRulesScheduler.run.bind(applyRulesScheduler);
 

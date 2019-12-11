@@ -1,6 +1,8 @@
 const ExtendedSelectorFactory = exports.ExtendedSelectorFactory;
 const initializeSizzle = exports.initializeSizzle;
 
+const Sizzle = initializeSizzle();
+
 var LOOP_COUNT = 10000;
 
 var testPerformance = function (selector, assert) {
@@ -30,7 +32,7 @@ QUnit.test("Tokenize performance", function (assert) {
     var resultOk = true;
     var iCount = LOOP_COUNT;
     while (iCount--) {
-        var tokens = exports.Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
+        var tokens = Sizzle.tokenize(selectorText, false, { returnUnsorted: true });
         if (!tokens || !tokens.length) {
             resultOk = false;
         }
