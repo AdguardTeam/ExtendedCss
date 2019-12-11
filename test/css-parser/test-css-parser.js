@@ -36,7 +36,7 @@ QUnit.test("Parse an invalid selector", function (assert) {
     assert.throws(function () {
         var cssText = 'div > { display:none; }';
         var cssObject = ExtendedCssParser.parseCss(cssText);
-    }, function (error) {
+    }, function (error) { // eslint-disable-line prefer-arrow-callback
         return !!error;
     }, "Expected ExtendedCssParser to throw on an invalid selector");
 });

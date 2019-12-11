@@ -11,7 +11,8 @@
   },
   "scripts": {
     "test": "node tasks/tests.js",
-    "build": "node tasks/compile.js"
+    "build": "node tasks/compile.js",
+    "lint": "eslint ."
   },
   "dependencies": {},
   "devDependencies": {
@@ -21,7 +22,10 @@
     "rollup": "^1.21.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.1.2",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "eslint": "^5.15.3",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0"
   },
   "repository": {
     "type": "git",
