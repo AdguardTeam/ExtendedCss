@@ -41,7 +41,6 @@ var ExtendedCss = (function () {
 
 
     utils.createURLRegex = function () {
-      // jshint ignore:line
       // Constants
       const regexConfiguration = {
         maskStartUrl: '||',
@@ -159,7 +158,6 @@ var ExtendedCss = (function () {
       const location_A = utils.createLocation(url_A);
 
       if (location_A.protocol === 'javascript:' || location_A.href === 'about:blank') {
-        // jshint ignore:line
         return true;
       }
 
@@ -2842,7 +2840,6 @@ var ExtendedCss = (function () {
      */
 
     const StylePropertyMatcher = function (window, document) {
-      // jshint ignore:line
       const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
       const isPhantom = !!window._phantom;
       const useFallback = isPhantom && !!window.getMatchedCSSRules;
@@ -3020,7 +3017,6 @@ var ExtendedCss = (function () {
      */
 
     const ExtendedSelectorFactory = function () {
-      // jshint ignore:line
       const PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not'];
       let initialized = false;
       let Sizzle;
@@ -3070,7 +3066,7 @@ var ExtendedCss = (function () {
           }
 
           return function (elem) {
-            return Sizzle(selector, elem).length === 0; // jshint ignore:line
+            return Sizzle(selector, elem).length === 0;
           };
         });
       }
@@ -3287,7 +3283,7 @@ var ExtendedCss = (function () {
 
       TraitLessSelector.prototype = {
         querySelectorAll() {
-          return Sizzle(this.selectorText); // jshint ignore:line
+          return Sizzle(this.selectorText);
         },
 
         /** @final */
@@ -3421,7 +3417,7 @@ var ExtendedCss = (function () {
 
 
       SplittedSelector.prototype.relativeSearch = function (node, results) {
-        Sizzle(this.complex, node, results); // jshint ignore:line
+        Sizzle(this.complex, node, results);
       };
 
       return {
@@ -3465,7 +3461,6 @@ var ExtendedCss = (function () {
      */
 
     const ExtendedCssParser = function () {
-      // jshint ignore:line
       const reDeclEnd = /[;}]/g;
       const reDeclDivider = /[;:}]/g;
       const reNonWhitespace = /\S/g;
@@ -3694,7 +3689,6 @@ var ExtendedCss = (function () {
      */
 
     function ExtendedCss(configuration) {
-      // jshint ignore:line
       if (!configuration) {
         throw 'Configuration is not provided.';
       }
