@@ -15,9 +15,11 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@babel/core": "^7.7.5",
     "fs-extra": "^3.0.1",
     "node-qunit-puppeteer": "^1.0.6",
     "rollup": "^1.21.0",
+    "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.1.2",
     "underscore": "^1.8.3"
   },

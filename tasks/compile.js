@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 const console = require('console');
 const { rollup } = require('rollup');
 const { terser } = require('rollup-plugin-terser');
+const babel = require('rollup-plugin-babel');
 
 
 const pkg = require('../package.json');
@@ -40,6 +41,11 @@ const rollupConfig = {
             plugins: [terser()],
         },
     ],
+    plugins: [
+        babel({
+            exclude: 'node_modules/**'
+        })
+    ]
 };
 
 (async () => {
