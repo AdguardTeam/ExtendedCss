@@ -3,5 +3,5 @@
  */
 module.exports = {
     outputDir: 'dist',
-    fileName: 'extended-css'
+    fileName: 'extended-css',
 };
