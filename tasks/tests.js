@@ -23,10 +23,10 @@ const options = [
             input: './test/index.js',
         },
         outputOptions: {
-            file: `build/index.js`,
+            file: 'build/index.js',
             format: 'iife',
             name: 'exports',
-        }
+        },
     },
 ];
 
@@ -52,7 +52,7 @@ const runQunit = async (testFilePath) => {
         /**
          * As we are not able to use es6 modules in browser environment, we first compile sources.
          */
-        options.forEach(async (option)=> {
+        options.forEach(async (option) => {
             const bundle = await rollup(option.inputOptions);
             // an array of file names this bundle depends on
             console.log(bundle.watchFiles);

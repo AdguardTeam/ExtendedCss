@@ -20,32 +20,32 @@ if (!fs.existsSync(config.outputDir)) {
 }
 
 const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}
-${pkg.homepage ? "* " + pkg.homepage : ""}
-* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(", ")}
+${pkg.homepage ? `* ${pkg.homepage}` : ''}
+* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(', ')}
 */`;
 
 const rollupConfig = {
-    input: "./index.js",
+    input: './index.js',
     output: [
         {
             file: `${config.outputDir}/${config.fileName}.js`,
             format: 'iife',
             name: 'ExtendedCss',
-            banner: banner,
+            banner,
         },
         {
             file: `${config.outputDir}/${config.fileName}.min.js`,
             format: 'iife',
             name: 'ExtendedCss',
-            banner: banner,
+            banner,
             plugins: [terser()],
         },
     ],
     plugins: [
         babel({
-            exclude: 'node_modules/**'
-        })
-    ]
+            exclude: 'node_modules/**',
+        }),
+    ],
 };
 
 (async () => {
@@ -55,7 +55,7 @@ const rollupConfig = {
         const bundle = await rollup(rollupConfig);
         console.log(bundle.watchFiles);
 
-        rollupConfig.output.forEach((option)=> {
+        rollupConfig.output.forEach((option) => {
             bundle.write(option);
         });
 
