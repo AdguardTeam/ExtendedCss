@@ -1,3 +1,5 @@
+/* eslint-disable max-len,prefer-rest-params */
+
 const { ExtendedCss } = exports;
 const { utils } = exports;
 
@@ -16,11 +18,12 @@ const assertElementStyle = function (id, expectedStyle, assert) {
         resultOk = false;
     }
 
+    // eslint-disable-next-line guard-for-in
     for (const prop in expectedStyle) {
         const left = element.style.getPropertyValue(prop) || '';
         const right = expectedStyle[prop];
 
-        if (left != right) {
+        if (left !== right) {
             resultOk = false;
         }
     }
@@ -222,11 +225,8 @@ QUnit.test('Test debugging', (assert) => {
     // Spy on utils.logInfo
     const utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
-        if (
-            arguments.length == 3
-            && typeof arguments[0] === 'string'
-            && arguments[0].indexOf('Timings for') !== -1
-        ) {
+        if (arguments.length === 3
+                && typeof arguments[0] === 'string' && arguments[0].indexOf('Timings for') !== -1) {
             const stats = arguments[2];
             assert.ok(stats);
             assert.ok(stats[0].selectorText.indexOf('with-debug') !== -1);
@@ -257,11 +257,8 @@ QUnit.test('Test global debugging', (assert) => {
     // Spy on utils.logInfo
     const utilsLogInfo = utils.logInfo;
     utils.logInfo = function () {
-        if (
-            arguments.length == 3
-            && typeof arguments[0] === 'string'
-            && arguments[0].indexOf('Timings for') !== -1
-        ) {
+        if (arguments.length === 3
+                && typeof arguments[0] === 'string' && arguments[0].indexOf('Timings for') !== -1) {
             const stats = arguments[2];
 
             assert.ok(stats);

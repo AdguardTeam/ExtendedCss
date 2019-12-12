@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Wed Dec 11 2019
+/*! extended-css - v1.1.6 - Thu Dec 12 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed Apache License 2.0
 */
@@ -20,6 +20,8 @@ var ExtendedCss = (function () {
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
+
+    /* eslint-disable no-multi-assign */
 
     /* global console */
     const utils = {};
@@ -147,25 +149,25 @@ var ExtendedCss = (function () {
     };
     /**
      * Checks whether A has the same origin as B.
-     * @param {string} url_A location.href of A.
-     * @param {Location} location_B location of B.
-     * @param {string} domain_B document.domain of B.
+     * @param {string} urlA location.href of A.
+     * @param {Location} locationB location of B.
+     * @param {string} domainB document.domain of B.
      * @return {boolean}
      */
 
 
-    utils.isSameOrigin = function (url_A, location_B, domain_B) {
-      const location_A = utils.createLocation(url_A);
+    utils.isSameOrigin = function (urlA, locationB, domainB) {
+      const locationA = utils.createLocation(urlA); // eslint-disable-next-line no-script-url
 
-      if (location_A.protocol === 'javascript:' || location_A.href === 'about:blank') {
+      if (locationA.protocol === 'javascript:' || locationA.href === 'about:blank') {
         return true;
       }
 
-      if (location_A.protocol === 'data:' || location_A.protocol === 'file:') {
+      if (locationA.protocol === 'data:' || locationA.protocol === 'file:') {
         return false;
       }
 
-      return location_A.hostname === domain_B && location_A.port === location_B.port && location_A.protocol === location_B.protocol;
+      return locationA.hostname === domainB && locationA.port === locationB.port && locationA.protocol === locationB.protocol;
     };
     /**
      * A helper class to throttle function calls with setTimeout and requestAnimationFrame.
@@ -318,8 +320,8 @@ var ExtendedCss = (function () {
         },
 
         get(key) {
-          let entry;
-          return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
+          const entry = key[this.name];
+          return entry && entry[0] === key ? entry[1] : undefined;
         },
 
         delete(key) {
@@ -467,6 +469,7 @@ var ExtendedCss = (function () {
 
       this.mean = this.sum / this.length;
       /** @member {number} */
+      // eslint-disable-next-line no-restricted-properties
 
       this.stddev = Math.sqrt(this.squaredSum / this.length - Math.pow(this.mean, 2));
     };
@@ -2838,6 +2841,7 @@ var ExtendedCss = (function () {
     /**
      * Class that extends Sizzle and adds support for "matches-css" pseudo element.
      */
+    // eslint-disable-next-line no-unused-vars
 
     const StylePropertyMatcher = function (window, document) {
       const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
@@ -3035,6 +3039,7 @@ var ExtendedCss = (function () {
         Sizzle = initializeSizzle(); // Add :matches-css-*() support
 
         StylePropertyMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
+        // eslint-disable-next-line no-multi-assign,max-len
 
         Sizzle.selectors.pseudos['contains'] = Sizzle.selectors.pseudos['has-text'] = Sizzle.selectors.pseudos['-abp-contains'] = Sizzle.selectors.createPseudo(text => {
           if (/^\s*\/.*\/\s*$/.test(text)) {
@@ -3057,6 +3062,7 @@ var ExtendedCss = (function () {
             return elem.textContent.indexOf(text) > -1;
           };
         }); // Add :if, :-abp-has support
+        // eslint-disable-next-line no-multi-assign
 
         Sizzle.selectors.pseudos['if'] = Sizzle.selectors.pseudos['-abp-has'] = Sizzle.selectors.pseudos['has']; // Add :if-not support
 
@@ -3337,7 +3343,8 @@ var ExtendedCss = (function () {
 
           if (!simpleNodes || !simpleNodes.length) {
             return resultNodes;
-          }
+          } // eslint-disable-next-line prefer-destructuring
+
 
           relation = this.relation;
         } else {
@@ -3404,6 +3411,8 @@ var ExtendedCss = (function () {
                   }
                 }
               }
+
+              break;
             }
         }
 
@@ -3512,7 +3521,8 @@ var ExtendedCss = (function () {
         /**
          * Parses a stylesheet and returns a list of pairs of an ExtendedSelector and a styles map.
          * This method will throw an error in case of an obviously invalid input.
-         * If any of the selectors used in the stylesheet cannot be compiled into an ExtendedSelector, it will be ignored.
+         * If any of the selectors used in the stylesheet cannot be compiled into an ExtendedSelector,
+         * it will be ignored.
          *
          * @typedef {Object} ExtendedStyle
          * @property {Object} selector An instance of the {@link ExtendedSelector} class
@@ -3690,7 +3700,7 @@ var ExtendedCss = (function () {
 
     function ExtendedCss(configuration) {
       if (!configuration) {
-        throw 'Configuration is not provided.';
+        throw new Error('Configuration is not provided.');
       }
 
       const {
@@ -3701,7 +3711,8 @@ var ExtendedCss = (function () {
       } = configuration;
 
       if (beforeStyleApplied && typeof beforeStyleApplied !== 'function') {
-        throw `Wrong configuration. Type of 'beforeStyleApplied' field should be a function, received: ${typeof beforeStyleApplied}`;
+        // eslint-disable-next-line max-len
+        throw new Error(`Wrong configuration. Type of 'beforeStyleApplied' field should be a function, received: ${typeof beforeStyleApplied}`);
       } // We use EventTracker to track the event that is likely to cause the mutation.
       // The problem is that we cannot use `window.event` directly from the mutation observer call
       // as we're not in the event handler context anymore.
@@ -4127,6 +4138,7 @@ var ExtendedCss = (function () {
         if (timings.length === 0) {
           return;
         } // Add location.href to the message to distinguish frames
+        // eslint-disable-next-line no-restricted-globals
 
 
         utils.logInfo('[ExtendedCss] Timings for %o:\n%o (in milliseconds)', location.href, timings);
@@ -4155,7 +4167,7 @@ var ExtendedCss = (function () {
 
     ExtendedCss.query = function (selectorText, noTiming) {
       if (typeof selectorText !== 'string') {
-        throw 'Selector text is empty';
+        throw new Error('Selector text is empty');
       }
 
       const {

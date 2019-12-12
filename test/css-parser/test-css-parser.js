@@ -1,3 +1,4 @@
+/* eslint-disable max-len,no-multi-str */
 /* global QUnit */
 const { ExtendedCssParser } = exports;
 const { initializeSizzle } = exports;
@@ -19,7 +20,7 @@ QUnit.test('Simple CSS', (assert) => {
 QUnit.test('Test Sizzle tokenize cache', (assert) => {
     const selector = 'body';
     const cssText = `${selector} { display:none; }`;
-    const cssObject = ExtendedCssParser.parseCss(cssText);
+    ExtendedCssParser.parseCss(cssText);
 
     // Check the tokens cache only now
     const tokens = Sizzle.tokenize(selector, false, { cacheOnly: true });
@@ -32,7 +33,7 @@ QUnit.test('Parse an invalid selector', (assert) => {
     assert.expect(1);
     assert.throws(() => {
         const cssText = 'div > { display:none; }';
-        const cssObject = ExtendedCssParser.parseCss(cssText);
+        ExtendedCssParser.parseCss(cssText);
     }, function (error) { // eslint-disable-line prefer-arrow-callback
         return !!error;
     }, 'Expected ExtendedCssParser to throw on an invalid selector');

@@ -1,3 +1,5 @@
+/* global QUnit, ExtendedCss */
+
 /* Start with creating ExtendedCss */
 const cssText = document.getElementById('extendedCss').innerHTML;
 const extendedCss = new ExtendedCss({ styleSheet: cssText });
@@ -13,11 +15,12 @@ const assertElementStyle = function (id, expectedStyle, assert) {
         resultOk = false;
     }
 
+    // eslint-disable-next-line guard-for-in
     for (const prop in expectedStyle) {
         const left = element.style.getPropertyValue(prop) || '';
         const right = expectedStyle[prop];
 
-        if (left != right) {
+        if (left !== right) {
             resultOk = false;
         }
     }

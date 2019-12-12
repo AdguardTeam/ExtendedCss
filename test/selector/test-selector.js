@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* eslint-disable max-len */
 /* global QUnit */
 
 const { ExtendedSelectorFactory } = exports;
@@ -264,18 +265,3 @@ QUnit.test('Test + and ~ combinators matching', (assert) => {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 });
-
-/**
- * We throttle MO callbacks in ExtCss with requestAnimationFrame and setTimeout.
- * Browsers postpone rAF callbacks in inactive tabs for a long time.
- * It throttles setTimeout callbacks as well, but it is called within a
- * relatively short time. (within several seconds)
- * We apply rAF in tests as well to postpone test for similar amount of time.
- */
-const rAF = function (fn, timeout) {
-    if (window.requestAnimationFrame) {
-        requestAnimationFrame(fn);
-    } else {
-        setTimeout(fn, 100);
-    }
-};

@@ -72,22 +72,7 @@
     ],
     // Prefer destructuring from arrays and objects
     // https://eslint.org/docs/rules/prefer-destructuring
-    "prefer-destructuring": [
-      "error",
-      {
-        "VariableDeclarator": {
-          "array": false,
-          "object": true
-        },
-        "AssignmentExpression": {
-          "array": true,
-          "object": false
-        }
-      },
-      {
-        "enforceForRenamedProperties": false
-      }
-    ],
+    "prefer-destructuring": ["error", {"object": true, "array": false}],
     "consistent-return": "off",
     "no-prototype-builtins": "off",
     "dot-notation": "off",
@@ -96,8 +81,11 @@
     "strict": "off",
     "no-bitwise": "off",
     "no-underscore-dangle": "off",
+    "no-plusplus": "off",
+    "no-restricted-syntax": "warn",
+    "no-use-before-define": "off",
     "max-len": ["error", {
-      "code": 120
+      "code": 130
     }]
   }
 }
