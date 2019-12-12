@@ -1,6 +1,6 @@
-/*! extended-css - v1.1.6 - Wed Dec 11 2019
+/*! extended-css - v1.1.6 - Thu Dec 12 2019
 * https://github.com/AdguardTeam/ExtendedCss
-* Copyright (c) 2019 Adguard ; Licensed Apache License 2.0
+* Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
 var ExtendedCss = (function () {
     'use strict';
