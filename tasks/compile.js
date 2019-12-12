@@ -38,7 +38,12 @@ const rollupConfig = {
             format: 'iife',
             name: 'ExtendedCss',
             banner,
-            plugins: [terser()],
+            plugins: [terser({
+                output: {
+                    comments: false,
+                    preamble: banner,
+                },
+            })],
         },
     ],
     plugins: [
