@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Thu Dec 12 2019
+/*! extended-css - v1.1.6 - Fri Dec 13 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -20,8 +20,6 @@ var ExtendedCss = (function () {
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-
-    /* eslint-disable no-multi-assign */
 
     /* global console */
     const utils = {};
@@ -204,7 +202,9 @@ var ExtendedCss = (function () {
 
       AsyncWrapper.prototype.wrappedCallback = function (ts) {
         this.lastRun = isNumber(ts) ? ts : perf.now();
-        this.rAFid = this.timerId = this.asapScheduled = undefined;
+        delete this.rAFid;
+        delete this.timerId;
+        delete this.asapScheduled;
         this.callback();
       };
       /** @private Indicates whether there is a scheduled callback. */
@@ -278,7 +278,8 @@ var ExtendedCss = (function () {
         if (this.hasPendingCallback()) {
           cAF(this.rAFid);
           clearTimeout(this.timerId);
-          this.rAFid = this.timerId = undefined;
+          delete this.rAFid;
+          delete this.timerId;
           this.wrappedCallback();
         }
       };
@@ -332,7 +333,8 @@ var ExtendedCss = (function () {
           }
 
           const hasValue = entry[0] === key;
-          entry[0] = entry[1] = undefined;
+          delete entry[0];
+          delete entry[1];
           return hasValue;
         },
 
@@ -2841,9 +2843,8 @@ var ExtendedCss = (function () {
     /**
      * Class that extends Sizzle and adds support for "matches-css" pseudo element.
      */
-    // eslint-disable-next-line no-unused-vars
 
-    const StylePropertyMatcher = function (window, document) {
+    const StylePropertyMatcher = function (window) {
       const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
       const isPhantom = !!window._phantom;
       const useFallback = isPhantom && !!window.getMatchedCSSRules;
@@ -3039,9 +3040,8 @@ var ExtendedCss = (function () {
         Sizzle = initializeSizzle(); // Add :matches-css-*() support
 
         StylePropertyMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
-        // eslint-disable-next-line no-multi-assign,max-len
 
-        Sizzle.selectors.pseudos['contains'] = Sizzle.selectors.pseudos['has-text'] = Sizzle.selectors.pseudos['-abp-contains'] = Sizzle.selectors.createPseudo(text => {
+        const containsPseudo = Sizzle.selectors.createPseudo(text => {
           if (/^\s*\/.*\/\s*$/.test(text)) {
             text = text.trim().slice(1, -1).replace(/\\([\\"])/g, '$1');
             let regex;
@@ -3061,10 +3061,13 @@ var ExtendedCss = (function () {
           return function (elem) {
             return elem.textContent.indexOf(text) > -1;
           };
-        }); // Add :if, :-abp-has support
-        // eslint-disable-next-line no-multi-assign
+        });
+        Sizzle.selectors.pseudos['contains'] = containsPseudo;
+        Sizzle.selectors.pseudos['has-text'] = containsPseudo;
+        Sizzle.selectors.pseudos['-abp-contains'] = containsPseudo; // Add :if, :-abp-has support
 
-        Sizzle.selectors.pseudos['if'] = Sizzle.selectors.pseudos['-abp-has'] = Sizzle.selectors.pseudos['has']; // Add :if-not support
+        Sizzle.selectors.pseudos['if'] = Sizzle.selectors.pseudos['has'];
+        Sizzle.selectors.pseudos['-abp-has'] = Sizzle.selectors.pseudos['has']; // Add :if-not support
 
         Sizzle.selectors.pseudos['if-not'] = Sizzle.selectors.createPseudo(selector => {
           if (typeof selector === 'string') {
@@ -3343,8 +3346,7 @@ var ExtendedCss = (function () {
 
           if (!simpleNodes || !simpleNodes.length) {
             return resultNodes;
-          } // eslint-disable-next-line prefer-destructuring
-
+          }
 
           relation = this.relation;
         } else {
@@ -4138,10 +4140,9 @@ var ExtendedCss = (function () {
         if (timings.length === 0) {
           return;
         } // Add location.href to the message to distinguish frames
-        // eslint-disable-next-line no-restricted-globals
 
 
-        utils.logInfo('[ExtendedCss] Timings for %o:\n%o (in milliseconds)', location.href, timings);
+        utils.logInfo('[ExtendedCss] Timings for %o:\n%o (in milliseconds)', window.location.href, timings);
       } // First of all parse the stylesheet
 
 

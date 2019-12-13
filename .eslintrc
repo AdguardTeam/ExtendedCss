@@ -72,7 +72,7 @@
     ],
     // Prefer destructuring from arrays and objects
     // https://eslint.org/docs/rules/prefer-destructuring
-    "prefer-destructuring": ["error", {"object": true, "array": false}],
+    "prefer-destructuring": ["warn", {"object": true, "array": false}],
     "consistent-return": "off",
     "no-prototype-builtins": "off",
     "dot-notation": "off",
