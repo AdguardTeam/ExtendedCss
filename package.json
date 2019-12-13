@@ -10,27 +10,22 @@
     "node": ">=10"
   },
   "scripts": {
-    "test": "grunt",
-    "build": "grunt build",
-    "build-dist": "grunt build-dist",
-    "build-dist-minus-tests": "grunt build-dist-minus-tests"
+    "test": "node tasks/tests.js",
+    "build": "node tasks/compile.js",
+    "lint": "eslint ."
   },
   "dependencies": {},
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-plugin-transform-es2015-block-scoping": "^6.26.0",
-    "babel-plugin-transform-for-of-as-array": "^1.0.4",
+    "@babel/core": "^7.7.5",
     "fs-extra": "^3.0.1",
-    "grunt": "^1.0.1",
-    "grunt-babel": "^7.0.0",
-    "grunt-contrib-concat": "~1.0.1",
-    "grunt-contrib-jshint": "~1.1.0",
-    "grunt-contrib-qunit": "^3.1.0",
-    "grunt-contrib-uglify": "~3.0.1",
-    "grunt-contrib-watch": "~1.0.0",
-    "grunt-contrib-clean": "^1.1.0",
-    "load-grunt-tasks": "^3.5.2",
-    "underscore": "^1.8.3"
+    "node-qunit-puppeteer": "^1.0.6",
+    "rollup": "^1.21.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-terser": "^5.1.2",
+    "underscore": "^1.8.3",
+    "eslint": "^5.15.3",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0"
   },
   "repository": {
     "type": "git",
@@ -39,7 +34,7 @@
   "author": "Adguard",
   "licenses": [
     {
-      "type": "Apache License 2.0",
+      "type": "LGPL-3.0",
       "url": "https://github.com/AdguardTeam/ExtendedCss/blob/master/LICENSE"
     }
   ],
