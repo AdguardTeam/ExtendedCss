@@ -1,3 +1,5 @@
+/* global QUnit, ExtendedCss */
+
 /* Start with creating ExtendedCss */
 const cssText = document.getElementById('extendedCss').innerHTML;
 const extendedCss = new ExtendedCss({ styleSheet: cssText });
@@ -13,14 +15,14 @@ const assertElementStyle = function (id, expectedStyle, assert) {
         resultOk = false;
     }
 
-    for (const prop in expectedStyle) {
+    Object.keys(expectedStyle).forEach((prop) => {
         const left = element.style.getPropertyValue(prop) || '';
         const right = expectedStyle[prop];
 
-        if (left != right) {
+        if (left !== right) {
             resultOk = false;
         }
-    }
+    });
 
     assert.ok(resultOk, id + (resultOk ? ' ok' : ' element either does not exist or has different style.'));
 };

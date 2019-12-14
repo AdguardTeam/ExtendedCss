@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 const { ExtendedSelectorFactory } = exports;
 const { initializeSizzle } = exports;
 
