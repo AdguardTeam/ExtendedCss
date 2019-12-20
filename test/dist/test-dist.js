@@ -69,23 +69,6 @@ QUnit.test('Reaction on DOM modification', (assert) => {
     }, 200);
 });
 
-QUnit.test('Test attribute protection', (assert) => {
-    const done = assert.async();
-    assertElementStyle('case10-blocked', { 'display': 'none' }, assert);
-
-    rAF(() => {
-        const node = document.getElementById('case10-blocked');
-        node.style.cssText = 'display: block!important;';
-        rAF(() => {
-            node.style.cssText = 'display: block!important; visibility: visible!important;';
-            rAF(() => {
-                assertElementStyle('case10-blocked', { 'display': 'none' }, assert);
-                done();
-            }, 100);
-        }, 100);
-    }, 100);
-});
-
 QUnit.test('Protection from recurring style fixes', (assert) => {
     const done = assert.async();
 
