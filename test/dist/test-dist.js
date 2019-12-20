@@ -68,37 +68,3 @@ QUnit.test('Reaction on DOM modification', (assert) => {
         done();
     }, 200);
 });
-
-QUnit.test('Protection from recurring style fixes', (assert) => {
-    const done = assert.async();
-
-    const testNode = document.getElementById('case11');
-
-    let styleTamperCount = 0;
-
-    const tamperStyle = function () {
-        if (testNode.hasAttribute('style')) {
-            testNode.removeAttribute('style');
-            styleTamperCount++;
-        }
-    };
-
-    const tamperObserver = new MutationObserver(tamperStyle);
-
-    tamperStyle();
-    tamperObserver.observe(
-        testNode,
-        {
-            attributes: true,
-            attributeFilter: ['style'],
-        }
-    );
-
-    setTimeout(() => {
-        tamperObserver.disconnect();
-        assert.ok(styleTamperCount < 60);
-        assert.ok(styleTamperCount >= 50);
-        assert.notOk(testNode.hasAttribute('style'));
-        done();
-    }, 1000);
-});
