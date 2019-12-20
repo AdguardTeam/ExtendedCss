@@ -2,8 +2,8 @@
 
 /* Start with creating ExtendedCss */
 const cssText = document.getElementById('extendedCss').innerHTML;
-const extendedCss = new ExtendedCss({ styleSheet: cssText });
-extendedCss.apply();
+const extCss = new ExtendedCss({ styleSheet: cssText });
+extCss.apply();
 
 /**
  * Asserts that specified function has specified expected styles
