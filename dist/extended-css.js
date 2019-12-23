@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Fri Dec 13 2019
+/*! extended-css - v1.1.6 - Tue Dec 24 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -48,7 +48,7 @@ var ExtendedCss = (function () {
         maskSeparator: '^',
         maskAnySymbol: '*',
         regexAnySymbol: '.*',
-        regexSeparator: '([^ a-zA-Z0-9.%]|$)',
+        regexSeparator: '([^ a-zA-Z0-9.%_-]|$)',
         regexStartUrl: '^(http|https|ws|wss)://([a-z0-9-_.]+\\.)?',
         regexStartString: '^',
         regexEndString: '$'
@@ -635,6 +635,7 @@ var ExtendedCss = (function () {
      * 2. Added tokens re-sorting mechanism forcing slow pseudos to be matched last  (see sortTokenGroups).
      * 3. Fix the nonnativeSelectorCache caching -- there was no value corresponding to a key.
      * 4. Added Sizzle.compile call to the `:has` pseudo definition.
+     * 5. Added :xpath pseudo
      * 
      * Changes that are applied to the ADGUARD_EXTCSS build only:
      * 1. Do not expose Sizzle to the global scope. Initialize it lazily via initializeSizzle().
@@ -1949,7 +1950,22 @@ var ExtendedCss = (function () {
                 }
 
                 return true;
-              } // Removed custom pseudo-classes
+              },
+              // Xpath
+              // https://github.com/AdguardTeam/ExtendedCss/issues/86
+              "xpath": markFunction(function (selector) {
+                var xpathResult = document.evaluate(selector, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+                var result = [];
+                var node;
+
+                while (node = xpathResult.iterateNext()) {
+                  result.push(node);
+                }
+
+                return function (elem) {
+                  return result.indexOf(elem) > -1;
+                };
+              }) // Removed custom pseudo-classes
 
             }
           }; // Removed custom pseudo-classes
