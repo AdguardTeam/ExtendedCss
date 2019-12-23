@@ -6,6 +6,7 @@ install:
 script:
   - yarn build
   - yarn test
+  - yarn browserstack
 deploy:
   - provider: pages
     skip_cleanup: true
