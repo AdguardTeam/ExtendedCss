@@ -635,7 +635,6 @@ var ExtendedCss = (function () {
      * 2. Added tokens re-sorting mechanism forcing slow pseudos to be matched last  (see sortTokenGroups).
      * 3. Fix the nonnativeSelectorCache caching -- there was no value corresponding to a key.
      * 4. Added Sizzle.compile call to the `:has` pseudo definition.
-     * 5. Added :xpath pseudo
      * 
      * Changes that are applied to the ADGUARD_EXTCSS build only:
      * 1. Do not expose Sizzle to the global scope. Initialize it lazily via initializeSizzle().
@@ -1950,22 +1949,7 @@ var ExtendedCss = (function () {
                 }
 
                 return true;
-              },
-              // Xpath
-              // https://github.com/AdguardTeam/ExtendedCss/issues/86
-              "xpath": markFunction(function (selector) {
-                var xpathResult = document.evaluate(selector, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-                var result = [];
-                var node;
-
-                while (node = xpathResult.iterateNext()) {
-                  result.push(node);
-                }
-
-                return function (elem) {
-                  return result.indexOf(elem) > -1;
-                };
-              }) // Removed custom pseudo-classes
+              } // Removed custom pseudo-classes
 
             }
           }; // Removed custom pseudo-classes
@@ -3093,7 +3077,22 @@ var ExtendedCss = (function () {
           return function (elem) {
             return Sizzle(selector, elem).length === 0;
           };
+        }); // Add :xpath support
+
+        const xpathPseudo = Sizzle.selectors.createPseudo(selector => {
+          const xpathResult = document.evaluate(selector, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+          const result = [];
+          let node; // eslint-disable-next-line no-cond-assign
+
+          while (node = xpathResult.iterateNext()) {
+            result.push(node);
+          }
+
+          return function (elem) {
+            return result.indexOf(elem) > -1;
+          };
         });
+        Sizzle.selectors.pseudos['xpath'] = xpathPseudo;
       }
       /**
        * Checks if specified token can be used by document.querySelectorAll.
