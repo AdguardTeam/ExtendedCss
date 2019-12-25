@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Tue Dec 24 2019
+/*! extended-css - v1.1.6 - Wed Dec 25 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -3078,9 +3078,18 @@ var ExtendedCss = (function () {
             return Sizzle(selector, elem).length === 0;
           };
         }); // Add :xpath support
+        // TODO: Fix ::xpath
 
-        const xpathPseudo = Sizzle.selectors.createPseudo(selector => {
-          const xpathResult = document.evaluate(selector, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+        Sizzle.selectors.match['xpath'] = new RegExp('^::xpath(?:\\((.*)\\))');
+
+        Sizzle.selectors.filter['xpath'] = () => true;
+
+        Sizzle.selectors.find['xpath'] = (match, context) => {
+          console.log(match);
+          console.log(context); // TODO: fix context elem
+
+          const execContext = context || document;
+          const xpathResult = document.evaluate(match, execContext, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
           const result = [];
           let node; // eslint-disable-next-line no-cond-assign
 
@@ -3088,11 +3097,9 @@ var ExtendedCss = (function () {
             result.push(node);
           }
 
-          return function (elem) {
-            return result.indexOf(elem) > -1;
-          };
-        });
-        Sizzle.selectors.pseudos['xpath'] = xpathPseudo;
+          return result;
+        }; // TODO: Fix matches
+
       }
       /**
        * Checks if specified token can be used by document.querySelectorAll.
