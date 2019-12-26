@@ -7,6 +7,7 @@ Module for applying CSS styles with extended selection properties.
   * [Pseudo-class :if-not()](#extended-css-if-not)
   * [Pseudo-class :contains()](#extended-css-contains)
   * [Pseudo-class :matches-css()](#extended-css-matches-css)
+  * [Pseudo-class :xpath()](#extended-css-xpath)
   * [Selectors debug mode](#selectors-debug-mode)
   * [Pseudo-property `remove`](#pseudo-property-remove)
 * [Usage](#usage)
@@ -185,6 +186,36 @@ div.banner[-ext-matches-css-before="content: block me"]
 
 // Regular expressions
 div.banner[-ext-matches-css-before="content: /block me/"]
+```
+
+<a id="extended-css-xpath"></a>
+### Pseudo-class `:xpath()`
+
+This pseudo-class allows to select an element by evaluating a XPath expression.
+> **Limited to work properly only at the end of selector.**
+
+The :xpath(...) pseudo is different than other classes. Whereas all other operators are used to filter down a resultset of elements, the :xpath(...) operator can be used both to create a new resultset or filter down an existing one. For this reason, subject selector is optional. For example, an :xpath(...) operator could be used to create a new resultset consisting of all ancestors elements of a subject element, something not otherwise possible with either plain CSS selectors or other procedural operators.
+
+#### `:xpath()` syntax
+
+```
+[selector]:xpath(expression)
+```
+
+##### `selector`
+Optional. Can be a plain CSS selector, or a Sizzle compatible selector.
+
+##### `expression`
+A valid XPath expression.
+
+#### `:xpath()` examples
+
+```
+// Filtering results from selector
+div:xpath(//*[@class="test-xpath-class"])
+div:has-text(/test-xpath-content/):xpath(../../..)
+// Use xpath only to select elements
+facebook.com##:xpath(//div[@id="stream_pagelet"]//div[starts-with(@id,"hyperfeed_story_id_")][.//h6//span/text()="People You May Know"])
 ```
 
 ### Selectors debug mode
