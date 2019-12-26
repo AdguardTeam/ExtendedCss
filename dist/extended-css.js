@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Wed Dec 25 2019
+/*! extended-css - v1.1.6 - Thu Dec 26 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -3077,29 +3077,11 @@ var ExtendedCss = (function () {
           return function (elem) {
             return Sizzle(selector, elem).length === 0;
           };
-        }); // Add :xpath support
-        // TODO: Fix ::xpath
+        }); // Define :xpath support in Sizzle, to make tokenize work properly
 
-        Sizzle.selectors.match['xpath'] = new RegExp('^::xpath(?:\\((.*)\\))');
-
-        Sizzle.selectors.filter['xpath'] = () => true;
-
-        Sizzle.selectors.find['xpath'] = (match, context) => {
-          console.log(match);
-          console.log(context); // TODO: fix context elem
-
-          const execContext = context || document;
-          const xpathResult = document.evaluate(match, execContext, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-          const result = [];
-          let node; // eslint-disable-next-line no-cond-assign
-
-          while (node = xpathResult.iterateNext()) {
-            result.push(node);
-          }
-
-          return result;
-        }; // TODO: Fix matches
-
+        Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(() => function () {
+          return true;
+        });
       }
       /**
        * Checks if specified token can be used by document.querySelectorAll.
@@ -3197,6 +3179,12 @@ var ExtendedCss = (function () {
             return new TraitLessSelector(selectorText, debug);
           }
 
+          const xpathToken = this.getXpathToken();
+
+          if (typeof xpathToken !== 'undefined') {
+            return new XpathSelector(selectorText, xpathToken.value, debug);
+          }
+
           tokens = tokens[0];
           const l = tokens.length;
           const lastRelTokenInd = this.getSplitPoint();
@@ -3267,6 +3255,25 @@ var ExtendedCss = (function () {
           }
 
           return latestRelationTokenIndex;
+        },
+
+        /**
+         * @private
+         * @return {string|undefined} xpath pseudo token if exists
+         * returns undefined if the selector does not contain xpath tokens
+         */
+        getXpathToken() {
+          const tokens = this.tokens[0];
+
+          for (let i = 0, l = tokens.length; i < l; i++) {
+            const token = tokens[i];
+
+            if (token.type === 'PSEUDO') {
+              if (token.value && token.value.indexOf(':xpath(') > -1) {
+                return token;
+              }
+            }
+          }
         }
 
       };
@@ -3324,6 +3331,72 @@ var ExtendedCss = (function () {
 
         /** @final */
         isDebugging
+      };
+      /**
+       * Xpath selector class
+       * Limited to support xpath to be only the last one token in selector
+       *
+       * @param {string} selectorText
+       * @param {string} xpath value
+       * @param {boolean=}debug
+       * @constructor
+       */
+
+      function XpathSelector(selectorText, xpath, debug) {
+        // Xpath is limited to be the last one token
+        this.selectorText = selectorText.substring(0, selectorText.indexOf(xpath));
+        this.xpath = xpath.substring(':xpath('.length, xpath.length - 1);
+        this.debug = debug;
+        Sizzle.compile(this.selectorText);
+      }
+
+      XpathSelector.prototype = {
+        querySelectorAll() {
+          const resultNodes = [];
+          let simpleNodes;
+
+          if (this.selectorText) {
+            simpleNodes = Sizzle(this.selectorText);
+
+            if (!simpleNodes || !simpleNodes.length) {
+              return resultNodes;
+            }
+          } else {
+            simpleNodes = [document];
+          }
+
+          for (const node of simpleNodes) {
+            this.xpathSearch(node, this.xpath, resultNodes);
+          }
+
+          return Sizzle.uniqueSort(resultNodes);
+        },
+
+        /** @final */
+        matches(element) {
+          const results = this.querySelectorAll();
+          return results.indexOf(element) > -1;
+        },
+
+        /** @final */
+        isDebugging,
+
+        /**
+         * Applies xpath to provided context node
+         *
+         * @param {Object} node context element
+         * @param {string} xpath
+         * @param {Array} result
+         */
+        xpathSearch(node, xpath, result) {
+          const xpathResult = document.evaluate(xpath, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+          let iNode; // eslint-disable-next-line no-cond-assign
+
+          while (iNode = xpathResult.iterateNext()) {
+            result.push(iNode);
+          }
+        }
+
       };
       /**
        * A splitted extended selector class.
