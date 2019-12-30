@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Thu Dec 26 2019
+/*! extended-css - v1.1.6 - Mon Dec 30 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -3082,6 +3082,9 @@ var ExtendedCss = (function () {
         Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(() => function () {
           return true;
         });
+        Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(() => function () {
+          return true;
+        });
       }
       /**
        * Checks if specified token can be used by document.querySelectorAll.
@@ -3179,10 +3182,10 @@ var ExtendedCss = (function () {
             return new TraitLessSelector(selectorText, debug);
           }
 
-          const xpathToken = this.getXpathToken();
+          const xpathPart = this.getXpathPart();
 
-          if (typeof xpathToken !== 'undefined') {
-            return new XpathSelector(selectorText, xpathToken.value, debug);
+          if (typeof xpathPart !== 'undefined') {
+            return new XpathSelector(selectorText, xpathPart, debug);
           }
 
           tokens = tokens[0];
@@ -3259,21 +3262,51 @@ var ExtendedCss = (function () {
 
         /**
          * @private
-         * @return {string|undefined} xpath pseudo token if exists
+         * @return {string|undefined} xpath selector part if exists
          * returns undefined if the selector does not contain xpath tokens
          */
-        getXpathToken() {
+        getXpathPart() {
           const tokens = this.tokens[0];
 
           for (let i = 0, l = tokens.length; i < l; i++) {
             const token = tokens[i];
 
             if (token.type === 'PSEUDO') {
-              if (token.value && token.value.indexOf(':xpath(') > -1) {
-                return token;
+              const {
+                matches
+              } = token;
+
+              if (matches && matches.length > 1) {
+                if (matches[0] === 'xpath') {
+                  return matches[1];
+                }
+
+                if (matches[0] === 'nth-ancestor') {
+                  const deep = matches[1];
+
+                  if (deep > 0 && deep < 256) {
+                    return this.convertNthAncestorToken(matches[1]);
+                  }
+                }
               }
             }
           }
+        },
+
+        /**
+         * converts nth-ancestor deep value to xpath equivalent
+         * @param deep
+         * @return {string}
+         */
+        convertNthAncestorToken(deep) {
+          let result = '..';
+
+          while (deep > 1) {
+            result += '/..';
+            deep--;
+          }
+
+          return result;
         }
 
       };
@@ -3344,8 +3377,8 @@ var ExtendedCss = (function () {
 
       function XpathSelector(selectorText, xpath, debug) {
         // Xpath is limited to be the last one token
-        this.selectorText = selectorText.substring(0, selectorText.indexOf(xpath));
-        this.xpath = xpath.substring(':xpath('.length, xpath.length - 1);
+        this.selectorText = selectorText;
+        this.xpath = xpath;
         this.debug = debug;
         Sizzle.compile(this.selectorText);
       }
