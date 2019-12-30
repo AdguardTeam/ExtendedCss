@@ -312,4 +312,12 @@ QUnit.test('Test xpath', (assert) => {
     assert.ok(selector.matches(elements[1]));
     assert.ok(selector.matches(elements[2]));
     assert.equal('test-xpath', elements[4].id);
+
+    selectorText = 'div.test-nth-ancestor-marker:nth-ancestor(4)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(2, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.ok(selector.matches(elements[1]));
+    assert.equal('test-nth-ancestor-div', elements[0].id);
 });
