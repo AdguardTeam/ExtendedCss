@@ -8,6 +8,7 @@ Module for applying CSS styles with extended selection properties.
   * [Pseudo-class :contains()](#extended-css-contains)
   * [Pseudo-class :matches-css()](#extended-css-matches-css)
   * [Pseudo-class :xpath()](#extended-css-xpath)
+  * [Pseudo-class :nth-ancestor()](#extended-css-nth-ancestor)
   * [Selectors debug mode](#selectors-debug-mode)
   * [Pseudo-property `remove`](#pseudo-property-remove)
 * [Usage](#usage)
@@ -216,6 +217,33 @@ div:xpath(//*[@class="test-xpath-class"])
 div:has-text(/test-xpath-content/):xpath(../../..)
 // Use xpath only to select elements
 facebook.com##:xpath(//div[@id="stream_pagelet"]//div[starts-with(@id,"hyperfeed_story_id_")][.//h6//span/text()="People You May Know"])
+```
+
+<a id="extended-css-nth-ancestor"></a>
+### Pseudo-class `:nth-ancestor()`
+
+This pseudo-class allows to lookup the nth ancestor relative to the currently selected node.
+> **Limited to work properly only at the end of selector.**
+
+It is a low-overhead equivalent to :xpath(..[/..]*)
+
+#### `:nth-ancestor()` syntax
+
+```
+selector:nth-ancestor(n)
+```
+
+##### `selector`
+Can be a plain CSS selector, or a Sizzle compatible selector.
+
+##### `n`
+Positive number >= 1 and < 256, distance from the currently selected node.
+
+#### `:nth-ancestor()` examples
+
+```
+div.test:nth-ancestor(4)
+div:has-text(/test/):nth-ancestor(2)
 ```
 
 ### Selectors debug mode
