@@ -68,6 +68,46 @@
         #test-properties-ignored-stylesheets-background { background: #333; }
     </style>
 
+    <div id="test-xpath">
+        <div id="test-xpath-div">
+            <div>
+                <div class="test-xpath-div-inner-class"></div>
+            </div>
+        </div>
+        <div id="test-xpath-content-div">
+            <div>
+                <div class="test-xpath-content-class">
+                    test-xpath-content
+                </div>
+            </div>
+        </div>
+        <div class="test-xpath-class" id="test-xpath-class-div"></div>
+        <div id="test-nth-ancestor-div">
+            <div>
+                <div>
+                    <div>
+                        <div class="test-nth-ancestor-marker">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <div>
+                        <div>
+                            <div>
+                                <div>
+                                    <div class="test-nth-ancestor-marker">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script src="../qunit/qunit-2.5.1.js"></script>

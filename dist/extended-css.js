@@ -1,4 +1,4 @@
-/*! extended-css - v1.1.6 - Fri Dec 13 2019
+/*! extended-css - v1.1.6 - Mon Dec 30 2019
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
 */
@@ -48,7 +48,7 @@ var ExtendedCss = (function () {
         maskSeparator: '^',
         maskAnySymbol: '*',
         regexAnySymbol: '.*',
-        regexSeparator: '([^ a-zA-Z0-9.%]|$)',
+        regexSeparator: '([^ a-zA-Z0-9.%_-]|$)',
         regexStartUrl: '^(http|https|ws|wss)://([a-z0-9-_.]+\\.)?',
         regexStartString: '^',
         regexEndString: '$'
@@ -3077,6 +3077,13 @@ var ExtendedCss = (function () {
           return function (elem) {
             return Sizzle(selector, elem).length === 0;
           };
+        }); // Define :xpath support in Sizzle, to make tokenize work properly
+
+        Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(() => function () {
+          return true;
+        });
+        Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(() => function () {
+          return true;
         });
       }
       /**
@@ -3175,6 +3182,12 @@ var ExtendedCss = (function () {
             return new TraitLessSelector(selectorText, debug);
           }
 
+          const xpathPart = this.getXpathPart();
+
+          if (typeof xpathPart !== 'undefined') {
+            return new XpathSelector(selectorText, xpathPart, debug);
+          }
+
           tokens = tokens[0];
           const l = tokens.length;
           const lastRelTokenInd = this.getSplitPoint();
@@ -3245,6 +3258,55 @@ var ExtendedCss = (function () {
           }
 
           return latestRelationTokenIndex;
+        },
+
+        /**
+         * @private
+         * @return {string|undefined} xpath selector part if exists
+         * returns undefined if the selector does not contain xpath tokens
+         */
+        getXpathPart() {
+          const tokens = this.tokens[0];
+
+          for (let i = 0, l = tokens.length; i < l; i++) {
+            const token = tokens[i];
+
+            if (token.type === 'PSEUDO') {
+              const {
+                matches
+              } = token;
+
+              if (matches && matches.length > 1) {
+                if (matches[0] === 'xpath') {
+                  return matches[1];
+                }
+
+                if (matches[0] === 'nth-ancestor') {
+                  const deep = matches[1];
+
+                  if (deep > 0 && deep < 256) {
+                    return this.convertNthAncestorToken(matches[1]);
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        /**
+         * converts nth-ancestor deep value to xpath equivalent
+         * @param deep
+         * @return {string}
+         */
+        convertNthAncestorToken(deep) {
+          let result = '..';
+
+          while (deep > 1) {
+            result += '/..';
+            deep--;
+          }
+
+          return result;
         }
 
       };
@@ -3302,6 +3364,72 @@ var ExtendedCss = (function () {
 
         /** @final */
         isDebugging
+      };
+      /**
+       * Xpath selector class
+       * Limited to support xpath to be only the last one token in selector
+       *
+       * @param {string} selectorText
+       * @param {string} xpath value
+       * @param {boolean=}debug
+       * @constructor
+       */
+
+      function XpathSelector(selectorText, xpath, debug) {
+        // Xpath is limited to be the last one token
+        this.selectorText = selectorText;
+        this.xpath = xpath;
+        this.debug = debug;
+        Sizzle.compile(this.selectorText);
+      }
+
+      XpathSelector.prototype = {
+        querySelectorAll() {
+          const resultNodes = [];
+          let simpleNodes;
+
+          if (this.selectorText) {
+            simpleNodes = Sizzle(this.selectorText);
+
+            if (!simpleNodes || !simpleNodes.length) {
+              return resultNodes;
+            }
+          } else {
+            simpleNodes = [document];
+          }
+
+          for (const node of simpleNodes) {
+            this.xpathSearch(node, this.xpath, resultNodes);
+          }
+
+          return Sizzle.uniqueSort(resultNodes);
+        },
+
+        /** @final */
+        matches(element) {
+          const results = this.querySelectorAll();
+          return results.indexOf(element) > -1;
+        },
+
+        /** @final */
+        isDebugging,
+
+        /**
+         * Applies xpath to provided context node
+         *
+         * @param {Object} node context element
+         * @param {string} xpath
+         * @param {Array} result
+         */
+        xpathSearch(node, xpath, result) {
+          const xpathResult = document.evaluate(xpath, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+          let iNode; // eslint-disable-next-line no-cond-assign
+
+          while (iNode = xpathResult.iterateNext()) {
+            result.push(iNode);
+          }
+        }
+
       };
       /**
        * A splitted extended selector class.

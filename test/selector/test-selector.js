@@ -265,3 +265,95 @@ QUnit.test('Test + and ~ combinators matching', (assert) => {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
 });
+
+QUnit.test('Test xpath', (assert) => {
+    let selectorText; let selector; let elements;
+
+    selectorText = 'div:xpath(//*[@class="test-xpath-class"])';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-xpath-class-div', elements[0].id);
+
+    selectorText = 'div:xpath(//*[@class="test-xpath-div-inner-class"]/../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-xpath-div', elements[0].id);
+
+    selectorText = ':xpath(//div[contains(text(),"test-xpath-content")]/../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-xpath-content-div', elements[0].id);
+
+    selectorText = '.test-xpath-div-inner-class:xpath(../../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-xpath', elements[0].id);
+
+    selectorText = '.test-xpath-content-class:has-text(/test-xpath-content/):xpath(../../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-xpath', elements[0].id);
+
+    selectorText = 'div:has-text(/test-xpath-content/):xpath(../../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(5, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.ok(selector.matches(elements[1]));
+    assert.ok(selector.matches(elements[2]));
+    assert.equal('test-xpath', elements[4].id);
+
+    selectorText = 'div.test-nth-ancestor-marker:nth-ancestor(4)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(2, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.ok(selector.matches(elements[1]));
+    assert.equal('test-nth-ancestor-div', elements[0].id);
+});
+
+QUnit.test('Test xpath validation', (assert) => {
+    let selectorText;
+
+    try {
+        selectorText = 'div:xpath()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:xpath(../..):has-text(/test-xpath-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:nth-ancestor(invalid)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+});
