@@ -1,6 +1,6 @@
-/*! extended-css - v1.1.6 - Mon Dec 30 2019
+/*! extended-css - v1.2.0 - Sat Jan 11 2020
 * https://github.com/AdguardTeam/ExtendedCss
-* Copyright (c) 2019 Adguard ; Licensed LGPL-3.0
+* Copyright (c) 2020 Adguard ; Licensed LGPL-3.0
 */
 var ExtendedCss = (function () {
     'use strict';
@@ -3079,11 +3079,23 @@ var ExtendedCss = (function () {
           };
         }); // Define :xpath support in Sizzle, to make tokenize work properly
 
-        Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(() => function () {
-          return true;
+        Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(selector => {
+          try {
+            document.createExpression(selector, null);
+          } catch (e) {
+            throw new Error(`Invalid argument of :nth-ancestor pseudo class: ${selector}`);
+          }
+
+          return () => true;
         });
-        Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(() => function () {
-          return true;
+        Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(selector => {
+          const deep = Number(selector);
+
+          if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
+            throw new Error(`Invalid argument of :nth-ancestor pseudo class: ${selector}`);
+          }
+
+          return () => true;
         });
       }
       /**
@@ -3268,7 +3280,7 @@ var ExtendedCss = (function () {
         getXpathPart() {
           const tokens = this.tokens[0];
 
-          for (let i = 0, l = tokens.length; i < l; i++) {
+          for (let i = 0, tokensLength = tokens.length; i < tokensLength; i++) {
             const token = tokens[i];
 
             if (token.type === 'PSEUDO') {
@@ -3278,10 +3290,18 @@ var ExtendedCss = (function () {
 
               if (matches && matches.length > 1) {
                 if (matches[0] === 'xpath') {
+                  if (i + 1 !== tokensLength) {
+                    throw new Error('Invalid pseudo: selector should finish with :xpath');
+                  }
+
                   return matches[1];
                 }
 
                 if (matches[0] === 'nth-ancestor') {
+                  if (i + 1 !== tokensLength) {
+                    throw new Error('Invalid pseudo: selector should finish with :nth-ancestor');
+                  }
+
                   const deep = matches[1];
 
                   if (deep > 0 && deep < 256) {
