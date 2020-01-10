@@ -321,3 +321,39 @@ QUnit.test('Test xpath', (assert) => {
     assert.ok(selector.matches(elements[1]));
     assert.equal('test-nth-ancestor-div', elements[0].id);
 });
+
+QUnit.test('Test xpath validation', (assert) => {
+    let selectorText;
+
+    try {
+        selectorText = 'div:xpath()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:xpath(../..):has-text(/test-xpath-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:nth-ancestor(invalid)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+});
