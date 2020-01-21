@@ -66,7 +66,7 @@ This pseudo-class is basically a shortcut for `:not(:has())`. It is supported by
 <a id="extended-css-contains"></a>
 ### Pseudo-class `:contains()`
 
-This pseudo-class principle is very simple: it allows to select the elements that contain specified text or which content matches a specified regular expression. Regex flags are supported. Please note, that this pseudo-class uses `innerText` element property for matching (and not the `innerHTML`).
+This pseudo-class principle is very simple: it allows to select the elements that contain specified text or which content matches a specified regular expression. Regex flags are supported. Please note, that this pseudo-class uses `textContent` element property for matching (and not the `innerHTML`).
 
 #### `:contains()` syntax
 
