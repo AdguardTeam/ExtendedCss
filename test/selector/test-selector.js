@@ -197,17 +197,22 @@ QUnit.test('Test regular expressions flags support in :contains', (assert) => {
     let selector;
     let selectorText;
 
+    selectorText = 'p:contains(/Quickly/)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(0, elements.length);
+
     selectorText = 'p:contains(/quickly/)';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 
-    selectorText = 'p:contains(/quickly/i)';
+    selectorText = 'p:contains(/Quickly/i)';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 
-    selectorText = 'p:contains(/quickly/gmi)';
+    selectorText = 'p:contains(/Quickly/gmi)';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
