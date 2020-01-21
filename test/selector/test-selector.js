@@ -192,6 +192,32 @@ QUnit.test('Test regular expressions support in :contains', (assert) => {
     assert.equal(1, elements.length);
 });
 
+QUnit.test('Test regular expressions flags support in :contains', (assert) => {
+    let elements;
+    let selector;
+    let selectorText;
+
+    selectorText = 'p:contains(/Quickly/)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(0, elements.length);
+
+    selectorText = 'p:contains(/quickly/)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+
+    selectorText = 'p:contains(/Quickly/i)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+
+    selectorText = 'p:contains(/Quickly/gmi)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+});
+
 QUnit.test('Test regular expressions support in :matches-css', (assert) => {
     // var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
     const selectorText = ':matches-css(    background-image: /^url\\([a-z]{4}:[a-z]{5}\\/[gif;base].*\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
