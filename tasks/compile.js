@@ -1,14 +1,12 @@
-/* global require */
-
+/* eslint-disable no-console */
 /**
  * This task compiles sources to javascript bundle
  */
 const fs = require('fs-extra');
-const console = require('console');
 const { rollup } = require('rollup');
 const { terser } = require('rollup-plugin-terser');
 const babel = require('rollup-plugin-babel');
-
+const copy = require('rollup-plugin-copy');
 
 const pkg = require('../package.json');
 const config = require('./config');
@@ -34,6 +32,12 @@ const rollupConfig = {
             banner,
         },
         {
+            file: `${config.outputDir}/${config.fileName}.esm.js`,
+            format: 'esm',
+            name: 'ExtendedCss',
+            banner,
+        },
+        {
             file: `${config.outputDir}/${config.fileName}.min.js`,
             format: 'iife',
             name: 'ExtendedCss',
@@ -49,6 +53,11 @@ const rollupConfig = {
     plugins: [
         babel({
             exclude: 'node_modules/**',
+        }),
+        copy({
+            targets: [
+                { src: 'types/extended-css.d.ts', dest: 'dist/' },
+            ],
         }),
     ],
 };
