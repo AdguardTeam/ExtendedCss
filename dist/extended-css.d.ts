@@ -22,7 +22,7 @@ declare module 'extended-css' {
          * @param selectorText
          * @param noTiming
          */
-        query(selectorText: string, noTiming: boolean): void;
+        query(selectorText: string, noTiming: boolean): HTMLElement[];
 
         /**
          * Used for testing purposes only
