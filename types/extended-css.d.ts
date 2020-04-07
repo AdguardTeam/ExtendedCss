@@ -1,10 +1,15 @@
 declare module 'extended-css' {
-    interface IConfiguration {
-        styleSheets: string;
-        beforeStyleApplied(): HTMLElement;
+    export interface IAffectedElement {
+        rules: { style: { content: string }}[]
+        node: HTMLElement;
     }
 
-    class ExtendedCss {
+    export interface IConfiguration {
+        styleSheets: string;
+        beforeStyleApplied(x:IAffectedElement): IAffectedElement;
+    }
+
+    export class ExtendedCss {
         constructor(configuration: IConfiguration);
 
         /**
@@ -27,7 +32,7 @@ declare module 'extended-css' {
         /**
          * Used for testing purposes only
          */
-        _getAffectedElements(): HTMLElement[];
+        _getAffectedElements(): IAffectedElement[];
     }
 }
 
