@@ -292,7 +292,7 @@ QUnit.test('Test + and ~ combinators matching', (assert) => {
     assert.ok(selector.matches(elements[0]));
 });
 
-QUnit.test('Test xpath', (assert) => {
+QUnit.test('Test xpath / nth-ancestor / upward', (assert) => {
     let selectorText; let selector; let elements;
 
     selectorText = 'div:xpath(//*[@class="test-xpath-class"])';
@@ -346,6 +346,14 @@ QUnit.test('Test xpath', (assert) => {
     assert.ok(selector.matches(elements[0]));
     assert.ok(selector.matches(elements[1]));
     assert.equal('test-nth-ancestor-div', elements[0].id);
+
+    selectorText = 'div.test-upward-marker:upward(2)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(2, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.ok(selector.matches(elements[1]));
+    assert.equal('test-upward-div', elements[0].id);
 });
 
 QUnit.test('Test xpath validation', (assert) => {
@@ -377,6 +385,22 @@ QUnit.test('Test xpath validation', (assert) => {
 
     try {
         selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:upward(invalid)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:upward(3):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
         assert.ok(false);
     } catch (e) {

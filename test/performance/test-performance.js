@@ -21,7 +21,7 @@ const testPerformance = function (selector, assert) {
     let msg = `Elapsed: ${elapsed} ms `;
     msg += `Count: ${LOOP_COUNT} `;
     msg += `Average: ${elapsed / LOOP_COUNT} ms`;
-    console.log(msg, assert.test.testName);
+    console.log(msg, assert.test.testName); // eslint-disable-line no-console
     assert.ok(resultOk, msg);
 };
 

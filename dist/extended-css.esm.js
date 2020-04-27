@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.5 - Fri Apr 24 2020
+/*! extended-css - v1.2.6 - Mon Apr 27 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3019,7 +3019,10 @@ const StylePropertyMatcher = function (window) {
  */
 
 const ExtendedSelectorFactory = function () {
-  const PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor'];
+  // while addind new markers, AdGuard extension code also should be corrected:
+  // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
+  // at Extension/lib/filter/rules/css-filter-rule.js
+  const PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward'];
   let initialized = false;
   let Sizzle;
   /**
@@ -3083,7 +3086,7 @@ const ExtendedSelectorFactory = function () {
       try {
         document.createExpression(selector, null);
       } catch (e) {
-        throw new Error(`Invalid argument of :nth-ancestor pseudo class: ${selector}`);
+        throw new Error(`Invalid argument of :xpath pseudo class: ${selector}`);
       }
 
       return () => true;
@@ -3093,6 +3096,15 @@ const ExtendedSelectorFactory = function () {
 
       if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
         throw new Error(`Invalid argument of :nth-ancestor pseudo class: ${selector}`);
+      }
+
+      return () => true;
+    });
+    Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(selector => {
+      const deep = Number(selector);
+
+      if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
+        throw new Error(`Invalid argument of :upward pseudo class: ${selector}`);
       }
 
       return () => true;
@@ -3291,15 +3303,15 @@ const ExtendedSelectorFactory = function () {
           if (matches && matches.length > 1) {
             if (matches[0] === 'xpath') {
               if (i + 1 !== tokensLength) {
-                throw new Error('Invalid pseudo: selector should finish with :xpath');
+                throw new Error('Invalid pseudo: \':xpath\' should be at the end of the selector');
               }
 
               return matches[1];
             }
 
-            if (matches[0] === 'nth-ancestor') {
+            if (matches[0] === 'nth-ancestor' || matches[0] === 'upward') {
               if (i + 1 !== tokensLength) {
-                throw new Error('Invalid pseudo: selector should finish with :nth-ancestor');
+                throw new Error('Invalid pseudo: \':nth-ancestor\'/\':upward\' should be at the end of the selector');
               }
 
               const deep = matches[1];
@@ -3314,8 +3326,8 @@ const ExtendedSelectorFactory = function () {
     },
 
     /**
-     * converts nth-ancestor deep value to xpath equivalent
-     * @param deep
+     * converts nth-ancestor/upward deep value to xpath equivalent
+     * @param {number} deep
      * @return {string}
      */
     convertNthAncestorToken(deep) {
