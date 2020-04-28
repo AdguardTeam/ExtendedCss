@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.6 - Mon Apr 27 2020
+/*! extended-css - v1.2.6 - Tue Apr 28 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3314,6 +3314,7 @@ var ExtendedCss = (function () {
 
                 if (matches[0] === 'nth-ancestor' || matches[0] === 'upward') {
                   if (i + 1 !== tokensLength) {
+                    // eslint-disable-next-line max-len
                     throw new Error('Invalid pseudo: \':nth-ancestor\'/\':upward\' should be at the end of the selector');
                   }
 
@@ -3433,10 +3434,9 @@ var ExtendedCss = (function () {
             simpleNodes = [document];
           }
 
-          for (const node of simpleNodes) {
+          simpleNodes.forEach(node => {
             this.xpathSearch(node, this.xpath, resultNodes);
-          }
-
+          });
           return Sizzle.uniqueSort(resultNodes);
         },
 
@@ -3511,7 +3511,9 @@ var ExtendedCss = (function () {
             return resultNodes;
           }
 
-          relation = this.relation;
+          ({
+            relation
+          } = this);
         } else {
           simpleNodes = [document];
           relation = ' ';
@@ -3519,64 +3521,50 @@ var ExtendedCss = (function () {
 
         switch (relation) {
           case ' ':
-            for (const node of simpleNodes) {
+            simpleNodes.forEach(node => {
               this.relativeSearch(node, resultNodes);
-            }
-
+            });
             break;
 
           case '>':
             {
-              for (const node of simpleNodes) {
-                for (const childNode of node.children) {
+              simpleNodes.forEach(node => {
+                Object.values(node.children).forEach(childNode => {
                   if (this.matches(childNode)) {
                     resultNodes.push(childNode);
                   }
-                }
-              }
-
+                });
+              });
               break;
             }
 
           case '+':
             {
-              for (const node of simpleNodes) {
+              simpleNodes.forEach(node => {
                 const {
                   parentNode
                 } = node;
-
-                if (!parentNode) {
-                  continue;
-                }
-
-                for (const childNode of parentNode.children) {
+                Object.values(parentNode.children).forEach(childNode => {
                   if (this.matches(childNode) && childNode.previousElementSibling === node) {
                     resultNodes.push(childNode);
                   }
-                }
-              }
-
+                });
+              });
               break;
             }
 
           case '~':
             {
-              for (const node of simpleNodes) {
+              simpleNodes.forEach(node => {
                 const {
                   parentNode
                 } = node;
-
-                if (!parentNode) {
-                  continue;
-                }
-
-                for (const childNode of parentNode.children) {
+                Object.values(parentNode.children).forEach(childNode => {
                   if (this.matches(childNode) && node.compareDocumentPosition(childNode) === 4) {
                     resultNodes.push(childNode);
                   }
-                }
-              }
-
+                });
+              });
               break;
             }
         }
@@ -3897,9 +3885,9 @@ var ExtendedCss = (function () {
           lastEventTime = Date.now();
         };
 
-        for (const evName of TRACKED_EVENTS) {
+        TRACKED_EVENTS.forEach(evName => {
           document.documentElement.addEventListener(evName, trackEvent, true);
-        }
+        });
 
         const getLastEventType = function () {
           return lastEventType;
@@ -4048,6 +4036,7 @@ var ExtendedCss = (function () {
 
 
       function findAffectedElement(node) {
+        // eslint-disable-next-line no-restricted-syntax
         for (const affectedElement of affectedElements) {
           if (affectedElement.node === node) {
             return affectedElement;
@@ -4121,7 +4110,7 @@ var ExtendedCss = (function () {
 
 
       function setStyleToElement(node, style) {
-        for (const prop in style) {
+        Object.keys(style).forEach(prop => {
           // Apply this style only to existing properties
           // We can't use hasOwnProperty here (does not work in FF)
           if (typeof node.style.getPropertyValue(prop) !== 'undefined') {
@@ -4130,7 +4119,7 @@ var ExtendedCss = (function () {
             value = removeSuffix(value.trim(), '!important').trim();
             node.style.setProperty(prop, value, 'important');
           }
-        }
+        });
       }
       /**
        * Reverts style for the affected object
@@ -4163,8 +4152,7 @@ var ExtendedCss = (function () {
           selector
         } = rule;
         const nodes = selector.querySelectorAll();
-
-        for (const node of nodes) {
+        nodes.forEach(node => {
           let affectedElement = findAffectedElement(node);
 
           if (affectedElement) {
@@ -4186,7 +4174,7 @@ var ExtendedCss = (function () {
             applyStyle(affectedElement);
             affectedElements.push(affectedElement);
           }
-        }
+        });
 
         if (debug) {
           const elapsed = utils.AsyncWrapper.now() - start;
@@ -4211,12 +4199,10 @@ var ExtendedCss = (function () {
         // https://github.com/AdguardTeam/ExtendedCss/issues/81
 
         stopObserve();
-
-        for (const rule of rules) {
+        rules.forEach(rule => {
           const nodes = applyRule(rule);
           Array.prototype.push.apply(elementsIndex, nodes);
-        } // Now revert styles for elements which are no more affected
-
+        }); // Now revert styles for elements which are no more affected
 
         let l = affectedElements.length;
 
@@ -4278,10 +4264,9 @@ var ExtendedCss = (function () {
 
       function dispose() {
         stopObserve();
-
-        for (const obj of affectedElements) {
+        affectedElements.forEach(obj => {
           revertStyle(obj);
-        }
+        });
       }
 
       let timingsPrinted = false;
