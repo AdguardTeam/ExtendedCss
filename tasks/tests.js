@@ -56,7 +56,10 @@ const rollupConfigs = [
             }),
             copy({
                 verbose: true,
-                targets: [{ src: './test/qunit/**', dest: './test/build/qunit' }],
+                targets: [
+                    { src: './test/qunit/**', dest: './test/build/qunit' },
+                    { src: './test/index.html', dest: './test/build' },
+                ],
             }),
             resolve(),
             commonjs({
