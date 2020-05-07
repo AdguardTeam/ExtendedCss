@@ -9,7 +9,6 @@ const { babel } = require('@rollup/plugin-babel');
 const copy = require('rollup-plugin-copy');
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
-const del = require('rollup-plugin-delete');
 
 const pkg = require('../package.json');
 const config = require('./config');
@@ -54,10 +53,6 @@ const rollupConfig = {
         },
     ],
     plugins: [
-        del({
-            targets: ['./dist'],
-            verbose: true,
-        }),
         resolve(),
         commonjs({
             include: 'node_modules/**',
