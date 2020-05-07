@@ -13,13 +13,10 @@
   "scripts": {
     "test": "node tasks/tests.js",
     "build": "node tasks/compile.js",
-    "browserstack": "node tasks/tests.js && node tasks/browserstack.js",
+    "browserstack": "node tasks/browserstack.js",
     "lint": "eslint ."
   },
-  "dependencies": {
-    "@babel/runtime": "^7.9.6",
-    "core-js": "^3.6.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/plugin-transform-runtime": "^7.9.6",

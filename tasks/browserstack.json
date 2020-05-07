@@ -1,7 +1,7 @@
 {
   "test_framework": "qunit",
   "test_path": [
-    "test/build/dist/dist.html"
+    "test/dist/dist.html"
   ],
   "test_server_port": "9961",
   "exit_with_fail": true,
@@ -37,14 +37,6 @@
       "os": "Windows",
       "os_version": "10",
       "cli_key": 4
-    },
-    {
-      "browser": "IE",
-      "browser_version": "11",
-      "device": null,
-      "os": "Windows",
-      "os_version": "10",
-      "cli_key": 5
     }
   ]
 }

@@ -5,9 +5,9 @@ module.exports = (api) => {
             [
                 '@babel/env',
                 {
-                    useBuiltIns: 'usage',
-                    corejs: '3',
-                    targets: '>= 0.5%, ie >= 11',
+                    // we do not support ie 11,
+                    // because it requires polyfills, which are modifying global scope
+                    targets: '>= 0.5%',
                 },
             ],
         ],
