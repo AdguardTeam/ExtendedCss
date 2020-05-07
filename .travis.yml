@@ -13,7 +13,7 @@ deploy:
     local_dir: 'test/build'
     github_token: $GITHUB_TOKEN
     on:
-      branch: fix/travis
+      branch: master
 notifications:
   slack: performix:yXTihlSzsLFSZiqbXMNzvTSX
 
