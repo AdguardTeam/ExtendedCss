@@ -7,7 +7,7 @@ const Sizzle = initializeSizzle();
 
 const LOOP_COUNT = 10000;
 
-const testPerformance = function (selector, assert) {
+const performanceTest = function (selector, assert) {
     const startTime = new Date().getTime();
     let iCount = LOOP_COUNT;
     let resultOk = true;
@@ -52,31 +52,31 @@ QUnit.test('Test simple selector', (assert) => {
             return document.querySelectorAll('.container #case1 div div');
         },
     };
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 QUnit.test('Case 1. :has performance', (assert) => {
     const selectorText = '.container #case1 div div:has(.banner)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 QUnit.test('Case 2. :contains performance', (assert) => {
     const selectorText = '.container #case2 div div:contains(Block this)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 QUnit.test('Case 3. :matches-css performance', (assert) => {
     const selectorText = '.container #case3 div div:matches-css(background-image: data:*)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 QUnit.test('Case 4. :has and :contains composite performance', (assert) => {
     const selectorText = '.container #case4 div div:has(.banner:contains(Block this))';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 QUnit.test('Case 5.1 complicated selector', (assert) => {
@@ -84,19 +84,19 @@ QUnit.test('Case 5.1 complicated selector', (assert) => {
 
     const selectorText = "#case5 > div:not([style^=\"min-height:\"]) > div[id][data-uniqid^=\"toolkit-\"]:not([data-bem]):not([data-mnemo])[-ext-has='a[href^=\"https://an.yandex.\"]>img']";
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 // Previous test results: Average: 0.0665 ms -> Last test results Average: 0.0409 ms
 QUnit.test('Case 5.2 split selectors with a lot of children', (assert) => {
     const selectorText = '#case5 div > div:has(.target-banner)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
 
 // Prev test results: Average: 0.1101 ms -> Last test results Average: 0.0601 ms
 QUnit.test('Case 5.3 split selectors with a lot of children and matches-css', (assert) => {
     const selectorText = '#case5 div > div:matches-css(background-image: data:*)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
-    testPerformance(selector, assert);
+    performanceTest(selector, assert);
 });
