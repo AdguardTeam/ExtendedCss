@@ -5,8 +5,10 @@
 const fs = require('fs-extra');
 const { rollup } = require('rollup');
 const { terser } = require('rollup-plugin-terser');
-const babel = require('rollup-plugin-babel');
+const { babel } = require('@rollup/plugin-babel');
 const copy = require('rollup-plugin-copy');
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
 
 const pkg = require('../package.json');
 const config = require('./config');
@@ -51,8 +53,13 @@ const rollupConfig = {
         },
     ],
     plugins: [
+        resolve(),
+        commonjs({
+            include: 'node_modules/**',
+        }),
         babel({
             exclude: 'node_modules/**',
+            babelHelpers: 'bundled',
         }),
         copy({
             targets: [
