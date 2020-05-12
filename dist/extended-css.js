@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.6 - Tue Apr 28 2020
+/*! extended-css - v1.2.7 - Tue May 12 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3103,11 +3103,11 @@ var ExtendedCss = (function () {
 
           return () => true;
         });
-        Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(selector => {
-          const deep = Number(selector);
-
-          if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
-            throw new Error(`Invalid argument of :upward pseudo class: ${selector}`);
+        Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(input => {
+          if (input === '') {
+            throw new Error(`Invalid argument of :upward pseudo class: ${input}`);
+          } else if (Number.isInteger(input) && (input <= 0 || input >= 256)) {
+            throw new Error(`Invalid argument of :upward pseudo class: ${input}`);
           }
 
           return () => true;
@@ -3188,6 +3188,8 @@ var ExtendedCss = (function () {
         }
       }
 
+      const XPATH_TYPE = '1';
+      const SELECTOR_TYPE = '2';
       ExtendedSelectorParser.prototype = {
         /**
          * The main method, creates a selector instance depending on the type of a selector.
@@ -3213,6 +3215,20 @@ var ExtendedCss = (function () {
 
           if (typeof xpathPart !== 'undefined') {
             return new XpathSelector(selectorText, xpathPart, debug);
+          }
+
+          const upwardPart = this.getUpwardPart();
+
+          if (typeof upwardPart !== 'undefined') {
+            let output;
+
+            if (upwardPart.type === XPATH_TYPE) {
+              output = new XpathSelector(selectorText, upwardPart.value, debug);
+            } else {
+              output = new UpwardSelector(selectorText, upwardPart.value, debug);
+            }
+
+            return output;
           }
 
           tokens = tokens[0];
@@ -3312,16 +3328,15 @@ var ExtendedCss = (function () {
                   return matches[1];
                 }
 
-                if (matches[0] === 'nth-ancestor' || matches[0] === 'upward') {
+                if (matches[0] === 'nth-ancestor') {
                   if (i + 1 !== tokensLength) {
-                    // eslint-disable-next-line max-len
-                    throw new Error('Invalid pseudo: \':nth-ancestor\'/\':upward\' should be at the end of the selector');
+                    throw new Error('Invalid pseudo: \':nth-ancestor\' should be at the end of the selector');
                   }
 
                   const deep = matches[1];
 
                   if (deep > 0 && deep < 256) {
-                    return this.convertNthAncestorToken(matches[1]);
+                    return this.convertNthAncestorToken(deep);
                   }
                 }
               }
@@ -3343,6 +3358,52 @@ var ExtendedCss = (function () {
           }
 
           return result;
+        },
+
+        /**
+         * @private
+         * @return {Object|undefined} type and value of upward selector part:
+         * - if upward gets a number — converts it to xpath,
+         * - if upward gets a selector - returns the selector for further operation.
+         * returns undefined if the input does not contain upward tokens
+         */
+        getUpwardPart() {
+          const tokens = this.tokens[0];
+
+          for (let i = 0, tokensLength = tokens.length; i < tokensLength; i++) {
+            const token = tokens[i];
+
+            if (token.type === 'PSEUDO') {
+              const {
+                matches
+              } = token;
+
+              if (matches && matches.length > 1) {
+                if (matches[0] === 'upward') {
+                  if (i + 1 !== tokensLength) {
+                    throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
+                  }
+
+                  let type;
+                  let value;
+                  const input = parseInt(matches[1], 10);
+
+                  if (input) {
+                    type = XPATH_TYPE;
+                    value = this.convertNthAncestorToken(matches[1]);
+                  } else {
+                    type = SELECTOR_TYPE;
+                    value = matches[1];
+                  }
+
+                  return {
+                    type,
+                    value
+                  };
+                }
+              }
+            }
+          }
         }
 
       };
@@ -3463,6 +3524,80 @@ var ExtendedCss = (function () {
           while (iNode = xpathResult.iterateNext()) {
             result.push(iNode);
           }
+        }
+
+      };
+      /**
+       * Upward selector class
+       * Limited to support upward to be only the last one token in selector
+       *
+       * @param {string} selectorText
+       * @param {string} upwardSelector value
+       * @param {boolean=}debug
+       * @constructor
+       */
+
+      function UpwardSelector(selectorText, upwardSelector, debug) {
+        // Xpath is limited to be the last one token
+        this.selectorText = selectorText;
+        this.upwardSelector = upwardSelector;
+        this.debug = debug;
+        Sizzle.compile(this.selectorText);
+      }
+
+      UpwardSelector.prototype = {
+        querySelectorAll() {
+          const resultNodes = [];
+          let simpleNodes;
+
+          if (this.selectorText) {
+            simpleNodes = Sizzle(this.selectorText);
+
+            if (!simpleNodes || !simpleNodes.length) {
+              return resultNodes;
+            }
+          } else {
+            simpleNodes = [document];
+          }
+
+          simpleNodes.forEach(node => {
+            this.upwardSearch(node, this.upwardSelector, resultNodes);
+          });
+          return Sizzle.uniqueSort(resultNodes);
+        },
+
+        /** @final */
+        matches(element) {
+          const results = this.querySelectorAll();
+          return results.indexOf(element) > -1;
+        },
+
+        /** @final */
+        isDebugging,
+
+        /**
+         * Applies upwardSelector to provided context node
+         *
+         * @param {Object} node context element
+         * @param {string} upwardSelector
+         * @param {Array} result
+         */
+        upwardSearch(node, upwardSelector, result) {
+          if (upwardSelector !== '') {
+            const parent = node.parentElement;
+
+            if (parent === null) {
+              return;
+            }
+
+            node = parent.closest(upwardSelector);
+
+            if (node === null) {
+              return;
+            }
+          }
+
+          result.push(node);
         }
 
       };
