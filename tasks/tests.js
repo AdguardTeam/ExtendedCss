@@ -1,33 +1,77 @@
-/* global require */
-
+/* eslint-disable no-console */
 /**
  * This task tests the javascript bundle
  */
-const console = require('console');
 const path = require('path');
 const { runQunitPuppeteer, printOutput } = require('node-qunit-puppeteer');
-const fs = require('fs-extra');
 const { rollup } = require('rollup');
+const { babel } = require('@rollup/plugin-babel');
+const copy = require('rollup-plugin-copy');
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
+const del = require('rollup-plugin-delete');
 
-const BUILD_DIR = 'build';
+const testsInputs = ['css-parser', 'dist', 'extended-css', 'performance', 'selector'];
 
-if (!fs.existsSync(BUILD_DIR)) {
-    fs.mkdirSync(BUILD_DIR);
-} else {
-    fs.emptyDirSync(BUILD_DIR);
-}
+const testsConfigs = testsInputs.map((input) => {
+    const inputPathPart = `${input}/${input}.test.js`;
+    const inputFile = `./test/${inputPathPart}`;
+    const outputFile = `./test/build/${inputPathPart}`;
 
-const options = [
-    {
-        inputOptions: {
-            input: './test/index.js',
+    return {
+        input: inputFile,
+        output: {
+            file: outputFile,
+            format: 'iife',
         },
-        outputOptions: {
-            file: 'build/index.js',
+        plugins: [
+            copy({
+                verbose: true,
+                targets: [{ src: `./test/${input}/${input}.html`, dest: `./test/build/${input}` }],
+            }),
+            resolve(),
+            commonjs({
+                include: 'node_modules/**',
+            }),
+            babel({
+                exclude: 'node_modules/**',
+                babelHelpers: 'bundled',
+            }),
+        ],
+    };
+});
+
+const rollupConfigs = [
+    {
+        input: './test/index.js',
+        output: {
+            file: './test/build/index.js',
             format: 'iife',
             name: 'exports',
         },
+        plugins: [
+            del({
+                targets: ['./test/build'],
+                verbose: true,
+            }),
+            copy({
+                verbose: true,
+                targets: [
+                    { src: './test/qunit/**', dest: './test/build/qunit' },
+                    { src: './test/index.html', dest: './test/build' },
+                ],
+            }),
+            resolve(),
+            commonjs({
+                include: 'node_modules/**',
+            }),
+            babel({
+                exclude: 'node_modules/**',
+                babelHelpers: 'bundled',
+            }),
+        ],
     },
+    ...testsConfigs,
 ];
 
 const runQunit = async (testFilePath) => {
@@ -52,22 +96,25 @@ const runQunit = async (testFilePath) => {
         /**
          * As we are not able to use es6 modules in browser environment, we first compile sources.
          */
-        options.forEach(async (option) => {
-            const bundle = await rollup(option.inputOptions);
+        // eslint-disable-next-line no-restricted-syntax
+        for (const config of rollupConfigs) {
+            // eslint-disable-next-line no-await-in-loop
+            const bundle = await rollup(config);
             // an array of file names this bundle depends on
             console.log(bundle.watchFiles);
-            await bundle.write(option.outputOptions);
-        });
+            // eslint-disable-next-line no-await-in-loop
+            await bundle.write(config.output);
+        }
 
         console.info('Finished compiling sources');
 
         console.log('Running tests..');
 
-        await runQunit('../test/css-parser/test-css-parser.html');
-        await runQunit('../test/extended-css/test-extended-css.html');
-        await runQunit('../test/performance/test-performance.html');
-        await runQunit('../test/selector/test-selector.html');
-        await runQunit('../test/dist/test-dist.html');
+        await runQunit('../test/build/css-parser/css-parser.html');
+        await runQunit('../test/build/extended-css/extended-css.html');
+        await runQunit('../test/build/performance/performance.html');
+        await runQunit('../test/build/selector/selector.html');
+        await runQunit('../test/build/dist/dist.html');
 
         console.log('Tests passed OK');
     } catch (ex) {
