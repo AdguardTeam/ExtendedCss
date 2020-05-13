@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.7 - Tue May 12 2020
+/*! extended-css - v1.2.7 - Wed May 13 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3192,9 +3192,6 @@ var ExtendedSelectorFactory = function () {
       this.debug = true;
     }
   }
-
-  var XPATH_TYPE = '1';
-  var SELECTOR_TYPE = '2';
   ExtendedSelectorParser.prototype = {
     /**
      * The main method, creates a selector instance depending on the type of a selector.
@@ -3220,15 +3217,24 @@ var ExtendedSelectorFactory = function () {
 
       if (typeof upwardPart !== 'undefined') {
         var output;
+        var upwardInput = parseInt(upwardPart, 10); // if upward input is not a number, we consider it is a selector
 
-        if (upwardPart.type === XPATH_TYPE) {
-          output = new XpathSelector(selectorText, upwardPart.value, debug);
+        if (upwardInput) {
+          var xpath = this.convertNthAncestorToken(upwardInput);
+          output = new XpathSelector(selectorText, xpath, debug);
         } else {
-          output = new UpwardSelector(selectorText, upwardPart.value, debug);
+          output = new UpwardSelector(selectorText, upwardPart, debug);
         }
+      } // if (typeof upwardPart !== 'undefined') {
+      //     let output;
+      //     if (upwardPart.type === XPATH_TYPE) {
+      //         output = new XpathSelector(selectorText, upwardPart.value, debug);
+      //     } else {
+      //         output = new UpwardSelector(selectorText, upwardPart.value, debug);
+      //     }
+      //     return output;
+      // }
 
-        return output;
-      }
 
       tokens = tokens[0];
       var l = tokens.length;
@@ -3379,22 +3385,17 @@ var ExtendedSelectorFactory = function () {
                 throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
               }
 
-              var type = void 0;
-              var value = void 0;
-              var input = parseInt(matches[1], 10);
-
-              if (input) {
-                type = XPATH_TYPE;
-                value = this.convertNthAncestorToken(matches[1]);
-              } else {
-                type = SELECTOR_TYPE;
-                value = matches[1];
-              }
-
-              return {
-                type: type,
-                value: value
-              };
+              return matches[1]; // let type;
+              // let value;
+              // const input = parseInt(matches[1], 10);
+              // if (input) {
+              //     type = XPATH_TYPE;
+              //     value = this.convertNthAncestorToken(matches[1]);
+              // } else {
+              //     type = SELECTOR_TYPE;
+              //     value = matches[1];
+              // }
+              // return { type, value };
             }
           }
         }
