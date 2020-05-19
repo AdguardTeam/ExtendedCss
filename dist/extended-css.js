@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.6 - Thu May 07 2020
+/*! extended-css - v1.2.7 - Wed May 13 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3028,7 +3028,10 @@ var ExtendedCss = (function () {
    */
 
   var ExtendedSelectorFactory = function () {
-    var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor'];
+    // while addind new markers, AdGuard extension code also should be corrected:
+    // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
+    // at Extension/lib/filter/rules/css-filter-rule.js
+    var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward'];
     var initialized = false;
     var Sizzle;
     /**
@@ -3092,7 +3095,7 @@ var ExtendedCss = (function () {
         try {
           document.createExpression(selector, null);
         } catch (e) {
-          throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
+          throw new Error("Invalid argument of :xpath pseudo class: ".concat(selector));
         }
 
         return function () {
@@ -3104,6 +3107,17 @@ var ExtendedCss = (function () {
 
         if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
           throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
+        }
+
+        return function () {
+          return true;
+        };
+      });
+      Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
+        if (input === '') {
+          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+        } else if (Number.isInteger(input) && (input <= 0 || input >= 256)) {
+          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
         }
 
         return function () {
@@ -3181,7 +3195,6 @@ var ExtendedCss = (function () {
         this.debug = true;
       }
     }
-
     ExtendedSelectorParser.prototype = {
       /**
        * The main method, creates a selector instance depending on the type of a selector.
@@ -3202,6 +3215,29 @@ var ExtendedCss = (function () {
         if (typeof xpathPart !== 'undefined') {
           return new XpathSelector(selectorText, xpathPart, debug);
         }
+
+        var upwardPart = this.getUpwardPart();
+
+        if (typeof upwardPart !== 'undefined') {
+          var output;
+          var upwardInput = parseInt(upwardPart, 10); // if upward input is not a number, we consider it is a selector
+
+          if (upwardInput) {
+            var xpath = this.convertNthAncestorToken(upwardInput);
+            output = new XpathSelector(selectorText, xpath, debug);
+          } else {
+            output = new UpwardSelector(selectorText, upwardPart, debug);
+          }
+        } // if (typeof upwardPart !== 'undefined') {
+        //     let output;
+        //     if (upwardPart.type === XPATH_TYPE) {
+        //         output = new XpathSelector(selectorText, upwardPart.value, debug);
+        //     } else {
+        //         output = new UpwardSelector(selectorText, upwardPart.value, debug);
+        //     }
+        //     return output;
+        // }
+
 
         tokens = tokens[0];
         var l = tokens.length;
@@ -3292,7 +3328,7 @@ var ExtendedCss = (function () {
             if (matches && matches.length > 1) {
               if (matches[0] === 'xpath') {
                 if (i + 1 !== tokensLength) {
-                  throw new Error('Invalid pseudo: selector should finish with :xpath');
+                  throw new Error('Invalid pseudo: \':xpath\' should be at the end of the selector');
                 }
 
                 return matches[1];
@@ -3300,13 +3336,13 @@ var ExtendedCss = (function () {
 
               if (matches[0] === 'nth-ancestor') {
                 if (i + 1 !== tokensLength) {
-                  throw new Error('Invalid pseudo: selector should finish with :nth-ancestor');
+                  throw new Error('Invalid pseudo: \':nth-ancestor\' should be at the end of the selector');
                 }
 
                 var deep = matches[1];
 
                 if (deep > 0 && deep < 256) {
-                  return this.convertNthAncestorToken(matches[1]);
+                  return this.convertNthAncestorToken(deep);
                 }
               }
             }
@@ -3315,8 +3351,8 @@ var ExtendedCss = (function () {
       },
 
       /**
-       * converts nth-ancestor deep value to xpath equivalent
-       * @param deep
+       * converts nth-ancestor/upward deep value to xpath equivalent
+       * @param {number} deep
        * @return {string}
        */
       convertNthAncestorToken: function convertNthAncestorToken(deep) {
@@ -3328,6 +3364,45 @@ var ExtendedCss = (function () {
         }
 
         return result;
+      },
+
+      /**
+       * @private
+       * @return {Object|undefined} type and value of upward selector part:
+       * - if upward gets a number — converts it to xpath,
+       * - if upward gets a selector - returns the selector for further operation.
+       * returns undefined if the input does not contain upward tokens
+       */
+      getUpwardPart: function getUpwardPart() {
+        var tokens = this.tokens[0];
+
+        for (var i = 0, tokensLength = tokens.length; i < tokensLength; i++) {
+          var token = tokens[i];
+
+          if (token.type === 'PSEUDO') {
+            var matches = token.matches;
+
+            if (matches && matches.length > 1) {
+              if (matches[0] === 'upward') {
+                if (i + 1 !== tokensLength) {
+                  throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
+                }
+
+                return matches[1]; // let type;
+                // let value;
+                // const input = parseInt(matches[1], 10);
+                // if (input) {
+                //     type = XPATH_TYPE;
+                //     value = this.convertNthAncestorToken(matches[1]);
+                // } else {
+                //     type = SELECTOR_TYPE;
+                //     value = matches[1];
+                // }
+                // return { type, value };
+              }
+            }
+          }
+        }
       }
     };
     var globalDebuggingFlag = false;
@@ -3403,6 +3478,8 @@ var ExtendedCss = (function () {
 
     XpathSelector.prototype = {
       querySelectorAll: function querySelectorAll() {
+        var _this = this;
+
         var resultNodes = [];
         var simpleNodes;
 
@@ -3416,30 +3493,9 @@ var ExtendedCss = (function () {
           simpleNodes = [document];
         }
 
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = simpleNodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var node = _step.value;
-            this.xpathSearch(node, this.xpath, resultNodes);
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator.return != null) {
-              _iterator.return();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
+        simpleNodes.forEach(function (node) {
+          _this.xpathSearch(node, _this.xpath, resultNodes);
+        });
         return Sizzle.uniqueSort(resultNodes);
       },
 
@@ -3466,6 +3522,81 @@ var ExtendedCss = (function () {
         while (iNode = xpathResult.iterateNext()) {
           result.push(iNode);
         }
+      }
+    };
+    /**
+     * Upward selector class
+     * Limited to support upward to be only the last one token in selector
+     *
+     * @param {string} selectorText
+     * @param {string} upwardSelector value
+     * @param {boolean=}debug
+     * @constructor
+     */
+
+    function UpwardSelector(selectorText, upwardSelector, debug) {
+      // Xpath is limited to be the last one token
+      this.selectorText = selectorText;
+      this.upwardSelector = upwardSelector;
+      this.debug = debug;
+      Sizzle.compile(this.selectorText);
+    }
+
+    UpwardSelector.prototype = {
+      querySelectorAll: function querySelectorAll() {
+        var _this2 = this;
+
+        var resultNodes = [];
+        var simpleNodes;
+
+        if (this.selectorText) {
+          simpleNodes = Sizzle(this.selectorText);
+
+          if (!simpleNodes || !simpleNodes.length) {
+            return resultNodes;
+          }
+        } else {
+          simpleNodes = [document];
+        }
+
+        simpleNodes.forEach(function (node) {
+          _this2.upwardSearch(node, _this2.upwardSelector, resultNodes);
+        });
+        return Sizzle.uniqueSort(resultNodes);
+      },
+
+      /** @final */
+      matches: function matches(element) {
+        var results = this.querySelectorAll();
+        return results.indexOf(element) > -1;
+      },
+
+      /** @final */
+      isDebugging: isDebugging,
+
+      /**
+       * Applies upwardSelector to provided context node
+       *
+       * @param {Object} node context element
+       * @param {string} upwardSelector
+       * @param {Array} result
+       */
+      upwardSearch: function upwardSearch(node, upwardSelector, result) {
+        if (upwardSelector !== '') {
+          var parent = node.parentElement;
+
+          if (parent === null) {
+            return;
+          }
+
+          node = parent.closest(upwardSelector);
+
+          if (node === null) {
+            return;
+          }
+        }
+
+        result.push(node);
       }
     };
     /**
@@ -3498,6 +3629,8 @@ var ExtendedCss = (function () {
     /** @override */
 
     SplittedSelector.prototype.querySelectorAll = function () {
+      var _this3 = this;
+
       var resultNodes = [];
       var simpleNodes;
       var simple = this.simple;
@@ -3519,203 +3652,46 @@ var ExtendedCss = (function () {
 
       switch (relation) {
         case ' ':
-          var _iteratorNormalCompletion2 = true;
-          var _didIteratorError2 = false;
-          var _iteratorError2 = undefined;
-
-          try {
-            for (var _iterator2 = simpleNodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-              var node = _step2.value;
-              this.relativeSearch(node, resultNodes);
-            }
-          } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
-                _iterator2.return();
-              }
-            } finally {
-              if (_didIteratorError2) {
-                throw _iteratorError2;
-              }
-            }
-          }
-
+          simpleNodes.forEach(function (node) {
+            _this3.relativeSearch(node, resultNodes);
+          });
           break;
 
         case '>':
           {
-            var _iteratorNormalCompletion3 = true;
-            var _didIteratorError3 = false;
-            var _iteratorError3 = undefined;
-
-            try {
-              for (var _iterator3 = simpleNodes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                var _node = _step3.value;
-                var _iteratorNormalCompletion4 = true;
-                var _didIteratorError4 = false;
-                var _iteratorError4 = undefined;
-
-                try {
-                  for (var _iterator4 = _node.children[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                    var childNode = _step4.value;
-
-                    if (this.matches(childNode)) {
-                      resultNodes.push(childNode);
-                    }
-                  }
-                } catch (err) {
-                  _didIteratorError4 = true;
-                  _iteratorError4 = err;
-                } finally {
-                  try {
-                    if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
-                      _iterator4.return();
-                    }
-                  } finally {
-                    if (_didIteratorError4) {
-                      throw _iteratorError4;
-                    }
-                  }
+            simpleNodes.forEach(function (node) {
+              Object.values(node.children).forEach(function (childNode) {
+                if (_this3.matches(childNode)) {
+                  resultNodes.push(childNode);
                 }
-              }
-            } catch (err) {
-              _didIteratorError3 = true;
-              _iteratorError3 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-                  _iterator3.return();
-                }
-              } finally {
-                if (_didIteratorError3) {
-                  throw _iteratorError3;
-                }
-              }
-            }
-
+              });
+            });
             break;
           }
 
         case '+':
           {
-            var _iteratorNormalCompletion5 = true;
-            var _didIteratorError5 = false;
-            var _iteratorError5 = undefined;
-
-            try {
-              for (var _iterator5 = simpleNodes[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                var _node2 = _step5.value;
-                var parentNode = _node2.parentNode;
-
-                if (!parentNode) {
-                  continue;
+            simpleNodes.forEach(function (node) {
+              var parentNode = node.parentNode;
+              Object.values(parentNode.children).forEach(function (childNode) {
+                if (_this3.matches(childNode) && childNode.previousElementSibling === node) {
+                  resultNodes.push(childNode);
                 }
-
-                var _iteratorNormalCompletion6 = true;
-                var _didIteratorError6 = false;
-                var _iteratorError6 = undefined;
-
-                try {
-                  for (var _iterator6 = parentNode.children[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                    var _childNode = _step6.value;
-
-                    if (this.matches(_childNode) && _childNode.previousElementSibling === _node2) {
-                      resultNodes.push(_childNode);
-                    }
-                  }
-                } catch (err) {
-                  _didIteratorError6 = true;
-                  _iteratorError6 = err;
-                } finally {
-                  try {
-                    if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
-                      _iterator6.return();
-                    }
-                  } finally {
-                    if (_didIteratorError6) {
-                      throw _iteratorError6;
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              _didIteratorError5 = true;
-              _iteratorError5 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
-                  _iterator5.return();
-                }
-              } finally {
-                if (_didIteratorError5) {
-                  throw _iteratorError5;
-                }
-              }
-            }
-
+              });
+            });
             break;
           }
 
         case '~':
           {
-            var _iteratorNormalCompletion7 = true;
-            var _didIteratorError7 = false;
-            var _iteratorError7 = undefined;
-
-            try {
-              for (var _iterator7 = simpleNodes[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                var _node3 = _step7.value;
-                var _parentNode = _node3.parentNode;
-
-                if (!_parentNode) {
-                  continue;
+            simpleNodes.forEach(function (node) {
+              var parentNode = node.parentNode;
+              Object.values(parentNode.children).forEach(function (childNode) {
+                if (_this3.matches(childNode) && node.compareDocumentPosition(childNode) === 4) {
+                  resultNodes.push(childNode);
                 }
-
-                var _iteratorNormalCompletion8 = true;
-                var _didIteratorError8 = false;
-                var _iteratorError8 = undefined;
-
-                try {
-                  for (var _iterator8 = _parentNode.children[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-                    var _childNode2 = _step8.value;
-
-                    if (this.matches(_childNode2) && _node3.compareDocumentPosition(_childNode2) === 4) {
-                      resultNodes.push(_childNode2);
-                    }
-                  }
-                } catch (err) {
-                  _didIteratorError8 = true;
-                  _iteratorError8 = err;
-                } finally {
-                  try {
-                    if (!_iteratorNormalCompletion8 && _iterator8.return != null) {
-                      _iterator8.return();
-                    }
-                  } finally {
-                    if (_didIteratorError8) {
-                      throw _iteratorError8;
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              _didIteratorError7 = true;
-              _iteratorError7 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion7 && _iterator7.return != null) {
-                  _iterator7.return();
-                }
-              } finally {
-                if (_didIteratorError7) {
-                  throw _iteratorError7;
-                }
-              }
-            }
-
+              });
+            });
             break;
           }
       }
@@ -4011,10 +3987,9 @@ var ExtendedCss = (function () {
         lastEventTime = Date.now();
       };
 
-      for (var _i = 0, _TRACKED_EVENTS = TRACKED_EVENTS; _i < _TRACKED_EVENTS.length; _i++) {
-        var evName = _TRACKED_EVENTS[_i];
+      TRACKED_EVENTS.forEach(function (evName) {
         document.documentElement.addEventListener(evName, trackEvent, true);
-      }
+      });
 
       var getLastEventType = function getLastEventType() {
         return lastEventType;
@@ -4162,6 +4137,7 @@ var ExtendedCss = (function () {
 
 
     function findAffectedElement(node) {
+      // eslint-disable-next-line no-restricted-syntax
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -4251,7 +4227,7 @@ var ExtendedCss = (function () {
 
 
     function setStyleToElement(node, style) {
-      for (var prop in style) {
+      Object.keys(style).forEach(function (prop) {
         // Apply this style only to existing properties
         // We can't use hasOwnProperty here (does not work in FF)
         if (typeof node.style.getPropertyValue(prop) !== 'undefined') {
@@ -4260,7 +4236,7 @@ var ExtendedCss = (function () {
           value = removeSuffix(value.trim(), '!important').trim();
           node.style.setProperty(prop, value, 'important');
         }
-      }
+      });
     }
     /**
      * Reverts style for the affected object
@@ -4291,49 +4267,29 @@ var ExtendedCss = (function () {
 
       var selector = rule.selector;
       var nodes = selector.querySelectorAll();
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      nodes.forEach(function (node) {
+        var affectedElement = findAffectedElement(node);
 
-      try {
-        for (var _iterator2 = nodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var node = _step2.value;
-          var affectedElement = findAffectedElement(node);
+        if (affectedElement) {
+          affectedElement.rules.push(rule);
+          applyStyle(affectedElement);
+        } else {
+          // Applying style first time
+          var originalStyle = node.style.cssText;
+          affectedElement = {
+            node: node,
+            // affected DOM node
+            rules: [rule],
+            // rules to be applied
+            originalStyle: originalStyle,
+            // original node style
+            protectionObserver: null // style attribute observer
 
-          if (affectedElement) {
-            affectedElement.rules.push(rule);
-            applyStyle(affectedElement);
-          } else {
-            // Applying style first time
-            var originalStyle = node.style.cssText;
-            affectedElement = {
-              node: node,
-              // affected DOM node
-              rules: [rule],
-              // rules to be applied
-              originalStyle: originalStyle,
-              // original node style
-              protectionObserver: null // style attribute observer
-
-            };
-            applyStyle(affectedElement);
-            affectedElements.push(affectedElement);
-          }
+          };
+          applyStyle(affectedElement);
+          affectedElements.push(affectedElement);
         }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
+      });
 
       if (debug) {
         var elapsed = utils.AsyncWrapper.now() - start;
@@ -4358,31 +4314,10 @@ var ExtendedCss = (function () {
       // https://github.com/AdguardTeam/ExtendedCss/issues/81
 
       stopObserve();
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
-
-      try {
-        for (var _iterator3 = rules[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var rule = _step3.value;
-          var nodes = applyRule(rule);
-          Array.prototype.push.apply(elementsIndex, nodes);
-        } // Now revert styles for elements which are no more affected
-
-      } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-            _iterator3.return();
-          }
-        } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
-          }
-        }
-      }
+      rules.forEach(function (rule) {
+        var nodes = applyRule(rule);
+        Array.prototype.push.apply(elementsIndex, nodes);
+      }); // Now revert styles for elements which are no more affected
 
       var l = affectedElements.length;
 
@@ -4444,29 +4379,9 @@ var ExtendedCss = (function () {
 
     function dispose() {
       stopObserve();
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
-
-      try {
-        for (var _iterator4 = affectedElements[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var obj = _step4.value;
-          revertStyle(obj);
-        }
-      } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
-            _iterator4.return();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
-      }
+      affectedElements.forEach(function (obj) {
+        revertStyle(obj);
+      });
     }
 
     var timingsPrinted = false;

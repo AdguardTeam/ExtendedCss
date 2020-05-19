@@ -18,15 +18,15 @@ const assertElementStyle = function (id, expectedStyle, assert) {
         resultOk = false;
     }
 
-    // eslint-disable-next-line guard-for-in
-    for (const prop in expectedStyle) {
-        const left = element.style.getPropertyValue(prop) || '';
-        const right = expectedStyle[prop];
+    Object.keys(expectedStyle)
+        .forEach((prop) => {
+            const left = element.style.getPropertyValue(prop) || '';
+            const right = expectedStyle[prop];
 
-        if (left !== right) {
-            resultOk = false;
-        }
-    }
+            if (left !== right) {
+                resultOk = false;
+            }
+        });
 
     assert.ok(resultOk, id + (resultOk ? ' ok' : ' element either does not exist or has different style.'));
 };
