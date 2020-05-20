@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.7 - Wed May 13 2020
+/*! extended-css - v1.2.8 - Wed May 20 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3102,7 +3102,7 @@ var ExtendedSelectorFactory = function () {
     Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(function (selector) {
       var deep = Number(selector);
 
-      if (Number.isNaN(deep) || deep <= 0 || deep >= 256) {
+      if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
         throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
       }
 
@@ -3113,7 +3113,7 @@ var ExtendedSelectorFactory = function () {
     Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
       if (input === '') {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-      } else if (Number.isInteger(input) && (input <= 0 || input >= 256)) {
+      } else if (Number.isInteger(input) && (input < 1 || input >= 256)) {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
       }
 
@@ -3192,6 +3192,7 @@ var ExtendedSelectorFactory = function () {
       this.debug = true;
     }
   }
+
   ExtendedSelectorParser.prototype = {
     /**
      * The main method, creates a selector instance depending on the type of a selector.
@@ -3217,24 +3218,18 @@ var ExtendedSelectorFactory = function () {
 
       if (typeof upwardPart !== 'undefined') {
         var output;
-        var upwardInput = parseInt(upwardPart, 10); // if upward input is not a number, we consider it is a selector
+        var upwardDeep = parseInt(upwardPart, 10); // if upward parameter is not a number, we consider it as a selector
 
-        if (upwardInput) {
-          var xpath = this.convertNthAncestorToken(upwardInput);
-          output = new XpathSelector(selectorText, xpath, debug);
-        } else {
+        if (Number.isNaN(upwardDeep)) {
           output = new UpwardSelector(selectorText, upwardPart, debug);
+        } else {
+          // upward works like nth-ancestor
+          var xpath = this.convertNthAncestorToken(upwardDeep);
+          output = new XpathSelector(selectorText, xpath, debug);
         }
-      } // if (typeof upwardPart !== 'undefined') {
-      //     let output;
-      //     if (upwardPart.type === XPATH_TYPE) {
-      //         output = new XpathSelector(selectorText, upwardPart.value, debug);
-      //     } else {
-      //         output = new UpwardSelector(selectorText, upwardPart.value, debug);
-      //     }
-      //     return output;
-      // }
 
+        return output;
+      }
 
       tokens = tokens[0];
       var l = tokens.length;
@@ -3365,10 +3360,8 @@ var ExtendedSelectorFactory = function () {
 
     /**
      * @private
-     * @return {Object|undefined} type and value of upward selector part:
-     * - if upward gets a number — converts it to xpath,
-     * - if upward gets a selector - returns the selector for further operation.
-     * returns undefined if the input does not contain upward tokens
+     * @return {string|undefined} upward parameter
+     * or undefined if the input does not contain upward tokens
      */
     getUpwardPart: function getUpwardPart() {
       var tokens = this.tokens[0];
@@ -3385,17 +3378,7 @@ var ExtendedSelectorFactory = function () {
                 throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
               }
 
-              return matches[1]; // let type;
-              // let value;
-              // const input = parseInt(matches[1], 10);
-              // if (input) {
-              //     type = XPATH_TYPE;
-              //     value = this.convertNthAncestorToken(matches[1]);
-              // } else {
-              //     type = SELECTOR_TYPE;
-              //     value = matches[1];
-              // }
-              // return { type, value };
+              return matches[1];
             }
           }
         }
@@ -3461,7 +3444,7 @@ var ExtendedSelectorFactory = function () {
    *
    * @param {string} selectorText
    * @param {string} xpath value
-   * @param {boolean=}debug
+   * @param {boolean=} debug
    * @constructor
    */
 
@@ -3527,7 +3510,7 @@ var ExtendedSelectorFactory = function () {
    *
    * @param {string} selectorText
    * @param {string} upwardSelector value
-   * @param {boolean=}debug
+   * @param {boolean=} debug
    * @constructor
    */
 
