@@ -40,6 +40,12 @@ const rollupConfig = {
             banner,
         },
         {
+            file: `${config.outputDir}/${config.fileName}.cjs.js`,
+            format: 'cjs',
+            name: 'ExtendedCss',
+            banner,
+        },
+        {
             file: `${config.outputDir}/${config.fileName}.min.js`,
             format: 'iife',
             name: 'ExtendedCss',
