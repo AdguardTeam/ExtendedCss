@@ -306,13 +306,28 @@ Sometimes, it is necessary to remove a matching element instead of hiding it or 
 > Please note, that other style properties will be ignored if `remove` is specified.
 
 ### Usage
+
+You can import, require or copy IIFE module with ExtendedCss into your code.
+
+e.g.
+```
+import ExtendedCss from 'extended-css';
+```
+or
+```
+const ExtendedCss = require('extended-css');
+```
+IIFE module can be found by the following path `./dist/extended-css.js`
+
+After that you can use ExtendedCss as you wish:
+
 ```
 (function() {
   var cssText = 'div.wrapper>div[-ext-has=".banner"] { display:none!important; }\n';
   cssText += 'div.wrapper>div[-ext-contains="some word"] { background:none!important; }';
   var extendedCss = new ExtendedCss({ cssText: cssText });
   extendedCss.apply();
-  
+
   // Just an example of how to stop applying this extended CSS
   setTimeout(function() {
     extendedCss.dispose();

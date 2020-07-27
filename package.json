@@ -1,8 +1,9 @@
 {
   "name": "extended-css",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Module for applying CSS styles with extended selection properties.",
-  "main": "dist/extended-css.esm.js",
+  "main": "dist/extended-css.cjs.js",
+  "module": "dist/extended-css.esm.js",
   "types": "dist/extended-css.d.ts",
   "directories": {
     "test": "test"

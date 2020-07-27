@@ -2,6 +2,8 @@
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
+'use strict';
+
 function _typeof(obj) {
   if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
     _typeof = function (obj) {
@@ -4432,4 +4434,4 @@ ExtendedCss.query = function (selectorText, noTiming) {
   }
 };
 
-export default ExtendedCss;
+module.exports = ExtendedCss;
