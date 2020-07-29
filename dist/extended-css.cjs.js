@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.9 - Mon Jul 27 2020
+/*! extended-css - v1.2.10 - Thu Jul 30 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3115,7 +3115,7 @@ var ExtendedSelectorFactory = function () {
     Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
       if (input === '') {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-      } else if (Number.isInteger(input) && (input < 1 || input >= 256)) {
+      } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
       }
 

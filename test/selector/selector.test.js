@@ -405,6 +405,14 @@ QUnit.test('Test xpath validation', (assert) => {
     }
 
     try {
+        selectorText = 'div:nth-ancestor(0)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
         selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
         assert.ok(false);
@@ -419,6 +427,15 @@ QUnit.test('Test xpath validation', (assert) => {
     } catch (e) {
         assert.ok(e);
     }
+
+    try {
+        selectorText = 'div:upward(0)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
     try {
         selectorText = 'div:upward(selector)';
         ExtendedSelectorFactory.createSelector(selectorText);
