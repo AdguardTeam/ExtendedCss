@@ -354,7 +354,7 @@ ExtendedCss.query(selectorText) // returns an array of Elements matching selecto
 ```
 
 ### Projects using Extended Css
-* [CoreLibs](https://github.com/AdguardTeam/CoreLibs)
+* [CoreLibs](https://github.com/AdguardTeam/CoreLibs) (Content Script should be updated)
 * [AdguardBrowserExtension](https://github.com/AdguardTeam/AdguardBrowserExtension)
 * [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari)
 
