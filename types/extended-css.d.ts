@@ -9,7 +9,7 @@ declare module 'extended-css' {
         beforeStyleApplied(x:IAffectedElement): IAffectedElement;
     }
 
-    export class ExtendedCss {
+    export default class ExtendedCss {
         constructor(configuration: IConfiguration);
 
         /**
@@ -27,7 +27,7 @@ declare module 'extended-css' {
          * @param selectorText
          * @param noTiming
          */
-        query(selectorText: string, noTiming: boolean): void;
+        static query(selectorText: string, noTiming: boolean): void;
 
         /**
          * Used for testing purposes only
