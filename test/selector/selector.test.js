@@ -452,3 +452,72 @@ QUnit.test('Test xpath validation', (assert) => {
         assert.ok(e);
     }
 });
+
+QUnit.test('Test remove pseudo-class', (assert) => {
+    let selectorText; let selector; let elements;
+
+    selectorText = 'div#test-remove #test-remove-inner-id:remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-inner-id', elements[0].id);
+
+    selectorText = 'div[id*="remove"]:has(> div > .test-remove-inner-class):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-div-for-has', elements[0].id);
+
+    selectorText = '#test-remove-div-for-contains div[class]:contains(remove me):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-inner-with-text', elements[0].className);
+});
+
+QUnit.test('Test remove validation', (assert) => {
+    let selectorText;
+
+    try {
+        selectorText = 'div:remove()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(true);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:has(> .inner):remove()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(true);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:remove():has-text(/test-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:remove(0)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:not([class]):remove(invalid)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(false);
+    } catch (e) {
+        assert.ok(e);
+    }
+});
