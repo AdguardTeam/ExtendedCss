@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.11 - Thu Jul 30 2020
+/*! extended-css - v1.2.12 - Fri Jul 31 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3106,7 +3106,7 @@ var ExtendedSelectorFactory = function () {
   // while addind new markers, AdGuard extension code also should be corrected:
   // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
   // at Extension/lib/filter/rules/css-filter-rule.js
-  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward'];
+  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove'];
   var initialized = false;
   var Sizzle;
   /**
@@ -3193,6 +3193,15 @@ var ExtendedSelectorFactory = function () {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
       } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
         throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+      }
+
+      return function () {
+        return true;
+      };
+    });
+    Sizzle.selectors.pseudos['remove'] = Sizzle.selectors.createPseudo(function (input) {
+      if (input !== '') {
+        throw new Error("Invalid argument of :remove pseudo class: ".concat(input));
       }
 
       return function () {
@@ -3307,6 +3316,12 @@ var ExtendedSelectorFactory = function () {
         }
 
         return output;
+      }
+
+      var shouldRemove = this.getRemovePart() === '';
+
+      if (shouldRemove) {
+        return new RemoveSelector(selectorText, shouldRemove, debug);
       }
 
       tokens = tokens[0];
@@ -3454,6 +3469,33 @@ var ExtendedSelectorFactory = function () {
             if (matches[0] === 'upward') {
               if (i + 1 !== tokensLength) {
                 throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
+              }
+
+              return matches[1];
+            }
+          }
+        }
+      }
+    },
+
+    /**
+     * @private
+     * @return {string|undefined} remove parameter
+     * or undefined if the input does not contain remove tokens
+     */
+    getRemovePart: function getRemovePart() {
+      var tokens = this.tokens[0];
+
+      for (var i = 0, tokensLength = tokens.length; i < tokensLength; i++) {
+        var token = tokens[i];
+
+        if (token.type === 'PSEUDO') {
+          var matches = token.matches;
+
+          if (matches && matches.length > 1) {
+            if (matches[0] === 'remove') {
+              if (i + 1 !== tokensLength) {
+                throw new Error('Invalid pseudo: \':remove\' should be at the end of the selector');
               }
 
               return matches[1];
@@ -3656,6 +3698,55 @@ var ExtendedSelectorFactory = function () {
 
       result.push(node);
     }
+  };
+  /**
+   * Remove selector class
+   * Limited to support remove to be only the last one token in selector
+   *
+   * @param {string} selectorText
+   * @param {boolean} shouldRemove value
+   * @param {boolean=} debug
+   * @constructor
+   */
+
+  function RemoveSelector(selectorText, shouldRemove, debug) {
+    var REMOVE_PSEUDO_MARKER = ':remove()';
+    var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER);
+    this.selectorText = selectorText.slice(0, removeMarkerIndex);
+    this.debug = debug;
+    this.shouldRemove = shouldRemove;
+    Sizzle.compile(this.selectorText);
+  }
+
+  RemoveSelector.prototype = {
+    querySelectorAll: function querySelectorAll() {
+      var resultNodes = [];
+      var simpleNodes;
+
+      if (this.selectorText) {
+        simpleNodes = Sizzle(this.selectorText);
+
+        if (!simpleNodes || !simpleNodes.length) {
+          return resultNodes;
+        }
+      } else {
+        simpleNodes = [document];
+      }
+
+      simpleNodes.forEach(function (node) {
+        resultNodes.push(node);
+      });
+      return Sizzle.uniqueSort(resultNodes);
+    },
+
+    /** @final */
+    matches: function matches(element) {
+      var results = this.querySelectorAll();
+      return results.indexOf(element) > -1;
+    },
+
+    /** @final */
+    isDebugging: isDebugging
   };
   /**
    * A splitted extended selector class.
@@ -3913,9 +4004,11 @@ var ExtendedCssParser = function () {
 
           try {
             var extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
+            var removeStyle = {};
+            removeStyle['remove'] = 'true';
             results.push({
               selector: extendedSelector,
-              style: styleMap
+              style: extendedSelector.shouldRemove ? removeStyle : styleMap
             });
           } catch (ex) {
             utils.logError("ExtendedCssParser: ignoring invalid selector ".concat(data.selectorText));
