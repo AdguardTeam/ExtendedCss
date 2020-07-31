@@ -3316,12 +3316,13 @@ var ExtendedSelectorFactory = function () {
         }
 
         return output;
-      }
+      } // 'remove' should get no argument
 
-      var shouldRemove = this.getRemovePart() === '';
 
-      if (shouldRemove) {
-        return new RemoveSelector(selectorText, shouldRemove, debug);
+      var hasValidRemovePart = this.getRemovePart() === '';
+
+      if (hasValidRemovePart) {
+        return new RemoveSelector(selectorText, hasValidRemovePart, debug);
       }
 
       tokens = tokens[0];
@@ -3704,17 +3705,17 @@ var ExtendedSelectorFactory = function () {
    * Limited to support remove to be only the last one token in selector
    *
    * @param {string} selectorText
-   * @param {boolean} shouldRemove value
+   * @param {boolean} hasValidRemovePart value
    * @param {boolean=} debug
    * @constructor
    */
 
-  function RemoveSelector(selectorText, shouldRemove, debug) {
+  function RemoveSelector(selectorText, hasValidRemovePart, debug) {
     var REMOVE_PSEUDO_MARKER = ':remove()';
     var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER);
     this.selectorText = selectorText.slice(0, removeMarkerIndex);
     this.debug = debug;
-    this.shouldRemove = shouldRemove;
+    this.shouldRemove = hasValidRemovePart;
     Sizzle.compile(this.selectorText);
   }
 
@@ -4004,11 +4005,14 @@ var ExtendedCssParser = function () {
 
           try {
             var extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
-            var removeStyle = {};
-            removeStyle['remove'] = 'true';
+
+            if (extendedSelector.shouldRemove) {
+              styleMap['remove'] = 'true';
+            }
+
             results.push({
               selector: extendedSelector,
-              style: extendedSelector.shouldRemove ? removeStyle : styleMap
+              style: styleMap
             });
           } catch (ex) {
             utils.logError("ExtendedCssParser: ignoring invalid selector ".concat(data.selectorText));

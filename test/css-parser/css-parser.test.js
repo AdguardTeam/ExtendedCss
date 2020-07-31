@@ -56,7 +56,6 @@ QUnit.test('Convert remove pseudo-class into remove pseudo-property', (assert) =
     assert.equal(cssObject[0].selector.selectorText, elementSelector);
     assert.ok(cssObject[0].style);
     assert.equal(cssObject[0].style.remove, 'true');
-    assert.notOk(cssObject[0].style.display);
 });
 
 QUnit.test('Parse stylesheet', (assert) => {
