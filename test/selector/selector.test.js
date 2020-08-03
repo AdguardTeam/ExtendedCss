@@ -437,14 +437,6 @@ QUnit.test('Test xpath validation', (assert) => {
     }
 
     try {
-        selectorText = 'div:upward(selector)';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
         selectorText = 'div:upward(3):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
         assert.ok(false);
@@ -482,22 +474,6 @@ QUnit.test('Test remove validation', (assert) => {
     let selectorText;
 
     try {
-        selectorText = 'div:remove()';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
-        selectorText = 'div:has(> .inner):remove()';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
         selectorText = 'div:remove():has-text(/test-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
         assert.ok(false);
@@ -517,22 +493,6 @@ QUnit.test('Test remove validation', (assert) => {
         selectorText = 'div:not([class]):remove(invalid)';
         ExtendedSelectorFactory.createSelector(selectorText);
         assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
-        selectorText = 'div:upward(1):remove()';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
-        selectorText = 'div:xpath(../..):remove()';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
     } catch (e) {
         assert.ok(e);
     }

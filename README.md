@@ -188,7 +188,7 @@ div.banner[-ext-matches-css-before="content: /block me/"]
 ### Pseudo-class `:xpath()`
 
 This pseudo-class allows to select an element by evaluating a XPath expression.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
+> **Limited to work properly only at the end of selector.**
 
 The :xpath(...) pseudo is different than other pseudo-classes. Whereas all other operators are used to filter down a resultset of elements, the :xpath(...) operator can be used both to create a new resultset or filter down an existing one. For this reason, subject selector is optional. For example, an :xpath(...) operator could be used to create a new resultset consisting of all ancestors elements of a subject element, something not otherwise possible with either plain CSS selectors or other procedural operators.
 
@@ -214,7 +214,7 @@ facebook.com##:xpath(//div[@id="stream_pagelet"]//div[starts-with(@id,"hyperfeed
 ### Pseudo-class `:nth-ancestor()`
 
 This pseudo-class allows to lookup the nth ancestor relative to the currently selected node.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
+> **Limited to work properly only at the end of selector.**
 
 It is a low-overhead equivalent to `:xpath(..[/..]*)`.
 
@@ -236,7 +236,7 @@ div:has-text(/test/):nth-ancestor(2)
 ### Pseudo-class `:upward()`
 
 This pseudo-class allows to lookup the ancestor relative to the currently selected node.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
+> **Limited to work properly only at the end of selector.**
 
 **Syntax**
 ```
