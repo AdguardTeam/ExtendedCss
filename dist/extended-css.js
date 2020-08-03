@@ -3564,10 +3564,10 @@ var ExtendedCss = (function () {
      * Parental class for such pseudo-classes as xpath, upward, remove
      * which are limited to be the last one token in selector
      *
-     * @constructor
      * @param {string} selectorText
      * @param {string} pseudoClassArg pseudo-class arg
      * @param {boolean=} debug
+     * @constructor
      */
 
     function BaseLastArgumentSelector(selectorText, pseudoClassArg, debug) {
@@ -3626,12 +3626,11 @@ var ExtendedCss = (function () {
     /**
      * Xpath selector class
      * Limited to support 'xpath' to be only the last one token in selecto
-     *
-     * @constructor
-     * @augments UltimusSelector
      * @param {string} selectorText
      * @param {string} xpath value
      * @param {boolean=} debug
+     * @constructor
+     * @augments BaseLastArgumentSelector
      */
 
     function XpathSelector(selectorText, xpath, debug) {
@@ -3642,10 +3641,10 @@ var ExtendedCss = (function () {
     XpathSelector.prototype.constructor = XpathSelector;
     /**
      * Applies xpath pseudo-class to provided context node
-     * @override
      * @param {Object} node context element
      * @param {string} pseudoClassArg xpath
      * @param {Array} result
+     * @override
      */
 
     XpathSelector.prototype.searchResultNodes = function (node, pseudoClassArg, result) {
@@ -3659,12 +3658,11 @@ var ExtendedCss = (function () {
     /**
      * Upward selector class
      * Limited to support 'upward' to be only the last one token in selector
-     *
-     * @constructor
-     * @augments UltimusSelector
      * @param {string} selectorText
      * @param {string} upwardSelector value
      * @param {boolean=} debug
+     * @constructor
+     * @augments BaseLastArgumentSelector
      */
 
 
@@ -3676,10 +3674,10 @@ var ExtendedCss = (function () {
     UpwardSelector.prototype.constructor = UpwardSelector;
     /**
      * Applies upward pseudo-class to provided context node
-     * @override
      * @param {Object} node context element
      * @param {string} upwardSelector upward selector
      * @param {Array} result
+     * @override
      */
 
     UpwardSelector.prototype.searchResultNodes = function (node, upwardSelector, result) {
@@ -3702,12 +3700,11 @@ var ExtendedCss = (function () {
     /**
      * Remove selector class
      * Limited to support 'remove' to be only the last one token in selector
-     *
-     * @constructor
-     * @augments UltimusSelector
      * @param {string} selectorText
      * @param {boolean} hasValidRemovePart
      * @param {boolean=} debug
+     * @constructor
+     * @augments BaseLastArgumentSelector
      */
 
 
