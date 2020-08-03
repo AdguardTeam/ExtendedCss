@@ -3162,7 +3162,8 @@ var ExtendedSelectorFactory = function () {
       return function (elem) {
         return Sizzle(selector, elem).length === 0;
       };
-    }); // Define :xpath support in Sizzle, to make tokenize work properly
+    }); // Following properties are needed only for proper work of tokens parcer
+    // Define :xpath support in Sizzle, to make tokenize work properly
 
     Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(function (selector) {
       try {
@@ -3314,7 +3315,10 @@ var ExtendedSelectorFactory = function () {
         }
 
         return output;
-      }
+      } // argument of pseudo-class remove;
+      // it's defined only if remove is parsed as last token
+      // and it's valid only if remove arg is empty string
+
 
       var removePart = this.getRemovePart();
 
@@ -3707,9 +3711,12 @@ var ExtendedSelectorFactory = function () {
 
   function RemoveSelector(selectorText, hasValidRemovePart, debug) {
     var REMOVE_PSEUDO_MARKER = ':remove()';
-    var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER);
+    var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER); // delete remove part of rule instead of which
+    // pseudo-property property 'remove' will be added
+
     var modifiedSelectorText = selectorText.slice(0, removeMarkerIndex);
-    BaseLastArgumentSelector.call(this, modifiedSelectorText, hasValidRemovePart, debug);
+    BaseLastArgumentSelector.call(this, modifiedSelectorText, hasValidRemovePart, debug); // mark extendedSelector as Remove one for ExtendedCssParser
+
     this.isRemoveSelector = true;
   }
 
