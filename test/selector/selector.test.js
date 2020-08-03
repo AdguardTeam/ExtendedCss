@@ -520,4 +520,20 @@ QUnit.test('Test remove validation', (assert) => {
     } catch (e) {
         assert.ok(e);
     }
+
+    try {
+        selectorText = 'div:upward(1):remove()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(true);
+    } catch (e) {
+        assert.ok(e);
+    }
+
+    try {
+        selectorText = 'div:xpath(../..):remove()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+        assert.ok(true);
+    } catch (e) {
+        assert.ok(e);
+    }
 });

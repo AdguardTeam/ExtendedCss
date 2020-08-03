@@ -3321,7 +3321,8 @@ var ExtendedSelectorFactory = function () {
       var removePart = this.getRemovePart();
 
       if (typeof removePart !== 'undefined') {
-        return new RemoveSelector(selectorText, removePart, debug);
+        var hasValidRemovePart = removePart === '';
+        return new RemoveSelector(selectorText, hasValidRemovePart, debug);
       }
 
       tokens = tokens[0];
@@ -3564,18 +3565,18 @@ var ExtendedSelectorFactory = function () {
    *
    * @constructor
    * @param {string} selectorText
-   * @param {string} ultimusArg pseudo-class arg
+   * @param {string} pseudoClassArg pseudo-class arg
    * @param {boolean=} debug
    */
 
-  function UltimusSelector(selectorText, ultimusArg, debug) {
+  function BaseLastArgumentSelector(selectorText, pseudoClassArg, debug) {
     this.selectorText = selectorText;
-    this.ultimusArg = ultimusArg;
+    this.pseudoClassArg = pseudoClassArg;
     this.debug = debug;
     Sizzle.compile(this.selectorText);
   }
 
-  UltimusSelector.prototype = {
+  BaseLastArgumentSelector.prototype = {
     querySelectorAll: function querySelectorAll() {
       var _this = this;
 
@@ -3593,7 +3594,7 @@ var ExtendedSelectorFactory = function () {
       }
 
       simpleNodes.forEach(function (node) {
-        _this.searchResultNodes(node, _this.ultimusArg, resultNodes);
+        _this.searchResultNodes(node, _this.pseudoClassArg, resultNodes);
       });
       return Sizzle.uniqueSort(resultNodes);
     },
@@ -3608,14 +3609,15 @@ var ExtendedSelectorFactory = function () {
     isDebugging: isDebugging,
 
     /**
-     * Primitive method that returns all nodes if pseudo-class arg exists.
-     * Should be overridden in subclasses.
+     * Primitive method that returns all nodes if pseudo-class arg is defined.
+     * That logic works for remove pseudo-class,
+     * but for others it should be overridden.
      * @param {Object} node context element
-     * @param {string} ultimusArg
+     * @param {string} pseudoClassArg pseudo-class argument
      * @param {Array} result
      */
-    searchResultNodes: function searchResultNodes(node, ultimusArg, result) {
-      if (ultimusArg) {
+    searchResultNodes: function searchResultNodes(node, pseudoClassArg, result) {
+      if (pseudoClassArg) {
         result.push(node);
       }
     }
@@ -3632,21 +3634,21 @@ var ExtendedSelectorFactory = function () {
    */
 
   function XpathSelector(selectorText, xpath, debug) {
-    UltimusSelector.call(this, selectorText, xpath, debug);
+    BaseLastArgumentSelector.call(this, selectorText, xpath, debug);
   }
 
-  XpathSelector.prototype = Object.create(UltimusSelector.prototype);
+  XpathSelector.prototype = Object.create(BaseLastArgumentSelector.prototype);
   XpathSelector.prototype.constructor = XpathSelector;
   /**
    * Applies xpath pseudo-class to provided context node
    * @override
    * @param {Object} node context element
-   * @param {string} ultimusArg xpath
+   * @param {string} pseudoClassArg xpath
    * @param {Array} result
    */
 
-  XpathSelector.prototype.searchResultNodes = function (node, ultimusArg, result) {
-    var xpathResult = document.evaluate(ultimusArg, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+  XpathSelector.prototype.searchResultNodes = function (node, pseudoClassArg, result) {
+    var xpathResult = document.evaluate(pseudoClassArg, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
     var iNode; // eslint-disable-next-line no-cond-assign
 
     while (iNode = xpathResult.iterateNext()) {
@@ -3666,10 +3668,10 @@ var ExtendedSelectorFactory = function () {
 
 
   function UpwardSelector(selectorText, upwardSelector, debug) {
-    UltimusSelector.call(this, selectorText, upwardSelector, debug);
+    BaseLastArgumentSelector.call(this, selectorText, upwardSelector, debug);
   }
 
-  UpwardSelector.prototype = Object.create(UltimusSelector.prototype);
+  UpwardSelector.prototype = Object.create(BaseLastArgumentSelector.prototype);
   UpwardSelector.prototype.constructor = UpwardSelector;
   /**
    * Applies upward pseudo-class to provided context node
@@ -3703,34 +3705,21 @@ var ExtendedSelectorFactory = function () {
    * @constructor
    * @augments UltimusSelector
    * @param {string} selectorText
-   * @param {boolean} removeArg
+   * @param {boolean} hasValidRemovePart
    * @param {boolean=} debug
    */
 
 
-  function RemoveSelector(selectorText, removeArg, debug) {
+  function RemoveSelector(selectorText, hasValidRemovePart, debug) {
     var REMOVE_PSEUDO_MARKER = ':remove()';
     var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER);
     var modifiedSelectorText = selectorText.slice(0, removeMarkerIndex);
-    UltimusSelector.call(this, modifiedSelectorText, removeArg, debug);
-    this._type = 'remove';
+    BaseLastArgumentSelector.call(this, modifiedSelectorText, hasValidRemovePart, debug);
+    this.isRemoveSelector = true;
   }
 
-  RemoveSelector.prototype = Object.create(UltimusSelector.prototype);
+  RemoveSelector.prototype = Object.create(BaseLastArgumentSelector.prototype);
   RemoveSelector.prototype.constructor = RemoveSelector;
-  /**
-   * Applies remove pseudo-class to provided context node
-   * @override
-   * @param {Object} node context element
-   * @param {string} removeArg
-   * @param {Array} result
-   */
-
-  RemoveSelector.prototype.searchResultNodes = function (node, removeArg, result) {
-    if (removeArg === '') {
-      result.push(node);
-    }
-  };
   /**
    * A splitted extended selector class.
    *
@@ -3747,7 +3736,6 @@ var ExtendedSelectorFactory = function () {
    * @constructor
    * @extends TraitLessSelector
    */
-
 
   function SplittedSelector(selectorText, simple, relation, complex, debug) {
     TraitLessSelector.call(this, selectorText, debug);
@@ -3989,7 +3977,9 @@ var ExtendedCssParser = function () {
           try {
             var extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
 
-            if (extendedSelector.ultimusArg === '' && extendedSelector._type === 'remove') {
+            if (extendedSelector.pseudoClassArg && extendedSelector.isRemoveSelector) {
+              // if there is remove pseudo-class in rule,
+              // the element will be removed and no other styles will be applied
               styleMap['remove'] = 'true';
             }
 
