@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.12 - Fri Jul 31 2020
+/*! extended-css - v1.2.12 - Mon Aug 03 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3314,13 +3314,12 @@ var ExtendedSelectorFactory = function () {
         }
 
         return output;
-      } // 'remove' should get no argument
+      }
 
+      var removePart = this.getRemovePart();
 
-      var hasValidRemovePart = this.getRemovePart() === '';
-
-      if (hasValidRemovePart) {
-        return new RemoveSelector(selectorText, hasValidRemovePart, debug);
+      if (typeof removePart !== 'undefined') {
+        return new RemoveSelector(selectorText, removePart, debug);
       }
 
       tokens = tokens[0];
@@ -3558,24 +3557,23 @@ var ExtendedSelectorFactory = function () {
     isDebugging: isDebugging
   };
   /**
-   * Xpath selector class
-   * Limited to support xpath to be only the last one token in selector
+   * Parental class for such pseudo-classes as xpath, upward, remove
+   * which are limited to be the last one token in selector
    *
-   * @param {string} selectorText
-   * @param {string} xpath value
-   * @param {boolean=} debug
    * @constructor
+   * @param {string} selectorText
+   * @param {string} ultimusArg pseudo-class arg
+   * @param {boolean=} debug
    */
 
-  function XpathSelector(selectorText, xpath, debug) {
-    // Xpath is limited to be the last one token
+  function UltimusSelector(selectorText, ultimusArg, debug) {
     this.selectorText = selectorText;
-    this.xpath = xpath;
+    this.ultimusArg = ultimusArg;
     this.debug = debug;
     Sizzle.compile(this.selectorText);
   }
 
-  XpathSelector.prototype = {
+  UltimusSelector.prototype = {
     querySelectorAll: function querySelectorAll() {
       var _this = this;
 
@@ -3593,7 +3591,7 @@ var ExtendedSelectorFactory = function () {
       }
 
       simpleNodes.forEach(function (node) {
-        _this.xpathSearch(node, _this.xpath, resultNodes);
+        _this.searchResultNodes(node, _this.ultimusArg, resultNodes);
       });
       return Sizzle.uniqueSort(resultNodes);
     },
@@ -3608,144 +3606,128 @@ var ExtendedSelectorFactory = function () {
     isDebugging: isDebugging,
 
     /**
-     * Applies xpath to provided context node
-     *
+     * Primitive method that returns all nodes if pseudo-class arg exists.
+     * Should be overridden in subclasses.
      * @param {Object} node context element
-     * @param {string} xpath
+     * @param {string} ultimusArg
      * @param {Array} result
      */
-    xpathSearch: function xpathSearch(node, xpath, result) {
-      var xpathResult = document.evaluate(xpath, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-      var iNode; // eslint-disable-next-line no-cond-assign
-
-      while (iNode = xpathResult.iterateNext()) {
-        result.push(iNode);
+    searchResultNodes: function searchResultNodes(node, ultimusArg, result) {
+      if (ultimusArg) {
+        result.push(node);
       }
+    }
+  };
+  /**
+   * Xpath selector class
+   * Limited to support 'xpath' to be only the last one token in selecto
+   *
+   * @constructor
+   * @augments UltimusSelector
+   * @param {string} selectorText
+   * @param {string} xpath value
+   * @param {boolean=} debug
+   */
+
+  function XpathSelector(selectorText, xpath, debug) {
+    UltimusSelector.call(this, selectorText, xpath, debug);
+  }
+
+  XpathSelector.prototype = Object.create(UltimusSelector.prototype);
+  XpathSelector.prototype.constructor = XpathSelector;
+  /**
+   * Applies xpath pseudo-class to provided context node
+   * @override
+   * @param {Object} node context element
+   * @param {string} ultimusArg xpath
+   * @param {Array} result
+   */
+
+  XpathSelector.prototype.searchResultNodes = function (node, ultimusArg, result) {
+    var xpathResult = document.evaluate(ultimusArg, node, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+    var iNode; // eslint-disable-next-line no-cond-assign
+
+    while (iNode = xpathResult.iterateNext()) {
+      result.push(iNode);
     }
   };
   /**
    * Upward selector class
-   * Limited to support upward to be only the last one token in selector
+   * Limited to support 'upward' to be only the last one token in selector
    *
+   * @constructor
+   * @augments UltimusSelector
    * @param {string} selectorText
    * @param {string} upwardSelector value
    * @param {boolean=} debug
-   * @constructor
    */
 
+
   function UpwardSelector(selectorText, upwardSelector, debug) {
-    // Xpath is limited to be the last one token
-    this.selectorText = selectorText;
-    this.upwardSelector = upwardSelector;
-    this.debug = debug;
-    Sizzle.compile(this.selectorText);
+    UltimusSelector.call(this, selectorText, upwardSelector, debug);
   }
 
-  UpwardSelector.prototype = {
-    querySelectorAll: function querySelectorAll() {
-      var _this2 = this;
+  UpwardSelector.prototype = Object.create(UltimusSelector.prototype);
+  UpwardSelector.prototype.constructor = UpwardSelector;
+  /**
+   * Applies upward pseudo-class to provided context node
+   * @override
+   * @param {Object} node context element
+   * @param {string} upwardSelector upward selector
+   * @param {Array} result
+   */
 
-      var resultNodes = [];
-      var simpleNodes;
+  UpwardSelector.prototype.searchResultNodes = function (node, upwardSelector, result) {
+    if (upwardSelector !== '') {
+      var parent = node.parentElement;
 
-      if (this.selectorText) {
-        simpleNodes = Sizzle(this.selectorText);
-
-        if (!simpleNodes || !simpleNodes.length) {
-          return resultNodes;
-        }
-      } else {
-        simpleNodes = [document];
+      if (parent === null) {
+        return;
       }
 
-      simpleNodes.forEach(function (node) {
-        _this2.upwardSearch(node, _this2.upwardSelector, resultNodes);
-      });
-      return Sizzle.uniqueSort(resultNodes);
-    },
+      node = parent.closest(upwardSelector);
 
-    /** @final */
-    matches: function matches(element) {
-      var results = this.querySelectorAll();
-      return results.indexOf(element) > -1;
-    },
-
-    /** @final */
-    isDebugging: isDebugging,
-
-    /**
-     * Applies upwardSelector to provided context node
-     *
-     * @param {Object} node context element
-     * @param {string} upwardSelector
-     * @param {Array} result
-     */
-    upwardSearch: function upwardSearch(node, upwardSelector, result) {
-      if (upwardSelector !== '') {
-        var parent = node.parentElement;
-
-        if (parent === null) {
-          return;
-        }
-
-        node = parent.closest(upwardSelector);
-
-        if (node === null) {
-          return;
-        }
+      if (node === null) {
+        return;
       }
-
-      result.push(node);
     }
+
+    result.push(node);
   };
   /**
    * Remove selector class
-   * Limited to support remove to be only the last one token in selector
+   * Limited to support 'remove' to be only the last one token in selector
    *
-   * @param {string} selectorText
-   * @param {boolean} hasValidRemovePart value
-   * @param {boolean=} debug
    * @constructor
+   * @augments UltimusSelector
+   * @param {string} selectorText
+   * @param {boolean} removeArg
+   * @param {boolean=} debug
    */
 
-  function RemoveSelector(selectorText, hasValidRemovePart, debug) {
+
+  function RemoveSelector(selectorText, removeArg, debug) {
     var REMOVE_PSEUDO_MARKER = ':remove()';
     var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER);
-    this.selectorText = selectorText.slice(0, removeMarkerIndex);
-    this.debug = debug;
-    this.shouldRemove = hasValidRemovePart;
-    Sizzle.compile(this.selectorText);
+    var modifiedSelectorText = selectorText.slice(0, removeMarkerIndex);
+    UltimusSelector.call(this, modifiedSelectorText, removeArg, debug);
+    this._type = 'remove';
   }
 
-  RemoveSelector.prototype = {
-    querySelectorAll: function querySelectorAll() {
-      var resultNodes = [];
-      var simpleNodes;
+  RemoveSelector.prototype = Object.create(UltimusSelector.prototype);
+  RemoveSelector.prototype.constructor = RemoveSelector;
+  /**
+   * Applies remove pseudo-class to provided context node
+   * @override
+   * @param {Object} node context element
+   * @param {string} removeArg
+   * @param {Array} result
+   */
 
-      if (this.selectorText) {
-        simpleNodes = Sizzle(this.selectorText);
-
-        if (!simpleNodes || !simpleNodes.length) {
-          return resultNodes;
-        }
-      } else {
-        simpleNodes = [document];
-      }
-
-      simpleNodes.forEach(function (node) {
-        resultNodes.push(node);
-      });
-      return Sizzle.uniqueSort(resultNodes);
-    },
-
-    /** @final */
-    matches: function matches(element) {
-      var results = this.querySelectorAll();
-      return results.indexOf(element) > -1;
-    },
-
-    /** @final */
-    isDebugging: isDebugging
+  RemoveSelector.prototype.searchResultNodes = function (node, removeArg, result) {
+    if (removeArg === '') {
+      result.push(node);
+    }
   };
   /**
    * A splitted extended selector class.
@@ -3764,6 +3746,7 @@ var ExtendedSelectorFactory = function () {
    * @extends TraitLessSelector
    */
 
+
   function SplittedSelector(selectorText, simple, relation, complex, debug) {
     TraitLessSelector.call(this, selectorText, debug);
     this.simple = simple;
@@ -3777,7 +3760,7 @@ var ExtendedSelectorFactory = function () {
   /** @override */
 
   SplittedSelector.prototype.querySelectorAll = function () {
-    var _this3 = this;
+    var _this2 = this;
 
     var resultNodes = [];
     var simpleNodes;
@@ -3801,7 +3784,7 @@ var ExtendedSelectorFactory = function () {
     switch (relation) {
       case ' ':
         simpleNodes.forEach(function (node) {
-          _this3.relativeSearch(node, resultNodes);
+          _this2.relativeSearch(node, resultNodes);
         });
         break;
 
@@ -3809,7 +3792,7 @@ var ExtendedSelectorFactory = function () {
         {
           simpleNodes.forEach(function (node) {
             Object.values(node.children).forEach(function (childNode) {
-              if (_this3.matches(childNode)) {
+              if (_this2.matches(childNode)) {
                 resultNodes.push(childNode);
               }
             });
@@ -3822,7 +3805,7 @@ var ExtendedSelectorFactory = function () {
           simpleNodes.forEach(function (node) {
             var parentNode = node.parentNode;
             Object.values(parentNode.children).forEach(function (childNode) {
-              if (_this3.matches(childNode) && childNode.previousElementSibling === node) {
+              if (_this2.matches(childNode) && childNode.previousElementSibling === node) {
                 resultNodes.push(childNode);
               }
             });
@@ -3835,7 +3818,7 @@ var ExtendedSelectorFactory = function () {
           simpleNodes.forEach(function (node) {
             var parentNode = node.parentNode;
             Object.values(parentNode.children).forEach(function (childNode) {
-              if (_this3.matches(childNode) && node.compareDocumentPosition(childNode) === 4) {
+              if (_this2.matches(childNode) && node.compareDocumentPosition(childNode) === 4) {
                 resultNodes.push(childNode);
               }
             });
@@ -4004,7 +3987,7 @@ var ExtendedCssParser = function () {
           try {
             var extendedSelector = ExtendedSelectorFactory.createSelector(data.selectorText, data.groups, debug);
 
-            if (extendedSelector.shouldRemove) {
+            if (extendedSelector.ultimusArg === '' && extendedSelector._type === 'remove') {
               styleMap['remove'] = 'true';
             }
 
