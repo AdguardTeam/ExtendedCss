@@ -46,6 +46,18 @@ QUnit.test('Single invalid selector in a stylesheet', (assert) => {
     assert.equal(cssObject.length, 1);
 });
 
+QUnit.test('Convert remove pseudo-class into remove pseudo-property', (assert) => {
+    const elementSelector = 'div:has(> div[class])';
+    const selectorText = `${elementSelector}:remove()`;
+    const cssText = `${selectorText} { display:none; }`;
+    const cssObject = ExtendedCssParser.parseCss(cssText);
+    assert.ok(cssObject instanceof Array);
+    assert.equal(cssObject.length, 1);
+    assert.equal(cssObject[0].selector.selectorText, elementSelector);
+    assert.ok(cssObject[0].style);
+    assert.equal(cssObject[0].style.remove, 'true');
+});
+
 QUnit.test('Parse stylesheet', (assert) => {
     const cssText = 'body { background: none!important; }\n div.wrapper { display: block!important; position: absolute; top:-2000px; }';
     const cssObject = ExtendedCssParser.parseCss(cssText);

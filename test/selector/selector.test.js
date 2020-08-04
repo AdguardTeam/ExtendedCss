@@ -380,75 +380,101 @@ QUnit.test('Test xpath / nth-ancestor / upward', (assert) => {
 QUnit.test('Test xpath validation', (assert) => {
     let selectorText;
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:xpath()';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- xpath should get an arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:xpath(../..):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- xpath should be at the end of rule');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(invalid)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- nth-ancestor should get a number arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(0)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- nth-ancestor arg should be more that 0 and less that 256');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- nth-ancestor should be at the end of rule');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward()';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- upward should get an arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward(0)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- upward arg should be more that 0 and less that 256');
 
-    try {
-        selectorText = 'div:upward(selector)';
-        ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(true);
-    } catch (e) {
-        assert.ok(e);
-    }
-
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward(3):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, 'Expected to be invalid rule -- upward should be at the end of rule');
+});
+
+QUnit.test('Test remove pseudo-class', (assert) => {
+    let selectorText; let selector; let elements;
+
+    selectorText = 'div#test-remove #test-remove-inner-id:remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-inner-id', elements[0].id);
+
+    selectorText = 'div[id*="remove"]:has(> div > .test-remove-inner-class):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-div-for-has', elements[0].id);
+
+    selectorText = '#test-remove-div-for-contains div[class]:contains(remove me):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-inner-with-text', elements[0].className);
+
+    selectorText = '#test-remove-inner-for-upward:upward(div[id]):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-with-xpath-upward', elements[0].id);
+
+    selectorText = '#test-remove-inner-for-xpath-pseudo:xpath(../../..):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-with-xpath-upward', elements[0].id);
+});
+
+QUnit.test('Test remove validation', (assert) => {
+    let selectorText;
+
+    assert.throws(() => {
+        selectorText = 'div:remove():has-text(/test-content/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- remove is not in the end');
+
+    assert.throws(() => {
+        selectorText = 'div:remove(0)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- remove should not get arg');
+
+    assert.throws(() => {
+        selectorText = 'div:not([class]):remove(invalid)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- remove should not get arg');
 });
