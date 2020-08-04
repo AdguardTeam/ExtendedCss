@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.12 - Mon Aug 03 2020
+/*! extended-css - v1.2.12 - Tue Aug 04 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3162,51 +3162,59 @@ var ExtendedSelectorFactory = function () {
       return function (elem) {
         return Sizzle(selector, elem).length === 0;
       };
-    }); // Following properties are needed only for proper work of tokens parcer
-    // Define :xpath support in Sizzle, to make tokenize work properly
-
-    Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(function (selector) {
-      try {
-        document.createExpression(selector, null);
-      } catch (e) {
-        throw new Error("Invalid argument of :xpath pseudo class: ".concat(selector));
-      }
-
-      return function () {
-        return true;
-      };
     });
-    Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(function (selector) {
-      var deep = Number(selector);
+    /**
+     * Registrate custom tokens for parser.
+     * Needed for proper work of pseudos:
+     * for checking if the token is last and pseudo-class arguments validation
+     */
 
-      if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
-        throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
-      }
+    function registerParserOnlyTokens() {
+      Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(function (selector) {
+        try {
+          document.createExpression(selector, null);
+        } catch (e) {
+          throw new Error("Invalid argument of :xpath pseudo class: ".concat(selector));
+        }
 
-      return function () {
-        return true;
-      };
-    });
-    Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
-      if (input === '') {
-        throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-      } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
-        throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-      }
+        return function () {
+          return true;
+        };
+      });
+      Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(function (selector) {
+        var deep = Number(selector);
 
-      return function () {
-        return true;
-      };
-    });
-    Sizzle.selectors.pseudos['remove'] = Sizzle.selectors.createPseudo(function (input) {
-      if (input !== '') {
-        throw new Error("Invalid argument of :remove pseudo class: ".concat(input));
-      }
+        if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
+          throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
+        }
 
-      return function () {
-        return true;
-      };
-    });
+        return function () {
+          return true;
+        };
+      });
+      Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
+        if (input === '') {
+          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+        } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
+          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+        }
+
+        return function () {
+          return true;
+        };
+      });
+      Sizzle.selectors.pseudos['remove'] = Sizzle.selectors.createPseudo(function (input) {
+        if (input !== '') {
+          throw new Error("Invalid argument of :remove pseudo class: ".concat(input));
+        }
+
+        return function () {
+          return true;
+        };
+      });
+    }
+
+    registerParserOnlyTokens();
   }
   /**
    * Checks if specified token can be used by document.querySelectorAll.
@@ -3415,7 +3423,7 @@ var ExtendedSelectorFactory = function () {
 
           if (matches && matches.length > 1) {
             if (matches[0] === 'xpath') {
-              if (i + 1 !== tokensLength) {
+              if (this.isLastToken(tokens, i)) {
                 throw new Error('Invalid pseudo: \':xpath\' should be at the end of the selector');
               }
 
@@ -3423,7 +3431,7 @@ var ExtendedSelectorFactory = function () {
             }
 
             if (matches[0] === 'nth-ancestor') {
-              if (i + 1 !== tokensLength) {
+              if (this.isLastToken(tokens, i)) {
                 throw new Error('Invalid pseudo: \':nth-ancestor\' should be at the end of the selector');
               }
 
@@ -3455,6 +3463,22 @@ var ExtendedSelectorFactory = function () {
     },
 
     /**
+     * Checks if the token is last,
+     * except of remove pseudo-class
+     * @param {Array} tokens
+     * @param {number} i index of token
+     * @returns {boolean}
+     */
+    isLastToken: function isLastToken(tokens, i) {
+      // check id the next parsed token is remove pseudo
+      var isNextRemoveToken = tokens[i + 1] && tokens[i + 1].type === 'PSEUDO' && tokens[i + 1].matches && tokens[i + 1].matches[0] === 'remove'; // check if the token is last
+      // and if it is not check if it is remove one
+      // which should be skipped
+
+      return i + 1 !== tokens.length && !isNextRemoveToken;
+    },
+
+    /**
      * @private
      * @return {string|undefined} upward parameter
      * or undefined if the input does not contain upward tokens
@@ -3470,7 +3494,7 @@ var ExtendedSelectorFactory = function () {
 
           if (matches && matches.length > 1) {
             if (matches[0] === 'upward') {
-              if (i + 1 !== tokensLength) {
+              if (this.isLastToken(tokens, i)) {
                 throw new Error('Invalid pseudo: \':upward\' should be at the end of the selector');
               }
 
@@ -3626,7 +3650,7 @@ var ExtendedSelectorFactory = function () {
   };
   /**
    * Xpath selector class
-   * Limited to support 'xpath' to be only the last one token in selecto
+   * Limited to support 'xpath' to be only the last one token in selector
    * @param {string} selectorText
    * @param {string} xpath value
    * @param {boolean=} debug
@@ -3711,8 +3735,8 @@ var ExtendedSelectorFactory = function () {
 
   function RemoveSelector(selectorText, hasValidRemovePart, debug) {
     var REMOVE_PSEUDO_MARKER = ':remove()';
-    var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER); // delete remove part of rule instead of which
-    // pseudo-property property 'remove' will be added
+    var removeMarkerIndex = selectorText.indexOf(REMOVE_PSEUDO_MARKER); // deleting remove part of rule instead of which
+    // pseudo-property property 'remove' will be added by ExtendedCssParser
 
     var modifiedSelectorText = selectorText.slice(0, removeMarkerIndex);
     BaseLastArgumentSelector.call(this, modifiedSelectorText, hasValidRemovePart, debug); // mark extendedSelector as Remove one for ExtendedCssParser

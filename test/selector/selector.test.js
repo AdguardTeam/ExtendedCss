@@ -468,6 +468,20 @@ QUnit.test('Test remove pseudo-class', (assert) => {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
     assert.equal('test-remove-inner-with-text', elements[0].className);
+
+    selectorText = '#test-remove-inner-for-upward:upward(div[id]):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-with-xpath-upward', elements[0].id);
+
+    selectorText = '#test-remove-inner-for-xpath-pseudo:xpath(../../..):remove()';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-remove-with-xpath-upward', elements[0].id);
 });
 
 QUnit.test('Test remove validation', (assert) => {
