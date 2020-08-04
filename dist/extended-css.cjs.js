@@ -3165,58 +3165,58 @@ var ExtendedSelectorFactory = function () {
         return Sizzle(selector, elem).length === 0;
       };
     });
-    /**
-     * Registrate custom tokens for parser.
-     * Needed for proper work of pseudos:
-     * for checking if the token is last and pseudo-class arguments validation
-     */
-
-    function registerParserOnlyTokens() {
-      Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(function (selector) {
-        try {
-          document.createExpression(selector, null);
-        } catch (e) {
-          throw new Error("Invalid argument of :xpath pseudo class: ".concat(selector));
-        }
-
-        return function () {
-          return true;
-        };
-      });
-      Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(function (selector) {
-        var deep = Number(selector);
-
-        if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
-          throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
-        }
-
-        return function () {
-          return true;
-        };
-      });
-      Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
-        if (input === '') {
-          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-        } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
-          throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
-        }
-
-        return function () {
-          return true;
-        };
-      });
-      Sizzle.selectors.pseudos['remove'] = Sizzle.selectors.createPseudo(function (input) {
-        if (input !== '') {
-          throw new Error("Invalid argument of :remove pseudo class: ".concat(input));
-        }
-
-        return function () {
-          return true;
-        };
-      });
-    }
-
     registerParserOnlyTokens();
+  }
+  /**
+   * Registrate custom tokens for parser.
+   * Needed for proper work of pseudos:
+   * for checking if the token is last and pseudo-class arguments validation
+   */
+
+
+  function registerParserOnlyTokens() {
+    Sizzle.selectors.pseudos['xpath'] = Sizzle.selectors.createPseudo(function (selector) {
+      try {
+        document.createExpression(selector, null);
+      } catch (e) {
+        throw new Error("Invalid argument of :xpath pseudo class: ".concat(selector));
+      }
+
+      return function () {
+        return true;
+      };
+    });
+    Sizzle.selectors.pseudos['nth-ancestor'] = Sizzle.selectors.createPseudo(function (selector) {
+      var deep = Number(selector);
+
+      if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
+        throw new Error("Invalid argument of :nth-ancestor pseudo class: ".concat(selector));
+      }
+
+      return function () {
+        return true;
+      };
+    });
+    Sizzle.selectors.pseudos['upward'] = Sizzle.selectors.createPseudo(function (input) {
+      if (input === '') {
+        throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+      } else if (Number.isInteger(+input) && (+input < 1 || +input >= 256)) {
+        throw new Error("Invalid argument of :upward pseudo class: ".concat(input));
+      }
+
+      return function () {
+        return true;
+      };
+    });
+    Sizzle.selectors.pseudos['remove'] = Sizzle.selectors.createPseudo(function (input) {
+      if (input !== '') {
+        throw new Error("Invalid argument of :remove pseudo class: ".concat(input));
+      }
+
+      return function () {
+        return true;
+      };
+    });
   }
   /**
    * Checks if specified token can be used by document.querySelectorAll.
