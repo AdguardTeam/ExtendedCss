@@ -380,69 +380,53 @@ QUnit.test('Test xpath / nth-ancestor / upward', (assert) => {
 QUnit.test('Test xpath validation', (assert) => {
     let selectorText;
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:xpath()';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- xpath should get an arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:xpath(../..):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- xpath should be at the end of rule');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(invalid)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- nth-ancestor should get a number arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(0)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- nth-ancestor arg should be more that 0 and less that 256');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:nth-ancestor(2):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- nth-ancestor should be at the end of rule');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward()';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- upward should get an arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward(0)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- upward arg should be more that 0 and less that 256');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:upward(3):has-text(/test-xpath-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- upward should be at the end of rule');
 });
 
 QUnit.test('Test remove pseudo-class', (assert) => {
@@ -487,27 +471,21 @@ QUnit.test('Test remove pseudo-class', (assert) => {
 QUnit.test('Test remove validation', (assert) => {
     let selectorText;
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:remove():has-text(/test-content/)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- remove is not in the end');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:remove(0)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- remove should not get arg');
 
-    try {
+    assert.throws(() => {
         selectorText = 'div:not([class]):remove(invalid)';
         ExtendedSelectorFactory.createSelector(selectorText);
-        assert.ok(false);
-    } catch (e) {
-        assert.ok(e);
-    }
+    }, error => !!error,
+    'Expected to be invalid rule -- remove should not get arg');
 });
