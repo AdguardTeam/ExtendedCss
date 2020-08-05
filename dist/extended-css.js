@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.12 - Tue Aug 04 2020
+/*! extended-css - v1.2.12 - Wed Aug 05 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -703,28 +703,29 @@ var ExtendedCss = (function () {
    * Released under the MIT license
    * https://js.foundation/
    *
-   * Date: 2018-03-20
+   * Date: 2020-08-04
    */
 
   /**
    * Version of Sizzle patched by AdGuard in order to be used in the ExtendedCss module.
    * https://github.com/AdguardTeam/sizzle-extcss
-   * 
+   *
    * Look for [AdGuard Patch] and ADGUARD_EXTCSS markers to find out what exactly was changed by us.
-   * 
+   *
    * Global changes:
    * 1. Added additional parameters to the "Sizzle.tokenize" method so that it can be used for stylesheets parsing and validation.
    * 2. Added tokens re-sorting mechanism forcing slow pseudos to be matched last  (see sortTokenGroups).
    * 3. Fix the nonnativeSelectorCache caching -- there was no value corresponding to a key.
    * 4. Added Sizzle.compile call to the `:has` pseudo definition.
-   * 
+   *
    * Changes that are applied to the ADGUARD_EXTCSS build only:
    * 1. Do not expose Sizzle to the global scope. Initialize it lazily via initializeSizzle().
    * 2. Removed :contains pseudo declaration -- its syntax is changed and declared outside of Sizzle.
-   * 3. Removed declarations for the following non-standard pseudo classes: 
+   * 3. Removed declarations for the following non-standard pseudo classes:
    * :parent, :header, :input, :button, :text, :first, :last, :eq,
    * :even, :odd, :lt, :gt, :nth, :radio, :checkbox, :file,
    * :password, :image, :submit, :reset
+   * 4. Added es6 module export
    */
   var Sizzle;
   /**
@@ -733,7 +734,7 @@ var ExtendedCss = (function () {
    * and exposing it to the global scope.
    */
 
-  function initializeSizzle() {
+  var initializeSizzle = function initializeSizzle() {
     // jshint ignore:line
     if (!Sizzle) {
       //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -1357,7 +1358,7 @@ var ExtendedCss = (function () {
               // setting a boolean content attribute,
               // since its presence should be enough
               // https://bugs.jquery.com/ticket/12359
-              docElem.appendChild(el).innerHTML = "<a id='" + expando + "'></a>" + "<select id='" + expando + "-\r\\' msallowcapture=''>" + "<option selected=''></option></select>"; // Support: IE8, Opera 11-12.16
+              docElem.appendChild(el).innerHTML = AGPolicy.createHTML("<a id='" + expando + "'></a>" + "<select id='" + expando + "-\r\\' msallowcapture=''>" + "<option selected=''></option></select>"); // Support: IE8, Opera 11-12.16
               // Nothing should be selected when empty strings follow ^= or $= or *=
               // The test attribute must be unknown in Opera but "safe" for WinRT
               // https://msdn.microsoft.com/en-us/library/ie/hh465388.aspx#attribute_section
@@ -1392,7 +1393,7 @@ var ExtendedCss = (function () {
               }
             });
             assert(function (el) {
-              el.innerHTML = "<a href='' disabled='disabled'></a>" + "<select disabled='disabled'><option/></select>"; // Support: Windows 8 Native Apps
+              el.innerHTML = AGPolicy.createHTML("<a href='' disabled='disabled'></a>" + "<select disabled='disabled'><option/></select>"); // Support: Windows 8 Native Apps
               // The type and name attributes are restricted during .innerHTML assignment
 
               var input = document.createElement("input");
@@ -2050,7 +2051,7 @@ var ExtendedCss = (function () {
         var sortTokenGroups = function () {
           /**
            * Splits compound selector into a list of simple selectors
-           * 
+           *
            * @param {*} tokens Tokens to split into groups
            * @returns an array consisting of token groups (arrays) and relation tokens.
            */
@@ -2089,7 +2090,7 @@ var ExtendedCss = (function () {
             "PSEUDO": 60
           };
           var POSITIONAL_PSEUDOS = ["nth", "first", "last", "eq", "even", "odd", "lt", "gt", "not"];
-          /** 
+          /**
            * A function that defines the sort order.
            * Returns a value lesser than 0 if "left" is less than "right".
            */
@@ -2126,7 +2127,7 @@ var ExtendedCss = (function () {
            * Sorts the tokens in order to mitigate the issues caused by the left-to-right matching.
            * The idea is change the tokens order so that Sizzle was matching fast selectors first (id, class),
            * and slow selectors after that (and here I mean our slow custom pseudo classes).
-           * 
+           *
            * @param {Array} tokens An array of tokens to sort
            * @returns {Array} A new re-sorted array
            */
@@ -2159,7 +2160,7 @@ var ExtendedCss = (function () {
           /**
            * Sorts every tokens array inside of the specified "groups" array.
            * See "sortTokens" methods for more information on how tokens are sorted.
-           * 
+           *
            * @param {Array} groups An array of tokens arrays.
            * @returns {Array} A new array that consists of the same tokens arrays after sorting
            */
@@ -2181,9 +2182,34 @@ var ExtendedCss = (function () {
           return sortTokenGroups;
         }();
         /**
+         * Creates custom policy to use TrustedTypes CSP policy
+         * https://w3c.github.io/webappsec-trusted-types/dist/spec/
+         */
+
+
+        var AGPolicy = function createPolicy() {
+          var defaultPolicy = {
+            createHTML: function createHTML(input) {
+              return input;
+            },
+            createScript: function createScript(input) {
+              return input;
+            },
+            createScriptURL: function createScriptURL(input) {
+              return input;
+            }
+          };
+
+          if (window.trustedTypes && window.trustedTypes.createPolicy) {
+            return window.trustedTypes.createPolicy("AGPolicy", defaultPolicy);
+          }
+
+          return defaultPolicy;
+        }();
+        /**
          * [AdGuard Patch]:
          * Removes trailing spaces from the tokens list
-         * 
+         *
          * @param {*} tokens An array of Sizzle tokens to post-process
          */
 
@@ -2213,7 +2239,7 @@ var ExtendedCss = (function () {
          * [AdGuard Patch]:
          * This method processes parsed token groups, divides them into a number of selectors
          * and makes sure that each selector's tokens are cached properly in Sizzle.
-         * 
+         *
          * @param {*} groups Token groups (see {@link Sizzle.tokenize})
          * @returns {Array.<SelectorData>} An array of selectors data we got from the groups
          */
@@ -2251,13 +2277,13 @@ var ExtendedCss = (function () {
          * Add an additional argument for Sizzle.tokenize which indicates that it
          * should not throw on invalid tokens, and instead should return tokens
          * that it has produced so far.
-         * 
+         *
          * One more additional argument that allow to choose if you want to receive sorted or unsorted tokens
          * The problem is that the re-sorted selectors are valid for Sizzle, but not for the browser.
          * options.returnUnsorted -- return unsorted tokens if true.
          * options.cacheOnly -- return cached result only. Required for unit-tests.
-         * 
-         * @param {*} options Optional configuration object with two additional flags 
+         *
+         * @param {*} options Optional configuration object with two additional flags
          * (options.tolerant, options.returnUnsorted, options.cacheOnly) -- see patches #5 and #6 notes
          */
 
@@ -2346,9 +2372,9 @@ var ExtendedCss = (function () {
           }
 
           if (tolerant) {
-            /** 
+            /**
              * [AdGuard Patch]:
-             * In tolerant mode we return a special object that constists of 
+             * In tolerant mode we return a special object that constists of
              * an array of parsed selectors (and their tokens) and a "nextIndex" field
              * that points to an index after which we're not able to parse selectors farther.
              */
@@ -2859,7 +2885,7 @@ var ExtendedCss = (function () {
         // https://msdn.microsoft.com/en-us/library/ms536429%28VS.85%29.aspx
 
         if (!assert(function (el) {
-          el.innerHTML = "<a href='#'></a>";
+          el.innerHTML = AGPolicy.createHTML("<a href='#'></a>");
           return el.firstChild.getAttribute("href") === "#";
         })) {
           addHandle("type|href|height|width", function (elem, name, isXML) {
@@ -2872,7 +2898,7 @@ var ExtendedCss = (function () {
 
 
         if (!support.attributes || !assert(function (el) {
-          el.innerHTML = "<input/>";
+          el.innerHTML = AGPolicy.createHTML("<input/>");
           el.firstChild.setAttribute("value", "");
           return el.firstChild.getAttribute("value") === "";
         })) {
@@ -2905,7 +2931,9 @@ var ExtendedCss = (function () {
     }
 
     return Sizzle;
-  }
+  };
+
+  /* jshint ignore:end */
 
   /**
    * Copyright 2016 Adguard Software Ltd
