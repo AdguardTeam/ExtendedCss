@@ -7,7 +7,7 @@ const { runQunitPuppeteer, printOutput } = require('node-qunit-puppeteer');
 const { rollup } = require('rollup');
 const { babel } = require('@rollup/plugin-babel');
 const copy = require('rollup-plugin-copy');
-const resolve = require('@rollup/plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const commonjs = require('@rollup/plugin-commonjs');
 const del = require('rollup-plugin-delete');
 

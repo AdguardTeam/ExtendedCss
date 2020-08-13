@@ -264,9 +264,9 @@ QUnit.test('Test global debugging', (assert) => {
             assert.ok(stats);
             assert.ok(stats.length, 3);
 
-            assert.equal(stats.filter(item => item.selectorText.indexOf('with-global-debug') !== -1).length, 1, JSON.stringify(stats));
-            assert.equal(stats.filter(item => item.selectorText.indexOf('without-debug-before-global') !== -1).length, 1, JSON.stringify(stats));
-            assert.equal(stats.filter(item => item.selectorText.indexOf('without-debug-after-global') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('with-global-debug') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-before-global') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-after-global') !== -1).length, 1, JSON.stringify(stats));
 
             // Cleanup
             utils.logInfo = utilsLogInfo;

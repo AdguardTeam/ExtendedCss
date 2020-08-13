@@ -230,7 +230,7 @@ var ExtendedCss = (function () {
     anchor.href = href;
 
     if (anchor.host === '') {
-      anchor.href = anchor.href;
+      anchor.href = anchor.href; // eslint-disable-line no-self-assign
     }
 
     return anchor;
