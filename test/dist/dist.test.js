@@ -1,4 +1,4 @@
-/* global QUnit, ExtendedCss */
+/* global ExtendedCss */
 
 /* Start with creating ExtendedCss */
 const cssText = document.getElementById('extendedCss').innerHTML;

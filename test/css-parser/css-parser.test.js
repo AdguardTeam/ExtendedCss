@@ -1,5 +1,4 @@
 /* eslint-disable max-len,no-multi-str */
-/* global QUnit */
 const { ExtendedCssParser } = exports;
 const { initializeSizzle } = exports;
 

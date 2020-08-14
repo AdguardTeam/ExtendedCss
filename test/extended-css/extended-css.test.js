@@ -264,9 +264,9 @@ QUnit.test('Test global debugging', (assert) => {
             assert.ok(stats);
             assert.ok(stats.length, 3);
 
-            assert.equal(stats.filter(item => item.selectorText.indexOf('with-global-debug') !== -1).length, 1, JSON.stringify(stats));
-            assert.equal(stats.filter(item => item.selectorText.indexOf('without-debug-before-global') !== -1).length, 1, JSON.stringify(stats));
-            assert.equal(stats.filter(item => item.selectorText.indexOf('without-debug-after-global') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('with-global-debug') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-before-global') !== -1).length, 1, JSON.stringify(stats));
+            assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-after-global') !== -1).length, 1, JSON.stringify(stats));
 
             // Cleanup
             utils.logInfo = utilsLogInfo;
@@ -351,4 +351,23 @@ QUnit.test('Protected elements are removed only 50 times', (assert) => {
         assert.ok(protectorNode.querySelector(`#${id}`));
         done();
     }, 9000);
+});
+
+QUnit.test('Strict style attribute matching', (assert) => {
+    const selector = 'div[class="test_item"][style="padding-bottom: 16px;"]:has(> a > img[width="50"])';
+    const styleSheet = `${selector} { display: none!important; }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    const done = assert.async();
+    const testNode = document.getElementById('case17-inner');
+    const testNodeStyleProps = window.getComputedStyle(testNode);
+    assert.strictEqual(testNodeStyleProps['padding-bottom'], '16px');
+    assert.strictEqual(testNodeStyleProps.display, 'none');
+
+    rAF(() => {
+        assert.strictEqual(testNodeStyleProps['padding-bottom'], '16px');
+        assert.strictEqual(testNodeStyleProps.display, 'none');
+        done();
+    }, 200);
 });

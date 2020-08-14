@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.13 - Wed Aug 05 2020
+/*! extended-css - v1.2.14 - Thu Aug 13 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -229,7 +229,7 @@ utils.createLocation = function (href) {
   anchor.href = href;
 
   if (anchor.host === '') {
-    anchor.href = anchor.href;
+    anchor.href = anchor.href; // eslint-disable-line no-self-assign
   }
 
   return anchor;
@@ -4493,20 +4493,22 @@ function ExtendedCss(configuration) {
       Array.prototype.push.apply(elementsIndex, nodes);
     }); // Now revert styles for elements which are no more affected
 
-    var l = affectedElements.length;
+    var l = affectedElements.length; // do nothing if there is no elements to process
 
-    while (l--) {
-      var obj = affectedElements[l];
+    if (elementsIndex.length > 0) {
+      while (l--) {
+        var obj = affectedElements[l];
 
-      if (elementsIndex.indexOf(obj.node) === -1) {
-        // Time to revert style
-        revertStyle(obj);
-        affectedElements.splice(l, 1);
-      } else if (!obj.removed) {
-        // Add style protection observer
-        // Protect "style" attribute from changes
-        if (!obj.protectionObserver) {
-          obj.protectionObserver = protectStyleAttribute(obj.node, obj.rules);
+        if (elementsIndex.indexOf(obj.node) === -1) {
+          // Time to revert style
+          revertStyle(obj);
+          affectedElements.splice(l, 1);
+        } else if (!obj.removed) {
+          // Add style protection observer
+          // Protect "style" attribute from changes
+          if (!obj.protectionObserver) {
+            obj.protectionObserver = protectStyleAttribute(obj.node, obj.rules);
+          }
         }
       }
     } // After styles are applied we can start observe again

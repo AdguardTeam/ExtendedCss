@@ -7,7 +7,7 @@ const { rollup } = require('rollup');
 const { terser } = require('rollup-plugin-terser');
 const { babel } = require('@rollup/plugin-babel');
 const copy = require('rollup-plugin-copy');
-const resolve = require('@rollup/plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const commonjs = require('@rollup/plugin-commonjs');
 
 const pkg = require('../package.json');
@@ -21,7 +21,7 @@ if (!fs.existsSync(config.outputDir)) {
 
 const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}
 ${pkg.homepage ? `* ${pkg.homepage}` : ''}
-* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map(l => l.type).join(', ')}
+* Copyright (c) ${new Date().getFullYear()} ${pkg.author} ; Licensed ${pkg.licenses.map((l) => l.type).join(', ')}
 */`;
 
 const rollupConfig = {
