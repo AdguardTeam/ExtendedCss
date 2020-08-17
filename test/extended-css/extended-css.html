@@ -39,6 +39,10 @@
     #case8-blocked>.before::before {
       content: "Block me please"
     }
+
+    .case18-test {
+      height: 20px;
+    }
   </style>
   <div id="container" class="container">
     <div id="case1">
@@ -108,6 +112,18 @@
         <a class="banner">
           <img atl="ad" width="50">
         </a>
+      </div>
+    </div>
+    <div id="case18">
+      <div>
+        <div case18-parent class="case18-test">
+          <div case18-child class="case18-test"></div>
+        </div>
+        <div left-over></div>
+      </div>
+      <div>
+        <div case18-target class="case18-test">
+        </div>
       </div>
     </div>
 

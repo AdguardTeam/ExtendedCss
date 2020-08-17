@@ -371,3 +371,23 @@ QUnit.test('Strict style attribute matching', (assert) => {
         done();
     }, 200);
 });
+
+QUnit.test('Test removing of parent and child elements matched by style + no id attr', (assert) => {
+    let parentEl = document.querySelector('div[case18-parent]');
+    assert.ok(parentEl, 'parentEl is present at test start');
+    let childEl = document.querySelector('div[case18-child]');
+    assert.ok(childEl, 'childEl is present at test start');
+    let targetEl = document.querySelector('div[case18-target]');
+    assert.ok(targetEl, 'targetEl is present at test start');
+
+    const styleSheet = '#case18 div:matches-css(height:/20px/) { remove: true; }';
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    parentEl = document.querySelector('div[case18-parent]');
+    assert.notOk(parentEl, 'parentEl should be removed by rule');
+    childEl = document.querySelector('div[case18-child]');
+    assert.notOk(childEl, 'childEl no longer exists because parentNode is removed');
+    targetEl = document.querySelector('div[case18-target]');
+    assert.notOk(targetEl, 'targetEl should be removed as well');
+});

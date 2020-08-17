@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.14 - Thu Aug 13 2020
+/*! extended-css - v1.2.14 - Mon Aug 17 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -16,80 +16,6 @@ function _typeof(obj) {
   }
 
   return _typeof(obj);
-}
-
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
-
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-
-  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
-  return arr2;
-}
-
-function _createForOfIteratorHelper(o, allowArrayLike) {
-  var it;
-
-  if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-      if (it) o = it;
-      var i = 0;
-
-      var F = function () {};
-
-      return {
-        s: F,
-        n: function () {
-          if (i >= o.length) return {
-            done: true
-          };
-          return {
-            done: false,
-            value: o[i++]
-          };
-        },
-        e: function (e) {
-          throw e;
-        },
-        f: F
-      };
-    }
-
-    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-
-  var normalCompletion = true,
-      didErr = false,
-      err;
-  return {
-    s: function () {
-      it = o[Symbol.iterator]();
-    },
-    n: function () {
-      var step = it.next();
-      normalCompletion = step.done;
-      return step;
-    },
-    e: function (e) {
-      didErr = true;
-      err = e;
-    },
-    f: function () {
-      try {
-        if (!normalCompletion && it.return != null) it.return();
-      } finally {
-        if (didErr) throw err;
-      }
-    }
-  };
 }
 
 /**
@@ -567,19 +493,21 @@ function isNumber(obj) {
 }
 /**
  * Returns path to element we will use as element identifier
- * @param {Element} el
+ * @param {Element} inputEl
  * @returns {string} - path to the element
  */
 
 
-utils.getNodeSelector = function (el) {
-  if (!(el instanceof Element)) {
+utils.getNodeSelector = function (inputEl) {
+  if (!(inputEl instanceof Element)) {
     throw new Error('Function received argument with wrong type');
   }
 
-  var path = [];
+  var el = inputEl;
+  var path = []; // we need to check '!!el' first because it is possible
+  // that some ancestor of the inputEl was removed before it
 
-  while (el.nodeType === Node.ELEMENT_NODE) {
+  while (!!el && el.nodeType === Node.ELEMENT_NODE) {
     var selector = el.nodeName.toLowerCase();
 
     if (el.id && typeof el.id === 'string') {
@@ -4319,22 +4247,10 @@ function ExtendedCss(configuration) {
 
 
   function findAffectedElement(node) {
-    // eslint-disable-next-line no-restricted-syntax
-    var _iterator = _createForOfIteratorHelper(affectedElements),
-        _step;
-
-    try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var affectedElement = _step.value;
-
-        if (affectedElement.node === node) {
-          return affectedElement;
-        }
+    for (var i = 0; i < affectedElements.length; i += 1) {
+      if (affectedElements[i].node === node) {
+        return affectedElements[i];
       }
-    } catch (err) {
-      _iterator.e(err);
-    } finally {
-      _iterator.f();
     }
 
     return null;
