@@ -477,3 +477,35 @@ QUnit.test('Test remove validation', (assert) => {
         ExtendedSelectorFactory.createSelector(selectorText);
     }, 'Expected to be invalid rule -- remove should not get arg');
 });
+
+QUnit.test('Test attr-matches', (assert) => {
+    let selectorText = '#test-attr-matches div:attr-matches(/data-/ = /click here/)';
+    let selector = ExtendedSelectorFactory.createSelector(selectorText);
+    let elements = selector.querySelectorAll();
+    assert.equal(3, elements.length);
+    assert.equal(elements[0], document.getElementById('test-attr-matches-inner'));
+
+    selectorText = '#test-attr-matches div:attr-matches(/^data-.{2,5}$/ = /click here/)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-attr-matches-last'));
+
+    selectorText = '#test-attr-matches div:has(> div[class]:attr-matches(/id/ = /R-A-/) > div:attr-matches(/data-bem/ = /src:/))';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_attr-matches_has'));
+
+    selectorText = '#test-attr-matches *[id^="unit-"][class] > *:attr-matches(/class/ = /^.{6,8}$/):attr-matches(/.{5,}delay$/ = /^[0-9]*$/):upward(3)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_attr-matches_upward'));
+
+    selectorText = '#test-attr-matches div:attr-matches(/-link/ = /-banner_/):contains(click here):xpath(../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_attr-matches_contains_xpath'));
+});
