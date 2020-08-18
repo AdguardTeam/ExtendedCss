@@ -225,16 +225,16 @@ selector:matches-attr(/nameRegexp/ "=" /valueRegexp/)
 ```
 
 ```
-// for blocking div#targer1
+// for div#targer1
 div:matches-attr(/-link/ = /-banner_/)
 
-// for blocking div#targer2
+// for div#targer2
 div:has(> div:matches-attr(/data-/ = /adbanner/))
 
-// for blocking div#targer3
+// for div#targer3
 div:matches-attr(/-unit/ = /click/):has(> span:contains(ads))
 
-// for blocking div#targer4
+// for div#targer4
 *[class]:matches-attr(/.{5,}delay$/ = /^[0-9]*$/):upward(2)
 ```
 
