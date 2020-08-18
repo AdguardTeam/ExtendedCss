@@ -192,7 +192,6 @@ This pseudo-class allows to select an element by its attributes, especially if t
 
 **Syntax**
 ```
-/* element style matching */
 selector:matches-attr(/nameRegexp/ "=" /valueRegexp/)
 ```
 
