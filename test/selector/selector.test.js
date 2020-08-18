@@ -479,31 +479,45 @@ QUnit.test('Test remove validation', (assert) => {
 });
 
 QUnit.test('Test matches-attr', (assert) => {
-    let selectorText = '#test-matches-attr div:matches-attr(/data-/ = /click here/)';
-    let selector = ExtendedSelectorFactory.createSelector(selectorText);
-    let elements = selector.querySelectorAll();
-    assert.equal(3, elements.length);
+    let selectorText; let selector; let elements;
+
+    selectorText = '#test-matches-attr div:matches-attr("/data-/"="/click here/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(4, elements.length);
     assert.equal(elements[0], document.getElementById('test-matches-attr-inner'));
 
-    selectorText = '#test-matches-attr div:matches-attr(/^data-.{2,5}$/ = /click here/)';
+    selectorText = '#test-matches-attr div:matches-attr("data-target-attr")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-target'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/^data-.{4}$/"="/click here/")';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-matches-attr-last'));
 
-    selectorText = '#test-matches-attr div:has(> div:matches-attr(/id/ = /R-A-/) > div:matches-attr(/data-bem/ = /src:/))';
+    selectorText = '#test-matches-attr div:matches-attr("data-one"="/^click\\shere.{1,}?banner.{1,}?$/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-one'));
+
+    selectorText = '#test-matches-attr div:has(> div:matches-attr("/id/"="/R-A-/") > div:matches-attr("/data-bem/"="/src:/"))';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test_matches-attr_has'));
 
-    selectorText = '#test-matches-attr *[id^="unit-"][class] > *:matches-attr(/class/ = /^.{6,8}$/):matches-attr(/.{5,}delay$/ = /^[0-9]*$/):upward(3)';
+    selectorText = '#test-matches-attr *[id^="unit-"][class] > *:matches-attr("/class/"="/^.{6,8}$/"):matches-attr("/.{5,}delay$/"="/^[0-9]*$/"):upward(3)';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test_matches-attr_upward'));
 
-    selectorText = '#test-matches-attr div:matches-attr(/-link/ = /-banner_/):contains(click here):xpath(../..)';
+    selectorText = '#test-matches-attr div:matches-attr("/-link/"="/-banner_/"):contains(click here):xpath(../..)';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);

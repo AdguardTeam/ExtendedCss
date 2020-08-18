@@ -149,9 +149,9 @@ selector[-ext-matches-css-before="property-name ":" pattern"]
 - `property-name` — a name of CSS property to check the element for
 - `pattern` —  a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner. In the case of a regular expression, the pattern looks like `/regex/`.
 
-> For non-regex patterns, (`,`),[`,`] must be unescaped, because we require escaping them in the filtering rules.
+> For non-regex patterns, `(`,`)`,`[`,`]` must be unescaped, because we require escaping them in the filtering rules.
 
-> For regex patterns, ",\ should be escaped, because we manually escape those in extended-css-selector.js.
+> For regex patterns, `"` and `\` should be escaped, because we manually escape those in extended-css-selector.js.
 
 **Examples**
 
@@ -192,11 +192,13 @@ This pseudo-class allows to select an element by its attributes, especially if t
 
 **Syntax**
 ```
-selector:matches-attr(/nameRegexp/ "=" /valueRegexp/)
+selector:matches-attr("name"[="value"])
 ```
 
-- `nameRegexp` — regular expression for attribute name
-- `valueRegexp` — regular expression for attribute value
+- `name` — attribute name OR regular expression for attribute name
+- `value` — optional, attribute value OR regular expression for attribute value
+
+> For regex patterns, `"` and `\` should be escaped.
 
 **Examples**
 
@@ -226,16 +228,16 @@ selector:matches-attr(/nameRegexp/ "=" /valueRegexp/)
 
 ```
 // for div#targer1
-div:matches-attr(/-link/ = /-banner_/)
+div:matches-attr("/-link/")
 
 // for div#targer2
-div:has(> div:matches-attr(/data-/ = /adbanner/))
+div:has(> div:matches-attr("/data-/"="adbanner"))
 
 // for div#targer3
-div:matches-attr(/-unit/ = /click/):has(> span:contains(ads))
+div:matches-attr("/-unit/"="/click/"):has(> span:contains(ads))
 
 // for div#targer4
-*[class]:matches-attr(/.{5,}delay$/ = /^[0-9]*$/):upward(2)
+*[class]:matches-attr("/.{5,}delay$/"="/^[0-9]*$/"):upward(2)
 ```
 
 <a id="extended-css-xpath"></a>

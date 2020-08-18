@@ -107,6 +107,21 @@ utils.pseudoArgToRegex = function (regexSrc, flag) {
   return new RegExp(regexSrc, flag);
 };
 /**
+ * Converts string to the regexp
+ * @param {string} str
+ * @returns {RegExp}
+ */
+
+
+utils.toRegExp = function (str) {
+  if (str[0] === '/' && str[str.length - 1] === '/') {
+    return new RegExp(str.slice(1, -1));
+  }
+
+  var escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escaped);
+};
+/**
  * Helper function for creating regular expression from a url filter rule syntax.
  */
 
@@ -3110,17 +3125,19 @@ var AttributesMatcher = function () {
     this.pseudoElement = pseudoElement;
 
     try {
+      // For regex patterns, `"` and `\` should be escaped
+      // parce attrFilter
       var _attrFilter$split$map = attrFilter.split('=').map(function (el) {
-        return el.trim();
+        return el.slice(1, -1);
       }),
           _attrFilter$split$map2 = _slicedToArray(_attrFilter$split$map, 2),
           rawName = _attrFilter$split$map2[0],
           rawValue = _attrFilter$split$map2[1];
 
-      if (/^\/.*\/$/.test(rawName) && /^\/.*\/$/.test(rawValue)) {
-        this.attrNameRegexp = utils.pseudoArgToRegex(rawName.slice(1, -1));
-        this.attrValueRegexp = utils.pseudoArgToRegex(rawValue.slice(1, -1));
-      }
+      this.attrNameRegexp = utils.toRegExp(rawName); // if there is no '=' in attrFilter,
+      // rawValue is indefined so any attribute value should be matched
+
+      this.attrValueRegexp = rawValue ? utils.toRegExp(rawValue) : utils.toRegExp('/.?/');
     } catch (ex) {
       utils.logError("AttributesMatcher: invalid match string ".concat(attrFilter));
     }
