@@ -188,7 +188,7 @@ div.banner[-ext-matches-css-before="content: /block me/"]
 <a id="extended-css-matches-attr"></a>
 ### Pseudo-class `:matches-attr()`
 
-These pseudo-classes allow to select an element by its attributes, especially if they are randomized.
+This pseudo-class allows to select an element by its attributes, especially if they are randomized.
 
 **Syntax**
 ```
