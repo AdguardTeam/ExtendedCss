@@ -481,17 +481,37 @@ QUnit.test('Test remove validation', (assert) => {
 QUnit.test('Test matches-attr', (assert) => {
     let selectorText; let selector; let elements;
 
-    selectorText = '#test-matches-attr div:matches-attr("/data-/"="/click here/")';
-    selector = ExtendedSelectorFactory.createSelector(selectorText);
-    elements = selector.querySelectorAll();
-    assert.equal(4, elements.length);
-    assert.equal(elements[0], document.getElementById('test-matches-attr-inner'));
-
-    selectorText = '#test-matches-attr div:matches-attr("data-target-attr")';
+    selectorText = '#test-matches-attr div:matches-attr("data-o")';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
-    assert.equal(elements[0], document.getElementById('test-matches-attr-target'));
+    assert.equal(elements[0], document.getElementById('test-matches-attr-strict'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/data-o/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(3, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-strict'));
+    assert.equal(elements[1], document.getElementById('test-matches-attr-one'));
+    assert.equal(elements[2], document.getElementById('test-matches-attr-one-test'));
+
+    selectorText = '#test-matches-attr div:matches-attr("test-data"="no_click")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-test-data-match'));
+
+    selectorText = '#test-matches-attr div:matches-attr("test-data"="/banner/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-test-data'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/data-/"="/click here/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(5, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-one'));
 
     selectorText = '#test-matches-attr div:matches-attr("/^data-.{4}$/"="/click here/")';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
@@ -522,4 +542,13 @@ QUnit.test('Test matches-attr', (assert) => {
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test_matches-attr_contains_xpath'));
+});
+
+QUnit.test('Test matches-attr validation', (assert) => {
+    let selectorText;
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- no pseudo arg');
 });

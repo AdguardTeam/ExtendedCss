@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.15 - Tue Aug 18 2020
+/*! extended-css - v1.2.15 - Wed Aug 19 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3106,8 +3106,58 @@ var StylePropertyMatcher = function (window) {
 }(window);
 
 /**
+ * Parses
+ * @param {string} attrFilter argument of matches-attr pseudo
+ */
+
+var parseAttrFilter = function parseAttrFilter(attrFilter) {
+  var FULL_MATCH_MARKER = '"="';
+  var rawArgs = attrFilter.split('=').map(function (arg) {
+    var finalArg;
+
+    if (attrFilter.indexOf(FULL_MATCH_MARKER) === -1) {
+      // if there is only one pseudo arg, e.g. :matches-attr("data-name"),
+      // Sizzle will parse it and get rid of quotes
+      // so it might be valid arg already without them
+      finalArg = arg;
+    } else if (arg[0] === '"' && arg[arg.length - 1] === '"') {
+      finalArg = arg.slice(1, -1);
+    }
+
+    return finalArg;
+  });
+  return rawArgs;
+};
+/**
+ * @typedef {Object} ArgData
+ * @property {string} arg
+ * @property {boolean} isRegexp
+ */
+
+/**
+ * Parses raw arg
+ * @param {string} rawArg attribute name or value arg
+ * @returns {ArgData}
+ */
+
+
+var parseRawArg = function parseRawArg(rawArg) {
+  var arg = rawArg;
+  var isRegexp = !!rawArg && rawArg[0] === '/' && rawArg[rawArg.length - 1] === '/';
+
+  if (isRegexp) {
+    arg = utils.toRegExp(rawArg);
+  }
+
+  return {
+    arg: arg,
+    isRegexp: isRegexp
+  };
+};
+/**
  * Class that extends Sizzle and adds support for "matches-attr" pseudo element.
  */
+
 
 var AttributesMatcher = function () {
   /**
@@ -3116,26 +3166,30 @@ var AttributesMatcher = function () {
    * @param {string} pseudoElement
    * @constructor
    *
-   * @member {RegExp} attrNameRegexp
-   * @member {RegExp} attrValueRegexp
+   * @member {string|RegExp} attrName
+   * @member {boolean} isRegexpName
+   * @member {string|RegExp} attrValue
+   * @member {boolean} isRegexpValue
    */
   var AttrMatcher = function AttrMatcher(attrFilter, pseudoElement) {
     this.pseudoElement = pseudoElement;
 
     try {
       // For regex patterns, `"` and `\` should be escaped
-      // parce attrFilter
-      var _attrFilter$split$map = attrFilter.split('=').map(function (el) {
-        return el.slice(1, -1);
-      }),
-          _attrFilter$split$map2 = _slicedToArray(_attrFilter$split$map, 2),
-          rawName = _attrFilter$split$map2[0],
-          rawValue = _attrFilter$split$map2[1];
+      var _parseAttrFilter = parseAttrFilter(attrFilter),
+          _parseAttrFilter2 = _slicedToArray(_parseAttrFilter, 2),
+          rawName = _parseAttrFilter2[0],
+          rawValue = _parseAttrFilter2[1];
 
-      this.attrNameRegexp = utils.toRegExp(rawName); // if there is no '=' in attrFilter,
-      // rawValue is indefined so any attribute value should be matched
+      var _parseRawArg = parseRawArg(rawName);
 
-      this.attrValueRegexp = rawValue ? utils.toRegExp(rawValue) : utils.toRegExp('/.?/');
+      this.attrName = _parseRawArg.arg;
+      this.isRegexpName = _parseRawArg.isRegexp;
+
+      var _parseRawArg2 = parseRawArg(rawValue);
+
+      this.attrValue = _parseRawArg2.arg;
+      this.isRegexpValue = _parseRawArg2.isRegexp;
     } catch (ex) {
       utils.logError("AttributesMatcher: invalid match string ".concat(attrFilter));
     }
@@ -3149,21 +3203,31 @@ var AttributesMatcher = function () {
   AttrMatcher.prototype.matches = function (element) {
     var elAttrs = element.attributes;
 
-    if (elAttrs.length === 0 || !this.attrNameRegexp || !this.attrValueRegexp) {
+    if (elAttrs.length === 0 || !this.attrName) {
       return false;
     }
 
-    var matched = false;
-    var i = 0; // check element attributes until we find one that matches
+    var i = 0;
 
-    while (i < elAttrs.length && !matched) {
+    while (i < elAttrs.length) {
       var attr = elAttrs[i];
-      var attrMatched = this.attrNameRegexp.test(attr.name) && this.attrValueRegexp.test(attr.value);
-      matched = attrMatched || matched;
+      var matched = false;
+      var attrNameMatched = this.isRegexpName ? this.attrName.test(attr.name) : this.attrName === attr.name;
+
+      if (!this.attrValue) {
+        // for :matches-attr("/regex/") or :matches-attr("attr-name")
+        matched = attrNameMatched;
+      } else {
+        var attrValueMatched = this.isRegexpValue ? this.attrValue.test(attr.value) : this.attrValue === attr.value;
+        matched = attrNameMatched && attrValueMatched;
+      }
+
+      if (matched) {
+        return true;
+      }
+
       i += 1;
     }
-
-    return matched;
   };
   /**
    * Creates a new pseudo-class and registers it in Sizzle
@@ -3173,6 +3237,10 @@ var AttributesMatcher = function () {
   var extendSizzle = function extendSizzle(sizzle) {
     // First of all we should prepare Sizzle engine
     sizzle.selectors.pseudos['matches-attr'] = sizzle.selectors.createPseudo(function (attrFilter) {
+      if (!attrFilter) {
+        throw new Error("Invalid argument of :matches-attr pseudo class: ".concat(attrFilter));
+      }
+
       var matcher = new AttrMatcher(attrFilter);
       return function (element) {
         return matcher.matches(element);

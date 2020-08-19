@@ -204,7 +204,7 @@ selector:matches-attr("name"[="value"])
 
 ```html
 <!-- HTML code -->
-<div id="targer1" class="matches-attr" hsd4jkf-link="ssdgsg-banner_240x400"></div>
+<div id="targer1" class="matches-attr" ad-link="ssdgsg-banner_240x400"></div>
 
 <div id="targer2" class="has matches-attr">
   <div data-sdfghlhw="adbanner"></div>
@@ -228,7 +228,7 @@ selector:matches-attr("name"[="value"])
 
 ```
 // for div#targer1
-div:matches-attr("/-link/")
+div:matches-attr("ad-link")
 
 // for div#targer2
 div:has(> div:matches-attr("/data-/"="adbanner"))
