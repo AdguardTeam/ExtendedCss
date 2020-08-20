@@ -551,4 +551,29 @@ QUnit.test('Test matches-attr validation', (assert) => {
         selectorText = 'div:matches-attr()';
         ExtendedSelectorFactory.createSelector(selectorText);
     }, 'Expected to be invalid rule -- no pseudo arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr("")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(> [track="true"])';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(".?"="/^[0-9]*$/")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- first is not a regexp');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr("//"="/./")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- first is not a regexp');
 });

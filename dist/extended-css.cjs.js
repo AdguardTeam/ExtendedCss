@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.15 - Wed Aug 19 2020
+/*! extended-css - v1.2.15 - Thu Aug 20 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3110,24 +3110,26 @@ var StylePropertyMatcher = function (window) {
 /**
  * Parses
  * @param {string} attrFilter argument of matches-attr pseudo
+ * @returns {Array}
  */
 
 var parseAttrFilter = function parseAttrFilter(attrFilter) {
   var FULL_MATCH_MARKER = '"="';
-  var rawArgs = attrFilter.split('=').map(function (arg) {
-    var finalArg;
+  var rawArgs = [];
 
-    if (attrFilter.indexOf(FULL_MATCH_MARKER) === -1) {
-      // if there is only one pseudo arg, e.g. :matches-attr("data-name"),
-      // Sizzle will parse it and get rid of quotes
-      // so it might be valid arg already without them
-      finalArg = arg;
-    } else if (arg[0] === '"' && arg[arg.length - 1] === '"') {
-      finalArg = arg.slice(1, -1);
-    }
+  if (attrFilter.indexOf(FULL_MATCH_MARKER) === -1) {
+    // if there is only one pseudo arg, e.g. :matches-attr("data-name"),
+    // Sizzle will parse it and get rid of quotes
+    // so it might be valid arg already without them
+    rawArgs.push(attrFilter);
+  } else {
+    attrFilter.split('=').forEach(function (arg) {
+      if (arg[0] === '"' && arg[arg.length - 1] === '"') {
+        rawArgs.push(arg.slice(1, -1));
+      }
+    });
+  }
 
-    return finalArg;
-  });
   return rawArgs;
 };
 /**
@@ -3148,13 +3150,39 @@ var parseRawArg = function parseRawArg(rawArg) {
   var isRegexp = !!rawArg && rawArg[0] === '/' && rawArg[rawArg.length - 1] === '/';
 
   if (isRegexp) {
-    arg = utils.toRegExp(rawArg);
+    // to avoid at least such case — :matches-attr("//")
+    if (rawArg.length > 2) {
+      arg = utils.toRegExp(rawArg);
+    } else {
+      throw new Error("Invalid regexp: ".concat(rawArg));
+    }
   }
 
   return {
     arg: arg,
     isRegexp: isRegexp
   };
+};
+/**
+ * Validates parsed args of matches-attr pseudo
+ */
+
+
+var validateAttrMatcherArgs = function validateAttrMatcherArgs() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  for (var i = 0; i < args.length; i += 1) {
+    if (!args[i].isRegexp) {
+      // simple arg check if it is not a regexp
+      if (!/^[\w-]+$/.test(args[i].arg)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 };
 /**
  * Class that extends Sizzle and adds support for "matches-attr" pseudo element.
@@ -3164,7 +3192,8 @@ var parseRawArg = function parseRawArg(rawArg) {
 var AttributesMatcher = function () {
   /**
    * Class that matches element attributes against the specified expressions
-   * @param {string} attrFilter - argument of matches-attr pseudo
+   * @param {ArgData} nameArg - parsed name argument
+   * @param {ArgData} valueArg - parsed value argument
    * @param {string} pseudoElement
    * @constructor
    *
@@ -3173,28 +3202,12 @@ var AttributesMatcher = function () {
    * @member {string|RegExp} attrValue
    * @member {boolean} isRegexpValue
    */
-  var AttrMatcher = function AttrMatcher(attrFilter, pseudoElement) {
+  var AttrMatcher = function AttrMatcher(nameArg, valueArg, pseudoElement) {
     this.pseudoElement = pseudoElement;
-
-    try {
-      // For regex patterns, `"` and `\` should be escaped
-      var _parseAttrFilter = parseAttrFilter(attrFilter),
-          _parseAttrFilter2 = _slicedToArray(_parseAttrFilter, 2),
-          rawName = _parseAttrFilter2[0],
-          rawValue = _parseAttrFilter2[1];
-
-      var _parseRawArg = parseRawArg(rawName);
-
-      this.attrName = _parseRawArg.arg;
-      this.isRegexpName = _parseRawArg.isRegexp;
-
-      var _parseRawArg2 = parseRawArg(rawValue);
-
-      this.attrValue = _parseRawArg2.arg;
-      this.isRegexpValue = _parseRawArg2.isRegexp;
-    } catch (ex) {
-      utils.logError("AttributesMatcher: invalid match string ".concat(attrFilter));
-    }
+    this.attrName = nameArg.arg;
+    this.isRegexpName = nameArg.isRegexp;
+    this.attrValue = valueArg.arg;
+    this.isRegexpValue = valueArg.isRegexp;
   };
   /**
    * Function to check if element attributes matches filter pattern
@@ -3239,11 +3252,19 @@ var AttributesMatcher = function () {
   var extendSizzle = function extendSizzle(sizzle) {
     // First of all we should prepare Sizzle engine
     sizzle.selectors.pseudos['matches-attr'] = sizzle.selectors.createPseudo(function (attrFilter) {
-      if (!attrFilter) {
+      var _parseAttrFilter = parseAttrFilter(attrFilter),
+          _parseAttrFilter2 = _slicedToArray(_parseAttrFilter, 2),
+          rawName = _parseAttrFilter2[0],
+          rawValue = _parseAttrFilter2[1];
+
+      var nameArg = parseRawArg(rawName);
+      var valueArg = parseRawArg(rawValue);
+
+      if (!attrFilter || !validateAttrMatcherArgs(nameArg, valueArg)) {
         throw new Error("Invalid argument of :matches-attr pseudo class: ".concat(attrFilter));
       }
 
-      var matcher = new AttrMatcher(attrFilter);
+      var matcher = new AttrMatcher(nameArg, valueArg);
       return function (element) {
         return matcher.matches(element);
       };
