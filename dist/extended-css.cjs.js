@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.14 - Mon Aug 17 2020
+/*! extended-css - v1.2.15 - Thu Aug 20 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -18,6 +18,62 @@ function _typeof(obj) {
   }
 
   return _typeof(obj);
+}
+
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _iterableToArrayLimit(arr, i) {
+  if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+  return arr2;
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
 /**
@@ -49,6 +105,21 @@ utils.pseudoArgToRegex = function (regexSrc, flag) {
   flag = flag || 'i';
   regexSrc = regexSrc.trim().replace(/\\(["\\])/g, '$1');
   return new RegExp(regexSrc, flag);
+};
+/**
+ * Converts string to the regexp
+ * @param {string} str
+ * @returns {RegExp}
+ */
+
+
+utils.toRegExp = function (str) {
+  if (str[0] === '/' && str[str.length - 1] === '/') {
+    return new RegExp(str.slice(1, -1));
+  }
+
+  var escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escaped);
 };
 /**
  * Helper function for creating regular expression from a url filter rule syntax.
@@ -3037,6 +3108,176 @@ var StylePropertyMatcher = function (window) {
 }(window);
 
 /**
+ * Parses
+ * @param {string} attrFilter argument of matches-attr pseudo
+ * @returns {Array}
+ */
+
+var parseAttrFilter = function parseAttrFilter(attrFilter) {
+  var FULL_MATCH_MARKER = '"="';
+  var rawArgs = [];
+
+  if (attrFilter.indexOf(FULL_MATCH_MARKER) === -1) {
+    // if there is only one pseudo arg, e.g. :matches-attr("data-name"),
+    // Sizzle will parse it and get rid of quotes
+    // so it might be valid arg already without them
+    rawArgs.push(attrFilter);
+  } else {
+    attrFilter.split('=').forEach(function (arg) {
+      if (arg[0] === '"' && arg[arg.length - 1] === '"') {
+        rawArgs.push(arg.slice(1, -1));
+      }
+    });
+  }
+
+  return rawArgs;
+};
+/**
+ * @typedef {Object} ArgData
+ * @property {string} arg
+ * @property {boolean} isRegexp
+ */
+
+/**
+ * Parses raw arg
+ * @param {string} rawArg attribute name or value arg
+ * @returns {ArgData}
+ */
+
+
+var parseRawArg = function parseRawArg(rawArg) {
+  var arg = rawArg;
+  var isRegexp = !!rawArg && rawArg[0] === '/' && rawArg[rawArg.length - 1] === '/';
+
+  if (isRegexp) {
+    // to avoid at least such case — :matches-attr("//")
+    if (rawArg.length > 2) {
+      arg = utils.toRegExp(rawArg);
+    } else {
+      throw new Error("Invalid regexp: ".concat(rawArg));
+    }
+  }
+
+  return {
+    arg: arg,
+    isRegexp: isRegexp
+  };
+};
+/**
+ * Validates parsed args of matches-attr pseudo
+ */
+
+
+var validateAttrMatcherArgs = function validateAttrMatcherArgs() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  for (var i = 0; i < args.length; i += 1) {
+    if (!args[i].isRegexp) {
+      // simple arg check if it is not a regexp
+      if (!/^[\w-]+$/.test(args[i].arg)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+/**
+ * Class that extends Sizzle and adds support for "matches-attr" pseudo element.
+ */
+
+
+var AttributesMatcher = function () {
+  /**
+   * Class that matches element attributes against the specified expressions
+   * @param {ArgData} nameArg - parsed name argument
+   * @param {ArgData} valueArg - parsed value argument
+   * @param {string} pseudoElement
+   * @constructor
+   *
+   * @member {string|RegExp} attrName
+   * @member {boolean} isRegexpName
+   * @member {string|RegExp} attrValue
+   * @member {boolean} isRegexpValue
+   */
+  var AttrMatcher = function AttrMatcher(nameArg, valueArg, pseudoElement) {
+    this.pseudoElement = pseudoElement;
+    this.attrName = nameArg.arg;
+    this.isRegexpName = nameArg.isRegexp;
+    this.attrValue = valueArg.arg;
+    this.isRegexpValue = valueArg.isRegexp;
+  };
+  /**
+   * Function to check if element attributes matches filter pattern
+   * @param {Element} element to check
+   */
+
+
+  AttrMatcher.prototype.matches = function (element) {
+    var elAttrs = element.attributes;
+
+    if (elAttrs.length === 0 || !this.attrName) {
+      return false;
+    }
+
+    var i = 0;
+
+    while (i < elAttrs.length) {
+      var attr = elAttrs[i];
+      var matched = false;
+      var attrNameMatched = this.isRegexpName ? this.attrName.test(attr.name) : this.attrName === attr.name;
+
+      if (!this.attrValue) {
+        // for :matches-attr("/regex/") or :matches-attr("attr-name")
+        matched = attrNameMatched;
+      } else {
+        var attrValueMatched = this.isRegexpValue ? this.attrValue.test(attr.value) : this.attrValue === attr.value;
+        matched = attrNameMatched && attrValueMatched;
+      }
+
+      if (matched) {
+        return true;
+      }
+
+      i += 1;
+    }
+  };
+  /**
+   * Creates a new pseudo-class and registers it in Sizzle
+   */
+
+
+  var extendSizzle = function extendSizzle(sizzle) {
+    // First of all we should prepare Sizzle engine
+    sizzle.selectors.pseudos['matches-attr'] = sizzle.selectors.createPseudo(function (attrFilter) {
+      var _parseAttrFilter = parseAttrFilter(attrFilter),
+          _parseAttrFilter2 = _slicedToArray(_parseAttrFilter, 2),
+          rawName = _parseAttrFilter2[0],
+          rawValue = _parseAttrFilter2[1];
+
+      var nameArg = parseRawArg(rawName);
+      var valueArg = parseRawArg(rawValue);
+
+      if (!attrFilter || !validateAttrMatcherArgs(nameArg, valueArg)) {
+        throw new Error("Invalid argument of :matches-attr pseudo class: ".concat(attrFilter));
+      }
+
+      var matcher = new AttrMatcher(nameArg, valueArg);
+      return function (element) {
+        return matcher.matches(element);
+      };
+    });
+  }; // EXPOSE
+
+
+  return {
+    extendSizzle: extendSizzle
+  };
+}();
+
+/**
  * Copyright 2016 Adguard Software Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3062,7 +3303,7 @@ var ExtendedSelectorFactory = function () {
   // while addind new markers, AdGuard extension code also should be corrected:
   // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
   // at Extension/lib/filter/rules/css-filter-rule.js
-  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove'];
+  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove', ':matches-attr'];
   var initialized = false;
   var Sizzle;
   /**
@@ -3079,7 +3320,9 @@ var ExtendedSelectorFactory = function () {
 
     Sizzle = initializeSizzle(); // Add :matches-css-*() support
 
-    StylePropertyMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
+    StylePropertyMatcher.extendSizzle(Sizzle); // Add :matches-attr() support
+
+    AttributesMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
 
     var containsPseudo = Sizzle.selectors.createPseudo(function (text) {
       if (/^\s*\/.*\/[gmisuy]*\s*$/.test(text)) {

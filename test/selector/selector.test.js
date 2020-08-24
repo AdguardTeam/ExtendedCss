@@ -477,3 +477,103 @@ QUnit.test('Test remove validation', (assert) => {
         ExtendedSelectorFactory.createSelector(selectorText);
     }, 'Expected to be invalid rule -- remove should not get arg');
 });
+
+QUnit.test('Test matches-attr', (assert) => {
+    let selectorText; let selector; let elements;
+
+    selectorText = '#test-matches-attr div:matches-attr("data-o")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-strict'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/data-o/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(3, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-strict'));
+    assert.equal(elements[1], document.getElementById('test-matches-attr-one'));
+    assert.equal(elements[2], document.getElementById('test-matches-attr-one-test'));
+
+    selectorText = '#test-matches-attr div:matches-attr("test-data"="no_click")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-test-data-match'));
+
+    selectorText = '#test-matches-attr div:matches-attr("test-data"="/banner/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-test-data'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/data-/"="/click here/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(5, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-one'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/^data-.{4}$/"="/click here/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-last'));
+
+    selectorText = '#test-matches-attr div:matches-attr("data-one"="/^click\\shere.{1,}?banner.{1,}?$/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-matches-attr-one'));
+
+    selectorText = '#test-matches-attr div:has(> div:matches-attr("/id/"="/R-A-/") > div:matches-attr("/data-bem/"="/src:/"))';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_matches-attr_has'));
+
+    selectorText = '#test-matches-attr *[id^="unit-"][class] > *:matches-attr("/class/"="/^.{6,8}$/"):matches-attr("/.{5,}delay$/"="/^[0-9]*$/"):upward(3)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_matches-attr_upward'));
+
+    selectorText = '#test-matches-attr div:matches-attr("/-link/"="/-banner_/"):contains(click here):xpath(../..)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test_matches-attr_contains_xpath'));
+});
+
+QUnit.test('Test matches-attr validation', (assert) => {
+    let selectorText;
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- no pseudo arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr("")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(> [track="true"])';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr(".?"="/^[0-9]*$/")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- first is not a regexp');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-attr("//"="/./")';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- first is not a regexp');
+});
