@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.15 - Thu Aug 20 2020
+/*! extended-css - v1.2.15 - Fri Aug 28 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -121,6 +121,150 @@ var ExtendedCss = (function () {
 
     var escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp(escaped);
+  };
+  /**
+   * Parses argument of matcher pseudo (for matches-attr and matches-property)
+   * @param {string} matcherFilter argument of pseudo class
+   * @returns {Array}
+   */
+
+
+  utils.parseMatcherFilter = function (matcherFilter) {
+    var FULL_MATCH_MARKER = '"="';
+    var rawArgs = [];
+
+    if (matcherFilter.indexOf(FULL_MATCH_MARKER) === -1) {
+      // if there is only one pseudo arg
+      // e.g. :matches-attr("data-name") or :matches-property("inner.prop")
+      // Sizzle will parse it and get rid of quotes
+      // so it might be valid arg already without them
+      rawArgs.push(matcherFilter);
+    } else {
+      matcherFilter.split('=').forEach(function (arg) {
+        if (arg[0] === '"' && arg[arg.length - 1] === '"') {
+          rawArgs.push(arg.slice(1, -1));
+        }
+      });
+    }
+
+    return rawArgs;
+  };
+  /**
+   * @typedef {Object} ArgData
+   * @property {string} arg
+   * @property {boolean} isRegexp
+   */
+
+  /**
+   * Parses raw matcher arg
+   * @param {string} rawArg
+   * @returns {ArgData}
+   */
+
+
+  utils.parseRawMatcherArg = function (rawArg) {
+    var arg = rawArg;
+    var isRegexp = !!rawArg && rawArg[0] === '/' && rawArg[rawArg.length - 1] === '/';
+
+    if (isRegexp) {
+      // to avoid at least such case — :matches-property("//")
+      if (rawArg.length > 2) {
+        arg = utils.toRegExp(rawArg);
+      } else {
+        throw new Error("Invalid regexp: ".concat(rawArg));
+      }
+    }
+
+    return {
+      arg: arg,
+      isRegexp: isRegexp
+    };
+  };
+  /**
+   * @typedef Chain
+   * @property {Object} base
+   * @property {string} prop
+   * @property {string} value
+   */
+
+  /**
+   * Checks if the property exists in the base object (recursively).
+   * @param {Object} base
+   * @param {ArgData[]} chain array of objects - parsed string property chain
+   * @param {Array} [output=[]] result acc
+   * @returns {Chain[]} array of objects
+   */
+
+
+  utils.getRegexpPropertyInChain = function (base, chain) {
+    var output = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    var tempProp = chain[0];
+
+    if (chain.length === 1) {
+      Object.keys(base).forEach(function (key) {
+        if (tempProp.isRegexpProp) {
+          if (tempProp.arg.test(key)) {
+            output.push({
+              base: base,
+              prop: key,
+              value: base[key]
+            });
+          }
+        } else if (tempProp.arg === key) {
+          output.push({
+            base: base,
+            prop: tempProp.arg,
+            value: base[key]
+          });
+        }
+      });
+      return output;
+    } // if there is a regexp prop in input chain
+    // e.g. 'unit./^ad.+/.src' for 'unit.ad-1gf2.src unit.ad-fgd34.src'),
+    // every base keys should be tested by regexp and it can be more that one results
+
+
+    if (tempProp.isRegexpProp) {
+      var nextProp = chain.slice(1);
+      var baseKeys = Object.keys(base).filter(function (key) {
+        return tempProp.arg.test(key);
+      });
+      baseKeys.forEach(function (key) {
+        var item = base[key];
+        utils.getRegexpPropertyInChain(item, nextProp, output);
+      });
+    }
+
+    var nextBase = base[tempProp.arg];
+    chain = chain.slice(1);
+
+    if (nextBase !== undefined) {
+      utils.getRegexpPropertyInChain(nextBase, chain, output);
+    }
+
+    return output;
+  };
+  /**
+   * Validates parsed args of matches-property pseudo
+   * @param {Array} args
+   */
+
+
+  utils.validatePropMatcherArgs = function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    for (var i = 0; i < args.length; i += 1) {
+      if (!args[i].isRegexp) {
+        // simple arg check if it is not a regexp
+        if (!/^[\w-]+$/.test(args[i].arg)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   };
   /**
    * Helper function for creating regular expression from a url filter rule syntax.
@@ -3109,86 +3253,8 @@ var ExtendedCss = (function () {
   }(window);
 
   /**
-   * Parses
-   * @param {string} attrFilter argument of matches-attr pseudo
-   * @returns {Array}
-   */
-
-  var parseAttrFilter = function parseAttrFilter(attrFilter) {
-    var FULL_MATCH_MARKER = '"="';
-    var rawArgs = [];
-
-    if (attrFilter.indexOf(FULL_MATCH_MARKER) === -1) {
-      // if there is only one pseudo arg, e.g. :matches-attr("data-name"),
-      // Sizzle will parse it and get rid of quotes
-      // so it might be valid arg already without them
-      rawArgs.push(attrFilter);
-    } else {
-      attrFilter.split('=').forEach(function (arg) {
-        if (arg[0] === '"' && arg[arg.length - 1] === '"') {
-          rawArgs.push(arg.slice(1, -1));
-        }
-      });
-    }
-
-    return rawArgs;
-  };
-  /**
-   * @typedef {Object} ArgData
-   * @property {string} arg
-   * @property {boolean} isRegexp
-   */
-
-  /**
-   * Parses raw arg
-   * @param {string} rawArg attribute name or value arg
-   * @returns {ArgData}
-   */
-
-
-  var parseRawArg = function parseRawArg(rawArg) {
-    var arg = rawArg;
-    var isRegexp = !!rawArg && rawArg[0] === '/' && rawArg[rawArg.length - 1] === '/';
-
-    if (isRegexp) {
-      // to avoid at least such case — :matches-attr("//")
-      if (rawArg.length > 2) {
-        arg = utils.toRegExp(rawArg);
-      } else {
-        throw new Error("Invalid regexp: ".concat(rawArg));
-      }
-    }
-
-    return {
-      arg: arg,
-      isRegexp: isRegexp
-    };
-  };
-  /**
-   * Validates parsed args of matches-attr pseudo
-   */
-
-
-  var validateAttrMatcherArgs = function validateAttrMatcherArgs() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    for (var i = 0; i < args.length; i += 1) {
-      if (!args[i].isRegexp) {
-        // simple arg check if it is not a regexp
-        if (!/^[\w-]+$/.test(args[i].arg)) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  };
-  /**
    * Class that extends Sizzle and adds support for "matches-attr" pseudo element.
    */
-
 
   var AttributesMatcher = function () {
     /**
@@ -3253,19 +3319,210 @@ var ExtendedCss = (function () {
     var extendSizzle = function extendSizzle(sizzle) {
       // First of all we should prepare Sizzle engine
       sizzle.selectors.pseudos['matches-attr'] = sizzle.selectors.createPseudo(function (attrFilter) {
-        var _parseAttrFilter = parseAttrFilter(attrFilter),
-            _parseAttrFilter2 = _slicedToArray(_parseAttrFilter, 2),
-            rawName = _parseAttrFilter2[0],
-            rawValue = _parseAttrFilter2[1];
+        var _utils$parseMatcherFi = utils.parseMatcherFilter(attrFilter),
+            _utils$parseMatcherFi2 = _slicedToArray(_utils$parseMatcherFi, 2),
+            rawName = _utils$parseMatcherFi2[0],
+            rawValue = _utils$parseMatcherFi2[1];
 
-        var nameArg = parseRawArg(rawName);
-        var valueArg = parseRawArg(rawValue);
+        var nameArg = utils.parseRawMatcherArg(rawName);
+        var valueArg = utils.parseRawMatcherArg(rawValue);
 
-        if (!attrFilter || !validateAttrMatcherArgs(nameArg, valueArg)) {
+        if (!attrFilter || !utils.validatePropMatcherArgs(nameArg, valueArg)) {
           throw new Error("Invalid argument of :matches-attr pseudo class: ".concat(attrFilter));
         }
 
         var matcher = new AttrMatcher(nameArg, valueArg);
+        return function (element) {
+          return matcher.matches(element);
+        };
+      });
+    }; // EXPOSE
+
+
+    return {
+      extendSizzle: extendSizzle
+    };
+  }();
+
+  /**
+   * Parses raw property arg
+   * @param {string} rawProp
+   * @returns {ArgData[]} array of objects
+   */
+
+  var parseRawPropChain = function parseRawPropChain(input) {
+    var PROPS_DIVIDER = '.';
+    var REGEXP_MARKER = '/';
+    var propsArr = [];
+    var str = input;
+
+    while (str.length > 0) {
+      var firstChar = str[0];
+
+      if (firstChar === PROPS_DIVIDER) {
+        // for cases like '.prop.id' and 'nested..test'
+        throw new Error("Invalid chain property: ".concat(input));
+      }
+
+      if (firstChar !== REGEXP_MARKER) {
+        var isRegexpProp = false;
+
+        var _dividerIndex = str.indexOf(PROPS_DIVIDER);
+
+        if (_dividerIndex > -1) {
+          // take prop from str
+          var prop = str.slice(0, _dividerIndex); // for cases like 'asadf.?+/.test'
+
+          if (prop.indexOf(REGEXP_MARKER) > -1) {
+            throw new Error("Invalid chain property: ".concat(prop));
+          }
+
+          propsArr.push({
+            arg: prop,
+            isRegexpProp: isRegexpProp
+          }); // delete prop from str
+
+          str = str.slice(_dividerIndex);
+        } else {
+          // if there is no '.' left
+          // take the rest of str as prop
+          propsArr.push({
+            arg: str,
+            isRegexpProp: isRegexpProp
+          });
+          return propsArr;
+        }
+      } else {
+        var propChunks = [];
+        propChunks.push(str.slice(0, REGEXP_MARKER.length)); // if str starts with '/', delete it from str and find closing regexp slash.
+        // note that chained property name can not include '/' or '.'
+        // so there is no checking for escaped characters
+
+        str = str.slice(REGEXP_MARKER.length);
+        var regexEndIndex = str.indexOf(REGEXP_MARKER);
+
+        if (regexEndIndex < 1) {
+          // regexp should be at least === '/./'
+          // so we should avoid args like '/id' and 'test.//.id'
+          throw new Error("Invalid regexp: ".concat(REGEXP_MARKER).concat(str));
+        } else {
+          var _isRegexpProp = true; // take the rest regexp part
+
+          propChunks.push(str.slice(0, regexEndIndex + REGEXP_MARKER.length));
+
+          var _prop = utils.toRegExp(propChunks.join(''));
+
+          propsArr.push({
+            arg: _prop,
+            isRegexpProp: _isRegexpProp
+          }); // delete prop from str
+
+          str = str.slice(regexEndIndex + REGEXP_MARKER.length);
+        }
+      }
+
+      if (!str) {
+        return propsArr;
+      } // str should be like '.nextProp' now
+      // so 'zx.prop' or '.' is invalid
+
+
+      var dividerIndex = str.indexOf(PROPS_DIVIDER);
+
+      if (dividerIndex !== 0) {
+        throw new Error("Invalid chain property: ".concat(input));
+      }
+
+      str = str.slice(1);
+    }
+  };
+  /**
+   * Class that extends Sizzle and adds support for "matches-property" pseudo element.
+   */
+
+
+  var ElementPropertyMatcher = function () {
+    /**
+     * Class that matches element properties against the specified expressions
+     * @param {ArgData[]} propsChainArg - array of parsed props chain objects
+     * @param {ArgData} valueArg - parsed value argument
+     * @param {string} pseudoElement
+     * @constructor
+     *
+     * @member {Array} chainedProps
+     * @member {boolean} isRegexpName
+     * @member {string|RegExp} propValue
+     * @member {boolean} isRegexpValue
+     */
+    var PropMatcher = function PropMatcher(propsChainArg, valueArg, pseudoElement) {
+      this.pseudoElement = pseudoElement;
+      this.chainedProps = propsChainArg;
+      this.propValue = valueArg.arg;
+      this.isRegexpValue = valueArg.isRegexp;
+    };
+    /**
+     * Function to check if element properties matches filter pattern
+     * @param {Element} element to check
+     */
+
+
+    PropMatcher.prototype.matches = function (element) {
+      var matched = false;
+      var ownerObjArr = utils.getRegexpPropertyInChain(element, this.chainedProps);
+      var isPropMatched = ownerObjArr.length > 0;
+
+      if (!this.propValue) {
+        matched = isPropMatched;
+      } else {
+        for (var i = 0; i < ownerObjArr.length; i += 1) {
+          var realValue = ownerObjArr[i].value.toString();
+          var isValueMatched = this.isRegexpValue ? this.propValue.test(realValue) : this.propValue === realValue;
+          matched = isPropMatched && isValueMatched;
+
+          if (matched) {
+            break;
+          }
+        }
+      }
+
+      return matched;
+    };
+    /**
+     * Creates a new pseudo-class and registers it in Sizzle
+     */
+
+
+    var extendSizzle = function extendSizzle(sizzle) {
+      // First of all we should prepare Sizzle engine
+      sizzle.selectors.pseudos['matches-property'] = sizzle.selectors.createPseudo(function (propertyFilter) {
+        if (!propertyFilter) {
+          throw new Error('No argument is given for :matches-property pseudo class');
+        }
+
+        var _utils$parseMatcherFi = utils.parseMatcherFilter(propertyFilter),
+            _utils$parseMatcherFi2 = _slicedToArray(_utils$parseMatcherFi, 2),
+            rawProp = _utils$parseMatcherFi2[0],
+            rawValue = _utils$parseMatcherFi2[1]; // chained property name can not include '/' or '.'
+        // so regex prop names with such escaped characters are invalid
+
+
+        if (rawProp.indexOf('\\/') > -1 || rawProp.indexOf('\\.') > -1) {
+          throw new Error("Invalid property name: ".concat(rawProp));
+        }
+
+        var propsChainArg = parseRawPropChain(rawProp);
+        var valueArg = utils.parseRawMatcherArg(rawValue);
+        var propsToValidate = [];
+        propsChainArg.forEach(function (el) {
+          return propsToValidate.push(el);
+        });
+        propsToValidate.push(valueArg);
+
+        if (!utils.validatePropMatcherArgs(propsToValidate)) {
+          throw new Error("Invalid argument of :matches-property pseudo class: ".concat(propertyFilter));
+        }
+
+        var matcher = new PropMatcher(propsChainArg, valueArg);
         return function (element) {
           return matcher.matches(element);
         };
@@ -3304,7 +3561,7 @@ var ExtendedCss = (function () {
     // while addind new markers, AdGuard extension code also should be corrected:
     // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
     // at Extension/lib/filter/rules/css-filter-rule.js
-    var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove', ':matches-attr'];
+    var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove', ':matches-attr', ':matches-property'];
     var initialized = false;
     var Sizzle;
     /**
@@ -3323,7 +3580,9 @@ var ExtendedCss = (function () {
 
       StylePropertyMatcher.extendSizzle(Sizzle); // Add :matches-attr() support
 
-      AttributesMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
+      AttributesMatcher.extendSizzle(Sizzle); // Add :matches-property() support
+
+      ElementPropertyMatcher.extendSizzle(Sizzle); // Add :contains, :has-text, :-abp-contains support
 
       var containsPseudo = Sizzle.selectors.createPseudo(function (text) {
         if (/^\s*\/.*\/[gmisuy]*\s*$/.test(text)) {
