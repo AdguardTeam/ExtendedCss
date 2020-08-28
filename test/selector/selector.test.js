@@ -583,6 +583,7 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
 
     const testEl = document.querySelector('#test-matches-property-div');
     const testElems = document.querySelectorAll('#test-matches-property div[id][class]');
+    const testInnerElems = document.querySelectorAll('#test-matches-property div[id^="test-matches-property-inner"]');
 
     const testPropName = 'testProp';
     const testPropValue = '123';
@@ -595,9 +596,9 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
     assert.equal('test-matches-property-div', elements[0].id);
 
     const propFirst = 'propFirst';
-    const propInner = { propInner: 111 };
+    const propInner = { propInner: null };
     testEl[propFirst] = propInner;
-    selectorText = 'div#test-matches-property div:matches-property("propFirst.propInner")';
+    selectorText = 'div#test-matches-property div:matches-property("propFirst.propInner"="null")';
     selector = ExtendedSelectorFactory.createSelector(selectorText);
     elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
@@ -647,6 +648,36 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
     assert.equal(1, elements.length);
     assert.ok(selector.matches(elements[0]));
     assert.equal('test-matches-property-div-two', elements[0].id);
+
+    selectorText = 'div#test-matches-property div:matches-property("/^[a-z]Prop$/./[\\w]+/"="1234")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const abProp = 'abProp';
+    const aaInner = {
+        unit123: { id: 123 },
+    };
+    const bbInner = {
+        unit000: { id: 0 },
+    };
+    testInnerElems[0][abProp] = aaInner;
+    testInnerElems[1][abProp] = bbInner;
+    selectorText = 'div#test-matches-property div[id]:matches-property("abProp./[\\w]{4}000/.id"):upward(2)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div-two', elements[0].id);
+
+    selectorText = 'div#test-matches-property div[id]:has(div:matches-property("abProp.unit123./.{1,5}/"="123"))';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
 });
 
 QUnit.test('Test matches-property validation', (assert) => {
