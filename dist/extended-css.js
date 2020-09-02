@@ -3552,24 +3552,29 @@ var ExtendedCss = (function () {
 
 
     PropMatcher.prototype.matches = function (element) {
-      var matched = false;
       var ownerObjArr = matcherUtils.filterRootsByRegexpChain(element, this.chainedProps);
-      var isPropMatched = ownerObjArr.length > 0;
 
-      if (!this.propValue) {
-        matched = isPropMatched;
-      } else {
+      if (ownerObjArr.length === 0) {
+        return false;
+      }
+
+      var matched = true;
+
+      if (this.propValue) {
         for (var i = 0; i < ownerObjArr.length; i += 1) {
           var realValue = ownerObjArr[i].value;
-          var isValueMatched = false;
 
           if (this.isRegexpValue) {
-            isValueMatched = this.propValue.test(convertTypeIntoStr(realValue));
+            matched = this.propValue.test(convertTypeIntoStr(realValue));
           } else {
-            isValueMatched = convertTypeFromStr(this.propValue) === realValue;
-          }
+            // handle 'null' and 'undefined' property values set as string
+            if (realValue === 'null' || realValue === 'undefined') {
+              matched = this.propValue === realValue;
+              break;
+            }
 
-          matched = isPropMatched && isValueMatched;
+            matched = convertTypeFromStr(this.propValue) === realValue;
+          }
 
           if (matched) {
             break;

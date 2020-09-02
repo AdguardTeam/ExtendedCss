@@ -605,6 +605,26 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
     assert.ok(selector.matches(elements[0]));
     assert.equal('test-matches-property-div', elements[0].id);
 
+    const propNullAsStr = 'propNullStr';
+    const propInnerNullStr = { propInner: 'null' };
+    testEl[propNullAsStr] = propInnerNullStr;
+    selectorText = 'div#test-matches-property div:matches-property("propNullStr.propInner"="null")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const propUndefAsStr = 'propNullStr';
+    const propInnerUndefStr = { propInner: 'undefined' };
+    testEl[propUndefAsStr] = propInnerUndefStr;
+    selectorText = 'div#test-matches-property div:matches-property("propNullStr.propInner"="undefined")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
     const abcProp = 'abcProp';
     const propInnerOne = { propInnerOne: 111 };
     const propInnerTwo = { propInnerTwo: 222 };
