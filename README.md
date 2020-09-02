@@ -244,7 +244,7 @@ div:matches-attr("/-unit/"="/click/"):has(> span:contains(ads))
 <a id="extended-css-matches-property"></a>
 ### Pseudo-class `:matches-property()`
 
-This pseudo-class allows to select an element by its attributes, especially if they are randomized.
+This pseudo-class allows to select an element by its properties.
 
 **Syntax**
 ```
