@@ -585,7 +585,7 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
     const testElems = document.querySelectorAll('#test-matches-property div[id][class]');
     const testInnerElems = document.querySelectorAll('#test-matches-property div[id^="test-matches-property-inner"]');
 
-    const testPropName = 'testProp';
+    const testPropName = '_testProp';
     const testPropValue = '123';
     testEl[testPropName] = testPropValue;
     selectorText = `div#test-matches-property div:matches-property("${testPropName}")`;
