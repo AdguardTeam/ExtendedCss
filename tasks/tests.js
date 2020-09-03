@@ -11,7 +11,7 @@ const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const commonjs = require('@rollup/plugin-commonjs');
 const del = require('rollup-plugin-delete');
 
-const testsInputs = ['css-parser', 'dist', 'extended-css', 'performance', 'selector'];
+const testsInputs = ['utils', 'css-parser', 'dist', 'extended-css', 'performance', 'selector'];
 
 const testsConfigs = testsInputs.map((input) => {
     const inputPathPart = `${input}/${input}.test.js`;
@@ -110,6 +110,7 @@ const runQunit = async (testFilePath) => {
 
         console.log('Running tests..');
 
+        await runQunit('../test/build/utils/utils.html');
         await runQunit('../test/build/css-parser/css-parser.html');
         await runQunit('../test/build/extended-css/extended-css.html');
         await runQunit('../test/build/performance/performance.html');

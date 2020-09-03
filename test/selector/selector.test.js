@@ -577,3 +577,154 @@ QUnit.test('Test matches-attr validation', (assert) => {
         ExtendedSelectorFactory.createSelector(selectorText);
     }, 'Expected to be invalid rule -- first is not a regexp');
 });
+
+QUnit.test('Test matches-property pseudo-class', (assert) => {
+    let selectorText; let selector; let elements;
+
+    const testEl = document.querySelector('#test-matches-property-div');
+    const testElems = document.querySelectorAll('#test-matches-property div[id][class]');
+    const testInnerElems = document.querySelectorAll('#test-matches-property div[id^="test-matches-property-inner"]');
+
+    const testPropName = '_testProp';
+    const testPropValue = '123';
+    testEl[testPropName] = testPropValue;
+    selectorText = `div#test-matches-property div:matches-property("${testPropName}")`;
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const propFirst = 'propFirst';
+    const propInner = { propInner: null };
+    testEl[propFirst] = propInner;
+    selectorText = 'div#test-matches-property div:matches-property("propFirst.propInner"="null")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const propNullAsStr = 'propNullStr';
+    const propInnerNullStr = { propInner: 'null' };
+    testEl[propNullAsStr] = propInnerNullStr;
+    selectorText = 'div#test-matches-property div:matches-property("propNullStr.propInner"="null")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const propUndefAsStr = 'propNullStr';
+    const propInnerUndefStr = { propInner: 'undefined' };
+    testEl[propUndefAsStr] = propInnerUndefStr;
+    selectorText = 'div#test-matches-property div:matches-property("propNullStr.propInner"="undefined")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const abcProp = 'abcProp';
+    const propInnerOne = { propInnerOne: 111 };
+    const propInnerTwo = { propInnerTwo: 222 };
+    testElems[0][abcProp] = propInnerOne;
+    testElems[1][abcProp] = propInnerTwo;
+    selectorText = 'div#test-matches-property div[id][class]:matches-property("abcProp.propInnerOne")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const aProp = 'aProp';
+    const propInnerValueOne = { val: 111 };
+    const propInnerValueTwo = { val: 222 };
+    testElems[0][aProp] = propInnerValueOne;
+    testElems[1][aProp] = propInnerValueTwo;
+    selectorText = 'div#test-matches-property div[id][class]:matches-property("aProp.val"="222")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div-two', elements[0].id);
+
+    const bProp = 'bProp';
+    const cProp = 'cProp';
+    const bPropInner = { val: 1234 };
+    const cPropInner = { val: 1223 };
+    testElems[0][bProp] = bPropInner;
+    testElems[1][cProp] = cPropInner;
+    selectorText = 'div#test-matches-property div[id][class]:matches-property("/^b[A-Z].+/.val")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    selectorText = 'div#test-matches-property div[id][class]:matches-property("/^[a-z][A-Z].+/.val"="/223/")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div-two', elements[0].id);
+
+    selectorText = 'div#test-matches-property div:matches-property("/^[a-z]Prop$/./[\\w]+/"="1234")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+
+    const abProp = 'abProp';
+    const aaInner = {
+        unit123: { id: 123 },
+    };
+    const bbInner = {
+        unit000: { id: 0 },
+    };
+    testInnerElems[0][abProp] = aaInner;
+    testInnerElems[1][abProp] = bbInner;
+    selectorText = 'div#test-matches-property div[id]:matches-property("abProp./[\\w]{4}000/.id"):upward(2)';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div-two', elements[0].id);
+
+    selectorText = 'div#test-matches-property div[id]:has(div:matches-property("abProp.unit123./.{1,5}/"="123"))';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+    assert.equal('test-matches-property-div', elements[0].id);
+});
+
+QUnit.test('Test matches-property validation', (assert) => {
+    let selectorText;
+
+    assert.throws(() => {
+        selectorText = 'div:matches-property()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- no arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-property(.prop.id)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-property(asadf./aa.?+./test/)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-property(asadf..?+/.test)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid chained arg');
+
+    assert.throws(() => {
+        selectorText = 'div:matches-property(asadf.?+/.test)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- invalid regex');
+});
