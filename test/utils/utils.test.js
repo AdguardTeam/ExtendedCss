@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 
 const { utils, matcherUtils } = exports;
-// import matcherUtils from '../../lib/matcher-utils';
 
 QUnit.test('Test matcher utils', (assert) => {
     let input;

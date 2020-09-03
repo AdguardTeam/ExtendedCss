@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.15 - Wed Sep 02 2020
+/*! extended-css - v1.2.15 - Thu Sep 03 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3383,7 +3383,7 @@ var ExtendedCss = (function () {
 
   /**
    * Parses raw property arg
-   * @param {string} rawProp
+   * @param {string} input
    * @returns {ArgData[]} array of objects
    */
 
