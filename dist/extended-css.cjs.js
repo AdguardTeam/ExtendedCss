@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.15 - Thu Sep 03 2020
+/*! extended-css - v1.2.16 - Fri Sep 04 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -678,7 +678,8 @@ var cssUtils = function () {
 
 
   var reMatchesCss = /\:(matches-css(?:-after|-before)?)\(([a-z-\s]*\:\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
-  var reContains = /:(?:-abp-)?(contains|has-text)\((\s*\/(?:\\.|[^\/])*?\/\s*)\)/g; // Note that we require `/` character in regular expressions to be escaped.
+  var reContains = /:(?:-abp-)?(contains|has-text)\((\s*\/(?:\\.|[^\/])*?\/\s*)\)/g;
+  var reScope = /\(\:scope >/g; // Note that we require `/` character in regular expressions to be escaped.
 
   /**
    * Used for pre-processing pseudo-classes values with above two regexes.
@@ -686,6 +687,15 @@ var cssUtils = function () {
 
   var addQuotes = function addQuotes(_, c1, c2) {
     return ":".concat(c1, "(\"").concat(c2.replace(/["\\]/g, '\\$&'), "\")");
+  };
+  /**
+   * Used for :scope pseudo-class support
+   */
+
+
+  var handleScope = function handleScope() {
+    var SCOPE_REPLACER = '(>';
+    return SCOPE_REPLACER;
   };
   /**
    * Normalizes specified css text in a form that can be parsed by the
@@ -703,6 +713,7 @@ var cssUtils = function () {
     cssText = cssText.replace(reAttrFallback, evaluateMatch);
     cssText = cssText.replace(reMatchesCss, addQuotes);
     cssText = cssText.replace(reContains, addQuotes);
+    cssText = cssText.replace(reScope, handleScope);
     return cssText;
   };
 

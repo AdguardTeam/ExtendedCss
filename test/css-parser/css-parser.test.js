@@ -57,6 +57,15 @@ QUnit.test('Convert remove pseudo-class into remove pseudo-property', (assert) =
     assert.equal(cssObject[0].style.remove, 'true');
 });
 
+QUnit.test('Scope handling', (assert) => {
+    const inputCssText = 'div:has(:scope > a > img[id]) { display: none }';
+    const cssObject = ExtendedCssParser.parseCss(inputCssText);
+    const expectedOutputSelectorText = 'div:has(> a > img[id])';
+    assert.ok(cssObject instanceof Array);
+    assert.equal(cssObject.length, 1);
+    assert.equal(cssObject[0].selector.selectorText, expectedOutputSelectorText);
+});
+
 QUnit.test('Parse stylesheet', (assert) => {
     const cssText = 'body { background: none!important; }\n div.wrapper { display: block!important; position: absolute; top:-2000px; }';
     const cssObject = ExtendedCssParser.parseCss(cssText);
