@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.16 - Fri Sep 04 2020
+/*! extended-css - v1.2.16 - Mon Sep 07 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -689,15 +689,8 @@ var ExtendedCss = (function () {
     var addQuotes = function addQuotes(_, c1, c2) {
       return ":".concat(c1, "(\"").concat(c2.replace(/["\\]/g, '\\$&'), "\")");
     };
-    /**
-     * Used for :scope pseudo-class support
-     */
 
-
-    var handleScope = function handleScope() {
-      var SCOPE_REPLACER = '(>';
-      return SCOPE_REPLACER;
-    };
+    var SCOPE_REPLACER = '(>';
     /**
      * Normalizes specified css text in a form that can be parsed by the
      * Sizzle engine.
@@ -709,12 +702,11 @@ var ExtendedCss = (function () {
      * @return {string}
      */
 
-
     var normalize = function normalize(cssText) {
       cssText = cssText.replace(reAttrFallback, evaluateMatch);
       cssText = cssText.replace(reMatchesCss, addQuotes);
       cssText = cssText.replace(reContains, addQuotes);
-      cssText = cssText.replace(reScope, handleScope);
+      cssText = cssText.replace(reScope, SCOPE_REPLACER);
       return cssText;
     };
 
