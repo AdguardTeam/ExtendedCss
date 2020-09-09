@@ -1,4 +1,4 @@
-/*! extended-css - v1.2.16 - Mon Sep 07 2020
+/*! extended-css - v1.3.0 - Tue Sep 08 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
