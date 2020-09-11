@@ -391,3 +391,18 @@ QUnit.test('Test removing of parent and child elements matched by style + no id 
     targetEl = document.querySelector('div[case18-target]');
     assert.notOk(targetEl, 'targetEl should be removed as well');
 });
+
+QUnit.test('matches-property working test', (assert) => {
+    const selector = '#case19 > div:matches-property("id"="/property-match/")';
+    const styleSheet = `${selector} { display: none!important; }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    const matchEl = document.getElementById('case19-property-match');
+    const matchElStyleProps = window.getComputedStyle(matchEl);
+    assert.strictEqual(matchElStyleProps.display, 'none');
+
+    const noMatchEl = document.getElementById('case19-property-no-match');
+    const noMatchElStyleProps = window.getComputedStyle(noMatchEl);
+    assert.strictEqual(noMatchElStyleProps.display, 'block');
+});

@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.0 - Tue Sep 08 2020
+/*! extended-css - v1.3.0 - Thu Sep 10 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
 */
@@ -3223,7 +3223,8 @@ matcherUtils.filterRootsByRegexpChain = function (base, chain) {
   var tempProp = chain[0];
 
   if (chain.length === 1) {
-    Object.keys(base).forEach(function (key) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (var key in base) {
       if (tempProp.isRegexp) {
         if (tempProp.arg.test(key)) {
           output.push({
@@ -3239,7 +3240,8 @@ matcherUtils.filterRootsByRegexpChain = function (base, chain) {
           value: base[key]
         });
       }
-    });
+    }
+
     return output;
   } // if there is a regexp prop in input chain
   // e.g. 'unit./^ad.+/.src' for 'unit.ad-1gf2.src unit.ad-fgd34.src'),
