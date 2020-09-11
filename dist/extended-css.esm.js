@@ -1,6 +1,6 @@
-/*! extended-css - v1.3.0 - Thu Sep 10 2020
+/*! extended-css - v1.3.1 - Fri Sep 11 2020
 * https://github.com/AdguardTeam/ExtendedCss
-* Copyright (c) 2020 AdGuard ; Licensed LGPL-3.0
+* Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
 function _typeof(obj) {
   "@babel/helpers - typeof";
