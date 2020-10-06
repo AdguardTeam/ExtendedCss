@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.1 - Fri Sep 11 2020
+/*! extended-css - v1.3.2 - Tue Oct 06 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -3655,10 +3655,10 @@ var ElementPropertyMatcher = function () {
  */
 
 var ExtendedSelectorFactory = function () {
-  // while addind new markers, AdGuard extension code also should be corrected:
+  // while adding new markers, AdGuard extension code also should be corrected:
   // 'CssFilterRule.SUPPORTED_PSEUDO_CLASSES' and 'CssFilterRule.EXTENDED_CSS_MARKERS'
   // at Extension/lib/filter/rules/css-filter-rule.js
-  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove', ':matches-attr', ':matches-property'];
+  var PSEUDO_EXTENSIONS_MARKERS = [':has', ':contains', ':has-text', ':matches-css', ':-abp-has', ':-abp-has-text', ':if', ':if-not', ':xpath', ':nth-ancestor', ':upward', ':remove', ':matches-attr', ':matches-property', ':-abp-contains'];
   var initialized = false;
   var Sizzle;
   /**

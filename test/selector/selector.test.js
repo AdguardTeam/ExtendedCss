@@ -247,6 +247,13 @@ QUnit.test('Test -abp-has and -abp-has-text', (assert) => {
     assert.ok(selector.matches(elements[0]));
 });
 
+QUnit.test('Pseudo -abp-contains class', (assert) => {
+    const selector = ExtendedSelectorFactory.createSelector('#test-abp-pseudo div:-abp-contains(some text) div:-abp-has(div.test-class)');
+    const elements = selector.querySelectorAll();
+    assert.equal(1, elements.length);
+    assert.ok(selector.matches(elements[0]));
+});
+
 QUnit.test('Test if and if-not', (assert) => {
     let elements;
     let selector;
