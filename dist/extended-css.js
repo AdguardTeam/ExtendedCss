@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.2 - Tue Oct 06 2020
+/*! extended-css - v1.3.3 - Fri Oct 16 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -3251,13 +3251,24 @@ var ExtendedCss = (function () {
 
     if (tempProp.isRegexp) {
       var nextProp = chain.slice(1);
-      var baseKeys = Object.keys(base).filter(function (key) {
-        return tempProp.arg.test(key);
-      });
+      var baseKeys = []; // eslint-disable-next-line no-restricted-syntax
+
+      for (var _key in base) {
+        if (tempProp.arg.test(_key)) {
+          baseKeys.push(_key);
+        }
+      }
+
       baseKeys.forEach(function (key) {
         var item = base[key];
         matcherUtils.filterRootsByRegexpChain(item, nextProp, output);
       });
+    } // extended-css might be executed after the chain property has been declared BUT before it was completely loaded
+    // e.g. facebook error https://github.com/AdguardTeam/ExtendedCss/issues/97#issuecomment-708584140
+
+
+    if (base === null) {
+      return;
     }
 
     var nextBase = base[tempProp.arg];
@@ -3276,8 +3287,8 @@ var ExtendedCss = (function () {
 
 
   matcherUtils.validatePropMatcherArgs = function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    for (var _len = arguments.length, args = new Array(_len), _key2 = 0; _key2 < _len; _key2++) {
+      args[_key2] = arguments[_key2];
     }
 
     for (var i = 0; i < args.length; i += 1) {
