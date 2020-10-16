@@ -421,3 +421,14 @@ QUnit.test('matches-property -- chain with regexp', (assert) => {
     const noMatchElStyleProps = window.getComputedStyle(noMatchEl);
     assert.strictEqual(noMatchElStyleProps.display, 'block');
 });
+
+QUnit.test('matches-property -- access child prop of null prop', (assert) => {
+    const selector = '#case19 > div[class]:matches-property("firstChild.assignedSlot.test")';
+    const styleSheet = `${selector} { display: none!important; }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    const matchEl = document.getElementById('case19-property-null');
+    const matchElStyleProps = window.getComputedStyle(matchEl);
+    assert.strictEqual(matchElStyleProps.display, 'block');
+});

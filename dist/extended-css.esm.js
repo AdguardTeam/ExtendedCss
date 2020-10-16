@@ -3260,8 +3260,7 @@ matcherUtils.filterRootsByRegexpChain = function (base, chain) {
       var item = base[key];
       matcherUtils.filterRootsByRegexpChain(item, nextProp, output);
     });
-  } // extended-css might be executed after the chain property has been declared BUT before it was completely loaded
-  // e.g. facebook error https://github.com/AdguardTeam/ExtendedCss/issues/97#issuecomment-708584140
+  } // avoid TypeError while accessing to null-prop's child
 
 
   if (base === null) {
