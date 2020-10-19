@@ -612,6 +612,12 @@ QUnit.test('Test matches-property pseudo-class', (assert) => {
     assert.ok(selector.matches(elements[0]));
     assert.equal('test-matches-property-div', elements[0].id);
 
+    // access child prop of null prop
+    selectorText = 'div#test-matches-property div:matches-property("propFirst.propInner.test")';
+    selector = ExtendedSelectorFactory.createSelector(selectorText);
+    elements = selector.querySelectorAll();
+    assert.equal(0, elements.length);
+
     const propNullAsStr = 'propNullStr';
     const propInnerNullStr = { propInner: 'null' };
     testEl[propNullAsStr] = propInnerNullStr;

@@ -392,7 +392,7 @@ QUnit.test('Test removing of parent and child elements matched by style + no id 
     assert.notOk(targetEl, 'targetEl should be removed as well');
 });
 
-QUnit.test('matches-property working test', (assert) => {
+QUnit.test('matches-property -- regexp value', (assert) => {
     const selector = '#case19 > div:matches-property("id"="/property-match/")';
     const styleSheet = `${selector} { display: none!important; }`;
     const extendedCss = new ExtendedCss({ styleSheet });
@@ -405,4 +405,30 @@ QUnit.test('matches-property working test', (assert) => {
     const noMatchEl = document.getElementById('case19-property-no-match');
     const noMatchElStyleProps = window.getComputedStyle(noMatchEl);
     assert.strictEqual(noMatchElStyleProps.display, 'block');
+});
+
+QUnit.test('matches-property -- chain with regexp', (assert) => {
+    const selector = '#case19 > div:matches-property("/class/.value"="match")';
+    const styleSheet = `${selector} { display: none!important; }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    const matchEl = document.getElementById('case19-chain-property-match');
+    const matchElStyleProps = window.getComputedStyle(matchEl);
+    assert.strictEqual(matchElStyleProps.display, 'none');
+
+    const noMatchEl = document.getElementById('case19-chain-property-no-match');
+    const noMatchElStyleProps = window.getComputedStyle(noMatchEl);
+    assert.strictEqual(noMatchElStyleProps.display, 'block');
+});
+
+QUnit.test('matches-property -- access child prop of null prop', (assert) => {
+    const selector = '#case19 > div[class]:matches-property("firstChild.assignedSlot.test")';
+    const styleSheet = `${selector} { display: none!important; }`;
+    const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+
+    const matchEl = document.getElementById('case19-property-null');
+    const matchElStyleProps = window.getComputedStyle(matchEl);
+    assert.strictEqual(matchElStyleProps.display, 'block');
 });
