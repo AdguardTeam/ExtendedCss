@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.3 - Fri Oct 16 2020
+/*! extended-css - v1.3.4 - Thu Nov 05 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -4225,7 +4225,23 @@ var ExtendedSelectorFactory = function () {
    */
 
   function XpathSelector(selectorText, xpath, debug) {
-    BaseLastArgumentSelector.call(this, selectorText, xpath, debug);
+    var NO_SELECTOR_MARKER = ':xpath(//';
+    var WILDCARD_SELECTOR_MARKER = '*:xpath(//';
+    var BODY_SELECTOR_REPLACER = 'body:xpath(//';
+    var modifiedSelectorText = selectorText; // selector should be defined for :xpath() pseudo-class, especially it's common shortcut ('//...').
+    // because if it's not, :xpath() will be applied to root element
+    // and will slow element searching by iterating throught *all* nodes in root element.
+    // so we will use 'document.body' as the context instead of 'document'
+
+    if (utils.startsWith(selectorText, NO_SELECTOR_MARKER)) {
+      modifiedSelectorText = selectorText.replace(NO_SELECTOR_MARKER, BODY_SELECTOR_REPLACER);
+    }
+
+    if (utils.startsWith(selectorText, WILDCARD_SELECTOR_MARKER)) {
+      modifiedSelectorText = selectorText.replace(WILDCARD_SELECTOR_MARKER, BODY_SELECTOR_REPLACER);
+    }
+
+    BaseLastArgumentSelector.call(this, modifiedSelectorText, xpath, debug);
   }
 
   XpathSelector.prototype = Object.create(BaseLastArgumentSelector.prototype);
