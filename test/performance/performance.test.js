@@ -127,7 +127,5 @@ QUnit.test('Case 6.2 document.evaluate calls count', (assert) => {
     assert.equal(nodes.length, 12);
     assert.equal(counter, 1);
 
-    Document.prototype.evaluate = (...args) => {
-        return nativeEvaluate.apply(document, args);
-    };
+    Document.prototype.evaluate = nativeEvaluate;
 });
