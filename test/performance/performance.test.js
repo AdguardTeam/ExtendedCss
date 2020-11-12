@@ -105,8 +105,25 @@ QUnit.test('Case 5.3 split selectors with a lot of children and matches-css', (a
     performanceTest(selector, assert);
 });
 
-QUnit.test('Case 6. :xpath performance', (assert) => {
+QUnit.test('Case 6.1 :xpath performance', (assert) => {
     const selectorText = ':xpath(//div[@class=\'target-banner\'])';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     performanceTest(selector, assert);
+});
+
+QUnit.test('Case 6.2 document.evaluate calls count', (assert) => {
+    let counter = 0;
+    const nativeEvaluate = Document.prototype.evaluate;
+
+    Document.prototype.evaluate = (...args) => {
+        counter += 1;
+        return nativeEvaluate.apply(document, args);
+    };
+
+    const selectorText = ':xpath(//div[@class=\'banner\'])';
+    const selector = ExtendedSelectorFactory.createSelector(selectorText);
+    const nodes = selector.querySelectorAll();
+
+    assert.equal(nodes.length, 12);
+    assert.equal(counter, 1);
 });
