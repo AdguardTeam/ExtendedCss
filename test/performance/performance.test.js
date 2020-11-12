@@ -6,6 +6,7 @@ const { initializeSizzle } = exports;
 const Sizzle = initializeSizzle();
 
 const LOOP_COUNT = 10000;
+const MAX_ELAPSED_VALUE = 15000;
 
 const performanceTest = function (selector, assert) {
     const startTime = new Date().getTime();
@@ -22,6 +23,9 @@ const performanceTest = function (selector, assert) {
     msg += `Count: ${LOOP_COUNT} `;
     msg += `Average: ${elapsed / LOOP_COUNT} ms`;
     console.log(msg, assert.test.testName); // eslint-disable-line no-console
+    if (elapsed > MAX_ELAPSED_VALUE) {
+        resultOk = false;
+    }
     assert.ok(resultOk, msg);
 };
 
@@ -99,4 +103,29 @@ QUnit.test('Case 5.3 split selectors with a lot of children and matches-css', (a
     const selectorText = '#case5 div > div:matches-css(background-image: data:*)';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     performanceTest(selector, assert);
+});
+
+QUnit.test('Case 6.1 :xpath performance', (assert) => {
+    const selectorText = ':xpath(//div[@class=\'target-banner\'])';
+    const selector = ExtendedSelectorFactory.createSelector(selectorText);
+    performanceTest(selector, assert);
+});
+
+QUnit.test('Case 6.2 document.evaluate calls count', (assert) => {
+    let counter = 0;
+    const nativeEvaluate = Document.prototype.evaluate;
+
+    Document.prototype.evaluate = (...args) => {
+        counter += 1;
+        return nativeEvaluate.apply(document, args);
+    };
+
+    const selectorText = ':xpath(//div[@class=\'banner\'])';
+    const selector = ExtendedSelectorFactory.createSelector(selectorText);
+    const nodes = selector.querySelectorAll();
+
+    assert.equal(nodes.length, 12);
+    assert.equal(counter, 1);
+
+    Document.prototype.evaluate = nativeEvaluate;
 });
