@@ -87,13 +87,19 @@ QUnit.test('Test -ext-matches-css', (assert) => {
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
-    // ubo quotes for url                                               data:image/gif;base64
+    // quotes for url
     selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"data\\:\\image\\/gif;base64.+/)');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
-    assert.ok(true);
+
+    // compatibility for versions with no url quotes
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"?data\\:\\image\\/gif;base64.+/)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-div-background'));
 });
 
 QUnit.test('Test -ext-matches-css with opacity property', (assert) => {
