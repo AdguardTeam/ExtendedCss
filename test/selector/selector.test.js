@@ -74,18 +74,26 @@ QUnit.test('Test ExtendedSelector', (assert) => {
 
 QUnit.test('Test -ext-matches-css', (assert) => {
     // Compatible syntax
-    let selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]');
+    let selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url("data:*")"]');
     let elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
     // Standard syntax
-    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url(data:*))');
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url("data:*"))');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
+
+    // ubo quotes for url                                               data:image/gif;base64
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"data\\:\\image\\/gif;base64.+/)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-div-background'));
+    assert.ok(true);
 });
 
 QUnit.test('Test -ext-matches-css with opacity property', (assert) => {
@@ -219,14 +227,14 @@ QUnit.test('Test regular expressions flags support in :contains', (assert) => {
 
 QUnit.test('Test regular expressions support in :matches-css', (assert) => {
     // var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
-    const selectorText = ':matches-css(    background-image: /^url\\([a-z]{4}:[a-z]{5}\\/[gif;base].*\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+    const selectorText = ':matches-css(    background-image: /^url\\(\\"[a-z]{4}:[a-z]{5}\\/[gif;base].*\\"\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     const elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
 });
 
 QUnit.test('Test simple regex support in :matches-css, when ()[] characters are escaped', (assert) => {
-    const selectorText = ':matches-css(background-image:url\(data:*\))';
+    const selectorText = ':matches-css(background-image:url\("data:*"\))';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     const elements = selector.querySelectorAll();
     assert.equal(1, elements.length);

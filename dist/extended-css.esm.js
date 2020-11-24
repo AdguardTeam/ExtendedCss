@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.4 - Thu Nov 12 2020
+/*! extended-css - v1.3.5 - Tue Nov 24 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -2988,20 +2988,6 @@ var StylePropertyMatcher = function (window) {
 
     return value;
   };
-  /**
-   * Unlike Safari, Chrome and FF doublequotes url() property value.
-   * I suppose it would be better to leave it unquoted.
-   */
-
-
-  var removeUrlQuotes = function removeUrlQuotes(value) {
-    if (typeof value !== 'string' || value.indexOf('url("') < 0) {
-      return value;
-    }
-
-    var re = /url\(\"(.*?)\"\)/g;
-    return value.replace(re, 'url($1)');
-  };
 
   var getComputedStyle = window.getComputedStyle.bind(window);
   var getMatchedCSSRules = useFallback ? window.getMatchedCSSRules.bind(window) : null;
@@ -3041,8 +3027,6 @@ var StylePropertyMatcher = function (window) {
         }
       }
     }
-
-    value = removeUrlQuotes(value);
 
     if (propertyName === 'content') {
       value = removeContentQuotes(value);
