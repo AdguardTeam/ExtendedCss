@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.5 - Tue Nov 24 2020
+/*! extended-css - v1.3.5 - Wed Nov 25 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -3038,6 +3038,20 @@ var ExtendedCss = (function () {
       return value;
     };
     /**
+     * Adds url parameter quotes for non-regex pattern
+     * @param {string} pattern
+     */
+
+
+    var addUrlQuotes = function addUrlQuotes(pattern) {
+      if (pattern.indexOf('url("') === -1) {
+        var re = /url\((.*?)\)/g;
+        return pattern.replace(re, 'url("$1")');
+      }
+
+      return pattern;
+    };
+    /**
      * Class that matches element style against the specified expression
      * @member {string} propertyName
      * @member {string} pseudoElement
@@ -3051,7 +3065,8 @@ var ExtendedCss = (function () {
       try {
         var index = propertyFilter.indexOf(':');
         this.propertyName = propertyFilter.substring(0, index).trim();
-        var pattern = propertyFilter.substring(index + 1).trim(); // Unescaping pattern
+        var pattern = propertyFilter.substring(index + 1).trim();
+        pattern = addUrlQuotes(pattern); // Unescaping pattern
         // For non-regex patterns, (,),[,] should be unescaped, because we require escaping them in filter rules.
         // For regex patterns, ",\ should be escaped, because we manually escape those in extended-css-selector.js.
 

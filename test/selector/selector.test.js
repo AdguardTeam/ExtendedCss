@@ -73,28 +73,28 @@ QUnit.test('Test ExtendedSelector', (assert) => {
 });
 
 QUnit.test('Test -ext-matches-css', (assert) => {
-    // Compatible syntax
-    let selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url("data:*")"]');
+    // Compatible syntax + no quotes for url
+    let selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]');
     let elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
-    // Standard syntax
+    // Standard syntax + quotes for url
     selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url("data:*"))');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
-    // quotes for url
+    // regex + strict quotes for url
     selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"data\\:\\image\\/gif;base64.+/)');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
-    // compatibility for versions with no url quotes
+    // regex + optional quotes for url
     selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"?data\\:\\image\\/gif;base64.+/)');
     elements = selector.querySelectorAll();
 
@@ -240,7 +240,7 @@ QUnit.test('Test regular expressions support in :matches-css', (assert) => {
 });
 
 QUnit.test('Test simple regex support in :matches-css, when ()[] characters are escaped', (assert) => {
-    const selectorText = ':matches-css(background-image:url\("data:*"\))';
+    const selectorText = ':matches-css(background-image:url\(data:*\))';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     const elements = selector.querySelectorAll();
     assert.equal(1, elements.length);
