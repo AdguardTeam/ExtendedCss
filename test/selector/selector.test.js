@@ -73,15 +73,29 @@ QUnit.test('Test ExtendedSelector', (assert) => {
 });
 
 QUnit.test('Test -ext-matches-css', (assert) => {
-    // Compatible syntax
+    // Compatible syntax + no quotes for url
     let selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]');
     let elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
-    // Standard syntax
-    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url(data:*))');
+    // Standard syntax + quotes for url
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: url("data:*"))');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-div-background'));
+
+    // regex + strict quotes for url
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"data\\:\\image\\/gif;base64.+/)');
+    elements = selector.querySelectorAll();
+
+    assert.equal(1, elements.length);
+    assert.equal(elements[0], document.getElementById('test-div-background'));
+
+    // regex + optional quotes for url
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(\\"?data\\:\\image\\/gif;base64.+/)');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
@@ -219,7 +233,7 @@ QUnit.test('Test regular expressions flags support in :contains', (assert) => {
 
 QUnit.test('Test regular expressions support in :matches-css', (assert) => {
     // var selectorText = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
-    const selectorText = ':matches-css(    background-image: /^url\\([a-z]{4}:[a-z]{5}\\/[gif;base].*\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+    const selectorText = ':matches-css(    background-image: /^url\\(\\"[a-z]{4}:[a-z]{5}\\/[gif;base].*\\"\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
     const selector = ExtendedSelectorFactory.createSelector(selectorText);
     const elements = selector.querySelectorAll();
     assert.equal(1, elements.length);

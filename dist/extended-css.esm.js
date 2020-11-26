@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.4 - Thu Nov 12 2020
+/*! extended-css - v1.3.5 - Wed Nov 25 2020
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2020 AdGuard. Licensed LGPL-3.0
 */
@@ -2988,20 +2988,6 @@ var StylePropertyMatcher = function (window) {
 
     return value;
   };
-  /**
-   * Unlike Safari, Chrome and FF doublequotes url() property value.
-   * I suppose it would be better to leave it unquoted.
-   */
-
-
-  var removeUrlQuotes = function removeUrlQuotes(value) {
-    if (typeof value !== 'string' || value.indexOf('url("') < 0) {
-      return value;
-    }
-
-    var re = /url\(\"(.*?)\"\)/g;
-    return value.replace(re, 'url($1)');
-  };
 
   var getComputedStyle = window.getComputedStyle.bind(window);
   var getMatchedCSSRules = useFallback ? window.getMatchedCSSRules.bind(window) : null;
@@ -3042,13 +3028,25 @@ var StylePropertyMatcher = function (window) {
       }
     }
 
-    value = removeUrlQuotes(value);
-
     if (propertyName === 'content') {
       value = removeContentQuotes(value);
     }
 
     return value;
+  };
+  /**
+   * Adds url parameter quotes for non-regex pattern
+   * @param {string} pattern
+   */
+
+
+  var addUrlQuotes = function addUrlQuotes(pattern) {
+    if (pattern.indexOf('url("') === -1) {
+      var re = /url\((.*?)\)/g;
+      return pattern.replace(re, 'url("$1")');
+    }
+
+    return pattern;
   };
   /**
    * Class that matches element style against the specified expression
@@ -3064,7 +3062,8 @@ var StylePropertyMatcher = function (window) {
     try {
       var index = propertyFilter.indexOf(':');
       this.propertyName = propertyFilter.substring(0, index).trim();
-      var pattern = propertyFilter.substring(index + 1).trim(); // Unescaping pattern
+      var pattern = propertyFilter.substring(index + 1).trim();
+      pattern = addUrlQuotes(pattern); // Unescaping pattern
       // For non-regex patterns, (,),[,] should be unescaped, because we require escaping them in filter rules.
       // For regex patterns, ",\ should be escaped, because we manually escape those in extended-css-selector.js.
 
