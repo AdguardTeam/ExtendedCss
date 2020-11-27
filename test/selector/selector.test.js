@@ -73,7 +73,8 @@ QUnit.test('Test ExtendedSelector', (assert) => {
 });
 
 QUnit.test('Test -ext-matches-css', (assert) => {
-    let selector; let elements;
+    let selector;
+    let elements;
     // Compatible syntax + no quotes for url
     selector = ExtendedSelectorFactory.createSelector('#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]');
     elements = selector.querySelectorAll();
@@ -103,7 +104,7 @@ QUnit.test('Test -ext-matches-css', (assert) => {
     assert.equal(elements[0], document.getElementById('test-div-background'));
 
     // regex + no quotes for url
-    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\(data\\:\\image\\/gif;base64.+/)');
+    selector = ExtendedSelectorFactory.createSelector('#test-matches-css div:matches-css(background-image: /^url\\([a-z]{4}:[a-z]{5}/)');
     elements = selector.querySelectorAll();
 
     assert.equal(1, elements.length);
