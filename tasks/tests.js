@@ -110,12 +110,12 @@ const runQunit = async (testFilePath) => {
 
         console.log('Running tests..');
 
-        // await runQunit('../test/build/utils/utils.html');
-        // await runQunit('../test/build/css-parser/css-parser.html');
-        // await runQunit('../test/build/extended-css/extended-css.html');
-        // await runQunit('../test/build/performance/performance.html');
+        await runQunit('../test/build/utils/utils.html');
+        await runQunit('../test/build/css-parser/css-parser.html');
+        await runQunit('../test/build/extended-css/extended-css.html');
+        await runQunit('../test/build/performance/performance.html');
         await runQunit('../test/build/selector/selector.html');
-        // await runQunit('../test/build/dist/dist.html');
+        await runQunit('../test/build/dist/dist.html');
 
         console.log('Tests passed OK');
     } catch (ex) {
