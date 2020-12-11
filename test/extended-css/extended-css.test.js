@@ -154,6 +154,7 @@ QUnit.test('Test attribute protection', (assert) => {
 });
 
 QUnit.test('Protection from recurring style fixes', (assert) => {
+    assert.expect(3);
     const done = assert.async();
 
     const testNode = document.getElementById('case11');
@@ -214,6 +215,7 @@ QUnit.test('Test using ExtendedCss.query for selectors validation', (assert) => 
 
 QUnit.test('Test debugging', (assert) => {
     assert.timeout(1000);
+    assert.expect(2);
     const done = assert.async();
 
     const selectors = [
@@ -244,6 +246,7 @@ QUnit.test('Test debugging', (assert) => {
 
 QUnit.test('Test global debugging', (assert) => {
     assert.timeout(1000);
+    assert.expect(5);
     const done = assert.async();
 
     const selectors = [
@@ -281,6 +284,7 @@ QUnit.test('Test global debugging', (assert) => {
 
 QUnit.test('Test style remove property', (assert) => {
     assert.timeout(1000);
+    assert.expect(2);
     const done = assert.async();
 
     const styleSheet = '#case-remove-property { remove: true }';
@@ -305,6 +309,7 @@ QUnit.test('Apply different rules to the same element', (assert) => {
 });
 
 QUnit.test('Protect only rule style', (assert) => {
+    assert.expect(2);
     const done = assert.async();
     assertElementStyle('case16-inner', { 'color': 'red', 'background': 'white' }, assert);
 
@@ -321,6 +326,7 @@ QUnit.test('Protect only rule style', (assert) => {
 });
 
 QUnit.test('Protected elements are removed only 50 times', (assert) => {
+    assert.expect(3);
     const done = assert.async();
     const protectorNode = document.getElementById('protect-node-inside');
     const id = 'case-remove-property-repeatedly';
@@ -359,6 +365,7 @@ QUnit.test('Strict style attribute matching', (assert) => {
     const extendedCss = new ExtendedCss({ styleSheet });
     extendedCss.apply();
 
+    assert.expect(4);
     const done = assert.async();
     const testNode = document.getElementById('case17-inner');
     const testNodeStyleProps = window.getComputedStyle(testNode);

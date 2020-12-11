@@ -292,6 +292,72 @@ QUnit.test('Test if and if-not', (assert) => {
     assert.ok(selector.matches(elements[0]));
 });
 
+QUnit.test('Test :is()', (assert) => {
+    let elements;
+    let selector;
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(.header, .body, .footer) .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 3);
+    assert.equal('test-is--header-inner', elements[0].id);
+    assert.equal('test-is--body-inner', elements[1].id);
+    assert.equal('test-is--footer-inner', elements[2].id);
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(.header, .body) > .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 1);
+    assert.equal('test-is--header-inner', elements[0].id);
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(.header, .body) > div > .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 1);
+    assert.equal('test-is--body-inner', elements[0].id);
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(.header, .main) > div > .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 0);
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(.main, div[id$="footer"]) .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 1);
+    assert.equal('test-is--footer-inner', elements[0].id);
+
+    selector = ExtendedSelectorFactory.createSelector(':is(.test-is-inner, .test-is-inner2):contains(isistest)');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 3);
+    assert.equal('test-is--header-inner', elements[0].id);
+    assert.equal('test-is--body-inner', elements[1].id);
+    assert.equal('test-is--body-inner2', elements[2].id);
+
+    selector = ExtendedSelectorFactory.createSelector(':is([id^="test-is"]) > :is(div:not([class]) > .test-is-inner)');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 1);
+    assert.equal('test-is--body-inner', elements[0].id);
+
+    // invalid selector but it should not fail, just skip
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(id="123") > .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 0);
+
+    selector = ExtendedSelectorFactory.createSelector('#test-is :is(1) > .test-is-inner');
+    elements = selector.querySelectorAll();
+    assert.equal(elements.length, 0);
+});
+
+QUnit.test('Test :is() validation', (assert) => {
+    let selectorText;
+
+    assert.throws(() => {
+        selectorText = ':is()';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- no arg');
+
+    assert.throws(() => {
+        selectorText = 'div:is():has(> a)';
+        ExtendedSelectorFactory.createSelector(selectorText);
+    }, 'Expected to be invalid rule -- no arg');
+});
+
 QUnit.test('Test + and ~ combinators matching', (assert) => {
     let selectorText; let selector; let
         elements;

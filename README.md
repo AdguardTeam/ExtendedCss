@@ -13,6 +13,7 @@ Module for applying CSS styles with extended selection properties.
   * [Pseudo-class :nth-ancestor()](#extended-css-nth-ancestor)
   * [Pseudo-class :upward()](#extended-css-upward)
   * [Pseudo-class :remove() and pseudo-property `remove`](#remove-pseudos)
+  * [Pseudo-class :is()](#extended-css-is)
   * [Selectors debug mode](#selectors-debug-mode)
 * [Usage](#usage)
 * [Debugging extended selectors](#debugging-extended-selectors)
@@ -403,6 +404,26 @@ div[class]:has(> a:not([id])) { remove: true; }
 ```
 
 > Please note, that all style properties will be ignored if `:remove()` pseudo-class or `remove` pseudo-property is used.
+
+<a id="extended-css-is"></a>
+### Pseudo-class `:is()`
+
+This pseudo-class allown to match any element that can be selected by one of the selectors passed to :is().
+If there is invalid selector passed, it will be passed and pseudo-class will deal with valid ones.
+Our implementation of matches-any pseudo-class https://developer.mozilla.org/en-US/docs/Web/CSS/:is
+
+**Syntax**
+```
+
+:is(selectors)
+```
+- `selectors` — list of plain CSS selector
+
+**Examples**
+```
+#main :is(.header, .body, .footer) .banner-inner
+:is(.div-inner, .div-inner2):contains(textmarker)
+```
 
 ### Selectors debug mode
 

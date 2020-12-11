@@ -29,13 +29,12 @@ QUnit.test('Test Sizzle tokenize cache', (assert) => {
 });
 
 QUnit.test('Parse an invalid selector', (assert) => {
-    assert.expect(1);
     assert.throws(() => {
         const cssText = 'div > { display:none; }';
         ExtendedCssParser.parseCss(cssText);
-    }, function (error) { // eslint-disable-line prefer-arrow-callback
-        return !!error;
-    }, 'Expected ExtendedCssParser to throw on an invalid selector');
+    },
+    (error) => error.toString().includes('parse error at position'),
+    'Expected ExtendedCssParser to throw on an invalid selector');
 });
 
 QUnit.test('Single invalid selector in a stylesheet', (assert) => {
@@ -97,6 +96,7 @@ QUnit.test('Parse stylesheet with extended selectors', (assert) => {
         }';
 
     const cssObject = ExtendedCssParser.parseCss(cssText);
+
     assert.ok(cssObject instanceof Array);
     assert.equal(cssObject.length, 2);
 
