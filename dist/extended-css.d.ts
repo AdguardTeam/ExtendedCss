@@ -5,7 +5,7 @@ declare module 'extended-css' {
     }
 
     export interface IConfiguration {
-        styleSheets: string;
+        styleSheet: string;
         beforeStyleApplied?(x:IAffectedElement): IAffectedElement;
     }
 
