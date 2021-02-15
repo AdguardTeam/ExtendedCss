@@ -6,7 +6,7 @@ declare module 'extended-css' {
 
     export interface IConfiguration {
         styleSheets: string;
-        beforeStyleApplied(x:IAffectedElement): IAffectedElement;
+        beforeStyleApplied?(x:IAffectedElement): IAffectedElement;
     }
 
     export default class ExtendedCss {
