@@ -79,6 +79,7 @@ const runQunit = async (testFilePath) => {
         targetUrl: `file://${path.resolve(__dirname, testFilePath)}`,
         timeout: 15000,
         redirectConsole: true,
+        puppeteerArgs: ['--no-sandbox', '--allow-file-access-from-files'],
     };
 
     const result = await runQunitPuppeteer(qunitArgs);
