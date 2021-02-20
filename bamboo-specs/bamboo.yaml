@@ -29,8 +29,9 @@ Build:
           - |-
             set -e
             set -x
-            yarn install
+            yarn install --dev
             yarn test
+            exit 255
             # yarn browserstack
             # yarn build
 
