@@ -30,6 +30,7 @@ Build:
             set -e
             set -x
             yarn install --dev
+            cat ../../../../../package.json
             yarn test
             exit 255
             # yarn browserstack
