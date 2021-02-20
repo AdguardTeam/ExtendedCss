@@ -29,13 +29,13 @@ Build:
           - |-
             set -e
             set -x
-            yarn install ${system.YARN_ARGS}
+            yarn install
             yarn test
-            yarn browserstack
-            yarn build
+            # yarn browserstack
+            # yarn build
 
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
-                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}"\
+                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}" \
                      NODE_ENV=production
   final-tasks:
     - clean
