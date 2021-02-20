@@ -29,10 +29,11 @@ Build:
           - |-
             set -e
             set -x
-            yarn install ${system.YARN_ARGS}
+            yarn install
             yarn test
             yarn browserstack
             yarn build
+            exit 255
 
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
                      BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
