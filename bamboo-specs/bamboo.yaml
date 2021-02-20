@@ -37,8 +37,7 @@ Build:
             # yarn build
 
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
-                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}" \
-                     NODE_ENV=production
+                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
   final-tasks:
     - clean
   requirements:
