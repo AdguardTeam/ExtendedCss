@@ -2,19 +2,28 @@
 /**
  * This task tests the javascript bundle
  */
-const path = require('path');
-const { runQunitPuppeteer, printOutput } = require('node-qunit-puppeteer');
+const { runQunitPuppeteer, printResultSummary, printFailedTests } = require('node-qunit-puppeteer');
 const { rollup } = require('rollup');
 const { babel } = require('@rollup/plugin-babel');
 const copy = require('rollup-plugin-copy');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const commonjs = require('@rollup/plugin-commonjs');
 const del = require('rollup-plugin-delete');
+const { server } = require('./server');
 
-const testsInputs = ['utils', 'css-parser', 'dist', 'extended-css', 'performance', 'selector'];
+const TESTS_RUN_TIMEOUT = 15000;
 
-const testsConfigs = testsInputs.map((input) => {
-    const inputPathPart = `${input}/${input}.test.js`;
+const testModules = [
+    'utils',
+    'css-parser',
+    'extended-css',
+    'performance',
+    'selector',
+    'dist',
+];
+
+const testsConfigs = testModules.map((module) => {
+    const inputPathPart = `${module}/${module}.test.js`;
     const inputFile = `./test/${inputPathPart}`;
     const outputFile = `./test/build/${inputPathPart}`;
 
@@ -27,7 +36,7 @@ const testsConfigs = testsInputs.map((input) => {
         plugins: [
             copy({
                 verbose: true,
-                targets: [{ src: `./test/${input}/${input}.html`, dest: `./test/build/${input}` }],
+                targets: [{ src: `./test/${module}/${module}.html`, dest: `./test/build/${module}` }],
             }),
             resolve(),
             commonjs({
@@ -59,6 +68,7 @@ const rollupConfigs = [
                 targets: [
                     { src: './test/qunit/**', dest: './test/build/qunit' },
                     { src: './test/index.html', dest: './test/build' },
+                    { src: './dist/*', dest: './test/build/dist' },
                 ],
             }),
             resolve(),
@@ -74,19 +84,25 @@ const rollupConfigs = [
     ...testsConfigs,
 ];
 
-const runQunit = async (testFilePath) => {
+const runQunit = async (module) => {
     const qunitArgs = {
-        targetUrl: `file://${path.resolve(__dirname, testFilePath)}`,
-        timeout: 15000,
-        redirectConsole: true,
+        targetUrl: `http://localhost:${server.port}/test/build/${module}/${module}.html`,
+        timeout: TESTS_RUN_TIMEOUT,
         puppeteerArgs: ['--no-sandbox', '--allow-file-access-from-files'],
     };
 
-    const result = await runQunitPuppeteer(qunitArgs);
-
-    printOutput(result, console);
-    if (result.stats.failed > 0) {
-        throw new Error('Some of the unit tests failed');
+    try {
+        await server.start();
+        const result = await runQunitPuppeteer(qunitArgs);
+        printResultSummary(result, console);
+        if (result.stats.failed > 0) {
+            printFailedTests(result, console);
+        }
+        await server.stop();
+    } catch (e) {
+        await server.stop();
+        console.error(e);
+        process.exit(1);
     }
 };
 
@@ -111,14 +127,11 @@ const runQunit = async (testFilePath) => {
 
         console.log('Running tests..');
 
-        await runQunit('../test/build/utils/utils.html');
-        await runQunit('../test/build/css-parser/css-parser.html');
-        await runQunit('../test/build/extended-css/extended-css.html');
-        await runQunit('../test/build/performance/performance.html');
-        await runQunit('../test/build/selector/selector.html');
-        await runQunit('../test/build/dist/dist.html');
-
-        console.log('Tests passed OK');
+        // eslint-disable-next-line no-restricted-syntax
+        for (const module of testModules) {
+            // eslint-disable-next-line no-await-in-loop
+            await runQunit(module);
+        }
     } catch (ex) {
         console.log(ex);
     }

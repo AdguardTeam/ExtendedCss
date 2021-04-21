@@ -5,7 +5,7 @@ plan:
   key: EXTCSSSPEC
   name: extended-css - test
 variables:
-  dockerPuppeteer: buildkite/puppeteer:5.2.1
+  dockerPuppeteer: buildkite/puppeteer:8.0.0
 
 stages:
   - Build:
@@ -29,11 +29,10 @@ Build:
           - |-
             set -e
             set -x
-            yarn install
-            yarn test
+            export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+            yarn install ${system.YARN_ARGS}
             yarn browserstack
             yarn build
-            exit 255
 
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
                      BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
@@ -55,7 +54,7 @@ notifications:
     recipients:
       - webhook:
           name: Build webhook
-          url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo?channel=adguard-qa
+          url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo
 
 labels: []
 other:
