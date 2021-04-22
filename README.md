@@ -403,7 +403,9 @@ div:contains(target text) { remove: true; }
 div[class]:has(> a:not([id])) { remove: true; }
 ```
 
-> Please note, that all style properties will be ignored if `:remove()` pseudo-class or `remove` pseudo-property is used.
+> Please note that all style properties will be ignored if `:remove()` pseudo-class or `remove` pseudo-property is used.
+
+> `remove` pseudo-property should be used with `#$?#` marker as it is a part of ExtendedCss library and at the same time it looks like CSS style rules.
 
 <a id="extended-css-is"></a>
 ### Pseudo-class `:is()`
