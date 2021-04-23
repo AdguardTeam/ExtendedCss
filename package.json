@@ -1,6 +1,6 @@
 {
   "name": "extended-css",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "description": "Module for applying CSS styles with extended selection properties.",
   "main": "dist/extended-css.cjs.js",
   "module": "dist/extended-css.esm.js",

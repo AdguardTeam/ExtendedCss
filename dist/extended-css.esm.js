@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.10 - Mon Feb 15 2021
+/*! extended-css - v1.3.11 - Fri Apr 23 2021
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2021 AdGuard. Licensed LGPL-3.0
 */
@@ -109,6 +109,13 @@ function _nonIterableRest() {
 /* eslint-disable no-console */
 var utils = {};
 utils.MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+/**
+ * Stores native Node textContent getter to be used for contains pseudo-class
+ * because elements' 'textContent' and 'innerText' properties might be mocked
+ * https://github.com/AdguardTeam/ExtendedCss/issues/127
+ */
+
+utils.nodeTextContentGetter = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent').get;
 
 utils.isSafariBrowser = function () {
   var isChrome = navigator.userAgent.indexOf('Chrome') > -1;
@@ -3756,7 +3763,7 @@ var IsAnyMatcher = function () {
 }();
 
 /**
- * Copyright 2016 Adguard Software Ltd
+ * Copyright 2021 Adguard Software Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3821,13 +3828,15 @@ var ExtendedSelectorFactory = function () {
         }
 
         return function (elem) {
-          return regex.test(elem.textContent);
+          var elemTextContent = utils.nodeTextContentGetter.apply(elem);
+          return regex.test(elemTextContent);
         };
       }
 
       text = text.replace(/\\([\\()[\]"])/g, '$1');
       return function (elem) {
-        return elem.textContent.indexOf(text) > -1;
+        var elemTextContent = utils.nodeTextContentGetter.apply(elem);
+        return elemTextContent.indexOf(text) > -1;
       };
     });
     Sizzle.selectors.pseudos['contains'] = containsPseudo;
