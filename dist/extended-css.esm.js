@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.11 - Fri Apr 23 2021
+/*! extended-css - v1.3.12 - Mon May 31 2021
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2021 AdGuard. Licensed LGPL-3.0
 */
@@ -115,7 +115,10 @@ utils.MutationObserver = window.MutationObserver || window.WebKitMutationObserve
  * https://github.com/AdguardTeam/ExtendedCss/issues/127
  */
 
-utils.nodeTextContentGetter = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent').get;
+utils.nodeTextContentGetter = function () {
+  var nativeNode = window.Node || Node;
+  return Object.getOwnPropertyDescriptor(nativeNode.prototype, 'textContent').get;
+}();
 
 utils.isSafariBrowser = function () {
   var isChrome = navigator.userAgent.indexOf('Chrome') > -1;
