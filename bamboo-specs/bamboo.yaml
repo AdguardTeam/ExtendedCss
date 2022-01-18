@@ -31,7 +31,6 @@ Build:
             set -x
             export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
             yarn install ${bamboo.varsYarn}
-            yarn browserstack
             yarn build
             rm -rf node_modules
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
