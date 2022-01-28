@@ -4,36 +4,57 @@ describe('tokenizer', () => {
     it('simple', () => {
         let selector = 'div.banner';
         let expected = [
-            // token, position, length
-            ['div', 0, 3],
-            ['.', 3, 1],
-            ['banner', 4, 6],
+            // type, value
+            ['word', 'div'],
+            ['mark', '.'],
+            ['word', 'banner'],
         ];
         expect(tokenizer(selector)).toEqual(expected);
 
         selector = '.banner';
         expected = [
-            ['.', 0, 1],
-            ['banner', 1, 6],
+            // type, value
+            ['mark', '.'],
+            ['word', 'banner'],
         ];
+        // expected = [
+        //     // type, value, start, end
+        //     ['mark', '.', 0, 0],
+        //     ['word', 'banner', 1, 6],
+        // ];
         expect(tokenizer(selector)).toEqual(expected);
 
         selector = 'div[id][class] > .banner';
         expected = [
-            ['div', 0, 3],
-            ['[', 3, 1],
-            ['id', 4, 2],
-            [']', 6, 1],
-            ['[', 7, 1],
-            ['class', 8, 5],
-            [']', 13, 1],
-            [' ', 14, 1],
-            ['>', 15, 1],
-            [' ', 16, 1],
-            ['.', 17, 1],
-            ['banner', 18, 6],
+            // type, value
+            ['word', 'div'],
+            ['mark', '['],
+            ['word', 'id'],
+            ['mark', ']'],
+            ['mark', '['],
+            ['word', 'class'],
+            ['mark', ']'],
+            ['mark', ' '],
+            ['mark', '>'],
+            ['mark', ' '],
+            ['mark', '.'],
+            ['word', 'banner'],
         ];
+        // expected = [
+        //     // type, value, start, end
+        //     ['word', 'div', 0, 2],
+        //     ['mark', '[', 3, 3],
+        //     ['word', 'id', 4, 5],
+        //     ['mark', ']', 6, 6],
+        //     ['mark', '[', 7, 7],
+        //     ['word', 'class', 8, 12],
+        //     ['mark', ']', 13, 13],
+        //     ['space', ' ', 14, 14],
+        //     ['mark', '>', 15, 15],
+        //     ['space', ' ', 16, 16],
+        //     ['mark', '.', 17, 17],
+        //     ['word', 'banner', 18, 23],
+        // ];
         expect(tokenizer(selector)).toEqual(expected);
-
     });
 });

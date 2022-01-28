@@ -10,6 +10,12 @@ module.exports = (api) => {
                     targets: '>= 0.5%',
                 },
             ],
+            [
+                '@babel/preset-typescript',
+                {
+                    allowNamespaces: true,
+                },
+            ],
         ],
     };
 };
