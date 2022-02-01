@@ -14,7 +14,7 @@ import {
  * @param {string} selector css selector
  * @returns {Token[]} array of tokens
  */
-export const tokenizer = (selector) => {
+export const tokenize = (selector) => {
     // currently processed
     let symbol;
     // for words collecting while iterating

@@ -1,4 +1,4 @@
-import { tokenizer } from '../../src/tokenizer';
+import { tokenize } from '../../src/tokenizer';
 
 describe('tokenizer', () => {
     it('simple', () => {
@@ -9,7 +9,7 @@ describe('tokenizer', () => {
             ['mark', '.'],
             ['word', 'banner'],
         ];
-        expect(tokenizer(selector)).toEqual(expected);
+        expect(tokenize(selector)).toEqual(expected);
 
         selector = '.banner';
         expected = [
@@ -22,7 +22,7 @@ describe('tokenizer', () => {
         //     ['mark', '.', 0, 0],
         //     ['word', 'banner', 1, 6],
         // ];
-        expect(tokenizer(selector)).toEqual(expected);
+        expect(tokenize(selector)).toEqual(expected);
 
         selector = 'div[id][class] > .banner';
         expected = [
@@ -55,6 +55,6 @@ describe('tokenizer', () => {
         //     ['mark', '.', 17, 17],
         //     ['word', 'banner', 18, 23],
         // ];
-        expect(tokenizer(selector)).toEqual(expected);
+        expect(tokenize(selector)).toEqual(expected);
     });
 });

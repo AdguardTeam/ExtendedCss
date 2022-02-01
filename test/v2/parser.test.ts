@@ -1,4 +1,4 @@
-import { parser } from '../../src/parser';
+import { parse } from '../../src/parser';
 
 import { NodeTypes } from '../../src/nodes';
 
@@ -19,7 +19,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
     });
 
     it('compound', () => {
@@ -38,7 +38,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
 
         selector = 'div.ad > a.redirect + a';
         expected = {
@@ -55,7 +55,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
 
         selector = 'div[style]';
         expected = {
@@ -72,9 +72,9 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
 
-        selector = 'div#top[onclick*=redirect]';
+        selector = 'div#top[onclick*="redirect"]';
         expected = {
             type: NodeTypes.SelectorList,
             children: [
@@ -83,13 +83,13 @@ describe('parser', () => {
                     children: [
                         {
                             type: NodeTypes.RegularSelector,
-                            value: 'div#top[onclick*=redirect]',
+                            value: 'div#top[onclick*="redirect"]',
                         },
                     ],
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
     });
 
     it('complex', () => {
@@ -108,7 +108,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
     });
 
     it('selector list', () => {
@@ -136,7 +136,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
 
         selector = 'div.banner, span[ad], div > a > img';
         expected = {
@@ -171,7 +171,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
     });
 
     it('regular selector with pseudo-class', () => {
@@ -190,7 +190,7 @@ describe('parser', () => {
                 },
             ],
         };
-        expect(parser(selector)).toEqual(expected);
+        expect(parse(selector)).toEqual(expected);
     });
 
     /**

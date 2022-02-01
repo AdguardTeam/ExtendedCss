@@ -1,4 +1,4 @@
-import { tokenizer } from './tokenizer';
+import { tokenize } from './tokenizer';
 
 import {
     NodeTypes,
@@ -28,7 +28,7 @@ import {
     COMMA,
 } from './constants';
 
-export const parser = (selector) => {
+export const parse = (selector) => {
     // notes:
 
     // For example, :valid is a regular pseudo-class, and :lang() is a functional pseudo-class.
@@ -40,7 +40,7 @@ export const parser = (selector) => {
     // double parentheses allowed since second ones are part of contains pseudo-class arg
     // express.de#?#.dm_container-300x--[-ext-has=">.dm_container_inner_wrapper>h3:contains((Anzeige))"]
 
-    const tokens = tokenizer(selector);
+    const tokens = tokenize(selector);
 
     const isSupportedPseudoClass = (str) => SUPPORTED_PSEUDO_CLASSES.includes(str);
 
