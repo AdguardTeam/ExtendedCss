@@ -32,8 +32,11 @@ export const BRACKETS = {
 
 export const SPACE = ' ';
 export const COMMA = ',';
-const SEMICOLON = ';';
+export const SEMICOLON = ';';
 export const COLON = ':';
+
+export const SINGLE_QUOTE = '\'';
+export const DOUBLE_QUOTE = '"';
 
 // for universal selector and attributes
 export const ASTERISK = '*';
@@ -77,18 +80,54 @@ export const TOKEN_TYPES = {
     MARK: 'mark',
 };
 
-const HAS_PSEUDO_CLASS_MARKERS = [
-    'has',
-    'if',
-    '-abp-has',
-];
+// absolute:
 const CONTAINS_PSEUDO_CLASS_MARKERS = [
     'contains',
     'has-text',
     '-abp-contains',
 ];
+const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
+    'matches-css',
+    'matches-css-before',
+    'matches-css-after',
+];
+const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
+const MATCHES_PROP_PSEUDO_CLASS_MARKER = 'matches-property';
+const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
+const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
+const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
+
+// relative:
+const HAS_PSEUDO_CLASS_MARKERS = [
+    'has',
+    'if',
+    '-abp-has',
+];
+const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
+const IS_PSEUDO_CLASS_MARKER = 'is';
+
+// :upward() can be both absolute or relative depending on arg
+// so we handle it separately
+export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
+
+export const ABSOLUTE_PSEUDO_CLASSES = [
+    ...CONTAINS_PSEUDO_CLASS_MARKERS,
+    ...MATCHES_CSS_PSEUDO_CLASS_MARKERS,
+    MATCHES_ATTR_PSEUDO_CLASS_MARKER,
+    MATCHES_PROP_PSEUDO_CLASS_MARKER,
+    XPATH_PSEUDO_CLASS_MARKER,
+    NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
+    REMOVE_PSEUDO_CLASS_MARKER,
+];
+
+export const RELATIVE_PSEUDO_CLASSES = [
+    ...HAS_PSEUDO_CLASS_MARKERS,
+    IF_NOT_PSEUDO_CLASS_MARKER,
+    IS_PSEUDO_CLASS_MARKER,
+];
 
 export const SUPPORTED_PSEUDO_CLASSES = [
-    ...HAS_PSEUDO_CLASS_MARKERS,
-    ...CONTAINS_PSEUDO_CLASS_MARKERS,
+    ...ABSOLUTE_PSEUDO_CLASSES,
+    ...RELATIVE_PSEUDO_CLASSES,
+    UPWARD_PSEUDO_CLASS_MARKER,
 ];

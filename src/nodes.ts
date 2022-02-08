@@ -3,8 +3,8 @@ export enum NodeTypes {
     Selector = 'Selector',
     RegularSelector = 'RegularSelector',
     ExtendedSelector = 'ExtendedSelector',
-    ExtendedPseudo = 'ExtendedPseudoSelector',
-    PseudoClass = 'PseudoClassSelector',
+    AbsolutePseudoClass = 'AbsolutePseudoClass',
+    RelativePseudoClass = 'RelativePseudoClass',
 };
 
 /**
@@ -47,7 +47,7 @@ export const selectorNode = () => {
  *   : value
  *   ;
  */
-export const regSelectorNode = (value) => {
+export const regularSelectorNode = (value) => {
     return {
         type: NodeTypes.RegularSelector,
         value,
@@ -58,11 +58,11 @@ export const regSelectorNode = (value) => {
  * Extended selector node
  *
  * ExtendedSelector
- *   : RegularSelector
- *   : ExtendedPseudoSelector
+ *   : AbsolutePseudoClass
+ *   | RelativePseudoClass
  *   ;
  */
-export const extSelectorNode = () => {
+export const extendedSelectorNode = () => {
     return {
         type: NodeTypes.ExtendedSelector,
         children: [],
@@ -70,49 +70,40 @@ export const extSelectorNode = () => {
 };
 
 /**
- * Extended pseudo node;
- * may contain another pseudo-class
+ * Absolute extended pseudo-class node
+ * i.e. none-selector args
  *
- * ExtendedPseudoSelector
- *   : PseudoClassSelector
+ * AbsolutePseudoClass
+ *   : type
+ *   : name
+ *   : arg
+ *   ;
+ */
+export const absolutePseudoClassNode = (name) => {
+    return {
+        type: NodeTypes.AbsolutePseudoClass,
+        name,
+        // init with no arg value, update it while tokens iterating
+        arg: '',
+    };
+};
+
+/**
+ * Relative extended pseudo-class node
+ * i.e. selector as arg
+ *
+ * RelativePseudoClass
+ *   : type
+ *   : name
  *   : SelectorList
  *   ;
  */
-export const extPseudoNode = () => {
+ export const relativePseudoClassNode = (name) => {
     return {
-        type: NodeTypes.ExtendedPseudo,
+        type: NodeTypes.RelativePseudoClass,
+        name,
         children: [],
     };
-};
-
-/**
- * Extended pseudo node
- *
- * PseudoClassSelector
- *   : type
- *   : value
- *   ;
- */
-export const pseudoClassNode = (value) => {
-    return {
-        type: NodeTypes.PseudoClass,
-        value,
-    };
-};
-
-/**
- * Only RegularSelector and PseudoClassSelector can have value
- * @param {string} type
- * @param {string} value
- * @returns {Object}
- */
-export const getNodeWithValue = (type, value) => {
-    switch (type) {
-        case NodeTypes.RegularSelector:
-            return regSelectorNode(value);
-        case NodeTypes.PseudoClass:
-            return pseudoClassNode(value);
-    }
 };
 
 //
