@@ -1,11 +1,67 @@
-export enum NodeTypes {
+export enum NodeType {
     SelectorList = 'SelectorList',
     Selector = 'Selector',
     RegularSelector = 'RegularSelector',
     ExtendedSelector = 'ExtendedSelector',
     AbsolutePseudoClass = 'AbsolutePseudoClass',
     RelativePseudoClass = 'RelativePseudoClass',
-};
+}
+
+/**
+ * Universal interface for all node types
+ */
+export interface AnySelectorNodeInterface {
+    type: string,
+    children: AnySelectorNodeInterface[],
+    value?: string,
+    name?: string,
+    arg?: string,
+
+    addChild(child: AnySelectorNodeInterface): void;
+}
+
+export class AnySelectorNode implements AnySelectorNodeInterface {
+    type: string;
+
+    children: AnySelectorNodeInterface[] = [];
+
+    constructor(type: NodeType) {
+        this.type = type;
+    }
+
+    public addChild(child: AnySelectorNodeInterface): void {
+        this.children.push(child);
+    }
+}
+
+export class RegularSelectorNode extends AnySelectorNode {
+    value: string;
+
+    constructor(value: string) {
+        super(NodeType.RegularSelector);
+        this.value = value;
+    }
+}
+
+export class RelativePseudoClassNode extends AnySelectorNode {
+    name: string;
+
+    constructor(name: string) {
+        super(NodeType.RelativePseudoClass);
+        this.name = name;
+    }
+}
+
+export class AbsolutePseudoClassNode extends AnySelectorNode {
+    name: string;
+
+    arg = '';
+
+    constructor(name: string) {
+        super(NodeType.AbsolutePseudoClass);
+        this.name = name;
+    }
+}
 
 /**
  * Root node
@@ -15,12 +71,6 @@ export enum NodeTypes {
  *     ...
  *   ;
  */
-export const selectorListNode = () => {
-    return {
-        type: NodeTypes.SelectorList,
-        children: [],
-    };
-};
 
 /**
  * Selector node
@@ -31,12 +81,6 @@ export const selectorListNode = () => {
  *     ...
  *   ;
  */
-export const selectorNode = () => {
-    return {
-        type: NodeTypes.Selector,
-        children: [],
-    };
-};
 
 /**
  * Regular selector node;
@@ -47,12 +91,6 @@ export const selectorNode = () => {
  *   : value
  *   ;
  */
-export const regularSelectorNode = (value) => {
-    return {
-        type: NodeTypes.RegularSelector,
-        value,
-    };
-};
 
 /**
  * Extended selector node
@@ -62,12 +100,6 @@ export const regularSelectorNode = (value) => {
  *   | RelativePseudoClass
  *   ;
  */
-export const extendedSelectorNode = () => {
-    return {
-        type: NodeTypes.ExtendedSelector,
-        children: [],
-    };
-};
 
 /**
  * Absolute extended pseudo-class node
@@ -79,14 +111,6 @@ export const extendedSelectorNode = () => {
  *   : arg
  *   ;
  */
-export const absolutePseudoClassNode = (name) => {
-    return {
-        type: NodeTypes.AbsolutePseudoClass,
-        name,
-        // init with no arg value, update it while tokens iterating
-        arg: '',
-    };
-};
 
 /**
  * Relative extended pseudo-class node
@@ -98,13 +122,6 @@ export const absolutePseudoClassNode = (name) => {
  *   : SelectorList
  *   ;
  */
- export const relativePseudoClassNode = (name) => {
-    return {
-        type: NodeTypes.RelativePseudoClass,
-        name,
-        children: [],
-    };
-};
 
 //
 //  ast example

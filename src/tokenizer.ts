@@ -4,17 +4,17 @@ import {
 } from './constants';
 
 /**
- * @typedef {Array} Token
- * @property {string} 0 - type
- * @property {string} 1 - value
+ * Array with few strings:
+ * 0 - token type,
+ * 1 - token value
  */
+export type Token = Array<string>;
 
 /**
  * Splits selector string into tokens
- * @param {string} selector css selector
- * @returns {Token[]} array of tokens
+ * @param selector css selector
  */
-export const tokenize = (selector) => {
+export const tokenize = (selector: string): Token[] => {
     // currently processed
     let symbol;
     // for words collecting while iterating

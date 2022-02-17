@@ -5,15 +5,6 @@ const CLOSE_PARENTHESES = ')';
 const OPEN_CURLY = '{';
 const CLOSE_CURLY = '}';
 
-// export const BRACKETS = [
-//     OPEN_SQUARE,
-//     CLOSE_SQUARE,
-//     OPEN_PARENTHESES,
-//     CLOSE_PARENTHESES,
-//     OPEN_CURLY,
-//     CLOSE_CURLY,
-// ];
-
 export const BRACKETS = {
     SQUARE: {
         OPEN: OPEN_SQUARE,
@@ -29,6 +20,8 @@ export const BRACKETS = {
     },
 };
 
+export const SLASH = '/';
+export const BACKSLASH = '\\';
 
 export const SPACE = ' ';
 export const COMMA = ',';
@@ -40,7 +33,7 @@ export const DOUBLE_QUOTE = '"';
 
 // for universal selector and attributes
 export const ASTERISK = '*';
-export const ID_MARKER = '#'
+export const ID_MARKER = '#';
 export const CLASS_MARKER = '.';
 
 export const DESCENDANT_COMBINATOR = SPACE;
@@ -54,7 +47,6 @@ export const COMBINATORS = [
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
 ];
-
 
 export const ACCEPTABLE_MARKS = [
     OPEN_SQUARE,
@@ -81,15 +73,18 @@ export const TOKEN_TYPES = {
 };
 
 // absolute:
-const CONTAINS_PSEUDO_CLASS_MARKERS = [
+export const CONTAINS_PSEUDO_CLASS_MARKERS = [
     'contains',
     'has-text',
     '-abp-contains',
 ];
-const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
-    'matches-css',
-    'matches-css-before',
-    'matches-css-after',
+const MATCHES_CSS_PSEUDO = 'matches-css';
+export const MATCHES_CSS_BEFORE_PSEUDO = 'matches-css-before';
+export const MATCHES_CSS_AFTER_PSEUDO = 'matches-css-after';
+export const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
+    MATCHES_CSS_PSEUDO,
+    MATCHES_CSS_BEFORE_PSEUDO,
+    MATCHES_CSS_AFTER_PSEUDO,
 ];
 const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
 const MATCHES_PROP_PSEUDO_CLASS_MARKER = 'matches-property';
@@ -131,3 +126,5 @@ export const SUPPORTED_PSEUDO_CLASSES = [
     ...RELATIVE_PSEUDO_CLASSES,
     UPWARD_PSEUDO_CLASS_MARKER,
 ];
+
+export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
