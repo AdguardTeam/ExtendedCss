@@ -8,6 +8,7 @@ import {
 
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
+    MATCHES_CSS_PSEUDO_CLASS_MARKERS,
 } from './constants';
 
 /**
@@ -30,15 +31,22 @@ const getByRegularSelector = (selectorNode: AnySelectorNodeInterface, document: 
  * @param domElement dom node, i.e html element
  * @param extendedPseudo absolute extended pseudo-class node
  */
-const isAbsoluteMatched = (domElement: Node, extendedPseudo: AnySelectorNodeInterface): boolean => {
-    let isMatched = false;
+const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNodeInterface): boolean => {
+    let isMatching = false;
     const { name, arg } = extendedPseudo;
-
-    if (name && arg && CONTAINS_PSEUDO_CLASS_MARKERS.includes(name)) {
-        isMatched = matchPseudo.contains(domElement, arg);
+    if (!name || !arg) {
+        throw new Error('name or arg is missing in AbsolutePseudoClass');
     }
 
-    return isMatched;
+    if (CONTAINS_PSEUDO_CLASS_MARKERS.includes(name)) {
+        isMatching = matchPseudo.contains(domElement, arg);
+    }
+
+    if (MATCHES_CSS_PSEUDO_CLASS_MARKERS.includes(name)) {
+        isMatching = matchPseudo.matchesCss(domElement, name, arg);
+    }
+
+    return isMatching;
 };
 
 /**
@@ -46,7 +54,7 @@ const isAbsoluteMatched = (domElement: Node, extendedPseudo: AnySelectorNodeInte
  * @param domElement dom node
  * @param selectorNode Selector node child
  */
-const isMatched = (domElement: Element, selectorNode: AnySelectorNodeInterface): boolean => {
+const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface): boolean => {
     let match = false;
     if (selectorNode.type === NodeType.RegularSelector) {
         // TODO:
@@ -57,12 +65,12 @@ const isMatched = (domElement: Element, selectorNode: AnySelectorNodeInterface):
          */
         const extendedPseudo = selectorNode.children[0];
         if (extendedPseudo.type === NodeType.AbsolutePseudoClass) {
-            match = isAbsoluteMatched(domElement, extendedPseudo);
+            match = isAbsoluteMatching(domElement, extendedPseudo);
         }
 
         if (extendedPseudo.type === NodeType.RelativePseudoClass) {
             // TODO: handle relative pseudo-class
-            // return isRelativeMatched(domElement, extendedNode);
+            // return isRelativeMatching(domElement, extendedNode);
         }
     } else {
         // it might be error if there is neither RegularSelector nor ExtendedSelector among Selector.children
@@ -78,7 +86,7 @@ const isMatched = (domElement: Element, selectorNode: AnySelectorNodeInterface):
  */
 const filterBySelector = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
     const filteredElements = domElements.filter((el) => {
-        return isMatched(el, selectorNode);
+        return isMatching(el, selectorNode);
     });
 
     return filteredElements;

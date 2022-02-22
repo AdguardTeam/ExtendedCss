@@ -26,6 +26,21 @@ const utils = {
         && console.error.bind)
         ? console.error.bind(window.console)
         : console.error,
+
+    isSafariBrowser: navigator.vendor === 'Apple Computer, Inc.',
+
+    /**
+     * Replaces all 'find' with 'replace' in 'str' string
+     * @param str
+     * @param find
+     * @param replace
+     */
+    replaceAll: (str: string, find: string, replace: string): string => {
+        if (!str) {
+            return str;
+        }
+        return str.split(find).join(replace);
+    },
 };
 
 export default utils;

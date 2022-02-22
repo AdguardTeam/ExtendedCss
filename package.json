@@ -19,11 +19,17 @@
     "browserstack": "node tasks/tests.js && node tasks/browserstack.js",
     "increment": "yarn version --patch --no-git-tag-version",
     "publish": "",
-    "lint": "eslint 'src/*.ts' 'test/v2/*.ts'"
+    "lint": "eslint 'src/*.ts' 'test/v2/*.ts'",
+    "lint-staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.ts": [
+        "eslint"
+    ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint"
+      "pre-commit": "yarn lint-staged"
     }
   },
   "author": "AdGuard",
@@ -55,6 +61,7 @@
     "fs-extra": "^9.0.1",
     "husky": "^4.2.5",
     "jest": "^27.4.7",
+    "lint-staged": "^12.3.4",
     "node-qunit-puppeteer": "^2.0.3",
     "rollup": "^2.8.2",
     "rollup-plugin-copy": "^3.3.0",

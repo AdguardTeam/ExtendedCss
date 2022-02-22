@@ -4,57 +4,66 @@ describe('tokenizer', () => {
     it('simple', () => {
         let selector = 'div.banner';
         let expected = [
-            // type, value
-            ['word', 'div'],
-            ['mark', '.'],
-            ['word', 'banner'],
+            { type: 'word', value: 'div' },
+            { type: 'mark', value: '.' },
+            { type: 'word', value: 'banner' },
         ];
         expect(tokenize(selector)).toEqual(expected);
 
         selector = '.banner';
         expected = [
-            // type, value
-            ['mark', '.'],
-            ['word', 'banner'],
+            { type: 'mark', value: '.' },
+            { type: 'word', value: 'banner' },
         ];
-        // expected = [
-        //     // type, value, start, end
-        //     ['mark', '.', 0, 0],
-        //     ['word', 'banner', 1, 6],
-        // ];
         expect(tokenize(selector)).toEqual(expected);
 
         selector = 'div[id][class] > .banner';
         expected = [
-            // type, value
-            ['word', 'div'],
-            ['mark', '['],
-            ['word', 'id'],
-            ['mark', ']'],
-            ['mark', '['],
-            ['word', 'class'],
-            ['mark', ']'],
-            ['mark', ' '],
-            ['mark', '>'],
-            ['mark', ' '],
-            ['mark', '.'],
-            ['word', 'banner'],
+            { type: 'word', value: 'div' },
+            { type: 'mark', value: '[' },
+            { type: 'word', value: 'id' },
+            { type: 'mark', value: ']' },
+            { type: 'mark', value: '[' },
+            { type: 'word', value: 'class' },
+            { type: 'mark', value: ']' },
+            { type: 'mark', value: ' ' },
+            { type: 'mark', value: '>' },
+            { type: 'mark', value: ' ' },
+            { type: 'mark', value: '.' },
+            { type: 'word', value: 'banner' },
         ];
-        // expected = [
-        //     // type, value, start, end
-        //     ['word', 'div', 0, 2],
-        //     ['mark', '[', 3, 3],
-        //     ['word', 'id', 4, 5],
-        //     ['mark', ']', 6, 6],
-        //     ['mark', '[', 7, 7],
-        //     ['word', 'class', 8, 12],
-        //     ['mark', ']', 13, 13],
-        //     ['space', ' ', 14, 14],
-        //     ['mark', '>', 15, 15],
-        //     ['space', ' ', 16, 16],
-        //     ['mark', '.', 17, 17],
-        //     ['word', 'banner', 18, 23],
-        // ];
+        expect(tokenize(selector)).toEqual(expected);
+    });
+
+    it('pseudo-class with regex', () => {
+        const selector = 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)';
+        const expected = [
+            { type: 'word', value: 'div' },
+            { type: 'mark', value: ':' },
+            { type: 'word', value: 'matches-css' },
+            { type: 'mark', value: '(' },
+            { type: 'word', value: 'background-image' },
+            { type: 'mark', value: ':' },
+            { type: 'mark', value: ' ' },
+            { type: 'mark', value: '/' },
+            { type: 'mark', value: '^' },
+            { type: 'word', value: 'url' },
+            { type: 'mark', value: '\\' },
+            { type: 'mark', value: '(' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'data' },
+            { type: 'mark', value: ':' },
+            { type: 'word', value: 'image' },
+            { type: 'mark', value: '\\' },
+            { type: 'mark', value: '/' },
+            { type: 'word', value: 'gif' },
+            { type: 'mark', value: ';' },
+            { type: 'word', value: 'base64' },
+            { type: 'mark', value: '.' },
+            { type: 'mark', value: '+' },
+            { type: 'mark', value: '/' },
+            { type: 'mark', value: ')' },
+        ];
         expect(tokenize(selector)).toEqual(expected);
     });
 });

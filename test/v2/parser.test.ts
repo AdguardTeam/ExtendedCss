@@ -344,8 +344,11 @@ describe('absolute extended selectors', () => {
     });
 
     it('matches-css', () => {
-        const selector = '*:matches-css(width:400px)';
-        const expected = {
+        let selector;
+        let expected;
+
+        selector = '*:matches-css(width:400px)';
+        expected = {
             type: NodeType.SelectorList,
             children: [
                 {
@@ -363,6 +366,64 @@ describe('absolute extended selectors', () => {
                                     type: NodeType.AbsolutePseudoClass,
                                     name: 'matches-css',
                                     arg: 'width:400px',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+
+        selector = 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'div',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.AbsolutePseudoClass,
+                                    name: 'matches-css',
+                                    arg: 'background-image: /^url\\("data:image\\/gif;base64.+/',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+
+        selector = 'div:matches-css(background-image: /^url\\([a-z]{4}:[a-z]{5}/)';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'div',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.AbsolutePseudoClass,
+                                    name: 'matches-css',
+                                    arg: 'background-image: /^url\\([a-z]{4}:[a-z]{5}/',
                                     children: [],
                                 },
                             ],

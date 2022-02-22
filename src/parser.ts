@@ -1,4 +1,8 @@
-import { tokenize } from './tokenizer';
+import {
+    Token,
+    TokenType,
+    tokenize,
+} from './tokenizer';
 
 import {
     NodeType,
@@ -10,7 +14,6 @@ import {
 } from './nodes';
 
 import {
-    TOKEN_TYPES,
     BRACKETS,
     COLON,
     SEMICOLON,
@@ -27,8 +30,13 @@ import {
     SUPPORTED_PSEUDO_CLASSES,
     ABSOLUTE_PSEUDO_CLASSES,
     UPWARD_PSEUDO_CLASS_MARKER,
+    BACKSLASH,
+    SLASH,
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE,
+    CARET,
+    DOLLAR_SIGN,
 } from './constants';
-import { Token } from '.';
 
 /**
  * Checks whether the passed token is supported extended pseudo-class
@@ -43,7 +51,7 @@ const isSupportedExtendedPseudo = (token: string): boolean => SUPPORTED_PSEUDO_C
  */
 const isRegularContinuousAfterSpace = (nextTokenType: string, nextTokenValue: string): boolean => {
     return COMBINATORS.includes(nextTokenValue)
-        || nextTokenType === TOKEN_TYPES.WORD
+        || nextTokenType === TokenType.Word
         || nextTokenValue === ID_MARKER
         || nextTokenValue === CLASS_MARKER
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
@@ -52,7 +60,7 @@ const isRegularContinuousAfterSpace = (nextTokenType: string, nextTokenValue: st
 const isAbsoluteUpward = (tokens: Token[], i: number, tokenValue: string): boolean => {
     const isNaNPseudoArg = () => {
         // check token next to nextToken, i.e 'i + 2'
-        const argValue = tokens[i + 2][1];
+        const argValue = tokens[i + 2].value;
         return Number.isNaN(parseInt(argValue, 10));
     };
     return tokenValue === UPWARD_PSEUDO_CLASS_MARKER && !isNaNPseudoArg();
@@ -177,16 +185,16 @@ export const parse = (selector: string) => {
     let i = 0;
     while (i < tokens.length) {
         const token = tokens[i];
-        const [tokenType, tokenValue] = token;
+        const { type: tokenType, value: tokenValue } = token;
 
         // needed for SPACE and COLON tokens checking
         const nextToken = tokens[i + 1] || [];
-        const [nextTokenType, nextTokenValue] = nextToken;
+        const { type: nextTokenType, value: nextTokenValue } = nextToken;
 
         let bufferNode = getBufferNode();
 
         switch (tokenType) {
-            case TOKEN_TYPES.WORD:
+            case TokenType.Word:
                 if (bufferNode === null) {
                     // very beginning
                     initDefaultAst(tokenValue);
@@ -217,7 +225,7 @@ export const parse = (selector: string) => {
                     initRelativeSubtree(tokenValue);
                 }
                 break;
-            case TOKEN_TYPES.MARK:
+            case TokenType.Mark:
                 switch (tokenValue) {
                     case COMMA:
                         if (bufferNode?.type === NodeType.RegularSelector) {
@@ -255,6 +263,14 @@ export const parse = (selector: string) => {
                     case NEXT_SIBLING_COMBINATOR:
                     case SUBSEQUENT_SIBLING_COMBINATOR:
                     case SEMICOLON:
+                    case SLASH:
+                    case BACKSLASH:
+                    case SINGLE_QUOTE:
+                    case DOUBLE_QUOTE:
+                    case CARET:
+                    case DOLLAR_SIGN:
+                    case BRACKETS.CURLY.OPEN:
+                    case BRACKETS.CURLY.CLOSE:
                     case ASTERISK:
                     case ID_MARKER:
                     case CLASS_MARKER:
@@ -323,11 +339,19 @@ export const parse = (selector: string) => {
                             // it might be error
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
-                            context.extendedBracketsStack.push(tokenValue);
-                            if (context.extendedBracketsStack.length > context.extendedNamesStack.length) {
+                            // if previous token is escaped parentheses
+                            // just update the buffer node
+                            if (tokens[i - 1].value === BACKSLASH) {
+                                // e.g. div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)
                                 updateBufferNode(tokenValue);
+                            } else {
+                                // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
+                                context.extendedBracketsStack.push(tokenValue);
+                                if (context.extendedBracketsStack.length > context.extendedNamesStack.length) {
+                                    updateBufferNode(tokenValue);
+                                }
                             }
+
                         }
 
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {

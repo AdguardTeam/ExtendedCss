@@ -31,6 +31,14 @@ export const COLON = ':';
 export const SINGLE_QUOTE = '\'';
 export const DOUBLE_QUOTE = '"';
 
+// do not consider hyphen as separated mark
+// to avoid pseudo-class names splitting
+// e.g. matches-css or if-not
+// const HYPHEN = '-';
+
+export const CARET = '^';
+export const DOLLAR_SIGN = '$';
+
 // for universal selector and attributes
 export const ASTERISK = '*';
 export const ID_MARKER = '#';
@@ -55,22 +63,23 @@ export const ACCEPTABLE_MARKS = [
     CLOSE_PARENTHESES,
     OPEN_CURLY,
     CLOSE_CURLY,
-    ID_MARKER,
-    CLASS_MARKER,
-    ASTERISK,
-    COMMA,
+    SLASH,
+    BACKSLASH,
     SEMICOLON,
     COLON,
+    COMMA,
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE,
+    CARET,
+    DOLLAR_SIGN,
+    ASTERISK,
+    ID_MARKER,
+    CLASS_MARKER,
     DESCENDANT_COMBINATOR,
     CHILD_COMBINATOR,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
 ];
-
-export const TOKEN_TYPES = {
-    WORD: 'word',
-    MARK: 'mark',
-};
 
 // absolute:
 export const CONTAINS_PSEUDO_CLASS_MARKERS = [
@@ -128,3 +137,8 @@ export const SUPPORTED_PSEUDO_CLASSES = [
 ];
 
 export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
+
+export const REGULAR_PSEUDO_CLASSES = {
+    BEFORE: ':before',
+    AFTER: ':after',
+};

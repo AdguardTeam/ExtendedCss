@@ -327,6 +327,193 @@ describe('extended pseudo-classes', () => {
          */
     });
 
+    describe('matches-css pseudos', () => {
+        it('matches-css - simple', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            document.body.innerHTML = `
+                <style type="text/css">
+                    div {
+                        height: 15px;
+                    }
+                    #target {
+                        width: 20px;
+                    }
+                    .find {
+                        content: "Try to find me";
+                        min-height: 10px;
+                    }
+                </style>
+
+                <div id="target" class="find"></div>
+            `;
+
+            let selector = ':matches-css(width:20px)';
+            let selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = ':matches-css(content: *find me*)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'div:matches-css(min-height:/10/):matches-css(height:/10|15|20/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // should NOT match because height is 15px
+            selector = 'div:matches-css(min-height:/10/):matches-css(height:/10|20/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-css - opacity', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = 'div:matches-css(opacity: 0.9)';
+
+            document.body.innerHTML = `
+                <style>
+                    #target { opacity: 0.9; }
+                    #NOT_A_TARGET { opacity: 0.7; }
+                </style>
+
+                <div id="target"></div>
+                <div id="NOT_A_TARGET"></div>
+            `;
+
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-css - url', () => {
+            let targetTag = 'div';
+            let targetId = 'divTarget';
+
+            /* eslint-disable max-len */
+            document.body.innerHTML = `
+                <style type="text/css">
+                    #divTarget {
+                        background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+                    }
+                    #pTarget {
+                        background:
+                            url(data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7)
+                            no-repeat
+                            left center;
+                        padding: 5px 0 5px 25px;
+                    }
+                </style>
+
+                <div id="divTarget"></div>
+                <p id="pTarget"></p>
+            `;
+            /* eslint-enable max-len */
+
+            let selector;
+            let selectedElements;
+
+            // no quotes for url
+            selector = 'div:matches-css(background-image: url(data:*))';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // quotes for url
+            selector = 'div:matches-css(background-image: url("data:*"))';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // regex + strict quotes for url
+            selector = 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // regex + optional quotes for url
+            selector = 'div:matches-css(background-image: /^url\\("?data:image\\/gif;base64.+/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // regex + no quotes for url
+            selector = 'div:matches-css(background-image: /^url\\([a-z]{4}:[a-z]{5}/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            // another style declaration
+            targetTag = 'p';
+            targetId = 'pTarget';
+            selector = 'p:matches-css(background-image: /^url\\("?data:image\\/gif;base64.+/)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        /**
+         * TODO: try after puppeteer or playwright usage.
+         * jsdom does not support pseudo-element so it does not work
+         * https://github.com/jsdom/jsdom/issues/1928
+         */
+        // it('matches-css-before', () => {
+        //     const targetTag = 'div';
+        //     const targetId = 'target';
+
+        //     document.body.innerHTML = `
+        //         <div id="target">
+        //             <style>
+        //                 #target::before {
+        //                     content: "Advertisement";
+        //                     color: rgb(255, 255, 255);
+        //                 }
+
+        //                 #target {
+        //                     width: 20px;
+        //                 }
+        //             </style>
+        //         </div>
+        //     `;
+
+        //     let selector = 'div:matches-css-before(color: rgb(255, 255, 255))';
+        //     let selectedElements = querySelectorAll(selector, document);
+        //     expectSingleElement(selectedElements, targetTag, targetId);
+
+        //     selector = 'div:matches-css-before(content: /^Advertisement$/)';
+        //     selectedElements = querySelectorAll(selector, document);
+        //     expectSingleElement(selectedElements, targetTag, targetId);
+        // });
+
+        /**
+         * TODO: try after puppeteer or playwright usage.
+         * jsdom does not support pseudo-element so it does not work
+         * https://github.com/jsdom/jsdom/issues/1928
+         */
+        // it('matches-css-after', () => {
+        //     const targetTag = 'div';
+        //     const targetId = 'target';
+
+        //     document.body.innerHTML = `
+        //         <style>
+        //             #target {
+        //                 content: "empty";
+        //                 color: #000;
+        //             }
+
+        //             #target::before {
+        //                 content: "Advertisement";
+        //                 color: #fff;
+        //             }
+        //         </style>
+
+        //         <div id="target"></div>
+        //     `;
+
+        //     let selector = 'div:matches-css-after(color: rgb(255, 255, 255))';
+        //     let selectedElements = querySelectorAll(selector, document);
+        //     expectSingleElement(selectedElements, targetTag, targetId);
+
+        //     selector = 'div:matches-css-before(content: /^Advertisement$/)';
+        //     selectedElements = querySelectorAll(selector, document);
+        //     expectSingleElement(selectedElements, targetTag, targetId);
+        // });
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */
