@@ -514,6 +514,116 @@ describe('extended pseudo-classes', () => {
         // });
     });
 
+    describe('matches-attr pseudos', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div
+                    id="target"
+                    class="match"
+                    data-o="banner_240x400"
+                ></div>
+                <div id="NOT_A_TARGET"</div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('matches-attr - simple attr name without quotes', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = ':matches-attr("class")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - attr name without quotes', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = ':matches-attr(class)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - wildcard in attr name pattern', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = ':matches-attr("data-*")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - no match by attr name', () => {
+            const selector = 'div:matches-attr("data")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-attr - regexp for attr name pattern', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = ':matches-attr("/data-/")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - string name and value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = 'div:matches-attr("class"="match")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - no match by value', () => {
+            const selector = 'div:matches-attr("class"="target")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-attr - string name and regexp value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = 'div:matches-attr("class"="/[\\w]{5}/")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - name with wildcard and regexp value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+            const selector = 'div:matches-attr("data-*"="/^banner_.?/")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr - invalid args', () => {
+            let selector;
+            let selectedElements;
+
+            selector = 'div:matches-attr("//")';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = 'div:matches-attr(*)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            // invalid attr name pattern
+            selector = 'div:matches-attr(".?"="/^[0-9]*$/")';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = 'div:matches-attr()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('name or arg is missing in AbsolutePseudoClass');
+        });
+
+
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */

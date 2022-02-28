@@ -3,6 +3,7 @@ import utils from './utils';
 import {
     matchingText,
     matchingStyle,
+    matchingAttr,
 } from './matcher-utils';
 
 import {
@@ -22,9 +23,9 @@ const matchPseudo = {
         let isTextContentMatching;
         try {
             isTextContentMatching = matchingText(elemTextContent, rawPseudoArg);
-        } catch (error) {
-            isTextContentMatching = false;
-            throw error;
+        } catch (e) {
+            utils.logError(e);
+            throw new Error(`Error while matching text: "${elemTextContent}" by arg ${rawPseudoArg}.`);
         }
         return isTextContentMatching;
     },
@@ -41,13 +42,23 @@ const matchPseudo = {
         let isMatchingCss;
         try {
             isMatchingCss = matchingStyle(domElement, pseudoName, rawPseudoArg, regularPseudo);
-        } catch (error) {
-            isMatchingCss = false;
-            throw error;
+        } catch (e) {
+            utils.logError(e);
+            throw new Error(`Error while matching css by arg ${rawPseudoArg}.`);
         }
         return isMatchingCss;
     },
 
+    matchesAttr: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
+        let isMatchingAttr;
+        try {
+            isMatchingAttr = matchingAttr(domElement, pseudoName, rawPseudoArg);
+        } catch (e) {
+            utils.logError(e);
+            throw new Error(`Error while matching attributes by arg ${rawPseudoArg}.`);
+        }
+        return isMatchingAttr;
+    },
 };
 
 export default matchPseudo;

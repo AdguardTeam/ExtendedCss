@@ -1,3 +1,5 @@
+import { SLASH } from './constants';
+
 /**
  * As soon as possible stores native Node textContent getter to be used for contains pseudo-class
  * because elements' 'textContent' and 'innerText' properties might be mocked
@@ -40,6 +42,18 @@ const utils = {
             return str;
         }
         return str.split(find).join(replace);
+    },
+
+    /**
+     * Converts string to regular expression
+     * @param str
+     */
+    toRegExp: (str: string): RegExp => {
+        if (str.startsWith(SLASH) && str.endsWith(SLASH)) {
+            return new RegExp(str.slice(1, -1));
+        }
+        const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(escaped);
     },
 };
 

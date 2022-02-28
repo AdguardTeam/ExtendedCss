@@ -8,6 +8,7 @@ import {
 
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
+    MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_CSS_PSEUDO_CLASS_MARKERS,
 } from './constants';
 
@@ -35,7 +36,7 @@ const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNode
     let isMatching = false;
     const { name, arg } = extendedPseudo;
     if (!name || !arg) {
-        throw new Error('name or arg is missing in AbsolutePseudoClass');
+        throw new Error('Pseudo-class name or arg is missing in AbsolutePseudoClass');
     }
 
     if (CONTAINS_PSEUDO_CLASS_MARKERS.includes(name)) {
@@ -44,6 +45,10 @@ const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNode
 
     if (MATCHES_CSS_PSEUDO_CLASS_MARKERS.includes(name)) {
         isMatching = matchPseudo.matchesCss(domElement, name, arg);
+    }
+
+    if (name === MATCHES_ATTR_PSEUDO_CLASS_MARKER) {
+        isMatching = matchPseudo.matchesAttr(domElement, name, arg);
     }
 
     return isMatching;

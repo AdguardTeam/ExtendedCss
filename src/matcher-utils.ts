@@ -1,6 +1,9 @@
 import {
     ASTERISK,
     COLON,
+    DOUBLE_QUOTE,
+    EQUAL_SIGN,
+    REGEXP_ANY_SYMBOL,
     REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
 } from './constants';
@@ -79,7 +82,7 @@ const matchingStyleValueToRegexp = (rawArg: string): RegExp => {
         arg = arg.replace(/\\([\\()[\]"])/g, '$1');
         arg = escapeRegExp(arg);
         // e.g. div:matches-css(background-image: url(data:*))
-        arg = utils.replaceAll(arg, ASTERISK, '.*');
+        arg = utils.replaceAll(arg, ASTERISK, REGEXP_ANY_SYMBOL);
     }
 
     return new RegExp(arg, 'i');
@@ -116,13 +119,21 @@ const getComputedStylePropertyValue = (domElement: Element, regularPseudo: strin
 
 interface PseudoArgData {
     name: string,
-    value: string,
+    value?: string,
 }
 
 const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData => {
     const index = pseudoArg.indexOf(separator);
-    const name = pseudoArg.substring(0, index).trim();
-    const value = pseudoArg.substring(index + 1).trim();
+    let name;
+    let value;
+
+    if (index > -1) {
+        name = pseudoArg.substring(0, index).trim();
+        value = pseudoArg.substring(index + 1).trim();
+    } else {
+        name = pseudoArg;
+    }
+
     return { name, value };
 };
 
@@ -155,6 +166,127 @@ export const matchingStyle = (
     const value = getComputedStylePropertyValue(domElement, regularPseudo, matchName);
 
     return valueRegexp && valueRegexp.test(value);
+};
+
+/**
+ * Validates string arg for :matches-attr
+ * @param arg
+ */
+const validateStrMatcherArg = (arg: string): boolean => {
+    if (!(/^[\w-]+$/.test(arg))) {
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Returns valid arg for :matches-attr
+ * @param rawArg arg pattern
+ */
+export const getValidMatcherArg = (rawArg: string): string | RegExp => {
+    // if rawArg is missing for pseudo-class
+    // e.g. :matches-attr()
+    // isAbsoluteMatching will throw error before getValidMatcherArg is called:
+    // name or arg is missing in AbsolutePseudoClass
+
+    let arg;
+    if (rawArg.length > 1 && rawArg.startsWith(DOUBLE_QUOTE) && rawArg.endsWith(DOUBLE_QUOTE)) {
+        rawArg = rawArg.slice(1, -1);
+    }
+    if (rawArg === '') {
+        // e.g. :matches-property("")
+        throw new Error('Argument should be specified. Empty arg is invalid.');
+    }
+    const isRegexpPattern = rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH);
+    if (isRegexpPattern) {
+        // e.g. :matches-property("//")
+        if (rawArg.length > 2) {
+            arg = utils.toRegExp(rawArg);
+        } else {
+            throw new Error(`Invalid regexp: '${rawArg}'`);
+        }
+    } else if (rawArg.includes(ASTERISK)) {
+        if (rawArg === ASTERISK) {
+            // e.g. :matches-property(*)
+            throw new Error(`Argument should be more specific than ${rawArg}`);
+        }
+        arg = utils.replaceAll(rawArg, ASTERISK, REGEXP_ANY_SYMBOL);
+        arg = new RegExp(arg);
+    } else {
+        if (!validateStrMatcherArg(rawArg)) {
+            throw new Error(`Invalid argument: '${rawArg}'`);
+        }
+        arg = rawArg;
+    }
+    return arg;
+};
+
+interface RawMatchingArgData {
+    rawAttrName: string,
+    rawAttrValue?: string,
+}
+
+/**
+ * Parses pseudo-class argument and returns parsed data
+ * @param pseudoName extended pseudo-class name
+ * @param pseudoArg extended pseudo-class argument
+ */
+export const getRawMatchingAttrData = (pseudoName: string, pseudoArg: string): RawMatchingArgData => {
+    const { name: rawAttrName, value: rawAttrValue } = getPseudoArgData(pseudoArg, EQUAL_SIGN);
+    if (!rawAttrName) {
+        throw new Error(`Required attribute name is missing in :${pseudoName} arg: ${pseudoArg}`);
+    }
+    return { rawAttrName, rawAttrValue };
+};
+
+export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+    const elementAttributes = domElement.attributes;
+    // no match if dom element has no attributes
+    if (elementAttributes.length === 0) {
+        return false;
+    }
+
+    const { rawAttrName, rawAttrValue } = getRawMatchingAttrData(pseudoName, pseudoArg);
+
+    let attrNameMatch;
+    try {
+        attrNameMatch = getValidMatcherArg(rawAttrName);
+    } catch (e) {
+        utils.logError(e);
+        return false;
+    }
+
+    let isMatching = false;
+    let i = 0;
+    while (i < elementAttributes.length && !isMatching) {
+        const attr = elementAttributes[i];
+
+        const isNameMatching = attrNameMatch instanceof RegExp
+            ? attrNameMatch.test(attr.name)
+            : attrNameMatch === attr.name;
+
+        if (!rawAttrValue) {
+            // for rules with no attribute value specified
+            // e.g. :matches-attr("/regex/") or :matches-attr("attr-name")
+            isMatching = isNameMatching;
+        } else {
+            let attrValueMatch;
+            try {
+                attrValueMatch = getValidMatcherArg(rawAttrValue);
+            } catch (e) {
+                utils.logError(e);
+                return false;
+            }
+            const isValueMatching = attrValueMatch instanceof RegExp
+                ? attrValueMatch.test(attr.value)
+                : attrValueMatch === attr.value;
+            isMatching = isNameMatching && isValueMatching;
+        }
+
+        i += 1;
+    }
+
+    return isMatching;
 };
 
 /**

@@ -13,7 +13,7 @@
   },
   "scripts": {
     "test": "node tasks/tests.js",
-    "test-v2": "jest --testPathPattern=test/v2",
+    "test-v2": "jest --testPathPattern=test/v2 --silent",
     "watch": "",
     "build": "node tasks/compile.js",
     "browserstack": "node tasks/tests.js && node tasks/browserstack.js",

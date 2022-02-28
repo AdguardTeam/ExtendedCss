@@ -39,6 +39,8 @@ export const DOUBLE_QUOTE = '"';
 export const CARET = '^';
 export const DOLLAR_SIGN = '$';
 
+export const EQUAL_SIGN = '=';
+
 // for universal selector and attributes
 export const ASTERISK = '*';
 export const ID_MARKER = '#';
@@ -95,7 +97,7 @@ export const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
 ];
-const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
+export const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
 const MATCHES_PROP_PSEUDO_CLASS_MARKER = 'matches-property';
 const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
@@ -137,6 +139,8 @@ export const SUPPORTED_PSEUDO_CLASSES = [
 ];
 
 export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
+
+export const REGEXP_ANY_SYMBOL = '.*';
 
 export const REGULAR_PSEUDO_CLASSES = {
     BEFORE: ':before',
