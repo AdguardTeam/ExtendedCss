@@ -1,5 +1,6 @@
 import {
     ASTERISK,
+    DOT,
     COLON,
     DOUBLE_QUOTE,
     EQUAL_SIGN,
@@ -169,10 +170,13 @@ export const matchingStyle = (
 };
 
 /**
- * Validates string arg for :matches-attr
+ * Validates string arg for :matches-attr and :matches-property
  * @param arg
  */
 const validateStrMatcherArg = (arg: string): boolean => {
+    if (arg.includes(SLASH)) {
+        return false;
+    }
     if (!(/^[\w-]+$/.test(arg))) {
         return false;
     }
@@ -180,10 +184,10 @@ const validateStrMatcherArg = (arg: string): boolean => {
 };
 
 /**
- * Returns valid arg for :matches-attr
+ * Returns valid arg for :matches-attr and :matcher-property
  * @param rawArg arg pattern
  */
-export const getValidMatcherArg = (rawArg: string): string | RegExp => {
+export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): string | RegExp => {
     // if rawArg is missing for pseudo-class
     // e.g. :matches-attr()
     // isAbsoluteMatching will throw error before getValidMatcherArg is called:
@@ -197,8 +201,7 @@ export const getValidMatcherArg = (rawArg: string): string | RegExp => {
         // e.g. :matches-property("")
         throw new Error('Argument should be specified. Empty arg is invalid.');
     }
-    const isRegexpPattern = rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH);
-    if (isRegexpPattern) {
+    if (rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH)) {
         // e.g. :matches-property("//")
         if (rawArg.length > 2) {
             arg = utils.toRegExp(rawArg);
@@ -206,8 +209,8 @@ export const getValidMatcherArg = (rawArg: string): string | RegExp => {
             throw new Error(`Invalid regexp: '${rawArg}'`);
         }
     } else if (rawArg.includes(ASTERISK)) {
-        if (rawArg === ASTERISK) {
-            // e.g. :matches-property(*)
+        if (rawArg === ASTERISK && !isWildcardAllowed) {
+            // e.g. :matches-attr(*)
             throw new Error(`Argument should be more specific than ${rawArg}`);
         }
         arg = utils.replaceAll(rawArg, ASTERISK, REGEXP_ANY_SYMBOL);
@@ -222,8 +225,8 @@ export const getValidMatcherArg = (rawArg: string): string | RegExp => {
 };
 
 interface RawMatchingArgData {
-    rawAttrName: string,
-    rawAttrValue?: string,
+    rawName: string,
+    rawValue?: string,
 }
 
 /**
@@ -231,12 +234,12 @@ interface RawMatchingArgData {
  * @param pseudoName extended pseudo-class name
  * @param pseudoArg extended pseudo-class argument
  */
-export const getRawMatchingAttrData = (pseudoName: string, pseudoArg: string): RawMatchingArgData => {
-    const { name: rawAttrName, value: rawAttrValue } = getPseudoArgData(pseudoArg, EQUAL_SIGN);
-    if (!rawAttrName) {
+export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMatchingArgData => {
+    const { name: rawName, value: rawValue } = getPseudoArgData(pseudoArg, EQUAL_SIGN);
+    if (!rawName) {
         throw new Error(`Required attribute name is missing in :${pseudoName} arg: ${pseudoArg}`);
     }
-    return { rawAttrName, rawAttrValue };
+    return { rawName, rawValue };
 };
 
 export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
@@ -246,14 +249,14 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
         return false;
     }
 
-    const { rawAttrName, rawAttrValue } = getRawMatchingAttrData(pseudoName, pseudoArg);
+    const { rawName: rawAttrName, rawValue: rawAttrValue } = getRawMatchingData(pseudoName, pseudoArg);
 
     let attrNameMatch;
     try {
         attrNameMatch = getValidMatcherArg(rawAttrName);
     } catch (e) {
         utils.logError(e);
-        return false;
+        throw new SyntaxError();
     }
 
     let isMatching = false;
@@ -275,7 +278,7 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
                 attrValueMatch = getValidMatcherArg(rawAttrValue);
             } catch (e) {
                 utils.logError(e);
-                return false;
+                throw new SyntaxError();
             }
             const isValueMatching = attrValueMatch instanceof RegExp
                 ? attrValueMatch.test(attr.value)
@@ -284,6 +287,202 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
         }
 
         i += 1;
+    }
+
+    return isMatching;
+};
+
+/**
+ * Parses raw property arg
+ * @param input
+ */
+export const parseRawPropChain = (input: string): (string | RegExp)[] => {
+    if (input.length > 1 && input.startsWith(DOUBLE_QUOTE) && input.endsWith(DOUBLE_QUOTE)) {
+        input = input.slice(1, -1);
+    }
+
+    const chainChunks = input.split(DOT);
+
+    const chainPatterns = [];
+    let patternBuffer = '';
+    let isRegexpPattern;
+    let i = 0;
+    while (i < chainChunks.length) {
+        const chunk = chainChunks[i];
+        if (chunk.startsWith(SLASH) && chunk.endsWith(SLASH) && chunk.length > 2) {
+            // regexp pattern with no dot in it, e.g. /propName/
+            chainPatterns.push(chunk);
+        } else if (chunk.startsWith(SLASH)) {
+            // if chunk is a start of regexp pattern
+            isRegexpPattern = true;
+            patternBuffer += chunk;
+        } else if (chunk.endsWith(SLASH)) {
+            isRegexpPattern = false;
+            // restore dot removed while splitting
+            // e.g. testProp./.{1,5}/
+            patternBuffer += `.${chunk}`;
+            chainPatterns.push(patternBuffer);
+            patternBuffer = '';
+        } else {
+            // if there are few dots in regexp pattern
+            // so chunk might be in the middle of it
+            if (isRegexpPattern) {
+                patternBuffer += chunk;
+            } else {
+                // otherwise it is string pattern
+                chainPatterns.push(chunk);
+            }
+        }
+        i += 1;
+    }
+
+    if (patternBuffer.length > 0) {
+        throw new Error(`Invalid regexp property pattern '${input}'`);
+    }
+
+    const chainMatchPatterns = chainPatterns
+        .map((pattern) => {
+            if (pattern.length === 0) {
+                // e.g. '.prop.id' or 'nested..test'
+                throw new Error(`Empty pattern '${pattern}' is invalid in chain '${input}'`);
+            }
+            let validPattern;
+            try {
+                validPattern = getValidMatcherArg(pattern, true);
+            } catch (e) {
+                utils.logError(e);
+                throw new Error(`Invalid property pattern '${pattern}' in property chain '${input}'`);
+            }
+            return validPattern;
+        });
+
+    return chainMatchPatterns;
+};
+
+interface Chain {
+    base: Element,
+    prop: string,
+    value?: string,
+}
+
+/**
+ * Checks if the property exists in the base object (recursively).
+ * @param base
+ * @param chain array of objects - parsed string property chain
+ * @param output result acc
+ */
+const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], output: Chain[] = []) => {
+    const tempProp = chain[0];
+
+    if (chain.length === 1) {
+        for (const key in base) {
+            if (tempProp instanceof RegExp) {
+                if (tempProp.test(key)) {
+                    output.push({
+                        base,
+                        prop: key,
+                        value: Object.getOwnPropertyDescriptor(base, key)?.value,
+                    });
+                }
+            } else if (tempProp === key) {
+                output.push({
+                    base,
+                    prop: tempProp,
+                    value: Object.getOwnPropertyDescriptor(base, key)?.value,
+                });
+            }
+        }
+        return output;
+    }
+
+    // if there is a regexp prop in input chain
+    // e.g. 'unit./^ad.+/.src' for 'unit.ad-1gf2.src unit.ad-fgd34.src'),
+    // every base keys should be tested by regexp and it can be more that one results
+    if (tempProp instanceof RegExp) {
+        const nextProp = chain.slice(1);
+        const baseKeys = [];
+        for (const key in base) {
+            if (tempProp.test(key)) {
+                baseKeys.push(key);
+            }
+        }
+        baseKeys.forEach((key) => {
+            const item = Object.getOwnPropertyDescriptor(base, key)?.value;
+            filterRootsByRegexpChain(item, nextProp, output);
+        });
+    }
+
+    // TODO: check later if it is needed
+    // // avoid TypeError while accessing to null-prop's child
+    // if (base === null) {
+    //     return;
+    // }
+
+    if (base && typeof tempProp === 'string') {
+        const nextBase = Object.getOwnPropertyDescriptor(base, tempProp)?.value;
+        chain = chain.slice(1);
+        if (nextBase !== undefined) {
+            filterRootsByRegexpChain(nextBase, chain, output);
+        }
+    }
+
+    return output;
+};
+
+export const matchingProperty = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+    const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
+
+    // chained property name can not include '/' or '.'
+    // so regex prop names with such escaped characters are invalid
+    if (rawPropertyName.includes('\\/')
+        || rawPropertyName.includes('\\.')) {
+        throw new Error(`Invalid :${pseudoName} name pattern: ${rawPropertyName}`);
+    }
+
+    let propChainMatches;
+    try {
+        propChainMatches = parseRawPropChain(rawPropertyName);
+    } catch (e) {
+        utils.logError(e);
+        throw new SyntaxError();
+    }
+
+    const ownerObjArr = filterRootsByRegexpChain(domElement, propChainMatches);
+    if (ownerObjArr.length === 0) {
+        return false;
+    }
+
+    let isMatching = true;
+
+    if (rawPropertyValue) {
+        let propValueMatch;
+        try {
+            propValueMatch = getValidMatcherArg(rawPropertyValue);
+        } catch (e) {
+            utils.logError(e);
+            throw new SyntaxError();
+        }
+
+        if (propValueMatch) {
+            for (let i = 0; i < ownerObjArr.length; i += 1) {
+                const realValue = ownerObjArr[i].value;
+
+                if (propValueMatch instanceof RegExp) {
+                    isMatching = propValueMatch.test(utils.convertTypeIntoStr(realValue));
+                } else {
+                    // handle 'null' and 'undefined' property values set as string
+                    if (realValue === 'null' || realValue === 'undefined') {
+                        isMatching = propValueMatch === realValue;
+                        break;
+                    }
+                    isMatching = utils.convertTypeFromStr(propValueMatch) === realValue;
+                }
+
+                if (isMatching) {
+                    break;
+                }
+            }
+        }
     }
 
     return isMatching;

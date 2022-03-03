@@ -25,6 +25,7 @@ export const BACKSLASH = '\\';
 
 export const SPACE = ' ';
 export const COMMA = ',';
+export const DOT = '.';
 export const SEMICOLON = ';';
 export const COLON = ':';
 
@@ -44,7 +45,7 @@ export const EQUAL_SIGN = '=';
 // for universal selector and attributes
 export const ASTERISK = '*';
 export const ID_MARKER = '#';
-export const CLASS_MARKER = '.';
+export const CLASS_MARKER = DOT;
 
 export const DESCENDANT_COMBINATOR = SPACE;
 export const CHILD_COMBINATOR = '>';
@@ -98,7 +99,7 @@ export const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
     MATCHES_CSS_AFTER_PSEUDO,
 ];
 export const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
-const MATCHES_PROP_PSEUDO_CLASS_MARKER = 'matches-property';
+export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
 const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
@@ -120,7 +121,7 @@ export const ABSOLUTE_PSEUDO_CLASSES = [
     ...CONTAINS_PSEUDO_CLASS_MARKERS,
     ...MATCHES_CSS_PSEUDO_CLASS_MARKERS,
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
-    MATCHES_PROP_PSEUDO_CLASS_MARKER,
+    MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     REMOVE_PSEUDO_CLASS_MARKER,

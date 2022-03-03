@@ -4,6 +4,7 @@ import {
     matchingText,
     matchingStyle,
     matchingAttr,
+    matchingProperty,
 } from './matcher-utils';
 
 import {
@@ -56,6 +57,17 @@ const matchPseudo = {
         } catch (e) {
             utils.logError(e);
             throw new Error(`Error while matching attributes by arg ${rawPseudoArg}.`);
+        }
+        return isMatchingAttr;
+    },
+
+    matchesProperty: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
+        let isMatchingAttr;
+        try {
+            isMatchingAttr = matchingProperty(domElement, pseudoName, rawPseudoArg);
+        } catch (e) {
+            utils.logError(e);
+            throw new Error(`Error while matching properties by arg ${rawPseudoArg}.`);
         }
         return isMatchingAttr;
     },

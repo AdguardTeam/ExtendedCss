@@ -55,6 +55,56 @@ const utils = {
         const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return new RegExp(escaped);
     },
+
+    /**
+     * Converts any instance value to string
+     * @param value
+     */
+    convertTypeIntoStr: (value: undefined | null | boolean | number | string): string => {
+        let output;
+        switch (value) {
+            case undefined:
+                output = 'undefined';
+                break;
+            case null:
+                output = 'null';
+                break;
+            default:
+                output = value.toString();
+        }
+        return output;
+    },
+
+    /**
+     * Converts instance of string value
+     * e.g. null for 'null', true for 'true' etc.
+     * @param value
+     */
+    convertTypeFromStr: (value: string): undefined | null | boolean | number | string => {
+        const numValue = Number(value);
+        let output;
+        if (!Number.isNaN(numValue)) {
+            output = numValue;
+        } else {
+            switch (value) {
+                case 'undefined':
+                    output = undefined;
+                    break;
+                case 'null':
+                    output = null;
+                    break;
+                case 'true':
+                    output = true;
+                    break;
+                case 'false':
+                    output = false;
+                    break;
+                default:
+                    output = value;
+            }
+        }
+        return output;
+    },
 };
 
 export default utils;

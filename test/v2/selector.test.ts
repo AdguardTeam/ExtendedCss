@@ -600,28 +600,239 @@ describe('extended pseudo-classes', () => {
 
         it('matches-attr - invalid args', () => {
             let selector;
-            let selectedElements;
 
             selector = 'div:matches-attr("//")';
-            selectedElements = querySelectorAll(selector, document);
-            expectNoMatch(selectedElements);
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
 
             selector = 'div:matches-attr(*)';
-            selectedElements = querySelectorAll(selector, document);
-            expectNoMatch(selectedElements);
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
 
             // invalid attr name pattern
             selector = 'div:matches-attr(".?"="/^[0-9]*$/")';
-            selectedElements = querySelectorAll(selector, document);
-            expectNoMatch(selectedElements);
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
 
             selector = 'div:matches-attr()';
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('name or arg is missing in AbsolutePseudoClass');
         });
+    });
 
+    describe('matches-property pseudos', () => {
+        beforeEach(() => {
+            document.body.innerHTML = '<div id="target" class="match"></div>';
+        });
 
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('matches-property - property name with quotes', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = '123';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property("_testProp")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - property name with no quotes', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = '123';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property(_testProp)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - wildcard in property name pattern', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = '123';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property(_t*)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - no match by property name', () => {
+            const testEl = document.querySelector('#target');
+            const testPropName = '_testProp';
+            const testPropValue = '123';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property("test")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-property - regexp for property name pattern', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = '123';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property(/_test/)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - string name and value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = 'abc';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property("_testProp"="abc")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - no match by value', () => {
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = 'abc';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property("_testProp"="target")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-property - string name and regexp value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const testPropName = '_testProp';
+            const testPropValue = 'abc';
+            testEl[testPropName] = testPropValue;
+
+            const selector = 'div:matches-property(_testProp=/[\\w]{3}/)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - string chain and null value', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const propFirst = 'propFirst';
+            const propInner = { propInner: null };
+            testEl[propFirst] = propInner;
+
+            const selector = 'div:matches-property(propFirst.propInner=null)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - access child prop of null prop', () => {
+            const testEl = document.querySelector('#target');
+            const propFirst = 'propFirst';
+            const propInner = { propInner: null };
+            testEl[propFirst] = propInner;
+
+            const selector = 'div:matches-property(propFirst.propInner.test)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('matches-property - string chain and null value as string', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const propNullAsStr = 'propNullStr';
+            const propInnerNullStr = { propInner: 'null' };
+            testEl[propNullAsStr] = propInnerNullStr;
+
+            const selector = 'div:matches-property("propNullStr.propInner"="null")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - string chain and undefined value as string', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const propUndefAsStr = 'propNullStr';
+            const propInnerUndefStr = { propInner: 'undefined' };
+            testEl[propUndefAsStr] = propInnerUndefStr;
+
+            const selector = 'div:matches-property("propNullStr.propInner"="undefined")';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - property chain variants', () => {
+            const targetTag = 'div';
+            const targetId = 'target';
+
+            const testEl = document.querySelector(`#${targetId}`);
+            const aProp = 'aProp';
+            const aInner = {
+                unit123: { id: 123 },
+            };
+            testEl[aProp] = aInner;
+
+            let selector = 'div:matches-property("aProp./[\\w]{4}123/.id")';
+            let selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'div:matches-property(aProp.unit123./.{1,5}/=123)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-property - invalid args', () => {
+            let selector;
+
+            selector = 'div:matches-property("//")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
+
+            // invalid property name pattern
+            selector = 'div:matches-property(".?"="/^[0-9]*$/")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
+
+            selector = 'div:matches-property()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('name or arg is missing in AbsolutePseudoClass');
+        });
     });
 
     /**

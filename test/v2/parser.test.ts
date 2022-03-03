@@ -556,7 +556,6 @@ describe('absolute extended selectors', () => {
         };
         expect(parse(selector)).toEqual(expected);
 
-
         selector = ':xpath(//div[@data-st-area=\'Advert\'][count(*)=2][not(header)])';
         expected = {
             type: NodeType.SelectorList,
@@ -585,6 +584,12 @@ describe('absolute extended selectors', () => {
             ],
         };
         expect(parse(selector)).toEqual(expected);
+
+        // TODO:
+        // eslint-disable-next-line max-len
+        // namu.wiki##:xpath(//article//div[count(div[*[*[*]]])=2][count(div[*[*[*]]][1]//img[starts-with(@src,'data:image/png;base64,')])>2][div[*[*[*]]][2][count(div[@class]/div[last()][count(div)=3])>=2]])
+        // eslint-disable-next-line max-len
+        // namu.wiki##:xpath(//article/h1/following-sibling::p[1]/following-sibling::div[1]//div[1][@class][@id][not(ancestor::div[@id]/ancestor::article)])
     });
 
     it('remove', () => {

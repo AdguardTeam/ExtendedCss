@@ -10,6 +10,7 @@ import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_CSS_PSEUDO_CLASS_MARKERS,
+    MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -49,6 +50,10 @@ const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNode
 
     if (name === MATCHES_ATTR_PSEUDO_CLASS_MARKER) {
         isMatching = matchPseudo.matchesAttr(domElement, name, arg);
+    }
+
+    if (name === MATCHES_PROPERTY_PSEUDO_CLASS_MARKER) {
+        isMatching = matchPseudo.matchesProperty(domElement, name, arg);
     }
 
     return isMatching;
