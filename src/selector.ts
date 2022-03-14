@@ -1,5 +1,9 @@
 import { parse } from './parser';
-import matchPseudo from './matcher';
+
+import {
+    matchPseudo,
+    findPseudo,
+} from './pseudo-processor';
 
 import {
     NodeType,
@@ -11,6 +15,7 @@ import {
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_CSS_PSEUDO_CLASS_MARKERS,
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
+    NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -89,17 +94,28 @@ const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface)
 };
 
 /**
- * Filters previously selected elements by selector
+ * Returns list of dom nodes filtered or selected by selector node
  * @param domElements dom nodes
  * @param selectorNode Selector node child
  * @returns array of dom nodes
  */
-const filterBySelector = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
-    const filteredElements = domElements.filter((el) => {
-        return isMatching(el, selectorNode);
-    });
+const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
+    let foundElements = [];
 
-    return filteredElements;
+    if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].type === NodeType.AbsolutePseudoClass
+        && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
+        if (!selectorNode.children[0].arg) {
+            throw new Error(`Missing arg for :${selectorNode.children[0].name} pseudo-class`);
+        }
+        foundElements = findPseudo.nthAncestor(domElements, selectorNode.children[0].arg);
+    } else {
+        foundElements = domElements.filter((el) => {
+            return isMatching(el, selectorNode);
+        });
+    }
+
+    return foundElements;
 };
 
 /**
@@ -117,7 +133,7 @@ const getElementsForSelectorNode = (selectorTree: AnySelectorNodeInterface, docu
             selectedElements = getByRegularSelector(selectorNode, document);
         } else {
             // filter previously selected elements by next selector nodes
-            selectedElements = filterBySelector(selectedElements, selectorNode);
+            selectedElements = getBySelectorNode(selectedElements, selectorNode);
         }
         i += 1;
     }

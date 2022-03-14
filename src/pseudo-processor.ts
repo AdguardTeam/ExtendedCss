@@ -8,12 +8,18 @@ import {
 } from './matcher-utils';
 
 import {
+    getNthAncestor,
+    getValidAncestorArg,
+    isElement,
+} from './finder-utils';
+
+import {
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
     REGULAR_PSEUDO_CLASSES,
 } from './constants';
 
-const matchPseudo = {
+export const matchPseudo = {
     /**
      * Checks whether the element satisfies condition of contains pseudo-class
      * @param domElement dom node
@@ -73,4 +79,25 @@ const matchPseudo = {
     },
 };
 
-export default matchPseudo;
+export const findPseudo = {
+    /**
+     * Gets list of nth ancestors relative to every dom node from domElements list
+     * @param domElements dom nodes
+     * @param rawPseudoArg arg of :nth-ancestor or :upward pseudo-class
+     */
+    nthAncestor: (domElements: Element[], rawPseudoArg: string): Element[] => {
+        const deep = getValidAncestorArg(rawPseudoArg);
+        const ancestors = domElements
+            .map((domElement) => {
+                let ancestor;
+                try {
+                    ancestor = getNthAncestor(domElement, deep);
+                } catch (e) {
+                    utils.logError(e);
+                }
+                return ancestor;
+            })
+            .filter(isElement);
+        return ancestors;
+    },
+};

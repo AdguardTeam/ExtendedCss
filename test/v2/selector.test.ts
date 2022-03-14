@@ -514,7 +514,7 @@ describe('extended pseudo-classes', () => {
         // });
     });
 
-    describe('matches-attr pseudos', () => {
+    describe('matches-attr pseudo', () => {
         beforeEach(() => {
             document.body.innerHTML = `
                 <div
@@ -624,7 +624,7 @@ describe('extended pseudo-classes', () => {
         });
     });
 
-    describe('matches-property pseudos', () => {
+    describe('matches-property pseudo', () => {
         beforeEach(() => {
             document.body.innerHTML = '<div id="target" class="match"></div>';
         });
@@ -832,6 +832,68 @@ describe('extended pseudo-classes', () => {
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('name or arg is missing in AbsolutePseudoClass');
+        });
+    });
+
+    describe('nth-ancestor pseudo', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <div id="child" class="base" level="2">
+                            <div id="inner" class="base" level="3"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('nth-ancestor - one target', () => {
+            const targetTag = 'div';
+            const targetId = 'root';
+
+            let selector = 'div.base[level="3"]:nth-ancestor(3)';
+            let selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'div.base[level="2"]:nth-ancestor(2)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('nth-ancestor - no match', () => {
+            // there is no such ancestor
+            const selector = 'div#root:nth-ancestor(5)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('nth-ancestor - invalid args', () => {
+            let selector;
+
+            selector = 'div:nth-ancestor("//")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :nth-ancestor pseudo-class');
+
+            selector = 'div:nth-ancestor()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :nth-ancestor pseudo-class');
+
+            selector = 'div:nth-ancestor(0)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :nth-ancestor pseudo-class');
+
+            selector = 'div:nth-ancestor(300)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :nth-ancestor pseudo-class');
         });
     });
 
