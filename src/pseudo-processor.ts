@@ -84,14 +84,15 @@ export const findPseudo = {
      * Gets list of nth ancestors relative to every dom node from domElements list
      * @param domElements dom nodes
      * @param rawPseudoArg arg of :nth-ancestor or :upward pseudo-class
+     * @param pseudoName pseudo-class name
      */
-    nthAncestor: (domElements: Element[], rawPseudoArg: string): Element[] => {
-        const deep = getValidAncestorArg(rawPseudoArg);
+    nthAncestor: (domElements: Element[], rawPseudoArg: string, pseudoName: string): Element[] => {
+        const deep = getValidAncestorArg(rawPseudoArg, pseudoName);
         const ancestors = domElements
             .map((domElement) => {
                 let ancestor;
                 try {
-                    ancestor = getNthAncestor(domElement, deep);
+                    ancestor = getNthAncestor(domElement, deep, pseudoName);
                 } catch (e) {
                     utils.logError(e);
                 }

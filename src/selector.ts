@@ -16,6 +16,7 @@ import {
     MATCHES_CSS_PSEUDO_CLASS_MARKERS,
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
+    UPWARD_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -104,11 +105,17 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
 
     if (selectorNode.type === NodeType.ExtendedSelector
         && selectorNode.children[0].type === NodeType.AbsolutePseudoClass
-        && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
+        && (selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER
+            // :upward pseudo-class with number arg has AbsolutePseudoClass type
+            || selectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER)) {
         if (!selectorNode.children[0].arg) {
             throw new Error(`Missing arg for :${selectorNode.children[0].name} pseudo-class`);
         }
-        foundElements = findPseudo.nthAncestor(domElements, selectorNode.children[0].arg);
+        foundElements = findPseudo.nthAncestor(
+            domElements,
+            selectorNode.children[0].arg,
+            selectorNode.children[0].name,
+        );
     } else {
         foundElements = domElements.filter((el) => {
             return isMatching(el, selectorNode);

@@ -897,6 +897,58 @@ describe('extended pseudo-classes', () => {
         });
     });
 
+    describe('upward pseudo - number', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <div id="child" class="base" level="2">
+                            <div id="inner" class="base" level="3"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('upward - one target', () => {
+            const targetTag = 'div';
+            const targetId = 'root';
+
+            let selector = 'div.base[level="3"]:upward(3)';
+            let selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'div.base[level="2"]:upward(2)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('upward - no match', () => {
+            // there is no such ancestor
+            const selector = 'div#root:upward(5)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('upward - invalid args', () => {
+            let selector;
+
+            selector = 'div:upward(0)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :upward pseudo-class');
+
+            selector = 'div:upward(300)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :upward pseudo-class');
+        });
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */
