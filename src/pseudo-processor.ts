@@ -101,4 +101,39 @@ export const findPseudo = {
             .filter(isElement);
         return ancestors;
     },
+    /**
+     * Gets list of elements by xpath expression, evaluated on every dom node from domElements list
+     * @param domElements dom nodes
+     * @param rawPseudoArg arg of :xpath pseudo-class
+     */
+    xpath: (domElements: Element[], rawPseudoArg: string): Element[] => {
+        const foundElements = domElements
+            .map((domElement) => {
+                const result = [];
+                let xpathResult;
+                try {
+                    xpathResult = document.evaluate(
+                        rawPseudoArg,
+                        domElement,
+                        null,
+                        XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                        null,
+                    );
+                } catch (e) {
+                    utils.logError(e);
+                    throw new Error(`Invalid argument of :xpath pseudo-class: '${rawPseudoArg}'`);
+                }
+                let node = xpathResult.iterateNext();
+                while (node) {
+                    if (isElement(node)) {
+                        result.push(node);
+                    }
+                    node = xpathResult.iterateNext();
+                }
+                return result;
+            })
+            .flat(1);
+
+        return foundElements;
+    },
 };

@@ -30,6 +30,7 @@ import {
     SUPPORTED_PSEUDO_CLASSES,
     ABSOLUTE_PSEUDO_CLASSES,
     UPWARD_PSEUDO_CLASS_MARKER,
+    XPATH_PSEUDO_CLASS_MARKER,
     BACKSLASH,
     SLASH,
     SINGLE_QUOTE,
@@ -305,8 +306,15 @@ export const parse = (selector: string) => {
                         break;
                     case COLON:
                         if (bufferNode === null) {
-                            // e.g. :contains(text)
-                            initDefaultAst(ASTERISK);
+                            if (nextTokenValue === XPATH_PSEUDO_CLASS_MARKER) {
+                                // limit applying of "naked" :xpath pseudo-class
+                                // https://github.com/AdguardTeam/ExtendedCss/issues/115
+                                initDefaultAst('body');
+                            } else {
+                                // e.g. :contains(text)
+                                initDefaultAst(ASTERISK);
+                            }
+
                             // bufferNode should be updated for following checking
                             bufferNode = getBufferNode();
                         }

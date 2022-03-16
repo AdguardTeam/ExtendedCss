@@ -35,6 +35,6 @@ export const getNthAncestor = (domElement: Element, deep: number, pseudoName: st
  * Checks whether the element is instance of Element
  * @param element
  */
-export const isElement = (element: Element | undefined): element is Element => {
+export const isElement = (element: Element | Node | undefined): element is Element => {
     return element instanceof Element;
 };

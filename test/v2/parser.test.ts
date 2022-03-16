@@ -498,8 +498,11 @@ describe('absolute extended selectors', () => {
     });
 
     it('xpath', () => {
-        let selector = 'div:xpath(//h3[contains(text(),"Share it!")]/..)';
-        let expected = {
+        let selector;
+        let expected;
+
+        selector = 'div:xpath(//h3[contains(text(),"Share it!")]/..)';
+        expected = {
             type: NodeType.SelectorList,
             children: [
                 {
@@ -565,7 +568,7 @@ describe('absolute extended selectors', () => {
                     children: [
                         {
                             type: NodeType.RegularSelector,
-                            value: '*',
+                            value: 'body',
                             children: [],
                         },
                         {

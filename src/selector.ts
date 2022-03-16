@@ -17,6 +17,7 @@ import {
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     UPWARD_PSEUDO_CLASS_MARKER,
+    XPATH_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -116,6 +117,17 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
             selectorNode.children[0].arg,
             selectorNode.children[0].name,
         );
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name === XPATH_PSEUDO_CLASS_MARKER) {
+        if (!selectorNode.children[0].arg) {
+            throw new Error('Missing arg for :xpath pseudo-class');
+        }
+        try {
+            document.createExpression(selectorNode.children[0].arg, null);
+        } catch (e) {
+            throw new Error(`Invalid argument of :xpath pseudo-class: '${selectorNode.children[0].arg}'`);
+        }
+        foundElements = findPseudo.xpath(domElements, selectorNode.children[0].arg);
     } else {
         foundElements = domElements.filter((el) => {
             return isMatching(el, selectorNode);

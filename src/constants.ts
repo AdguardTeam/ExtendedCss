@@ -100,7 +100,7 @@ export const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
 ];
 export const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
 export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
-const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
+export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
 

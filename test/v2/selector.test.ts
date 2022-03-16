@@ -7,11 +7,11 @@ import { querySelectorAll } from '../../src/selector';
 /**
  * Checks whether there is only one item among selectedElements
  * and that element tag and ID the same as expected
- * @param {Node[]} selectedElements
- * @param {string} targetTag
- * @param {string} targetId
+ * @param selectedElements
+ * @param targetTag
+ * @param targetId
  */
-const expectSingleElement = (selectedElements, targetTag, targetId) => {
+const expectSingleElement = (selectedElements: Element[], targetTag: string, targetId: string) => {
     expect(selectedElements.length).toEqual(1);
 
     const testElem = selectedElements[0];
@@ -21,9 +21,9 @@ const expectSingleElement = (selectedElements, targetTag, targetId) => {
 
 /**
  * Checks whether there is no element selected
- * @param {Array} selectedElements
+ * @param selectedElements
  */
-const expectNoMatch = (selectedElements) => {
+const expectNoMatch = (selectedElements: Element[]) => {
     expect(selectedElements.length).toEqual(0);
 };
 
@@ -832,6 +832,84 @@ describe('extended pseudo-classes', () => {
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('name or arg is missing in AbsolutePseudoClass');
+        });
+    });
+
+    describe('xpath pseudo', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <div id="child" class="base" level="2">
+                            <div id="inner" class="baseInner" level="3">
+                                test-xpath-content
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('xpath - one target', () => {
+            const targetTag = 'div';
+            let targetId;
+            let selector;
+            let selectedElements;
+
+            targetId = 'root';
+            selector = 'div.base[level="2"]:xpath(../..)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'inner';
+            selector = ':xpath(//*[@class="baseInner"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'parent';
+            selector = ':xpath(//*[@class="base"]/..)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'inner';
+            selector = ':xpath(//div[contains(text(),"test-xpath-content")]';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('xpath - no match', () => {
+            // there is no such ancestor
+            const selector = 'div#root:xpath(../../../..)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('xpath - invalid args', () => {
+            let selector;
+
+            selector = 'div:xpath("//")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :xpath pseudo-class');
+
+            selector = 'div:xpath()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :xpath pseudo-class');
+
+            selector = 'div:xpath(2)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :xpath pseudo-class');
+
+            selector = 'div:xpath(300)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :xpath pseudo-class');
         });
     });
 
