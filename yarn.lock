@@ -2457,10 +2457,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-node-qunit-puppeteer@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/node-qunit-puppeteer/-/node-qunit-puppeteer-2.0.3.tgz#62a66ad07f4d94b9a408274738683e98b375e7a9"
-  integrity sha512-G4mWn3RBQ+JPzCNWzFQ4r6RUUZqj52D5E3Z7wxqRi5b4daph0Alk/mgBpAQqZq7TVR1oV2emnN0Bk0EgYz/4gw==
+node-qunit-puppeteer@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/node-qunit-puppeteer/-/node-qunit-puppeteer-2.1.0.tgz#72e36a240e3981b127fa84d175f7186acf86c1f9"
+  integrity sha512-53ytjfu+t51r9qbOsek5D9biAlGO808Pp6b1gGdg/fcGJGFZIJNHoVpFF3OLRe7IUXA9QjhsQL9IkK4NGenHCA==
   dependencies:
     colors "^1.4.0"
     puppeteer "^2.1.0"

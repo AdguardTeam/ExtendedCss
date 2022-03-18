@@ -1,6 +1,6 @@
-/*! extended-css - v1.3.13 - Thu Jul 29 2021
+/*! extended-css - v1.3.14 - Fri Mar 18 2022
 * https://github.com/AdguardTeam/ExtendedCss
-* Copyright (c) 2021 AdGuard. Licensed GPL-3.0
+* Copyright (c) 2022 AdGuard. Licensed GPL-3.0
 */
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -121,19 +121,7 @@ utils.nodeTextContentGetter = function () {
 }();
 
 utils.isSafariBrowser = function () {
-  var isChrome = navigator.userAgent.indexOf('Chrome') > -1;
-  var isSafari = navigator.userAgent.indexOf('Safari') > -1;
-
-  if (isSafari) {
-    if (isChrome) {
-      // Chrome seems to have both Chrome and Safari userAgents
-      return false;
-    }
-
-    return true;
-  }
-
-  return false;
+  return navigator.vendor === 'Apple Computer, Inc.';
 }();
 /**
  * Converts regular expressions passed as pseudo class arguments into RegExp instances.
@@ -302,11 +290,7 @@ utils.isSameOrigin = function (urlA, locationB, domainB) {
 
 
 utils.AsyncWrapper = function () {
-  /**
-   * PhantomJS passes a wrong timestamp to the requestAnimationFrame callback and that breaks the AsyncWrapper logic
-   * https://github.com/ariya/phantomjs/issues/14832
-   */
-  var supported = typeof window.requestAnimationFrame !== 'undefined' && !/phantom/i.test(navigator.userAgent);
+  var supported = typeof window.requestAnimationFrame !== 'undefined';
   var rAF = supported ? requestAnimationFrame : setTimeout;
   var cAF = supported ? cancelAnimationFrame : clearTimeout;
   var perf = supported ? performance : Date;
