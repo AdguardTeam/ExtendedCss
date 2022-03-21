@@ -103,6 +103,12 @@ export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
 export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
+/**
+ * :upward() can get number or selector arg
+ * but selector should be standard, not extended
+ * so it's always absolute
+ */
+export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 
 // relative:
 const HAS_PSEUDO_CLASS_MARKERS = [
@@ -113,10 +119,6 @@ const HAS_PSEUDO_CLASS_MARKERS = [
 const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
 const IS_PSEUDO_CLASS_MARKER = 'is';
 
-// :upward() can be both absolute or relative depending on arg
-// so we handle it separately
-export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
-
 export const ABSOLUTE_PSEUDO_CLASSES = [
     ...CONTAINS_PSEUDO_CLASS_MARKERS,
     ...MATCHES_CSS_PSEUDO_CLASS_MARKERS,
@@ -124,6 +126,7 @@ export const ABSOLUTE_PSEUDO_CLASSES = [
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
+    UPWARD_PSEUDO_CLASS_MARKER,
     REMOVE_PSEUDO_CLASS_MARKER,
 ];
 
@@ -136,7 +139,6 @@ export const RELATIVE_PSEUDO_CLASSES = [
 export const SUPPORTED_PSEUDO_CLASSES = [
     ...ABSOLUTE_PSEUDO_CLASSES,
     ...RELATIVE_PSEUDO_CLASSES,
-    UPWARD_PSEUDO_CLASS_MARKER,
 ];
 
 export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;

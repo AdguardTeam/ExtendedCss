@@ -3,7 +3,7 @@
  * @param rawArg raw arg of pseudo-class
  * @param pseudoName pseudo-class name
  */
-export const getValidAncestorArg = (rawArg: string, pseudoName: string): number => {
+export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): number => {
     const deep = Number(rawArg);
     if (Number.isNaN(deep) || deep < 1 || deep >= 256) {
         throw new Error(`Invalid argument of :${pseudoName} pseudo-class: '${rawArg}'`);
@@ -35,6 +35,21 @@ export const getNthAncestor = (domElement: Element, deep: number, pseudoName: st
  * Checks whether the element is instance of Element
  * @param element
  */
-export const isElement = (element: Element | Node | undefined): element is Element => {
+export const isElement = (element: Element | Node | null | undefined): element is Element => {
     return element instanceof Element;
+};
+
+/**
+ * Validates standard CSS selector
+ * @param selector
+ */
+export const validateStandardSelector = (selector: string): boolean => {
+    let isValid;
+    try {
+        document.querySelectorAll(selector);
+        isValid = true;
+    } catch (e) {
+        isValid = false;
+    }
+    return isValid;
 };

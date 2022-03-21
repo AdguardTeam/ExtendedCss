@@ -1027,6 +1027,78 @@ describe('extended pseudo-classes', () => {
         });
     });
 
+    describe('upward pseudo - selector', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <p id="paragraph">text</p>
+                        <div id="child" class="base" level="2">
+                            <div id="inner" class="base" level="3"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('upward - one target', () => {
+            const targetTag = 'div';
+            let targetId;
+            let selector;
+            let selectedElements;
+
+            targetId = 'root';
+            selector = 'div.base[level="3"]:upward([level="0"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'child';
+            selector = 'div.base:upward(.base)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'parent';
+            selector = 'div.base[level="2"]:upward(#root > div)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'root';
+            selector = 'div.base:upward(body > [level])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'child';
+            selector = 'div#inner:upward(p ~ div)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('upward - no match', () => {
+            // there is no such ancestor
+            const selector = 'div#root:upward(div)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('upward - invalid args', () => {
+            let selector;
+
+            selector = 'div:upward(//)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :upward pseudo-class');
+
+            selector = 'div:upward(..class)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid argument of :upward pseudo-class');
+        });
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */

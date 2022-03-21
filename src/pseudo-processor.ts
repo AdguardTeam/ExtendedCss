@@ -9,8 +9,9 @@ import {
 
 import {
     getNthAncestor,
-    getValidAncestorArg,
+    getValidNumberAncestorArg,
     isElement,
+    validateStandardSelector,
 } from './finder-utils';
 
 import {
@@ -83,11 +84,11 @@ export const findPseudo = {
     /**
      * Gets list of nth ancestors relative to every dom node from domElements list
      * @param domElements dom nodes
-     * @param rawPseudoArg arg of :nth-ancestor or :upward pseudo-class
+     * @param rawPseudoArg number arg of :nth-ancestor or :upward pseudo-class
      * @param pseudoName pseudo-class name
      */
     nthAncestor: (domElements: Element[], rawPseudoArg: string, pseudoName: string): Element[] => {
-        const deep = getValidAncestorArg(rawPseudoArg, pseudoName);
+        const deep = getValidNumberAncestorArg(rawPseudoArg, pseudoName);
         const ancestors = domElements
             .map((domElement) => {
                 let ancestor;
@@ -135,5 +136,28 @@ export const findPseudo = {
             .flat(1);
 
         return foundElements;
+    },
+    /**
+     * Gets list of closest ancestors relative to every dom node from domElements list
+     * @param domElements dom nodes
+     * @param rawPseudoArg standard selector arg of :upward pseudo-class
+     */
+    upward: (domElements: Element[], rawPseudoArg: string): Element[] => {
+        if (!validateStandardSelector(rawPseudoArg)) {
+            throw new Error(`Invalid argument of :upward pseudo-class: '${rawPseudoArg}'`);
+        }
+        const closestAncestors = domElements
+            .map((domElement) => {
+                // closest to parent element should be found
+                // otherwise `.base:upward(.base)` will return itself too, not only ancestor
+                const parent = domElement.parentElement;
+                if (!parent) {
+                    return null;
+                }
+                return parent.closest(rawPseudoArg);
+            })
+            .filter(isElement);
+
+        return closestAncestors;
     },
 };

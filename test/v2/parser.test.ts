@@ -833,25 +833,10 @@ describe('upward extended pseudo-class', () => {
                             type: NodeType.ExtendedSelector,
                             children: [
                                 {
-                                    type: NodeType.RelativePseudoClass,
+                                    type: NodeType.AbsolutePseudoClass,
                                     name: 'upward',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '.info',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
+                                    arg: '.info',
+                                    children: [],
                                 },
                             ],
                         },
@@ -877,25 +862,10 @@ describe('upward extended pseudo-class', () => {
                             type: NodeType.ExtendedSelector,
                             children: [
                                 {
-                                    type: NodeType.RelativePseudoClass,
+                                    type: NodeType.AbsolutePseudoClass,
                                     name: 'upward',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: 'header ~ div[class]',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
+                                    arg: 'header ~ div[class]',
+                                    children: [],
                                 },
                             ],
                         },
@@ -1113,25 +1083,10 @@ describe('combined extended selectors', () => {
                             type: NodeType.ExtendedSelector,
                             children: [
                                 {
-                                    type: NodeType.RelativePseudoClass,
+                                    type: NodeType.AbsolutePseudoClass,
                                     name: 'upward',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '.ads',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
+                                    arg: '.ads',
+                                    children: [],
                                 },
                             ],
                         },

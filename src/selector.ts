@@ -105,10 +105,7 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
     let foundElements = [];
 
     if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].type === NodeType.AbsolutePseudoClass
-        && (selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER
-            // :upward pseudo-class with number arg has AbsolutePseudoClass type
-            || selectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER)) {
+        && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
         if (!selectorNode.children[0].arg) {
             throw new Error(`Missing arg for :${selectorNode.children[0].name} pseudo-class`);
         }
@@ -128,6 +125,21 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
             throw new Error(`Invalid argument of :xpath pseudo-class: '${selectorNode.children[0].arg}'`);
         }
         foundElements = findPseudo.xpath(domElements, selectorNode.children[0].arg);
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER) {
+        if (!selectorNode.children[0].arg) {
+            throw new Error('Missing arg for :upward pseudo-class');
+        }
+        if (Number.isNaN(Number(selectorNode.children[0].arg))) {
+            // so arg is selector, not a number
+            foundElements = findPseudo.upward(domElements, selectorNode.children[0].arg);
+        } else {
+            foundElements = findPseudo.nthAncestor(
+                domElements,
+                selectorNode.children[0].arg,
+                selectorNode.children[0].name,
+            );
+        }
     } else {
         foundElements = domElements.filter((el) => {
             return isMatching(el, selectorNode);
@@ -174,6 +186,7 @@ export const querySelectorAll = (selector: string, document: Document): Element[
     });
 
     // since resultElements is array of arrays with elements
-    // it should be flattered
-    return resultElementsForSelectorList.flat(1);
+    // it should be flattened
+    const uniqueElements = [...new Set(resultElementsForSelectorList.flat(1))];
+    return uniqueElements;
 };

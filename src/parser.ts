@@ -1,5 +1,4 @@
 import {
-    Token,
     TokenType,
     tokenize,
 } from './tokenizer';
@@ -29,7 +28,6 @@ import {
     COMMA,
     SUPPORTED_PSEUDO_CLASSES,
     ABSOLUTE_PSEUDO_CLASSES,
-    UPWARD_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,
     BACKSLASH,
     SLASH,
@@ -56,15 +54,6 @@ const isRegularContinuousAfterSpace = (nextTokenType: string, nextTokenValue: st
         || nextTokenValue === ID_MARKER
         || nextTokenValue === CLASS_MARKER
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
-};
-
-const isAbsoluteUpward = (tokens: Token[], i: number, tokenValue: string): boolean => {
-    const isNaNPseudoArg = () => {
-        // check token next to nextToken, i.e 'i + 2'
-        const argValue = tokens[i + 2].value;
-        return Number.isNaN(parseInt(argValue, 10));
-    };
-    return tokenValue === UPWARD_PSEUDO_CLASS_MARKER && !isNaNPseudoArg();
 };
 
 interface Context {
@@ -211,8 +200,7 @@ export const parse = (selector: string) => {
                     // store for brackets balance checking
                     context.extendedNamesStack.push(tokenValue);
 
-                    if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue)
-                        || isAbsoluteUpward(tokens, i, tokenValue)) {
+                    if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue)) {
                         addAnySelectorNode(NodeType.AbsolutePseudoClass, tokenValue);
                     } else {
                         // if it is not absolute pseudo-class, it must be relative one
