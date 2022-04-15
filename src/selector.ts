@@ -12,27 +12,38 @@ import {
 
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
+    HAS_PSEUDO_CLASS_MARKERS,
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_CSS_PSEUDO_CLASS_MARKERS,
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     UPWARD_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,
+    REGULAR_PSEUDO_CLASSES,
+    NEXT_SIBLING_COMBINATOR,
+    SUBSEQUENT_SIBLING_COMBINATOR,
 } from './constants';
 
 /**
  * Selects dom elements by value of RegularSelector
  * @param selectorNode
- * @param document
+ * @param root
  */
-const getByRegularSelector = (selectorNode: AnySelectorNodeInterface, document: Document): Element[] => {
+const getByRegularSelector = (
+    selectorNode: AnySelectorNodeInterface,
+    root: Document | Element,
+    specificity?: string,
+): Element[] => {
     if (!selectorNode) {
         throw new Error('selectorNode should be specified');
     }
     if (!selectorNode.value) {
         throw new Error('RegularSelector value should be specified');
     }
-    return Array.from(document.querySelectorAll(selectorNode.value));
+    const selectorText = specificity
+        ? `${specificity}${selectorNode.value}`
+        : selectorNode.value;
+    return Array.from(root.querySelectorAll(selectorText));
 };
 
 /**
@@ -74,8 +85,8 @@ const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNode
 const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface): boolean => {
     let match = false;
     if (selectorNode.type === NodeType.RegularSelector) {
-        // TODO:
-        // e.g. div:has(a) ~ p
+        // TODO: regular selector part after extended pseudo-class
+        // e.g. " ~ p" in rule "div:has(a) ~ p"
     } else if (selectorNode.type === NodeType.ExtendedSelector) {
         /**
          * TODO: consider to deprecate NodeTypes.ExtendedSelector
@@ -84,15 +95,55 @@ const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface)
         if (extendedPseudo.type === NodeType.AbsolutePseudoClass) {
             match = isAbsoluteMatching(domElement, extendedPseudo);
         }
-
-        if (extendedPseudo.type === NodeType.RelativePseudoClass) {
-            // TODO: handle relative pseudo-class
-            // return isRelativeMatching(domElement, extendedNode);
-        }
     } else {
         // it might be error if there is neither RegularSelector nor ExtendedSelector among Selector.children
     }
     return match;
+};
+
+const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorNodeInterface): boolean => {
+    return selectorList.children
+        .every((selector) => {
+            // selectorList.children always starts with regular selector
+            const relativeRegularSelector = selector.children[0];
+            if (!relativeRegularSelector) {
+                throw new Error('RegularSelector is missing.');
+            }
+
+            let specificity;
+            let rootElement;
+            if (relativeRegularSelector.value?.startsWith(NEXT_SIBLING_COMBINATOR)
+                || relativeRegularSelector.value?.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
+                /**
+                 * For matching the element by "element:has(+ next-sibling)" and "element:has(~ sibling)"
+                 * we check whether the element's parentElement has specific direct child combination
+                 * e.g. 'h1:has(+ .share)' -> h1.parentElement.querySelectorAll(':scope > h1 + .share')
+                 * https://www.w3.org/TR/selectors-4/#relational
+                 */
+                rootElement = element.parentElement;
+                const elementSelectorText = element.tagName.toLowerCase();
+                specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+            } else {
+                // e.g. "a:has(> img)", ".block(div > span)"
+                /**
+                 * TODO: figure out something with :scope usage as IE does not support it
+                 * https://developer.mozilla.org/en-US/docs/Web/CSS/:scope#browser_compatibility
+                 */
+                /**
+                 * :scope specification is needed for proper descendants selection
+                 * as native element.querySelectorAll() does not select exact element descendants
+                 */
+                specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} `;
+                rootElement = element;
+            }
+
+            if (!rootElement) {
+                throw new Error('Selection is not possible');
+            }
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            const relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
+            return relativeElements.length > 0;
+        });
 };
 
 /**
@@ -102,7 +153,7 @@ const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface)
  * @returns array of dom nodes
  */
 const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
-    let foundElements = [];
+    let foundElements: Element[] = [];
 
     if (selectorNode.type === NodeType.ExtendedSelector
         && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
@@ -140,6 +191,15 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
                 selectorNode.children[0].name,
             );
         }
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name
+        && HAS_PSEUDO_CLASS_MARKERS.includes(selectorNode.children[0].name)) {
+        if (selectorNode.children[0].children.length === 0) {
+            throw new Error('Missing arg for :has pseudo-class');
+        }
+        foundElements = domElements.filter((el) => {
+            return hasRelativesBySelectorList(el, selectorNode.children[0].children[0]);
+        });
     } else {
         foundElements = domElements.filter((el) => {
             return isMatching(el, selectorNode);
@@ -152,16 +212,20 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
 /**
  * Gets elements nodes for Selector node
  * @param selectorTree
- * @param document
+ * @param root
  */
-const getElementsForSelectorNode = (selectorTree: AnySelectorNodeInterface, document: Document): Element[] => {
+const getElementsForSelectorNode = (
+    selectorTree: AnySelectorNodeInterface,
+    root: Document | Element | HTMLElement,
+    specificity?: string,
+): Element[] => {
     let selectedElements: Element[] = [];
     let i = 0;
     while (i < selectorTree.children.length) {
         const selectorNode = selectorTree.children[i];
         if (i === 0) {
             // select start nodes by regular selector
-            selectedElements = getByRegularSelector(selectorNode, document);
+            selectedElements = getByRegularSelector(selectorNode, root, specificity);
         } else {
             // filter previously selected elements by next selector nodes
             selectedElements = getBySelectorNode(selectedElements, selectorNode);

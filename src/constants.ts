@@ -111,7 +111,7 @@ const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
 export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 
 // relative:
-const HAS_PSEUDO_CLASS_MARKERS = [
+export const HAS_PSEUDO_CLASS_MARKERS = [
     'has',
     'if',
     '-abp-has',
@@ -148,4 +148,5 @@ export const REGEXP_ANY_SYMBOL = '.*';
 export const REGULAR_PSEUDO_CLASSES = {
     BEFORE: ':before',
     AFTER: ':after',
+    SCOPE: ':scope',
 };

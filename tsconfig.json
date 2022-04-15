@@ -2,6 +2,7 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "target": "es5",
+    "downlevelIteration": true,
     "module":"es2015",
     "lib": ["esnext", "dom"],
     "strict": true,

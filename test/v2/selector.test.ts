@@ -1099,25 +1099,249 @@ describe('extended pseudo-classes', () => {
         });
     });
 
+    describe('has', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <p id="paragraph">text</p>
+                        <a href="test_url"></a>
+                        <div id="child" class="base" level="2">
+                            <a href="/inner_url" id="anchor" class="banner"></a>
+                            <div id="inner" class="base" level="3"></div>
+                            <div id="inner2" class="base" level="3">
+                                <span id="innerSpan" class="span" level="4"></span>
+                                <p id="innerParagraph">text</p>
+                            </div>
+                        </div>
+                        <div id="child2" class="base2" level="2">
+                            <div class="base" level="3">
+                                <p id="child2InnerParagraph">text</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('any descendant, one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'root';
+
+            const selector = 'div:has(#parent)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('simple has, any descendant, two targets', () => {
+            const targetId0 = 'root';
+            const targetId1 = 'parent';
+
+            const selector = 'div:has(#child)';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(2);
+            expect(selectedElements[0].id).toEqual(targetId0);
+            expect(selectedElements[1].id).toEqual(targetId1);
+        });
+
+        it('one target - some descendant, no child combinator', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+
+            const selector = 'div[class]:has(div > span)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('direct child element, one target', () => {
+            const targetTag = 'div';
+            const targetId = 'parent';
+
+            let selector;
+            let selectedElements;
+
+            selector = 'div:has(> #child)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = ':has(> div > .banner)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = ':has(> p + a + div #innerParagraph)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = ':has(> p ~ div #innerParagraph)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('next sibling combinator, one target', () => {
+            let targetTag;
+            let targetId;
+            let selector;
+            let selectedElements;
+
+            targetTag = 'p';
+            targetId = 'paragraph';
+
+            selector = 'p:has(+ a)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'p:has(+ * + div#child)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetTag = 'a';
+            targetId = 'anchor';
+            selector = '.banner:has(+ div[id][class])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('subsequent-sibling combinator, one target', () => {
+            const targetTag = 'p';
+            const targetId = 'paragraph';
+
+            let selector;
+            let selectedElements;
+
+            selector = 'p:has(~ a)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'p:has(~ div#child)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('selector list, one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+
+            const selector = 'div[id][class]:has(.base, p#innerParagraph)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('selector list, few targets', () => {
+            const targetId0 = 'root';
+            const targetId1 = 'parent';
+            const targetId2 = 'child';
+
+            const selector = 'div:has([id][class="base"], p)';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(3);
+            expect(selectedElements[0].id).toEqual(targetId0);
+            expect(selectedElements[1].id).toEqual(targetId1);
+            expect(selectedElements[2].id).toEqual(targetId2);
+        });
+
+        it('has, complex selectors', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+            let selector;
+            let selectedElements;
+
+            selector = '* > #paragraph ~ div:has(a[href^="/inner"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = '* > a[href*="test"] + div:has(a[href^="/inner"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = '#root div > div:has(.banner)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            /**
+             * TODO: filter by last "> div" regular selector part
+             */
+            // targetId = 'inner';
+            // selector = '#root div > div:has(.banner) > div';
+            // selectedElements = querySelectorAll(selector, document);
+            // expectSingleElement(selectedElements, targetTag, targetId);
+        });
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */
+});
 
-    // describe('has', () => {
-    //     afterEach(() => {
-    //         document.body.innerHTML = '';
-    //     });
+describe('combined pseudo-classes', () => {
+    describe('has + ...', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1" random>
+                        <p id="paragraph">text</p>
+                        <div id="child" class="base" level="2">
+                            <div id="inner" class="base" level="3">
+                                <span id="innerSpan" class="span" level="4">inner span text</span>
+                                <p id="innerParagraph">inner paragraph</p>
+                            </div>
+                        </div>
+                    </div>
 
-    //     it('div:has(a)', () => {
-    //         const selector = 'div:has(a)';
+                    <div id="parent2" level="1">
+                        <p id="paragraph2">second test</p>
+                        <div id="child2" class="base" level="2">
+                            <div id="inner2" class="base" level="3" random>
+                                <span id="innerSpan2" class="span" level="4">span2 text</span>
+                                <p id="innerParagraph2"></p>
+                                <div id="deepDiv" level="4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
 
-    //         document.body.innerHTML = `<div id="username"></div>`;
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
 
-    //         const selectedElements = querySelectorAll(selector, document);
+        it('has + not, few targets', () => {
+            const targetId0 = 'child';
+            const targetId1 = 'inner';
 
-    //         expect(selectedElements.length).toEqual(1);
-    //         expect(selectedElements[0].tagName.toLowerCase()).toEqual(selector);
-    //     });
-    // });
+            const selector = '#parent div[id][class]:has(:not(div))';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(2);
+            // #child as ancestor, because :has arg is not specified as direct child
+            expect(selectedElements[0].id).toEqual(targetId0);
+            // #inner2 as parent
+            expect(selectedElements[1].id).toEqual(targetId1);
+        });
 
+        it('has + contains', () => {
+            const targetTag = 'div';
+            const targetId = 'inner';
+
+            const selector = 'div[id^="inn"][class]:has(p:contains(inner))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('matches-attr + has + matches-prop', () => {
+            const setPropElement = document.querySelectorAll('#deepDiv')[0];
+            const testPropName = '_testProp';
+            const testPropValue = 'abc';
+            setPropElement[testPropName] = testPropValue;
+
+            const targetTag = 'div';
+            const targetId = 'inner2';
+            const selector = 'div:matches-attr(random):has(div:matches-property(_testProp=/[\\w]{3}/))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+    });
 });

@@ -71,12 +71,22 @@ interface Context {
      * Array of extended pseudo-class names;
      * needed for checking while going deep into extended selector
      */
-    extendedNamesStack: string[],
+    extendedPseudoNamesStack: string[],
 
     /**
      * Array of brackets for proper extended selector args collecting
      */
-    extendedBracketsStack: string[],
+    extendedPseudoBracketsStack: string[],
+
+    /**
+     * Array of standard pseudo-class names
+     */
+    standardPseudoNamesStack: string[],
+
+    /**
+     * Array of brackets for proper standard pseudo-class handling
+     */
+    standardPseudoBracketsStack: string[],
 }
 
 export const parse = (selector: string) => {
@@ -93,8 +103,10 @@ export const parse = (selector: string) => {
     const context: Context = {
         ast: null,
         pathToBufferNode: [],
-        extendedNamesStack: [],
-        extendedBracketsStack: [],
+        extendedPseudoNamesStack: [],
+        extendedPseudoBracketsStack: [],
+        standardPseudoNamesStack: [],
+        standardPseudoBracketsStack: [],
     };
 
     const getBufferNode = (): AnySelectorNodeInterface | null => {
@@ -198,7 +210,7 @@ export const parse = (selector: string) => {
 
                 if (bufferNode?.type === NodeType.ExtendedSelector) {
                     // store for brackets balance checking
-                    context.extendedNamesStack.push(tokenValue);
+                    context.extendedPseudoNamesStack.push(tokenValue);
 
                     if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue)) {
                         addAnySelectorNode(NodeType.AbsolutePseudoClass, tokenValue);
@@ -328,10 +340,24 @@ export const parse = (selector: string) => {
                             // e.g. div:matches-css(width:400px)
                             updateBufferNode(tokenValue);
                         }
+                        if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            initRelativeSubtree(ASTERISK);
+                            if (!isSupportedExtendedPseudo(nextTokenValue)) {
+                                // so it is a part of regular selector
+                                // e.g. :has pseudo-class arg part in rule:  div:has(:not(.content))
+                                updateBufferNode(tokenValue);
+                                context.standardPseudoNamesStack.push(nextTokenValue);
+                            } else {
+                                // add ExtendedSelector to Selector children
+                                // e.g. div:has(:contains(text))
+                                upToClosest(NodeType.Selector);
+                                addAnySelectorNode(NodeType.ExtendedSelector);
+                            }
+                        }
                         break;
                     case BRACKETS.PARENTHESES.OPEN:
                         // start of pseudo-class arg
-                        if (context.extendedNamesStack.length === 0) {
+                        if (context.extendedPseudoNamesStack.length === 0) {
                             // it might be error
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
@@ -342,45 +368,54 @@ export const parse = (selector: string) => {
                                 updateBufferNode(tokenValue);
                             } else {
                                 // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
-                                context.extendedBracketsStack.push(tokenValue);
-                                if (context.extendedBracketsStack.length > context.extendedNamesStack.length) {
+                                context.extendedPseudoBracketsStack.push(tokenValue);
+                                // eslint-disable-next-line max-len
+                                if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
                                     updateBufferNode(tokenValue);
                                 }
                             }
-
                         }
-
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
-                            context.extendedBracketsStack.push(tokenValue);
+                            context.extendedPseudoBracketsStack.push(tokenValue);
                         }
-
-                        // TODO: handle standard pseudo-classes parentheses
+                        if (bufferNode?.type === NodeType.RegularSelector) {
+                            // standard pseudo-classes, e.g. .banner:not(div)
+                            if (context.standardPseudoNamesStack.length > 0) {
+                                updateBufferNode(tokenValue);
+                                context.standardPseudoBracketsStack.push(tokenValue);
+                            }
+                        }
                         break;
                     case BRACKETS.PARENTHESES.CLOSE:
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // e.g. h3:contains((Ads))
                             // or   div:xpath(//h3[contains(text(),"Share it!")]/..)
-                            context.extendedBracketsStack.pop();
-                            context.extendedNamesStack.pop();
-                            if (context.extendedBracketsStack.length > context.extendedNamesStack.length) {
+                            context.extendedPseudoBracketsStack.pop();
+                            context.extendedPseudoNamesStack.pop();
+                            if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
                                 updateBufferNode(tokenValue);
-                            } else if (context.extendedBracketsStack.length === 0
-                                && context.extendedNamesStack.length === 0) {
+                            } else if (context.extendedPseudoBracketsStack.length === 0
+                                && context.extendedPseudoNamesStack.length === 0) {
                                 // assume it's combined
                                 // e.g. p:contains(PR):upward(2)
                                 upToClosest(NodeType.Selector);
                             }
                         }
-
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            // e.g. h3:has(div)
-                            context.extendedBracketsStack.pop();
-                            context.extendedNamesStack.pop();
-                            upToClosest(NodeType.ExtendedSelector);
-                            upToClosest(NodeType.Selector);
+                            if (context.standardPseudoNamesStack.length > 0) {
+                                // standard pseudo-classes, e.g. .banner:not(div)
+                                updateBufferNode(tokenValue);
+                                context.standardPseudoBracketsStack.pop();
+                                context.standardPseudoNamesStack.pop();
+                            } else {
+                                // e.g. h3:has(div)
+                                context.extendedPseudoBracketsStack.pop();
+                                context.extendedPseudoNamesStack.pop();
+                                upToClosest(NodeType.ExtendedSelector);
+                                upToClosest(NodeType.Selector);
+                            }
                         }
-
                         break;
                     // TODO:
                     // case SINGLE_QUOTE:
