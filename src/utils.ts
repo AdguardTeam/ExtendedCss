@@ -105,6 +105,20 @@ const utils = {
         }
         return output;
     },
+
+    /**
+     * Returns element selector text based on it's tagName and attributes
+     * @param element
+     */
+    getElementSelectorText: (element: Element): string => {
+        let selectorText = element.tagName.toLowerCase();
+        selectorText += Array.from(element.attributes)
+            .map((attr) => {
+                return `[${attr.name}="${element.getAttribute(attr.name)}"]`;
+            })
+            .join('');
+        return selectorText;
+    },
 };
 
 export default utils;

@@ -10,6 +10,8 @@ import {
     AnySelectorNodeInterface,
 } from './nodes';
 
+import utils from './utils';
+
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
     HAS_PSEUDO_CLASS_MARKERS,
@@ -22,6 +24,7 @@ import {
     REGULAR_PSEUDO_CLASSES,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
+    IS_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -103,11 +106,12 @@ const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface)
 
 const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorNodeInterface): boolean => {
     return selectorList.children
+        // "every" is used here as each selector from selector list should exist on page
         .every((selector) => {
             // selectorList.children always starts with regular selector
             const relativeRegularSelector = selector.children[0];
             if (!relativeRegularSelector) {
-                throw new Error('RegularSelector is missing.');
+                throw new Error('RegularSelector is missing for :has pseudo-class.');
             }
 
             let specificity;
@@ -138,11 +142,48 @@ const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorN
             }
 
             if (!rootElement) {
-                throw new Error('Selection is not possible');
+                throw new Error('Selection by :has pseudo-class is not possible');
             }
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            const relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
+
+            let relativeElements;
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
+            } catch (e) {
+                // fail for invalid selectors
+                throw new Error(`Invalid selector for :has pseudo-class: '${relativeRegularSelector.value}'`);
+            }
             return relativeElements.length > 0;
+        });
+};
+
+const isAnyElementBySelectorList = (element: Element, selectorList: AnySelectorNodeInterface): boolean => {
+    return selectorList.children
+        // "some" is used here as any selector from selector list should exist on page
+        .some((selector) => {
+            // selectorList.children always starts with regular selector
+            const relativeRegularSelector = selector.children[0];
+            if (!relativeRegularSelector) {
+                throw new Error('RegularSelector is missing for :is pseudo-class.');
+            }
+
+            const rootElement = element.parentElement;
+            if (!rootElement) {
+                throw new Error('Selection by :is pseudo-class is not possible');
+            }
+
+            const elementSelectorText = utils.getElementSelectorText(element);
+            const specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+
+            let anyElements;
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                anyElements = getElementsForSelectorNode(selector, rootElement, specificity);
+            } catch (e) {
+                // do not fail for invalid selectors
+                return false;
+            }
+            return anyElements.length > 0;
         });
 };
 
@@ -154,7 +195,9 @@ const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorN
  */
 const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
     let foundElements: Element[] = [];
-
+    /**
+     * TODO: refactor later
+     */
     if (selectorNode.type === NodeType.ExtendedSelector
         && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
         if (!selectorNode.children[0].arg) {
@@ -200,6 +243,15 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
         foundElements = domElements.filter((el) => {
             return hasRelativesBySelectorList(el, selectorNode.children[0].children[0]);
         });
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name
+        && selectorNode.children[0].name === IS_PSEUDO_CLASS_MARKER) {
+        if (selectorNode.children[0].children.length === 0) {
+            throw new Error('Missing arg for :is pseudo-class');
+        }
+        foundElements = domElements.filter((el) => {
+            return isAnyElementBySelectorList(el, selectorNode.children[0].children[0]);
+        });
     } else {
         foundElements = domElements.filter((el) => {
             return isMatching(el, selectorNode);
@@ -243,6 +295,9 @@ const getElementsForSelectorNode = (
 export const querySelectorAll = (selector: string, document: Document): Element[] => {
     const resultElementsForSelectorList: Element[] = [];
 
+    /**
+     * TODO: cache ast results for selector
+     */
     const ast = parse(selector);
 
     ast?.children.forEach((selectorNode: AnySelectorNodeInterface) => {

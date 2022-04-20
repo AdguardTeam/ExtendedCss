@@ -1269,6 +1269,124 @@ describe('extended pseudo-classes', () => {
             // selectedElements = querySelectorAll(selector, document);
             // expectSingleElement(selectedElements, targetTag, targetId);
         });
+
+        it('has - no arg or invalid selectors', () => {
+            let selector;
+
+            // no arg specified
+            selector = 'div:has()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :has pseudo-class');
+
+            // invalid selector
+            selector = 'div:has(1)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :has pseudo-class:');
+
+            selector = '#parent > :has(..banner)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :has pseudo-class:');
+
+            selector = '#parent > :has(id="123") > .test-inner';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :has pseudo-class:');
+        });
+    });
+
+    describe('is', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <p id="paragraph">text</p>
+                        <a href="test_url"></a>
+                        <div id="child" class="base" level="2">
+                            <a href="/inner_url" id="anchor" class="banner"></a>
+                            <div id="inner" class="base" level="3"></div>
+                            <div id="inner2" class="base" level="3">
+                                <span id="innerSpan" class="span" level="4"></span>
+                                <p id="innerParagraph">text</p>
+                            </div>
+                        </div>
+                        <div id="child2" class="base2" level="2">
+                            <div class="base" level="3">
+                                <p id="child2InnerParagraph">text</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('is: one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'parent';
+
+            const selector = 'div:is(#parent, #parent2, #parent3)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('is: child combinator, one target', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+
+            const selector = '#parent > :is(.base, .target)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('is: two simple targets', () => {
+            const targetId0 = 'child';
+            const targetId1 = 'child2';
+
+            const selector = 'div:is(#child, #child2)';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(2);
+            expect(selectedElements[0].id).toEqual(targetId0);
+            expect(selectedElements[1].id).toEqual(targetId1);
+        });
+
+        it('is: invalid selector — no fail, just skip', () => {
+            let selector;
+            let selectedElements;
+
+            selector = '#test-is :is(1) > .test-inner';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#parent > :is(id="123") > .test-inner';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#parent > :is(..banner) > .test-inner';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('is - invalid args', () => {
+            let selector;
+
+            // no selector specified
+            selector = 'div:is()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :is pseudo-class');
+
+            // there is no parentElement for html-node
+            selector = 'html:is(.modal-active)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Selection by :is pseudo-class is not possible');
+        });
     });
 
     /**
@@ -1340,6 +1458,15 @@ describe('combined pseudo-classes', () => {
             const targetTag = 'div';
             const targetId = 'inner2';
             const selector = 'div:matches-attr(random):has(div:matches-property(_testProp=/[\\w]{3}/))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('is(:has, :has)', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+
+            const selector = '#parent > :is(.block:has(> #inner), .base:has(> #inner))';
             const selectedElements = querySelectorAll(selector, document);
             expectSingleElement(selectedElements, targetTag, targetId);
         });

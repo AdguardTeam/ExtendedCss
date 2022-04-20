@@ -200,14 +200,15 @@ export const parse = (selector: string) => {
                 if (bufferNode === null) {
                     // very beginning
                     initDefaultAst(tokenValue);
-                } else if (bufferNode?.type === NodeType.SelectorList) {
+                } else if (bufferNode.type === NodeType.SelectorList) {
                     // add new selector to selector list
                     addAnySelectorNode(NodeType.Selector);
                     addAnySelectorNode(NodeType.RegularSelector, tokenValue);
-                } else if (bufferNode?.type === NodeType.RegularSelector) {
+                } else if (bufferNode.type === NodeType.RegularSelector) {
                     updateBufferNode(tokenValue);
                 }
 
+                // TODO: ditch optional chaining
                 if (bufferNode?.type === NodeType.ExtendedSelector) {
                     // store for brackets balance checking
                     context.extendedPseudoNamesStack.push(tokenValue);
@@ -237,8 +238,15 @@ export const parse = (selector: string) => {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
                             updateBufferNode(tokenValue);
                         }
+                        if (bufferNode?.type === NodeType.Selector) {
+                            // new selector should be collected
+                            upToClosest(NodeType.SelectorList);
+                        }
                         break;
                     case SPACE:
+                        /**
+                         * TODO: add test case for rule starting with few spaces
+                         */
                         if (bufferNode?.type === NodeType.RegularSelector
                             && isRegularContinuousAfterSpace(nextTokenType, nextTokenValue)) {
                             // if regular selector collecting in process
@@ -293,6 +301,9 @@ export const parse = (selector: string) => {
                             updateBufferNode(tokenValue);
                         } else if (bufferNode?.type === NodeType.RelativePseudoClass) {
                             initRelativeSubtree(tokenValue);
+                        } else if (bufferNode?.type === NodeType.SelectorList) {
+                            addAnySelectorNode(NodeType.Selector);
+                            addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                         }
                         break;
                     case BRACKETS.SQUARE.CLOSE:
