@@ -1050,6 +1050,204 @@ describe('relative extended selectors', () => {
         };
         expect(parse(selector)).toEqual(expected);
     });
+
+    it('not', () => {
+        let selector = '.banner:not(.header)';
+        let expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.banner',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '.header',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+
+        selector = 'div.banner > div:not(> a[class^="ad"])';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'div.banner > div',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '> a[class^="ad"]',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+
+        selector = '.banner > :not(span, p)';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.banner > *',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'span',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'p',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+
+        selector = '#child *:not(a, span)';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '#child *',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'a',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'span',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
 });
 
 describe('upward extended pseudo-class', () => {
@@ -1850,8 +2048,34 @@ describe('combined selectors', () => {
                                                     children: [
                                                         {
                                                             type: NodeType.RegularSelector,
-                                                            value: '*:not(span)',
+                                                            value: '*',
                                                             children: [],
+                                                        },
+                                                        {
+                                                            type: NodeType.ExtendedSelector,
+                                                            children: [
+                                                                {
+                                                                    type: NodeType.RelativePseudoClass,
+                                                                    name: 'not',
+                                                                    children: [
+                                                                        {
+                                                                            type: NodeType.SelectorList,
+                                                                            children: [
+                                                                                {
+                                                                                    type: NodeType.Selector,
+                                                                                    children: [
+                                                                                        {
+                                                                                            type: NodeType.RegularSelector, // eslint-disable-line max-len
+                                                                                            value: 'span',
+                                                                                            children: [],
+                                                                                        },
+                                                                                    ],
+                                                                                },
+                                                                            ],
+                                                                        },
+                                                                    ],
+                                                                },
+                                                            ],
                                                         },
                                                     ],
                                                 },
@@ -1868,138 +2092,134 @@ describe('combined selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    /**
-     * TODO: implement :not as extended pseudo-class. AG-13605
-     */
-    // it(':not(:contains())', () => {
-    //     const selector = 'p:not(:contains(text))';
-    //     const expected = {
-    //         type: NodeType.SelectorList,
-    //         children: [
-    //             {
-    //                 type: NodeType.Selector,
-    //                 children: [
-    //                     {
-    //                         type: NodeType.RegularSelector,
-    //                         value: 'p',
-    //                         children: [],
-    //                     },
-    //                     {
-    //                         type: NodeType.ExtendedSelector,
-    //                         children: [
-    //                             {
-    //                                 type: NodeType.RelativePseudoClass,
-    //                                 name: 'not',
-    //                                 children: [
-    //                                     {
-    //                                         type: NodeType.SelectorList,
-    //                                         children: [
-    //                                             {
-    //                                                 type: NodeType.Selector,
-    //                                                 children: [
-    //                                                     {
-    //                                                         type: NodeType.RegularSelector,
-    //                                                         value: '*',
-    //                                                         children: [],
-    //                                                     },
-    //                                                     {
-    //                                                         type: NodeType.ExtendedSelector,
-    //                                                         children: [
-    //                                                             {
-    //                                                                 type: NodeType.AbsolutePseudoClass,
-    //                                                                 name: 'contains',
-    //                                                                 arg: 'text',
-    //                                                                 children: [],
-    //                                                             },
-    //                                                         ],
-    //                                                     },
-    //                                                 ],
-    //                                             },
-    //                                         ],
-    //                                     },
-    //                                 ],
-    //                             },
-    //                         ],
-    //                     },
-    //                 ],
-    //             },
-    //         ],
-    //     };
-    //     expect(parse(selector)).toEqual(expected);
-    // });
+    it(':not(:contains())', () => {
+        const selector = 'p:not(:contains(text))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'p',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '*',
+                                                            children: [],
+                                                        },
+                                                        {
+                                                            type: NodeType.ExtendedSelector,
+                                                            children: [
+                                                                {
+                                                                    type: NodeType.AbsolutePseudoClass,
+                                                                    name: 'contains',
+                                                                    arg: 'text',
+                                                                    children: [],
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
 
-    // it(':not(:has())', () => {
-    //     const selector = 'div:not(:has(span))';
-    //     const expected = {
-    //         type: NodeType.SelectorList,
-    //         children: [
-    //             {
-    //                 type: NodeType.Selector,
-    //                 children: [
-    //                     {
-    //                         type: NodeType.RegularSelector,
-    //                         value: 'div',
-    //                         children: [],
-    //                     },
-    //                     {
-    //                         type: NodeType.ExtendedSelector,
-    //                         children: [
-    //                             {
-    //                                 type: NodeType.RelativePseudoClass,
-    //                                 name: 'not',
-    //                                 children: [
-    //                                     {
-    //                                         type: NodeType.SelectorList,
-    //                                         children: [
-    //                                             {
-    //                                                 type: NodeType.Selector,
-    //                                                 children: [
-    //                                                     {
-    //                                                         type: NodeType.RegularSelector,
-    //                                                         value: '*',
-    //                                                         children: [],
-    //                                                     },
-    //                                                     {
-    //                                                         type: NodeType.ExtendedSelector,
-    //                                                         children: [
-    //                                                             {
-    //                                                                 type: NodeType.RelativePseudoClass,
-    //                                                                 name: 'has',
-    //                                                                 children: [
-    //                                                                     {
-    //                                                                         type: NodeType.SelectorList,
-    //                                                                         children: [
-    //                                                                             {
-    //                                                                                 type: NodeType.Selector,
-    //                                                                                 children: [
-    //                                                                                     {
-    // eslint-disable-next-line max-len
-    //                                                                                         type: NodeType.RegularSelector,
-    //                                                                                         value: 'span',
-    //                                                                                         children: [],
-    //                                                                                     },
-    //                                                                                 ],
-    //                                                                             },
-    //                                                                         ],
-    //                                                                     },
-    //                                                                 ],
-    //                                                             },
-    //                                                         ],
-    //                                                     },
-    //                                                 ],
-    //                                             },
-    //                                         ],
-    //                                     },
-    //                                 ],
-    //                             },
-    //                         ],
-    //                     },
-    //                 ],
-    //             },
-    //         ],
-    //     };
-    //     expect(parse(selector)).toEqual(expected);
-    // });
+    it(':not(:has())', () => {
+        const selector = 'div:not(:has(span))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'div',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '*',
+                                                            children: [],
+                                                        },
+                                                        {
+                                                            type: NodeType.ExtendedSelector,
+                                                            children: [
+                                                                {
+                                                                    type: NodeType.RelativePseudoClass,
+                                                                    name: 'has',
+                                                                    children: [
+                                                                        {
+                                                                            type: NodeType.SelectorList,
+                                                                            children: [
+                                                                                {
+                                                                                    type: NodeType.Selector,
+                                                                                    children: [
+                                                                                        {
+                                                                                            type: NodeType.RegularSelector, // eslint-disable-line max-len
+                                                                                            value: 'span',
+                                                                                            children: [],
+                                                                                        },
+                                                                                    ],
+                                                                                },
+                                                                            ],
+                                                                        },
+                                                                    ],
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
 });
 
 /**

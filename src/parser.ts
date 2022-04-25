@@ -48,11 +48,15 @@ const isSupportedExtendedPseudo = (token: string): boolean => SUPPORTED_PSEUDO_C
  * @param nextTokenType
  * @param nextTokenValue
  */
-const isRegularContinuousAfterSpace = (nextTokenType: string, nextTokenValue: string): boolean => {
+const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: string): boolean => {
     return COMBINATORS.includes(nextTokenValue)
         || nextTokenType === TokenType.Word
+        // e.g. #main *:has(> .ad)
+        || nextTokenValue === ASTERISK
         || nextTokenValue === ID_MARKER
         || nextTokenValue === CLASS_MARKER
+        // e.g. div :not(.content)
+        || nextTokenValue === COLON
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
 };
 
@@ -248,16 +252,16 @@ export const parse = (selector: string) => {
                          * TODO: add test case for rule starting with few spaces
                          */
                         if (bufferNode?.type === NodeType.RegularSelector
-                            && isRegularContinuousAfterSpace(nextTokenType, nextTokenValue)) {
+                            && (doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)
+                                || !nextTokenValue)) {
                             // if regular selector collecting in process
                             // this space is part of it
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RegularSelector
                             && nextTokenValue === COLON) {
-                            // it might be such case    div > :contains(test)
-                            // should consider it as    div > *:contains(test)
-                            updateBufferNode(`${tokenValue}${ASTERISK}`);
+                            // e.g. div > :contains(text)
+                            updateBufferNode(ASTERISK);
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)

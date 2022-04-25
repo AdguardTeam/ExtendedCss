@@ -25,6 +25,7 @@ import {
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
     IS_PSEUDO_CLASS_MARKER,
+    NOT_PSEUDO_CLASS_MARKER,
     IF_NOT_PSEUDO_CLASS_MARKER,
 } from './constants';
 
@@ -162,19 +163,24 @@ const hasRelativesBySelectorList = (
         });
 };
 
-const isAnyElementBySelectorList = (element: Element, selectorList: AnySelectorNodeInterface): boolean => {
+const isAnyElementBySelectorList = (
+    element: Element,
+    selectorList: AnySelectorNodeInterface,
+    pseudoName: string | undefined,
+    errorOnInvalidSelector?: boolean,
+): boolean => {
     return selectorList.children
         // "some" is used here as any selector from selector list should exist on page
         .some((selector) => {
             // selectorList.children always starts with regular selector
             const relativeRegularSelector = selector.children[0];
             if (!relativeRegularSelector) {
-                throw new Error('RegularSelector is missing for :is pseudo-class.');
+                throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
             }
 
             const rootElement = element.parentElement;
             if (!rootElement) {
-                throw new Error('Selection by :is pseudo-class is not possible');
+                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
             }
 
             const elementSelectorText = utils.getElementSelectorText(element);
@@ -185,8 +191,13 @@ const isAnyElementBySelectorList = (element: Element, selectorList: AnySelectorN
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 anyElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
-                // do not fail for invalid selectors
-                return false;
+                if (errorOnInvalidSelector) {
+                    // fail on invalid selectors for :not
+                    throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
+                } else {
+                    // do not fail on invalid selectors for :is
+                    return false;
+                }
             }
             return anyElements.length > 0;
         });
@@ -264,7 +275,25 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
             throw new Error('Missing arg for :is pseudo-class');
         }
         foundElements = domElements.filter((el) => {
-            return isAnyElementBySelectorList(el, selectorNode.children[0].children[0]);
+            return isAnyElementBySelectorList(
+                el,
+                selectorNode.children[0].children[0],
+                selectorNode.children[0].name,
+            );
+        });
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name
+        && selectorNode.children[0].name === NOT_PSEUDO_CLASS_MARKER) {
+        if (selectorNode.children[0].children.length === 0) {
+            throw new Error('Missing arg for :not pseudo-class');
+        }
+        foundElements = domElements.filter((el) => {
+            return !isAnyElementBySelectorList(
+                el,
+                selectorNode.children[0].children[0],
+                selectorNode.children[0].name,
+                true,
+            );
         });
     } else {
         foundElements = domElements.filter((el) => {

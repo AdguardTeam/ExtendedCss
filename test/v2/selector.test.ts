@@ -1556,6 +1556,96 @@ describe('extended pseudo-classes', () => {
         });
     });
 
+    describe('not', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <p id="paragraph">text</p>
+                        <a href="test_url"></a>
+                        <div id="child" class="base" level="2">
+                            <a href="/inner_url" id="anchor" class="banner"></a>
+                            <div id="inner" class="base" level="3"></div>
+                            <div id="inner2" class="base" level="3">
+                                <span id="innerSpan" class="span" level="4"></span>
+                                <p id="innerParagraph">text</p>
+                            </div>
+                        </div>
+                        <div id="child2" class="base2" level="2">
+                            <div class="base" level="3">
+                                <p id="child2InnerParagraph">text</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('not: one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'child';
+
+            const selector = '.base:not([level="3"])';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('not: child combinator, one target', () => {
+            const targetTag = 'p';
+            const targetId = 'innerParagraph';
+
+            const selector = '#inner2 > :not(span)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('not: two simple targets', () => {
+            const targetId0 = 'inner';
+            const targetId1 = 'inner2';
+
+            const selector = '#child *:not(a, span, p)';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(2);
+            expect(selectedElements[0].id).toEqual(targetId0);
+            expect(selectedElements[1].id).toEqual(targetId1);
+        });
+
+        it('not - invalid args', () => {
+            let selector;
+
+            // no selector specified
+            selector = 'div:not()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :not pseudo-class');
+
+            selector = 'div:not(1)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :not pseudo-class:');
+
+            selector = '#parent > :not(id="123") > .test-inner';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :not pseudo-class:');
+
+            selector = '#parent > :not(..banner) > .test-inner';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :not pseudo-class:');
+
+            // there is no parentElement for html-node
+            selector = 'html:not(.modal-active)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Selection by :not pseudo-class is not possible');
+        });
+    });
+
     /**
      * TODO: add tests for other extended selectors
      */
