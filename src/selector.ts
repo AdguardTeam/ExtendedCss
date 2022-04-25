@@ -25,6 +25,7 @@ import {
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
     IS_PSEUDO_CLASS_MARKER,
+    IF_NOT_PSEUDO_CLASS_MARKER,
 } from './constants';
 
 /**
@@ -104,14 +105,18 @@ const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface)
     return match;
 };
 
-const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorNodeInterface): boolean => {
+const hasRelativesBySelectorList = (
+    element: Element,
+    selectorList: AnySelectorNodeInterface,
+    pseudoName: string | undefined,
+): boolean => {
     return selectorList.children
         // "every" is used here as each selector from selector list should exist on page
         .every((selector) => {
             // selectorList.children always starts with regular selector
             const relativeRegularSelector = selector.children[0];
             if (!relativeRegularSelector) {
-                throw new Error('RegularSelector is missing for :has pseudo-class.');
+                throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
             }
 
             let specificity;
@@ -142,7 +147,7 @@ const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorN
             }
 
             if (!rootElement) {
-                throw new Error('Selection by :has pseudo-class is not possible');
+                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible`);
             }
 
             let relativeElements;
@@ -151,7 +156,7 @@ const hasRelativesBySelectorList = (element: Element, selectorList: AnySelectorN
                 relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
                 // fail for invalid selectors
-                throw new Error(`Invalid selector for :has pseudo-class: '${relativeRegularSelector.value}'`);
+                throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`);
             }
             return relativeElements.length > 0;
         });
@@ -241,7 +246,16 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
             throw new Error('Missing arg for :has pseudo-class');
         }
         foundElements = domElements.filter((el) => {
-            return hasRelativesBySelectorList(el, selectorNode.children[0].children[0]);
+            return hasRelativesBySelectorList(el, selectorNode.children[0].children[0], selectorNode.children[0].name);
+        });
+    } else if (selectorNode.type === NodeType.ExtendedSelector
+        && selectorNode.children[0].name
+        && selectorNode.children[0].name === IF_NOT_PSEUDO_CLASS_MARKER) {
+        if (selectorNode.children[0].children.length === 0) {
+            throw new Error('Missing arg for :if-not pseudo-class');
+        }
+        foundElements = domElements.filter((el) => {
+            return !hasRelativesBySelectorList(el, selectorNode.children[0].children[0], selectorNode.children[0].name);
         });
     } else if (selectorNode.type === NodeType.ExtendedSelector
         && selectorNode.children[0].name

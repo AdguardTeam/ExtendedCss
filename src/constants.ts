@@ -116,7 +116,7 @@ export const HAS_PSEUDO_CLASS_MARKERS = [
     'if',
     '-abp-has',
 ];
-const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
+export const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
 export const IS_PSEUDO_CLASS_MARKER = 'is';
 
 export const ABSOLUTE_PSEUDO_CLASSES = [

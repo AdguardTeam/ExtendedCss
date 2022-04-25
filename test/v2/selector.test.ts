@@ -1297,6 +1297,173 @@ describe('extended pseudo-classes', () => {
         });
     });
 
+    describe('if-not', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root" level="0">
+                    <div id="parent" level="1">
+                        <p id="paragraph">text</p>
+                        <a href="test_url"></a>
+                        <div id="child" class="base" level="2">
+                            <a href="/inner_url" id="anchor" class="banner"></a>
+                            <div id="inner" class="base" level="3"></div>
+                            <div id="inner2" class="base" level="3">
+                                <span id="innerSpan" class="span" level="4"></span>
+                                <p id="innerParagraph">text</p>
+                            </div>
+                        </div>
+                        <div id="child2" class="base2" level="2">
+                            <div class="base" level="3">
+                                <p id="child2InnerParagraph">text</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('if-not - any descendant, one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'child2';
+
+            const selector = '#parent > div:if-not(#innerParagraph)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - some descendant, no child combinator', () => {
+            const targetTag = 'div';
+            const targetId = 'child2';
+
+            const selector = '#parent > div:if-not(div > span)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - direct child element, one target', () => {
+            const targetTag = 'div';
+
+            let targetId;
+            let selector;
+            let selectedElements;
+
+            targetId = 'inner';
+            selector = '#child div:if-not(> span)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'child2';
+
+            selector = '#parent > div:if-not(> a + div + div)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = '#parent > div:if-not(> a ~ div[level="3"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - * and child combinator, few targets', () => {
+            const targetId0 = 'anchor';
+            const targetId1 = 'inner';
+
+            const selector = '#child > :if-not(> span)';
+            const selectedElements = querySelectorAll(selector, document);
+            expect(selectedElements.length).toEqual(2);
+            expect(selectedElements[0].id).toEqual(targetId0);
+            expect(selectedElements[1].id).toEqual(targetId1);
+        });
+
+        it('if-not - next sibling combinator, one target', () => {
+            const targetTag = 'a';
+            const targetId = 'anchor';
+
+            let selector;
+            let selectedElements;
+
+            selector = 'a:if-not(+ [level="2"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'a:if-not(+ [level="2"] + [level="2"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - subsequent-sibling combinator, one target', () => {
+            const targetTag = 'a';
+            const targetId = 'anchor';
+
+            let selector;
+            let selectedElements;
+
+            selector = 'a:if-not(~ .base2)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            selector = 'a:if-not(~ * + div[id][class] > [level="3"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - selector list, one simple target', () => {
+            const targetTag = 'div';
+            const targetId = 'child2';
+
+            const selector = '#parent > div[id][class]:if-not(a, span)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - complex selectors', () => {
+            const targetTag = 'div';
+
+            let targetId;
+            let selector;
+            let selectedElements;
+
+            targetId = 'inner';
+            selector = '#root div > div:if-not(*)';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+
+            targetId = 'child2';
+            selector = '#root > * > #paragraph ~ div:if-not(a[href^="/inner"])';
+            selectedElements = querySelectorAll(selector, document);
+            expectSingleElement(selectedElements, targetTag, targetId);
+        });
+
+        it('if-not - no arg or invalid selectors', () => {
+            let selector;
+
+            // no arg specified
+            selector = 'div:if-not()';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Missing arg for :if-not pseudo-class');
+
+            // invalid selector
+            selector = 'div:if-not(1)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :if-not pseudo-class:');
+
+            selector = '#parent > :if-not(..banner)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :if-not pseudo-class:');
+
+            selector = '#parent > :if-not(id="123") > .test-inner';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Invalid selector for :if-not pseudo-class:');
+        });
+    });
+
     describe('is', () => {
         beforeEach(() => {
             document.body.innerHTML = `
