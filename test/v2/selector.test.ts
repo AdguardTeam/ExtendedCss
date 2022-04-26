@@ -5,18 +5,15 @@
 import { querySelectorAll } from '../../src/selector';
 
 /**
- * Checks whether there is only one item among selectedElements
- * and that element tag and ID the same as expected
+ * Checks whether selectedElements and targetElements are the same
+ * @param targetElements
  * @param selectedElements
- * @param targetTag
- * @param targetId
  */
-const expectSingleElement = (selectedElements: Element[], targetTag: string, targetId: string) => {
-    expect(selectedElements.length).toEqual(1);
-
-    const testElem = selectedElements[0];
-    expect(testElem.tagName.toLowerCase()).toEqual(targetTag);
-    expect(testElem.id).toEqual(targetId);
+const expectTheSameElements = (targetElements: NodeListOf<Element>, selectedElements: Element[]) => {
+    expect(selectedElements.length).toEqual(targetElements.length);
+    targetElements.forEach((targetEl, index) => {
+        expect(selectedElements[index]).toEqual(targetEl);
+    });
 };
 
 /**
@@ -33,63 +30,55 @@ describe('selector', () => {
     });
 
     it('simple -- div', () => {
-        const targetTag = 'div';
-        const targetId = 'username';
-        const selector = 'div';
-
         document.body.innerHTML = '<div id="username"></div>';
 
+        const selector = 'div';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('div#username');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('compound -- div#banner', () => {
-        const targetTag = 'div';
-        const targetId = 'banner';
-        const selector = 'div#banner';
-
         document.body.innerHTML = `
             <div id="top"></div>
             <div id="banner"></div>
         `;
 
+        const selector = 'div#banner';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('div#banner');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('compound -- div[style]', () => {
-        const targetTag = 'div';
-        const targetId = 'target';
-        const selector = 'div[style]';
-
         document.body.innerHTML = `
             <div id="NOT_A_TARGET" styled=0></div>
             <div id="target" style="border: 1px solid black"></div>
         `;
 
+        const selector = 'div[style]';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('div#target');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('compound -- div[id][onclick*="redirect"]', () => {
-        const targetTag = 'div';
-        const targetId = 'target';
-        const selector = 'div[id][onclick*="redirect"]';
-
         document.body.innerHTML = `
             <div id="NOT_A_TARGET" onclick="same_origin_url"></div>
             <div id="target" onclick="e23h-redirect__4tn"></div>
         `;
 
+        const selector = 'div[id][onclick*="redirect"]';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('div#target');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('complex -- div > span', () => {
-        const targetTag = 'span';
-        const targetId = 'target';
-        const selector = 'div > span';
-
         document.body.innerHTML = `
             <div>
                 <a class="test"></a>
@@ -97,15 +86,14 @@ describe('selector', () => {
             </div>
         `;
 
+        const selector = 'div > span';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('span#target');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('complex -- div.ad > a.redirect + a', () => {
-        const targetTag = 'a';
-        const targetId = 'target';
-        const selector = 'div.ad > a.redirect + a';
-
         document.body.innerHTML = `
             <div class="useful">
                 <a class="redirect"></a>
@@ -117,58 +105,36 @@ describe('selector', () => {
             </div>
         `;
 
+        const selector = 'div.ad > a.redirect + a';
         const selectedElements = querySelectorAll(selector, document);
 
-        expect(selectedElements.length).toEqual(1);
-
-        const testElem = selectedElements[0];
-        expect(testElem.tagName.toLowerCase()).toEqual(targetTag);
-        expect(testElem.id).toEqual(targetId);
+        const targetElements = document.querySelectorAll('a#target');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('selector list -- div, span', () => {
-        const targetTag0 = 'div';
-        const targetId0 = 'target0';
-        const targetTag1 = 'span';
-        const targetId1 = 'target1';
-        const selector = 'div, span';
-
         document.body.innerHTML = `
             <div id="target0"></>
             <a class="test"></a>
             <span id="target1"></span>
         `;
 
+        const selector = 'div, span';
         const selectedElements = querySelectorAll(selector, document);
 
-        expect(selectedElements.length).toEqual(2);
-
-        const testElem0 = selectedElements[0];
-        expect(testElem0.tagName.toLowerCase()).toEqual(targetTag0);
-        expect(testElem0.id).toEqual(targetId0);
-
-        const testElem1 = selectedElements[1];
-        expect(testElem1.tagName.toLowerCase()).toEqual(targetTag1);
-        expect(testElem1.id).toEqual(targetId1);
+        const targetElements = document.querySelectorAll('div, span');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('selector list -- div.banner, p[ad] ~ span, div > a > img', () => {
-        const targetTag0 = 'div';
-        const targetId0 = 'target0';
-        const targetTag1 = 'span';
-        const targetId1 = 'target1';
-        const targetTag2 = 'img';
-        const targetId2 = 'target2';
-        const selector = 'div.banner, p[ad] ~ span, div > a > img';
-
         document.body.innerHTML = `
             <div class="NOT_A_TARGET">
                 <p class="text" ad=true></p>
                 <a class="NOT_A_TARGET"></a>
-                <span id="target1"></span>
+                <span id="target0"></span>
             </div>
             <div class="ad">
-                <div class="banner" id="target0"></div>
+                <div class="banner" id="target1"></div>
             </div>
             <div class="ad">
                 <a>
@@ -177,35 +143,24 @@ describe('selector', () => {
             </div>
         `;
 
+        const selector = 'p[ad] ~ span, div.banner, div > a > img';
         const selectedElements = querySelectorAll(selector, document);
 
-        expect(selectedElements.length).toEqual(3);
-
-        const testElem0 = selectedElements[0];
-        expect(testElem0.tagName.toLowerCase()).toEqual(targetTag0);
-        expect(testElem0.id).toEqual(targetId0);
-
-        const testElem1 = selectedElements[1];
-        expect(testElem1.tagName.toLowerCase()).toEqual(targetTag1);
-        expect(testElem1.id).toEqual(targetId1);
-
-        const testElem2 = selectedElements[2];
-        expect(testElem2.tagName.toLowerCase()).toEqual(targetTag2);
-        expect(testElem2.id).toEqual(targetId2);
+        const targetElements = document.querySelectorAll('#target0, #target1, #target2');
+        expectTheSameElements(targetElements, selectedElements);
     });
 
     it('regular selector with pseudo-class -- input:disabled', () => {
-        const targetTag = 'input';
-        const targetId = 'target';
-        const selector = 'input:disabled';
-
         document.body.innerHTML = `
             <input class="NOT_A_TARGET">
             <input id="target" disabled>
         `;
 
+        const selector = 'input:disabled';
         const selectedElements = querySelectorAll(selector, document);
-        expectSingleElement(selectedElements, targetTag, targetId);
+
+        const targetElements = document.querySelectorAll('input#target');
+        expectTheSameElements(targetElements, selectedElements);
     });
 });
 
@@ -216,34 +171,32 @@ describe('extended pseudo-classes', () => {
         });
 
         it('simple string arg', () => {
-            const targetTag = 'span';
-            const targetId = 'target';
-
             document.body.innerHTML = `
                 <span id="target">text example</span>
                 <span id="NOT_A_TARGET">123example</span>
                 <p id="NOT_A_TARGET_2">text</p>
             `;
+            const targetElements = document.querySelectorAll('span#target');
 
-            let selector = 'span:contains(text)';
-            let selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            let selector;
+            let selectedElements;
+
+            selector = 'span:contains(text)';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
 
             // regexp + extra space
             selector = 'span:contains(/\\sexample/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // string + extra space
             selector = 'span:contains( example)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('regexp arg', () => {
-            const targetTag = 'span';
-            const targetId = 'target';
-
             document.body.innerHTML = `
                 <div id="container">
                     <h1 id="NOT_A_TARGET_1">Test template</h1>
@@ -252,10 +205,11 @@ describe('extended pseudo-classes', () => {
                     <p id="NOT_A_TARGET_3">text123</p>
                 </div>
             `;
+            const targetElements = document.querySelectorAll('span#target');
 
             const selector = '#container > :contains(/^text\\s/)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             /**
              * TODO: after old syntax support by parser
@@ -270,15 +224,13 @@ describe('extended pseudo-classes', () => {
         });
 
         it('regexp arg with flags', () => {
-            const targetTag = 'p';
-            const targetId = 'target';
-
             document.body.innerHTML = `
                 <div id="container">
                     <p id="target">paragraph with simple text</p>
                     <span id="NOT_A_TARGET">another simple text</span>
                 </div>
             `;
+            const targetElements = document.querySelectorAll('p#target');
 
             let selector;
             let selectedElements;
@@ -289,21 +241,18 @@ describe('extended pseudo-classes', () => {
 
             selector = 'p:contains(/simple/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'p:contains(/Simple/i)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'p:contains(/Simple/gmi)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('few different standard combinators + contains', () => {
-            const targetTag = 'a';
-            const targetId = 'target';
-
             document.body.innerHTML = `
                 <div id="container">
                     <h1 class="NOT_A_TARGET">Test template</h1>
@@ -315,10 +264,11 @@ describe('extended pseudo-classes', () => {
                     </div>
                 </div>
             `;
+            const targetElements = document.querySelectorAll('a#target');
 
             const selector = '* > p ~ #test a:contains(adg-test)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         /**
@@ -329,9 +279,6 @@ describe('extended pseudo-classes', () => {
 
     describe('matches-css pseudos', () => {
         it('matches-css - simple', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
-
             document.body.innerHTML = `
                 <style type="text/css">
                     div {
@@ -348,18 +295,22 @@ describe('extended pseudo-classes', () => {
 
                 <div id="target" class="find"></div>
             `;
+            const targetElements = document.querySelectorAll('div#target');
 
-            let selector = ':matches-css(width:20px)';
-            let selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            let selector;
+            let selectedElements;
+
+            selector = ':matches-css(width:20px)';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = ':matches-css(content: *find me*)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'div:matches-css(min-height:/10/):matches-css(height:/10|15|20/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // should NOT match because height is 15px
             selector = 'div:matches-css(min-height:/10/):matches-css(height:/10|20/)';
@@ -368,10 +319,6 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-css - opacity', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
-            const selector = 'div:matches-css(opacity: 0.9)';
-
             document.body.innerHTML = `
                 <style>
                     #target { opacity: 0.9; }
@@ -381,15 +328,14 @@ describe('extended pseudo-classes', () => {
                 <div id="target"></div>
                 <div id="NOT_A_TARGET"></div>
             `;
+            const targetElements = document.querySelectorAll('div#target');
 
+            const selector = 'div:matches-css(opacity: 0.9)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-css - url', () => {
-            let targetTag = 'div';
-            let targetId = 'divTarget';
-
             /* eslint-disable max-len */
             document.body.innerHTML = `
                 <style type="text/css">
@@ -410,40 +356,43 @@ describe('extended pseudo-classes', () => {
             `;
             /* eslint-enable max-len */
 
+            let targetElements;
             let selector;
             let selectedElements;
+
+            targetElements = document.querySelectorAll('div#divTarget');
 
             // no quotes for url
             selector = 'div:matches-css(background-image: url(data:*))';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // quotes for url
             selector = 'div:matches-css(background-image: url("data:*"))';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // regex + strict quotes for url
             selector = 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // regex + optional quotes for url
             selector = 'div:matches-css(background-image: /^url\\("?data:image\\/gif;base64.+/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // regex + no quotes for url
             selector = 'div:matches-css(background-image: /^url\\([a-z]{4}:[a-z]{5}/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             // another style declaration
-            targetTag = 'p';
-            targetId = 'pTarget';
+            targetElements = document.querySelectorAll('p#pTarget');
+
             selector = 'p:matches-css(background-image: /^url\\("?data:image\\/gif;base64.+/)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         /**
@@ -531,27 +480,24 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-attr - simple attr name without quotes', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = ':matches-attr("class")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - attr name without quotes', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = ':matches-attr(class)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - wildcard in attr name pattern', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = ':matches-attr("data-*")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - no match by attr name', () => {
@@ -561,19 +507,17 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-attr - regexp for attr name pattern', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = ':matches-attr("/data-/")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - string name and value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = 'div:matches-attr("class"="match")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - no match by value', () => {
@@ -583,19 +527,17 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-attr - string name and regexp value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = 'div:matches-attr("class"="/[\\w]{5}/")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - name with wildcard and regexp value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
             const selector = 'div:matches-attr("data-*"="/^banner_.?/")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr - invalid args', () => {
@@ -634,45 +576,42 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - property name with quotes', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property("_testProp")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - property name with no quotes', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property(_testProp)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - wildcard in property name pattern', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property(_t*)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - no match by property name', () => {
@@ -687,37 +626,33 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - regexp for property name pattern', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property(/_test/)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - string name and value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property("_testProp"="abc")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - no match by value', () => {
-            const targetId = 'target';
-
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
@@ -728,31 +663,29 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - string name and regexp value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
 
             const selector = 'div:matches-property(_testProp=/[\\w]{3}/)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - string chain and null value', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const propFirst = 'propFirst';
             const propInner = { propInner: null };
             testEl[propFirst] = propInner;
 
             const selector = 'div:matches-property(propFirst.propInner=null)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - access child prop of null prop', () => {
@@ -767,38 +700,35 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - string chain and null value as string', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const propNullAsStr = 'propNullStr';
             const propInnerNullStr = { propInner: 'null' };
             testEl[propNullAsStr] = propInnerNullStr;
 
             const selector = 'div:matches-property("propNullStr.propInner"="null")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - string chain and undefined value as string', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const propUndefAsStr = 'propNullStr';
             const propInnerUndefStr = { propInner: 'undefined' };
             testEl[propUndefAsStr] = propInnerUndefStr;
 
             const selector = 'div:matches-property("propNullStr.propInner"="undefined")';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - property chain variants', () => {
-            const targetTag = 'div';
-            const targetId = 'target';
+            const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector(`#${targetId}`);
+            const testEl = document.querySelector('#target');
             const aProp = 'aProp';
             const aInner = {
                 unit123: { id: 123 },
@@ -807,11 +737,11 @@ describe('extended pseudo-classes', () => {
 
             let selector = 'div:matches-property("aProp./[\\w]{4}123/.id")';
             let selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'div:matches-property(aProp.unit123./.{1,5}/=123)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - invalid args', () => {
@@ -855,30 +785,29 @@ describe('extended pseudo-classes', () => {
         });
 
         it('xpath - one target', () => {
-            const targetTag = 'div';
-            let targetId;
+            let targetElements;
             let selector;
             let selectedElements;
 
-            targetId = 'root';
+            targetElements = document.querySelectorAll('div#root');
             selector = 'div.base[level="2"]:xpath(../..)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'inner';
+            targetElements = document.querySelectorAll('div#inner');
             selector = ':xpath(//*[@class="baseInner"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'parent';
+            targetElements = document.querySelectorAll('div#parent');
             selector = ':xpath(//*[@class="base"]/..)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'inner';
+            targetElements = document.querySelectorAll('div#inner');
             selector = ':xpath(//div[contains(text(),"test-xpath-content")]';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('xpath - no match', () => {
@@ -931,16 +860,15 @@ describe('extended pseudo-classes', () => {
         });
 
         it('nth-ancestor - one target', () => {
-            const targetTag = 'div';
-            const targetId = 'root';
+            const targetElements = document.querySelectorAll('div#root');
 
             let selector = 'div.base[level="3"]:nth-ancestor(3)';
             let selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'div.base[level="2"]:nth-ancestor(2)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('nth-ancestor - no match', () => {
@@ -993,16 +921,15 @@ describe('extended pseudo-classes', () => {
         });
 
         it('upward - one target', () => {
-            const targetTag = 'div';
-            const targetId = 'root';
+            const targetElements = document.querySelectorAll('div#root');
 
             let selector = 'div.base[level="3"]:upward(3)';
             let selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'div.base[level="2"]:upward(2)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('upward - no match', () => {
@@ -1046,35 +973,34 @@ describe('extended pseudo-classes', () => {
         });
 
         it('upward - one target', () => {
-            const targetTag = 'div';
-            let targetId;
+            let targetElements;
             let selector;
             let selectedElements;
 
-            targetId = 'root';
+            targetElements = document.querySelectorAll('div#root');
             selector = 'div.base[level="3"]:upward([level="0"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'child';
+            targetElements = document.querySelectorAll('div#child');
             selector = 'div.base:upward(.base)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'parent';
+            targetElements = document.querySelectorAll('div#parent');
             selector = 'div.base[level="2"]:upward(#root > div)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'root';
+            targetElements = document.querySelectorAll('div#root');
             selector = 'div.base:upward(body > [level])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'child';
+            targetElements = document.querySelectorAll('div#child');
             selector = 'div#inner:upward(p ~ div)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('upward - no match', () => {
@@ -1129,137 +1055,115 @@ describe('extended pseudo-classes', () => {
         });
 
         it('any descendant, one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'root';
-
+            const targetElements = document.querySelectorAll('div#root');
             const selector = 'div:has(#parent)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('simple has, any descendant, two targets', () => {
-            const targetId0 = 'root';
-            const targetId1 = 'parent';
-
+            const targetElements = document.querySelectorAll('#root, #parent');
             const selector = 'div:has(#child)';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(2);
-            expect(selectedElements[0].id).toEqual(targetId0);
-            expect(selectedElements[1].id).toEqual(targetId1);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('one target - some descendant, no child combinator', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
-
+            const targetElements = document.querySelectorAll('div#child');
             const selector = 'div[class]:has(div > span)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('direct child element, one target', () => {
-            const targetTag = 'div';
-            const targetId = 'parent';
+            const targetElements = document.querySelectorAll('div#parent');
 
             let selector;
             let selectedElements;
 
             selector = 'div:has(> #child)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = ':has(> div > .banner)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = ':has(> p + a + div #innerParagraph)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = ':has(> p ~ div #innerParagraph)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('next sibling combinator, one target', () => {
-            let targetTag;
-            let targetId;
+            let targetElements;
             let selector;
             let selectedElements;
 
-            targetTag = 'p';
-            targetId = 'paragraph';
-
+            targetElements = document.querySelectorAll('p#paragraph');
             selector = 'p:has(+ a)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'p:has(+ * + div#child)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetTag = 'a';
-            targetId = 'anchor';
+            targetElements = document.querySelectorAll('a#anchor');
             selector = '.banner:has(+ div[id][class])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('subsequent-sibling combinator, one target', () => {
-            const targetTag = 'p';
-            const targetId = 'paragraph';
+            const targetElements = document.querySelectorAll('p#paragraph');
 
             let selector;
             let selectedElements;
 
             selector = 'p:has(~ a)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'p:has(~ div#child)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('selector list, one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
-
+            const targetElements = document.querySelectorAll('div#child');
             const selector = 'div[id][class]:has(.base, p#innerParagraph)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('selector list, few targets', () => {
-            const targetId0 = 'root';
-            const targetId1 = 'parent';
-            const targetId2 = 'child';
-
+            const targetElements = document.querySelectorAll('#root, #parent, #child');
             const selector = 'div:has([id][class="base"], p)';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(3);
-            expect(selectedElements[0].id).toEqual(targetId0);
-            expect(selectedElements[1].id).toEqual(targetId1);
-            expect(selectedElements[2].id).toEqual(targetId2);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('has, complex selectors', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
+            const targetElements = document.querySelectorAll('div#child');
+
             let selector;
             let selectedElements;
 
             selector = '* > #paragraph ~ div:has(a[href^="/inner"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = '* > a[href*="test"] + div:has(a[href^="/inner"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = '#root div > div:has(.banner)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             /**
              * TODO: filter by last "> div" regular selector part
@@ -1327,114 +1231,98 @@ describe('extended pseudo-classes', () => {
         });
 
         it('if-not - any descendant, one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'child2';
-
+            const targetElements = document.querySelectorAll('div#child2');
             const selector = '#parent > div:if-not(#innerParagraph)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - some descendant, no child combinator', () => {
-            const targetTag = 'div';
-            const targetId = 'child2';
-
+            const targetElements = document.querySelectorAll('div#child2');
             const selector = '#parent > div:if-not(div > span)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - direct child element, one target', () => {
-            const targetTag = 'div';
-
-            let targetId;
+            let targetElements;
             let selector;
             let selectedElements;
 
-            targetId = 'inner';
+            targetElements = document.querySelectorAll('div#inner');
             selector = '#child div:if-not(> span)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'child2';
+            targetElements = document.querySelectorAll('div#child2');
 
             selector = '#parent > div:if-not(> a + div + div)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = '#parent > div:if-not(> a ~ div[level="3"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - * and child combinator, few targets', () => {
-            const targetId0 = 'anchor';
-            const targetId1 = 'inner';
-
+            const targetElements = document.querySelectorAll('#anchor, #inner');
             const selector = '#child > :if-not(> span)';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(2);
-            expect(selectedElements[0].id).toEqual(targetId0);
-            expect(selectedElements[1].id).toEqual(targetId1);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - next sibling combinator, one target', () => {
-            const targetTag = 'a';
-            const targetId = 'anchor';
+            const targetElements = document.querySelectorAll('a#anchor');
 
             let selector;
             let selectedElements;
 
             selector = 'a:if-not(+ [level="2"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'a:if-not(+ [level="2"] + [level="2"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - subsequent-sibling combinator, one target', () => {
-            const targetTag = 'a';
-            const targetId = 'anchor';
+            const targetElements = document.querySelectorAll('a#anchor');
 
             let selector;
             let selectedElements;
 
             selector = 'a:if-not(~ .base2)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
             selector = 'a:if-not(~ * + div[id][class] > [level="3"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - selector list, one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'child2';
-
+            const targetElements = document.querySelectorAll('div#child2');
             const selector = '#parent > div[id][class]:if-not(a, span)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - complex selectors', () => {
-            const targetTag = 'div';
-
-            let targetId;
+            let targetElements;
             let selector;
             let selectedElements;
 
-            targetId = 'inner';
+            targetElements = document.querySelectorAll('div#inner');
             selector = '#root div > div:if-not(*)';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
 
-            targetId = 'child2';
+            targetElements = document.querySelectorAll('div#child2');
             selector = '#root > * > #paragraph ~ div:if-not(a[href^="/inner"])';
             selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('if-not - no arg or invalid selectors', () => {
@@ -1494,32 +1382,24 @@ describe('extended pseudo-classes', () => {
         });
 
         it('is: one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'parent';
-
+            const targetElements = document.querySelectorAll('div#parent');
             const selector = 'div:is(#parent, #parent2, #parent3)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('is: child combinator, one target', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
-
+            const targetElements = document.querySelectorAll('div#child');
             const selector = '#parent > :is(.base, .target)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('is: two simple targets', () => {
-            const targetId0 = 'child';
-            const targetId1 = 'child2';
-
+            const targetElements = document.querySelectorAll('#child, #child2');
             const selector = 'div:is(#child, #child2)';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(2);
-            expect(selectedElements[0].id).toEqual(targetId0);
-            expect(selectedElements[1].id).toEqual(targetId1);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('is: invalid selector — no fail, just skip', () => {
@@ -1586,32 +1466,24 @@ describe('extended pseudo-classes', () => {
         });
 
         it('not: one simple target', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
-
+            const targetElements = document.querySelectorAll('div#child');
             const selector = '.base:not([level="3"])';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('not: child combinator, one target', () => {
-            const targetTag = 'p';
-            const targetId = 'innerParagraph';
-
+            const targetElements = document.querySelectorAll('p#innerParagraph');
             const selector = '#inner2 > :not(span)';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('not: two simple targets', () => {
-            const targetId0 = 'inner';
-            const targetId1 = 'inner2';
-
+            const targetElements = document.querySelectorAll('#inner, #inner2');
             const selector = '#child *:not(a, span, p)';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(2);
-            expect(selectedElements[0].id).toEqual(targetId0);
-            expect(selectedElements[1].id).toEqual(targetId1);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('not - invalid args', () => {
@@ -1685,25 +1557,19 @@ describe('combined pseudo-classes', () => {
         });
 
         it('has + not, few targets', () => {
-            const targetId0 = 'child';
-            const targetId1 = 'inner';
-
+            // #child as ancestor, because :has arg is not specified as direct child
+            // #inner2 as parent
+            const targetElements = document.querySelectorAll('#child, #inner');
             const selector = '#parent div[id][class]:has(:not(div))';
             const selectedElements = querySelectorAll(selector, document);
-            expect(selectedElements.length).toEqual(2);
-            // #child as ancestor, because :has arg is not specified as direct child
-            expect(selectedElements[0].id).toEqual(targetId0);
-            // #inner2 as parent
-            expect(selectedElements[1].id).toEqual(targetId1);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('has + contains', () => {
-            const targetTag = 'div';
-            const targetId = 'inner';
-
+            const targetElements = document.querySelectorAll('div#inner');
             const selector = 'div[id^="inn"][class]:has(p:contains(inner))';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-attr + has + matches-prop', () => {
@@ -1712,20 +1578,17 @@ describe('combined pseudo-classes', () => {
             const testPropValue = 'abc';
             setPropElement[testPropName] = testPropValue;
 
-            const targetTag = 'div';
-            const targetId = 'inner2';
+            const targetElements = document.querySelectorAll('div#inner2');
             const selector = 'div:matches-attr(random):has(div:matches-property(_testProp=/[\\w]{3}/))';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('is(:has, :has)', () => {
-            const targetTag = 'div';
-            const targetId = 'child';
-
+            const targetElements = document.querySelectorAll('div#child');
             const selector = '#parent > :is(.block:has(> #inner), .base:has(> #inner))';
             const selectedElements = querySelectorAll(selector, document);
-            expectSingleElement(selectedElements, targetTag, targetId);
+            expectTheSameElements(targetElements, selectedElements);
         });
     });
 });
