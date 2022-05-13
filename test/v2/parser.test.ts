@@ -1691,100 +1691,6 @@ describe('combined extended selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    it(':has(:is())', () => {
-        /* eslint-disable max-len */
-        const selector = '#widget > .movie-thumbnail:has(> .movie-back > h3 > :is(a[href$="/netflix-premium/"], a[href$="/spotify-premium/"], a[title="Disney Premium"]))';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '#widget > .movie-thumbnail',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'has',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '> .movie-back > h3 > *',
-                                                            children: [],
-                                                        },
-                                                        {
-                                                            type: NodeType.ExtendedSelector,
-                                                            children: [
-                                                                {
-                                                                    type: NodeType.RelativePseudoClass,
-                                                                    name: 'is',
-                                                                    children: [
-                                                                        {
-                                                                            type: NodeType.SelectorList,
-                                                                            children: [
-                                                                                {
-                                                                                    type: NodeType.Selector,
-                                                                                    children: [
-                                                                                        {
-                                                                                            type: NodeType.RegularSelector,
-                                                                                            value: 'a[href$="/netflix-premium/"]',
-                                                                                            children: [],
-                                                                                        },
-                                                                                    ],
-                                                                                },
-                                                                                {
-                                                                                    type: NodeType.Selector,
-                                                                                    children: [
-                                                                                        {
-                                                                                            type: NodeType.RegularSelector,
-                                                                                            value: 'a[href$="/spotify-premium/"]',
-                                                                                            children: [],
-                                                                                        },
-                                                                                    ],
-                                                                                },
-                                                                                {
-                                                                                    type: NodeType.Selector,
-                                                                                    children: [
-                                                                                        {
-                                                                                            type: NodeType.RegularSelector,
-                                                                                            value: 'a[title="Disney Premium"]',
-                                                                                            children: [],
-                                                                                        },
-                                                                                    ],
-                                                                                },
-                                                                            ],
-                                                                        },
-                                                                    ],
-                                                                },
-                                                            ],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        /* eslint-enable max-len */
-        expect(parse(selector)).toEqual(expected);
-    });
-
     it(':has(:matches-css-before())', () => {
         // eslint-disable-next-line max-len
         const selector = 'body.zen .zen-lib div.feed__item:has(> div > div > div[class*="__label"] > span:matches-css-before(content:*Яндекс.Директ))';
@@ -2219,6 +2125,397 @@ describe('combined selectors', () => {
             ],
         };
         expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':empty::before', () => {
+        const selector = '.post-content > p:empty::before';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.post-content > p:empty::before',
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':not()::selection', () => {
+        const selector = 'html > body *:not(input)::selection';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'html > body *',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'input',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '::selection',
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':not():not()::selection', () => {
+        const selector = 'html > body *:not(input):not(textarea)::selection';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'html > body *',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'input',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'textarea',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '::selection',
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':not():has(:only-child)', () => {
+        const selector = '#snippet-list-posts > .item:not([id]):has(> .box-responsive:only-child > div[id]:only-child)';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '#snippet-list-posts > .item',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '[id]',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '> .box-responsive:only-child > div[id]:only-child',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':last-child:has()', () => {
+        const selector = '#__next > div:last-child:has(button.privacy-policy__btn)';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '#__next > div:last-child',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: 'button.privacy-policy__btn',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':not(:nth-child())', () => {
+        const selector = '.yellow:not(:nth-child(3))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.yellow',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '*:nth-child(3)',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':nth-child():has()', () => {
+        const selector = '.entry_text:nth-child(2):has(> #ninja-blog-inactive)';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.entry_text:nth-child(2)',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '> #ninja-blog-inactive',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
+    it(':has limitation - no inner :has, :is, :where', () => {
+        let selector;
+
+        selector = 'banner:has(> div:has(> img))';
+        expect(() => {
+            parse(selector);
+        }).toThrow('Usage of :has pseudo-class is not allowed inside upper :has');
+
+        selector = 'banner:has(> div:is(> img))';
+        expect(() => {
+            parse(selector);
+        }).toThrow('Usage of :is pseudo-class is not allowed inside upper :has');
+
+        selector = 'banner:has(> div:where(> img))';
+        expect(() => {
+            parse(selector);
+        }).toThrow('Usage of :where pseudo-class is not allowed inside upper :has');
+    });
+
+    it(':has limitation - no :has inside regular pseudos', () => {
+        const selector = '::slotted(:has(.a))';
+        expect(() => {
+            parse(selector);
+        }).toThrow('Usage of :has pseudo-class is not allowed inside regular pseudo');
+    });
+
+    it(':has limitation - no :has after pseudo-elements', () => {
+        const selector = '::part(foo):has(.a)';
+        expect(() => {
+            parse(selector);
+        }).toThrow('Usage of :has pseudo-class is not allowed after any regular pseudo-element');
     });
 });
 

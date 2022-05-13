@@ -27,6 +27,7 @@ import {
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
     IF_NOT_PSEUDO_CLASS_MARKER,
+    COLON,
 } from './constants';
 
 /**
@@ -132,7 +133,7 @@ const hasRelativesBySelectorList = (
                  */
                 rootElement = element.parentElement;
                 const elementSelectorText = element.tagName.toLowerCase();
-                specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
             } else {
                 // e.g. "a:has(> img)", ".block(div > span)"
                 /**
@@ -143,7 +144,7 @@ const hasRelativesBySelectorList = (
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
                  */
-                specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} `;
+                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} `;
                 rootElement = element;
             }
 
@@ -184,7 +185,7 @@ const isAnyElementBySelectorList = (
             }
 
             const elementSelectorText = utils.getElementSelectorText(element);
-            const specificity = `${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+            const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
 
             let anyElements;
             try {

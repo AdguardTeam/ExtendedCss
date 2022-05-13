@@ -1591,4 +1591,39 @@ describe('combined pseudo-classes', () => {
             expectTheSameElements(targetElements, selectedElements);
         });
     });
+
+    describe('has limitation', () => {
+        it('no :has, :is, :where inside :has', () => {
+            let selector;
+
+            selector = 'banner:has(> div:has(> img))';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Usage of :has pseudo-class is not allowed inside upper :has');
+
+            selector = 'banner:has(> div:is(> img))';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Usage of :is pseudo-class is not allowed inside upper :has');
+
+            selector = 'banner:has(> div:where(> img))';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Usage of :where pseudo-class is not allowed inside upper :has');
+        });
+
+        it('no :has inside regular pseudos', () => {
+            const selector = '::slotted(:has(.a))';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Usage of :has pseudo-class is not allowed inside regular pseudo');
+        });
+
+        it('no :has after pseudo-elements', () => {
+            const selector = '::part(foo):has(.a)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Usage of :has pseudo-class is not allowed after any regular pseudo-element');
+        });
+    });
 });

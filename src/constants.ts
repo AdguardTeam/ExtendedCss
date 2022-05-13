@@ -148,7 +148,25 @@ export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 export const REGEXP_ANY_SYMBOL = '.*';
 
 export const REGULAR_PSEUDO_CLASSES = {
-    BEFORE: ':before',
-    AFTER: ':after',
-    SCOPE: ':scope',
+    SCOPE: 'scope',
+    WHERE: 'where',
+};
+
+export const REGULAR_PSEUDO_ELEMENTS = {
+    AFTER: 'after',
+    BACKDROP: 'backdrop',
+    BEFORE: 'before',
+    CUE: 'cue',
+    CUE_REGION: 'cue-region',
+    FIRST_LETTER: 'first-letter',
+    FIRST_LINE: 'first-line',
+    FILE_SELECTION_BUTTON: 'file-selector-button',
+    GRAMMAR_ERROR: 'grammar-error',
+    MARKER: 'marker',
+    PART: 'part',
+    PLACEHOLDER: 'placeholder',
+    SELECTION: 'selection',
+    SLOTTED: 'slotted',
+    SPELLING_ERROR: 'spelling-error',
+    TARGET_TEXT: 'target-text',
 };

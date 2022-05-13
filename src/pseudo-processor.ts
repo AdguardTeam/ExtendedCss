@@ -15,9 +15,10 @@ import {
 } from './finder-utils';
 
 import {
+    COLON,
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
-    REGULAR_PSEUDO_CLASSES,
+    REGULAR_PSEUDO_ELEMENTS,
 } from './constants';
 
 export const matchPseudo = {
@@ -39,12 +40,12 @@ export const matchPseudo = {
     },
 
     matchesCss: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        // no standard pseudo-class for :matched-css
+        // no standard pseudo-element for :matched-css
         let regularPseudo = '';
         if (pseudoName === MATCHES_CSS_BEFORE_PSEUDO) {
-            regularPseudo = REGULAR_PSEUDO_CLASSES.BEFORE;
+            regularPseudo = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
         } else if (pseudoName === MATCHES_CSS_AFTER_PSEUDO) {
-            regularPseudo = REGULAR_PSEUDO_CLASSES.AFTER;
+            regularPseudo = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
         }
 
         let isMatchingCss;

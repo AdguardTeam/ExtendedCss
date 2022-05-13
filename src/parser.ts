@@ -35,6 +35,10 @@ import {
     DOUBLE_QUOTE,
     CARET,
     DOLLAR_SIGN,
+    HAS_PSEUDO_CLASS_MARKERS,
+    IS_PSEUDO_CLASS_MARKER,
+    REGULAR_PSEUDO_CLASSES,
+    REGULAR_PSEUDO_ELEMENTS,
 } from './constants';
 
 /**
@@ -335,20 +339,55 @@ export const parse = (selector: string) => {
                         }
                         // it supposed to be pseudo-class — regular or extended
                         if (bufferNode?.type === NodeType.RegularSelector) {
+                            // Disallow :has(), :is(), :where() inside :has() argument
+                            // to avoid increasing the :has() invalidation complexity
+                            // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
+                            if (context.extendedPseudoNamesStack.length > 0
+                                // check the last extended pseudo-class name from context
+                                && HAS_PSEUDO_CLASS_MARKERS.includes(context.extendedPseudoNamesStack[context.extendedPseudoNamesStack.length - 1]) // eslint-disable-line max-len
+                                // and check the processing pseudo-class
+                                && (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
+                                    || nextTokenValue === IS_PSEUDO_CLASS_MARKER
+                                    || nextTokenValue === REGULAR_PSEUDO_CLASSES.WHERE)) {
+                                // eslint-disable-next-line max-len
+                                throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside upper :has`);
+                            }
+
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
                                 // so it is a part of regular selector
+                                // e.g. .entry_text:nth-child(2)
                                 updateBufferNode(tokenValue);
+                                // no need to balance parentheses
+                                // if extended pseudo-class is next to standard one with no brackets
+                                // e.g. div:last-child:has(button.privacy-policy__btn)
+                                if (tokens[i + 2] && tokens[i + 2].value === BRACKETS.PARENTHESES.OPEN) {
+                                    context.standardPseudoNamesStack.push(nextTokenValue);
+                                }
                             } else {
-                                // add ExtendedSelector to Selector children
-                                upToClosest(NodeType.Selector);
-                                addAnySelectorNode(NodeType.ExtendedSelector);
+                                // Disallow :has() inside the pseudos accepting only compound selectors
+                                // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [2]
+                                if (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
+                                    && context.standardPseudoNamesStack.length > 0) {
+                                    // eslint-disable-next-line max-len
+                                    throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside regular pseudo: '${context.standardPseudoNamesStack[context.standardPseudoNamesStack.length - 1]}'`);
+                                } else {
+                                    // add ExtendedSelector to Selector children
+                                    upToClosest(NodeType.Selector);
+                                    addAnySelectorNode(NodeType.ExtendedSelector);
+                                }
                             }
                         }
                         if (bufferNode?.type === NodeType.Selector) {
-                            // assume there are few extended pseudos in row
+                            // few extended pseudo-classes might be used in row
                             // e.g. p:contains(PR):upward(2)
                             // and bufferNode was changed on parentheses closing
-                            addAnySelectorNode(NodeType.ExtendedSelector);
+                            if (isSupportedExtendedPseudo(nextTokenValue)) {
+                                addAnySelectorNode(NodeType.ExtendedSelector);
+                            } else {
+                                // otherwise it might be standard pseudo after extended pseudo-class
+                                // e.g. html > body *:not(input)::selection
+                                addAnySelectorNode(NodeType.RegularSelector, tokenValue);
+                            }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // collecting arg for absolute pseudo-class
@@ -359,7 +398,7 @@ export const parse = (selector: string) => {
                             initRelativeSubtree(ASTERISK);
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
                                 // so it is a part of regular selector
-                                // e.g. :has pseudo-class arg part in rule:  div:has(:not(.content))
+                                // e.g. :not pseudo-class arg in rule:  .yellow:not(:nth-child(3))
                                 updateBufferNode(tokenValue);
                                 context.standardPseudoNamesStack.push(nextTokenValue);
                             } else {
@@ -419,12 +458,23 @@ export const parse = (selector: string) => {
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
                             if (context.standardPseudoNamesStack.length > 0) {
-                                // standard pseudo-classes, e.g. .banner:not(div)
+                                // standard pseudo-classes, e.g. div:where(.class)
                                 updateBufferNode(tokenValue);
                                 context.standardPseudoBracketsStack.pop();
-                                context.standardPseudoNamesStack.pop();
+                                const lastStandardPseudo = context.standardPseudoNamesStack.pop() || '';
+                                // Disallow :has() after regular pseudo-elements
+                                // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [3]
+                                if (Object.values(REGULAR_PSEUDO_ELEMENTS).includes(lastStandardPseudo)
+                                    // check token which is next to closing parentheses and token after it
+                                    // e.g. ::part(foo):has(.a) - parser position is on bracket after 'foo' now
+                                    && nextTokenValue === COLON
+                                    && tokens[i + 2]
+                                    && HAS_PSEUDO_CLASS_MARKERS.includes(tokens[i + 2].value)) {
+                                    // eslint-disable-next-line max-len
+                                    throw new Error(`Usage of :${tokens[i + 2].value} pseudo-class is not allowed after any regular pseudo-element: '${lastStandardPseudo}'`);
+                                }
                             } else {
-                                // e.g. h3:has(div)
+                                // e.g. div:has(h3)
                                 context.extendedPseudoBracketsStack.pop();
                                 context.extendedPseudoNamesStack.pop();
                                 upToClosest(NodeType.ExtendedSelector);
