@@ -29,8 +29,8 @@ Build:
           - |-
             set -e
             set -x
-            export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
             yarn install ${bamboo.varsYarn}
+            npx playwright install --with-deps chromium
             yarn test-v2
             yarn build
             rm -rf node_modules

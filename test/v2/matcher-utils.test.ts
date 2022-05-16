@@ -10,7 +10,7 @@ import {
 describe('matcher-utils tests', () => {
     describe('test getValidMatcherArg', () => {
         it('valid arg pattern', () => {
-            let argPattern;
+            let argPattern: string;
 
             argPattern = '"attrName"';
             expect(getValidMatcherArg(argPattern)).toStrictEqual('attrName');
@@ -26,7 +26,7 @@ describe('matcher-utils tests', () => {
         });
 
         it('invalid arg pattern', () => {
-            let argPattern;
+            let argPattern: string;
 
             argPattern = '""';
             expect(() => {

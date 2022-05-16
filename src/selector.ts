@@ -337,6 +337,9 @@ const getElementsForSelectorNode = (
  * @param document
  */
 export const querySelectorAll = (selector: string, document: Document): Element[] => {
+    /**
+     * TODO: document should be default param
+     */
     const resultElementsForSelectorList: Element[] = [];
 
     /**

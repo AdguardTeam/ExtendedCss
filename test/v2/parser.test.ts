@@ -2486,7 +2486,7 @@ describe('combined selectors', () => {
     });
 
     it(':has limitation - no inner :has, :is, :where', () => {
-        let selector;
+        let selector: string;
 
         selector = 'banner:has(> div:has(> img))';
         expect(() => {

@@ -24,6 +24,11 @@ const expectNoMatch = (selectedElements: Element[]) => {
     expect(selectedElements.length).toEqual(0);
 };
 
+interface TestPropElement extends Element {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    _testProp: string | Object,
+}
+
 describe('selector', () => {
     afterEach(() => {
         document.body.innerHTML = '';
@@ -396,71 +401,10 @@ describe('extended pseudo-classes', () => {
         });
 
         /**
-         * TODO: try after puppeteer or playwright usage.
-         * jsdom does not support pseudo-element so it does not work
+         * matches-css-before and matches-css-after tests located in selector-playwright.test.ts
+         * because jsdom does not support pseudo-elements so it does not work
          * https://github.com/jsdom/jsdom/issues/1928
          */
-        // it('matches-css-before', () => {
-        //     const targetTag = 'div';
-        //     const targetId = 'target';
-
-        //     document.body.innerHTML = `
-        //         <div id="target">
-        //             <style>
-        //                 #target::before {
-        //                     content: "Advertisement";
-        //                     color: rgb(255, 255, 255);
-        //                 }
-
-        //                 #target {
-        //                     width: 20px;
-        //                 }
-        //             </style>
-        //         </div>
-        //     `;
-
-        //     let selector = 'div:matches-css-before(color: rgb(255, 255, 255))';
-        //     let selectedElements = querySelectorAll(selector, document);
-        //     expectSingleElement(selectedElements, targetTag, targetId);
-
-        //     selector = 'div:matches-css-before(content: /^Advertisement$/)';
-        //     selectedElements = querySelectorAll(selector, document);
-        //     expectSingleElement(selectedElements, targetTag, targetId);
-        // });
-
-        /**
-         * TODO: try after puppeteer or playwright usage.
-         * jsdom does not support pseudo-element so it does not work
-         * https://github.com/jsdom/jsdom/issues/1928
-         */
-        // it('matches-css-after', () => {
-        //     const targetTag = 'div';
-        //     const targetId = 'target';
-
-        //     document.body.innerHTML = `
-        //         <style>
-        //             #target {
-        //                 content: "empty";
-        //                 color: #000;
-        //             }
-
-        //             #target::before {
-        //                 content: "Advertisement";
-        //                 color: #fff;
-        //             }
-        //         </style>
-
-        //         <div id="target"></div>
-        //     `;
-
-        //     let selector = 'div:matches-css-after(color: rgb(255, 255, 255))';
-        //     let selectedElements = querySelectorAll(selector, document);
-        //     expectSingleElement(selectedElements, targetTag, targetId);
-
-        //     selector = 'div:matches-css-before(content: /^Advertisement$/)';
-        //     selectedElements = querySelectorAll(selector, document);
-        //     expectSingleElement(selectedElements, targetTag, targetId);
-        // });
     });
 
     describe('matches-attr pseudo', () => {
@@ -541,7 +485,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-attr - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:matches-attr("//")';
             expect(() => {
@@ -578,7 +522,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - property name with quotes', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
@@ -591,7 +535,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - property name with no quotes', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
@@ -604,7 +548,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - wildcard in property name pattern', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
@@ -615,7 +559,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - no match by property name', () => {
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
@@ -628,7 +572,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - regexp for property name pattern', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = '123';
             testEl[testPropName] = testPropValue;
@@ -641,7 +585,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - string name and value', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
@@ -652,7 +596,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('matches-property - no match by value', () => {
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
@@ -665,7 +609,7 @@ describe('extended pseudo-classes', () => {
         it('matches-property - string name and regexp value', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
+            const testEl = document.querySelector('#target') as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
@@ -678,23 +622,23 @@ describe('extended pseudo-classes', () => {
         it('matches-property - string chain and null value', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
-            const propFirst = 'propFirst';
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propFirst = '_testProp';
             const propInner = { propInner: null };
             testEl[propFirst] = propInner;
 
-            const selector = 'div:matches-property(propFirst.propInner=null)';
+            const selector = 'div:matches-property(_testProp.propInner=null)';
             const selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - access child prop of null prop', () => {
-            const testEl = document.querySelector('#target');
-            const propFirst = 'propFirst';
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propFirst = '_testProp';
             const propInner = { propInner: null };
             testEl[propFirst] = propInner;
 
-            const selector = 'div:matches-property(propFirst.propInner.test)';
+            const selector = 'div:matches-property(_testProp.propInner.test)';
             const selectedElements = querySelectorAll(selector, document);
             expectNoMatch(selectedElements);
         });
@@ -702,12 +646,12 @@ describe('extended pseudo-classes', () => {
         it('matches-property - string chain and null value as string', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
-            const propNullAsStr = 'propNullStr';
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propNullAsStr = '_testProp';
             const propInnerNullStr = { propInner: 'null' };
             testEl[propNullAsStr] = propInnerNullStr;
 
-            const selector = 'div:matches-property("propNullStr.propInner"="null")';
+            const selector = 'div:matches-property("_testProp.propInner"="null")';
             const selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
@@ -715,12 +659,12 @@ describe('extended pseudo-classes', () => {
         it('matches-property - string chain and undefined value as string', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
-            const propUndefAsStr = 'propNullStr';
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propUndefAsStr = '_testProp';
             const propInnerUndefStr = { propInner: 'undefined' };
             testEl[propUndefAsStr] = propInnerUndefStr;
 
-            const selector = 'div:matches-property("propNullStr.propInner"="undefined")';
+            const selector = 'div:matches-property("_testProp.propInner"="undefined")';
             const selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
@@ -728,24 +672,24 @@ describe('extended pseudo-classes', () => {
         it('matches-property - property chain variants', () => {
             const targetElements = document.querySelectorAll('div#target');
 
-            const testEl = document.querySelector('#target');
-            const aProp = 'aProp';
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const aProp = '_testProp';
             const aInner = {
                 unit123: { id: 123 },
             };
             testEl[aProp] = aInner;
 
-            let selector = 'div:matches-property("aProp./[\\w]{4}123/.id")';
+            let selector = 'div:matches-property("_testProp./[\\w]{4}123/.id")';
             let selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
 
-            selector = 'div:matches-property(aProp.unit123./.{1,5}/=123)';
+            selector = 'div:matches-property(_testProp.unit123./.{1,5}/=123)';
             selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
 
         it('matches-property - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:matches-property("//")';
             expect(() => {
@@ -818,7 +762,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('xpath - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:xpath("//")';
             expect(() => {
@@ -879,7 +823,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('nth-ancestor - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:nth-ancestor("//")';
             expect(() => {
@@ -940,7 +884,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('upward - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:upward(0)';
             expect(() => {
@@ -1011,7 +955,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('upward - invalid args', () => {
-            let selector;
+            let selector: string;
 
             selector = 'div:upward(//)';
             expect(() => {
@@ -1175,7 +1119,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('has - no arg or invalid selectors', () => {
-            let selector;
+            let selector: string;
 
             // no arg specified
             selector = 'div:has()';
@@ -1326,7 +1270,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('if-not - no arg or invalid selectors', () => {
-            let selector;
+            let selector: string;
 
             // no arg specified
             selector = 'div:if-not()';
@@ -1420,7 +1364,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('is - invalid args', () => {
-            let selector;
+            let selector: string;
 
             // no selector specified
             selector = 'div:is()';
@@ -1487,7 +1431,7 @@ describe('extended pseudo-classes', () => {
         });
 
         it('not - invalid args', () => {
-            let selector;
+            let selector: string;
 
             // no selector specified
             selector = 'div:not()';
@@ -1573,7 +1517,7 @@ describe('combined pseudo-classes', () => {
         });
 
         it('matches-attr + has + matches-prop', () => {
-            const setPropElement = document.querySelectorAll('#deepDiv')[0];
+            const setPropElement = document.querySelectorAll('#deepDiv')[0] as TestPropElement;
             const testPropName = '_testProp';
             const testPropValue = 'abc';
             setPropElement[testPropName] = testPropValue;
@@ -1594,7 +1538,7 @@ describe('combined pseudo-classes', () => {
 
     describe('has limitation', () => {
         it('no :has, :is, :where inside :has', () => {
-            let selector;
+            let selector: string;
 
             selector = 'banner:has(> div:has(> img))';
             expect(() => {
