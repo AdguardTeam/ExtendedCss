@@ -29,7 +29,7 @@ interface TestPropElement extends Element {
     _testProp: string | Object,
 }
 
-describe('selector', () => {
+describe('regular selectors', () => {
     afterEach(() => {
         document.body.innerHTML = '';
     });
@@ -157,15 +157,326 @@ describe('selector', () => {
 
     it('regular selector with pseudo-class -- input:disabled', () => {
         document.body.innerHTML = `
-            <input class="NOT_A_TARGET">
-            <input id="target" disabled>
+            <input id="enabled">
+            <input id="disabled" disabled>
         `;
 
-        const selector = 'input:disabled';
-        const selectedElements = querySelectorAll(selector, document);
+        let selector;
+        let selectedElements;
+        let targetElements;
 
-        const targetElements = document.querySelectorAll('input#target');
+        selector = 'input:disabled';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('#disabled');
         expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'input:enabled';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('#enabled');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'body > *:nth-last-child(1)';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('#disabled');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'body > *:NTH-last-child(2)';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('#enabled');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'body > :nth-of-type(2)';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('#disabled');
+        expectTheSameElements(targetElements, selectedElements);
+    });
+
+    it('valid regular selectors - ids', () => {
+        document.body.innerHTML = `
+            <div id="台北Táiběi" target="id0"></div>
+            <div id="台北" target="id1"></div>
+            <div id="foo:bar" target="id2"></div>
+            <div id="test.foo[5]bar" target="id3"></div>
+            <div id="form">
+                <span id="radio" target="id4"></span>
+            </div>
+            <div id="foo">
+                <p id="child_p_target" target="id5"></p>
+            </div>
+            <div id="firstUL" class="no_children" target="none"></div>
+            <div id="types_all" target="id6"></div>
+            <div id="dash-id" target="id7"></div>
+            <div id="name+value" target="id8"></div>
+        `;
+
+        let selector;
+        let selectedElements;
+        let targetElements;
+
+        selector = '#台北Táiběi';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id0"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#台北';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id1"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#foo\\:bar';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id2"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#test\\.foo\\[5\\]bar';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id3"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#form > #radio';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id4"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#foo > *';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id5"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        // all children of ID with no children
+        selector = '#firstUL > *';
+        selectedElements = querySelectorAll(selector, document);
+        expectNoMatch(selectedElements);
+
+        selector = '#types_all';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id6"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#dash-id';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id7"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '#name\\+value';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id8"]');
+        expectTheSameElements(targetElements, selectedElements);
+    });
+
+    it('valid regular selectors - classes', () => {
+        document.body.innerHTML = `
+            <div class="台北Táiběi" target="id0"></div>
+            <div class="foo:bar" target="id1"></div>
+            <div class="test.foo[5]bar" target="id2"></div>
+            <div class="nav" target="id3"></div>
+        `;
+
+        let selector;
+        let selectedElements;
+        let targetElements;
+
+        selector = '.台北Táiběi';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id0"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '.foo\\:bar';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id1"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '.test\\.foo\\[5\\]bar';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id2"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '.nav';
+        selectedElements = querySelectorAll(selector, document);
+        targetElements = document.querySelectorAll('[target="id3"]');
+        expectTheSameElements(targetElements, selectedElements);
+
+        // no selection
+        selector = '.NAV';
+        selectedElements = querySelectorAll(selector, document);
+        expectNoMatch(selectedElements);
+    });
+
+    describe('valid regular selectors - attributes', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="target0" rel="bookmark" name="action" data-comma="0,1"></div>
+                <div id="target1" name="Name1"></div>
+                <a id="target2" title="bookmark" href="http://www.example.com/promo"></a>
+                <a id="target3" href="#paragraph"></a>
+                <input id="target4" title="space separated" name="foo[bar]">
+                <input id="target5" title="exact-start">
+            `;
+        });
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('#target0', () => {
+            const targetElements = document.querySelectorAll('#target0');
+            let selector;
+            let selectedElements;
+
+            selector = '[rel="bookmark"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = '[rel=bookmark]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'div[name=action]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'div[name=\'action\']';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'div[name="action"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'div[data-comma="0,1"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'div[data-comma=\'0,1\']';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('#target1 - strict match for case sensitive value', () => {
+            const targetElements = document.querySelectorAll('#target1');
+            let selector;
+            let selectedElements;
+
+            selector = '[name=Name1]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = '[name=name1]';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+        });
+
+        it('#target2', () => {
+            const targetElements = document.querySelectorAll('#target2');
+            let selector;
+            let selectedElements;
+
+            selector = 'a[ title ]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'a[TITLE]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'a[ title = "bookmark" ]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'a[href ^= "http://www"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+        });
+
+        it('#target3 - href with hash', () => {
+            const targetElements = document.querySelectorAll('#target3');
+            let selector;
+            let selectedElements;
+
+            selector = 'a[href^="#"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'a[href*="#"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'a[href *= "para"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+        });
+
+        it('#target4 - value with square brackets', () => {
+            const targetElements = document.querySelectorAll('#target4');
+            let selector;
+            let selectedElements;
+
+            selector = 'input[name^="foo["]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'input[name^="foo[bar]"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'input[name*="[bar]"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'input[name*="foo[bar]"]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+        });
+
+        it('#target4 - separated word', () => {
+            const targetElements = document.querySelectorAll('#target4');
+            let selector;
+            let selectedElements;
+
+            // specified for exact separated word
+            selector = '[title~=space]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            // no match because of "=|" which needs dash separated exact start of value
+            selector = '[title|=space]';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '[title^=space]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = '[title*=space]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('#target5 - exact value start', () => {
+            const targetElements = document.querySelectorAll('#target5');
+            let selector;
+            let selectedElements;
+
+            selector = '[title|=exact]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            // no match because of "~|" which needs space separated word in value
+            selector = '[title~=exact]';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '[title*=exact]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = '[title^=exact]';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
     });
 });
 
@@ -177,7 +488,7 @@ describe('extended pseudo-classes', () => {
 
         it('simple string arg', () => {
             document.body.innerHTML = `
-                <span id="target">text example</span>
+                <span id="target">text example (LINK)</span>
                 <span id="NOT_A_TARGET">123example</span>
                 <p id="NOT_A_TARGET_2">text</p>
             `;
@@ -199,6 +510,21 @@ describe('extended pseudo-classes', () => {
             selector = 'span:contains( example)';
             selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'span:contains(example (LINK))';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'span:contains((LINK))';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            selector = 'span:contains(/(link)/i)';
+            selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+
+            // TODO:
+            // selector = '* > p ~ #test-id-div a:contains("adg-test")';
         });
 
         it('regexp arg', () => {
@@ -484,6 +810,13 @@ describe('extended pseudo-classes', () => {
             expectTheSameElements(targetElements, selectedElements);
         });
 
+        it('matches-attr - regexp name and regexp value', () => {
+            const targetElements = document.querySelectorAll('div#target');
+            const selector = 'div:matches-attr(/data-/=/^banner_.?/)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
         it('matches-attr - invalid args', () => {
             let selector: string;
 
@@ -507,6 +840,26 @@ describe('extended pseudo-classes', () => {
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('name or arg is missing in AbsolutePseudoClass');
+
+            selector = 'div:matches-attr(")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
+
+            selector = 'div:matches-attr(> [track="true"])';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
+
+            selector = 'div:matches-attr(".?"="/^[0-9]*$/")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
+
+            selector = 'div:matches-attr("//"="/./")';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching attributes by arg');
         });
     });
 
@@ -632,6 +985,19 @@ describe('extended pseudo-classes', () => {
             expectTheSameElements(targetElements, selectedElements);
         });
 
+        it('matches-property - partially regexp chain', () => {
+            const targetElements = document.querySelectorAll('div#target');
+
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propFirst = '_testProp';
+            const propInner = { propInner: null };
+            testEl[propFirst] = propInner;
+
+            const selector = 'div:matches-property(/^_test/.propInner=null)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
         it('matches-property - access child prop of null prop', () => {
             const testEl = document.querySelector('#target') as TestPropElement;
             const propFirst = '_testProp';
@@ -706,6 +1072,26 @@ describe('extended pseudo-classes', () => {
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('name or arg is missing in AbsolutePseudoClass');
+
+            selector = 'div:matches-property(.prop.id)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
+
+            selector = 'div:matches-property(abc./aa.?+./test/)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
+
+            selector = 'div:matches-property(abc..?+/.test)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
+
+            selector = 'div:matches-property(asadf.?+/.test)';
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('Error while matching properties by arg');
         });
     });
 
@@ -945,6 +1331,8 @@ describe('extended pseudo-classes', () => {
             selector = 'div#inner:upward(p ~ div)';
             selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
+
+            // selectorText = '.test:upward(div[id])';
         });
 
         it('upward - no match', () => {
@@ -1468,7 +1856,7 @@ describe('extended pseudo-classes', () => {
 });
 
 describe('combined pseudo-classes', () => {
-    describe('has + ...', () => {
+    describe('different combinations of pseudos', () => {
         beforeEach(() => {
             document.body.innerHTML = `
                 <div id="root" level="0">
@@ -1491,13 +1879,81 @@ describe('combined pseudo-classes', () => {
                                 <div id="deepDiv" level="4"></div>
                             </div>
                         </div>
+                        <input id="disabledInput" disabled>
                     </div>
                 </div>
             `;
         });
-
         afterEach(() => {
             document.body.innerHTML = '';
+        });
+
+        it('selector list of has duplicates', () => {
+            const targetElements = document.querySelectorAll('#inner');
+            const selector = '.base:has(> #innerSpan), .base:has(> #innerSpan)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('selector list with nonexistent class', () => {
+            const targetElements = document.querySelectorAll('#inner');
+            const selector = '#nonexistent:has(*), #inner:has(*)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('selector list with not + few regular selectors', () => {
+            const targetElements = document.querySelectorAll('#parent, #deepDiv, #disabledInput');
+            const selector = '#root > div:not(:contains(span2 text)),#deepDiv,:disabled';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('not for selector list of extended and regular', () => {
+            const targetElements = document.querySelectorAll('#innerParagraph2');
+            const selector = '#inner2 > :not(:contains(span2 text),#deepDiv)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('no match for :not pseudo', () => {
+            let selector;
+            let selectedElements;
+
+            selector = '#inner2 > p:not(p)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > p:not( p )';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > p:not([id])';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > p:not(#innerParagraph2)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > p:not(a,   p)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > p:not(a,p)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+
+            selector = '#inner2 > :not(span, p, div)';
+            selectedElements = querySelectorAll(selector, document);
+            expectNoMatch(selectedElements);
+        });
+
+        it('not + not + not', () => {
+            const targetElements = document.querySelectorAll('input#disabledInput');
+            const selector = '#root [id]:not([class]):not([level]):not(p)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
         });
 
         it('has + not, few targets', () => {
@@ -1512,6 +1968,13 @@ describe('combined pseudo-classes', () => {
         it('has + contains', () => {
             const targetElements = document.querySelectorAll('div#inner');
             const selector = 'div[id^="inn"][class]:has(p:contains(inner))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('has(contains) has contains', () => {
+            const targetElements = document.querySelectorAll('#parent');
+            const selector = '#root div:has(:contains(text)):has(#paragraph):contains(inner paragraph)';
             const selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
@@ -1534,6 +1997,73 @@ describe('combined pseudo-classes', () => {
             const selectedElements = querySelectorAll(selector, document);
             expectTheSameElements(targetElements, selectedElements);
         });
+
+        it('is + contains', () => {
+            const targetElements = document.querySelectorAll('div#inner');
+            const selector = ':is(#inner, #inner2):contains(inner)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('is + not', () => {
+            const targetElements = document.querySelectorAll('#innerParagraph');
+            const selector = '#inner > :is(*:not([class]))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('is(not) + has', () => {
+            const targetElements = document.querySelectorAll('div#parent');
+            const selector = '#root > :is(div:not([class])):has(#paragraph)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('has-text + xpath', () => {
+            const targetElements = document.querySelectorAll('div#parent');
+            const selector = 'p:has-text(/inner/):xpath(../../..)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('number upward + if', () => {
+            const targetElements = document.querySelectorAll('div#parent2');
+            const selector = 'div[level="2"]:upward(1):if(#disabledInput)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('selector upward + -abp-has', () => {
+            const targetElements = document.querySelectorAll('div#parent2');
+            const selector = 'div[level="2"]:upward(div[id]):-abp-has(#disabledInput)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('-abp-contains + upward', () => {
+            const targetElements = document.querySelectorAll('div#inner');
+            const selector = 'p:-abp-contains(inner paragraph):upward(div[id])';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        it('-abp-contains + upward + not', () => {
+            const targetElements = document.querySelectorAll('div#parent');
+            const selector = 'p:-abp-contains(inner paragraph):upward(div[id]:not([class]))';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+
+        /**
+         * TODO: :scope pseudo specified for :has will be handled by beautifier. AG-12806
+         */
+        // it('has with specified scope pseudo', () => {
+        //     const targetElements = document.querySelectorAll('div#root');
+        //     // const selector = 'div:has(:scope > a > img[id])';
+        //     const selector = 'div:has(:scope > div > input)';
+        //     const selectedElements = querySelectorAll(selector, document);
+        //     expectTheSameElements(targetElements, selectedElements);
+        // });
     });
 
     describe('has limitation', () => {
@@ -1568,6 +2098,214 @@ describe('combined pseudo-classes', () => {
             expect(() => {
                 querySelectorAll(selector, document);
             }).toThrow('Usage of :has pseudo-class is not allowed after any regular pseudo-element');
+        });
+    });
+
+    describe('super stressor', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="targetDiv" class="root"></div>
+                <span id="spanTarget">[test]</span>
+                <p id="pTarget">[paragraph]</p>
+                <div id="targetNotEmpty" class="none">
+                    test!
+                </div>
+            `;
+        });
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        it('multiple selectors combined', () => {
+            const targetElements = document.querySelectorAll('#targetDiv, #spanTarget, #pTarget, #targetNotEmpty');
+
+            // eslint-disable-next-line max-len
+            const selector = 'div[class]:not(:has(*, :contains(!)), :contains(!)), span:contains(]), p:contains(]), body > :not(:empty)';
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
+        });
+    });
+});
+
+/**
+ * TODO: selecting by regular selector after extended one
+ */
+// eslint-disable-next-line max-len
+// selector = '#test-matches-attr div:has(> div:matches-attr("/id/"="/R-A-/") > div:matches-attr("/data-bem/"="/src:/"))';
+// eslint-disable-next-line max-len
+// selector = '#test-matches-attr *[id^="unit-"][class] > *:matches-attr("/class/"="/^.{6,8}$/"):matches-attr("/.{5,}delay$/"="/^[0-9]*$/"):upward(3)';
+// selector = '#test-matches-attr div:matches-attr("/-link/"="/-banner_/"):contains(click here):xpath(../..)';
+// selector = '* > div + style:matches-css(display:none) ~ div > *:matches-css-after(content:/y\\st/)';
+// selector = '#test-is :is(.header, .body, .footer) .test-is-inner';
+// selector = '#test-is :is(.header, .body) > .test-is-inner';
+// selector = '#test-is :is(.main, div[id$="footer"]) .test-is-inner';
+// eslint-disable-next-line max-len
+// selector = ':matches-css(    background-image: /^url\\(\\"[a-z]{4}:[a-z]{5}\\/[gif;base].*\\"\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+// selector = ':is([id^="test-is"]) > :is(div:not([class]) > .test-is-inner)'
+
+describe('check invalid selectors', () => {
+    it('not a valid selectors', () => {
+        const invalidRegularSelectors = [
+            'foo\nbaz',
+            'foo\\\fbaz',
+            'foo\\\\\rbaz',
+            '[\nrel = bookmark\t]',
+            ',a',
+            'a,',
+            'a:has(.ad),',
+            '(',
+            '()',
+            ',',
+            '[',
+            '{',
+            '<',
+            '<>',
+            '{}',
+            '[id=012345678901234567890123456789',
+            ':nth-child(2+0)',
+            ':nth-child(- 1n)',
+            ':first-child(n)',
+            ':last-child(n)',
+            ':only-child(n)',
+            'input[name=]',
+            'input[name=foo.baz]',
+            'input[name=foo[baz]]',
+            "input[name=''double-quoted'']",
+            "input[name='apostrophe'd']",
+            ':lang(c++)',
+        ];
+
+        invalidRegularSelectors.forEach((selector) => {
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('is not a valid selector');
+        });
+    });
+
+    it('unknown pseudo-classes', () => {
+        const unknownPseudoClassSelectors = [
+            '*,:x',
+            ':visble',
+            ':nth-child',
+            ':nth-child(2n+-0)',
+            ':nth-child(-1 n)',
+            ':nth-last-last-child(1)',
+            ':first-last-child',
+            ':last-last-child',
+            ':only-last-child',
+        ];
+
+        unknownPseudoClassSelectors.forEach((selector) => {
+            expect(() => {
+                querySelectorAll(selector, document);
+            }).toThrow('unknown pseudo-class selector');
+        });
+    });
+});
+
+describe('check case-insensitive attributes selecting', () => {
+    // https://github.com/AdguardTeam/ExtendedCss/issues/104
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="target" class="case" tracking="a123_ad-12345" event="banner-STiCKY-123">
+                <div id="child" data-st-area="x-BackTo-main" class="PAGE"></div>
+                <div id="inner" data-st-area="x-GoToSG123"></div>
+                <a id="anchor" href="/example.com/promo" target="_blank"></a>
+                <img id="img" alt="SLOT online AD abd1">
+            </div>
+        `;
+    });
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    it('regular selectors', () => {
+        let selector;
+        let selectedElements;
+        let targetElements;
+
+        targetElements = document.querySelectorAll('#target');
+
+        selector = 'body div[class="case" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'div[class="case" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = 'div[class=case i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        // jsdom does not support 'I' flag by document.querySelectorAll()
+        // e.g. 'div[class="cAsE" I]';
+        selector = 'div[class="cAsE" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        selector = '.case[tracking*="ad-"][event*="-sticky" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        targetElements = document.querySelectorAll('#child, #inner');
+        selector = 'div[data-st-area*="backTo" i], div[data-st-area*="goToSG" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        targetElements = document.querySelectorAll('#img');
+        selector = 'img[alt^="slot online ad" i]';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+    });
+
+    it('extended selectors', () => {
+        let selector;
+        let selectedElements;
+        let targetElements;
+
+        targetElements = document.querySelectorAll('#target');
+        selector = 'div:has(div[class="page" i])';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+
+        targetElements = document.querySelectorAll('#anchor');
+        selector = 'div[id*="TAR" i] a[href][target="_blank"]:is([href*="example.COM" i])';
+        selectedElements = querySelectorAll(selector, document);
+        expectTheSameElements(targetElements, selectedElements);
+    });
+});
+
+describe('check valid regular selectors', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    it('should be trimmed', () => {
+        document.body.innerHTML = `
+            <div id="test">
+                <p>text</p>
+            </div>
+        `;
+        const selectors = [
+            ' #test p',
+            '   #test p',
+            '\t#test p',
+            '\r#test p',
+            '\n#test p',
+            '\f#test p',
+            '#test p ',
+            '#test p   ',
+            '#test p\t',
+            '#test p\r',
+            '#test p\n',
+            '#test p\f',
+        ];
+        const targetElements = document.querySelectorAll('#test p');
+
+        selectors.forEach((selector) => {
+            const selectedElements = querySelectorAll(selector, document);
+            expectTheSameElements(targetElements, selectedElements);
         });
     });
 });

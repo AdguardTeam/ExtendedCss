@@ -66,4 +66,33 @@ describe('tokenizer', () => {
         ];
         expect(tokenize(selector)).toEqual(expected);
     });
+
+    describe('trim selectors', () => {
+        const rawSelectors = [
+            ' #test p',
+            '   #test p',
+            '\t#test p',
+            '\r#test p',
+            '\n#test p',
+            '\f#test p',
+            '#test p ',
+            '#test p   ',
+            '#test p\t',
+            '#test p\r',
+            '#test p\n',
+            '#test p\f',
+        ];
+        // should be '#test p'
+        const expected = [
+            { type: 'mark', value: '#' },
+            { type: 'word', value: 'test' },
+            { type: 'mark', value: ' ' },
+            { type: 'word', value: 'p' },
+        ];
+        test.each(
+            rawSelectors.map((raw) => ({ raw })),
+        )('%s', ({ raw }) => {
+            expect(tokenize(raw)).toEqual(expected);
+        });
+    });
 });

@@ -39,6 +39,11 @@ import {
     IS_PSEUDO_CLASS_MARKER,
     REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
+    NEWLINE,
+    CARRIAGE_RETURN,
+    FORM_FEED,
+    NOT_PSEUDO_CLASS_MARKER,
+    IS_OR_NOT_PSEUDO_SELECTING_ROOT,
 } from './constants';
 
 /**
@@ -59,7 +64,7 @@ const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: st
         || nextTokenValue === ASTERISK
         || nextTokenValue === ID_MARKER
         || nextTokenValue === CLASS_MARKER
-        // e.g. div :not(.content)
+        // e.g. div :where(.content)
         || nextTokenValue === COLON
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
 };
@@ -95,6 +100,11 @@ interface Context {
      * Array of brackets for proper standard pseudo-class handling
      */
     standardPseudoBracketsStack: string[],
+
+    /**
+     * Flag for processing comma inside attribute value
+     */
+    isAttributeBracketsOpen: boolean,
 }
 
 export const parse = (selector: string) => {
@@ -115,6 +125,7 @@ export const parse = (selector: string) => {
         extendedPseudoBracketsStack: [],
         standardPseudoNamesStack: [],
         standardPseudoBracketsStack: [],
+        isAttributeBracketsOpen: false,
     };
 
     const getBufferNode = (): AnySelectorNodeInterface | null => {
@@ -177,7 +188,7 @@ export const parse = (selector: string) => {
         addAnySelectorNode(NodeType.RegularSelector, tokenValue);
     };
 
-    const initRelativeSubtree = (tokenValue: string) => {
+    const initRelativeSubtree = (tokenValue = '') => {
         addAnySelectorNode(NodeType.SelectorList);
         addAnySelectorNode(NodeType.Selector);
         addAnySelectorNode(NodeType.RegularSelector, tokenValue);
@@ -200,6 +211,11 @@ export const parse = (selector: string) => {
         // needed for SPACE and COLON tokens checking
         const nextToken = tokens[i + 1] || [];
         const { type: nextTokenType, value: nextTokenValue } = nextToken;
+
+        // needed for COLON token checking for none-specified regular selector before extended one
+        // e.g. 'p, :hover' OR '.banner, :contains(ads)'
+        const previousToken = tokens[i - 1] || [];
+        const { value: prevTokenValue } = previousToken;
 
         let bufferNode = getBufferNode();
 
@@ -238,9 +254,22 @@ export const parse = (selector: string) => {
             case TokenType.Mark:
                 switch (tokenValue) {
                     case COMMA:
+                        // consider the selector is invalid
+                        // if there is no bufferNode yet (e.g. ', a')
+                        // or if there is nothing after the comma (e.g. 'div, ')
+                        if (!bufferNode
+                            || typeof bufferNode !== 'undefined' && !nextTokenValue) {
+                            throw new Error(`'${nextTokenValue}' is not a valid selector`);
+                        }
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            // new selector should be collected
-                            upToClosest(NodeType.SelectorList);
+                            // it might be comma inside element attribute value
+                            // e.g. div[data-comma="0,1"]
+                            if (context.isAttributeBracketsOpen) {
+                                updateBufferNode(tokenValue);
+                            } else {
+                                // otherwise new selector should be collected to selector list
+                                upToClosest(NodeType.SelectorList);
+                            }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
@@ -252,9 +281,6 @@ export const parse = (selector: string) => {
                         }
                         break;
                     case SPACE:
-                        /**
-                         * TODO: add test case for rule starting with few spaces
-                         */
                         if (bufferNode?.type === NodeType.RegularSelector
                             && (doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)
                                 || !nextTokenValue)) {
@@ -262,17 +288,15 @@ export const parse = (selector: string) => {
                             // this space is part of it
                             updateBufferNode(tokenValue);
                         }
-                        if (bufferNode?.type === NodeType.RegularSelector
-                            && nextTokenValue === COLON) {
-                            // e.g. div > :contains(text)
-                            updateBufferNode(ASTERISK);
-                        }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
-                            initRelativeSubtree(tokenValue);
+                            // init with empty value RegularSelector
+                            // as the space is not needed for selector value
+                            // e.g. 'p:not( .content )'
+                            initRelativeSubtree();
                         }
                         break;
                     case DESCENDANT_COMBINATOR:
@@ -299,23 +323,43 @@ export const parse = (selector: string) => {
                          * '-ext-contains' is not valid attribute name so it's definitely extended pseudo
                          */
                         if (bufferNode === null) {
-                            // it might be such cases:
-                            // .banner > p
-                            // #top > div.ad
-                            // [class][style][specific_attr]
-                            initDefaultAst(tokenValue);
-                        } else if (bufferNode?.type === NodeType.RegularSelector
-                            || bufferNode?.type === NodeType.AbsolutePseudoClass) {
+                            if (tokenValue === ASTERISK
+                                && nextTokenValue === COLON
+                                && tokens[i + 2]
+                                && (tokens[i + 2].value === IS_PSEUDO_CLASS_MARKER
+                                    || tokens[i + 2].value === NOT_PSEUDO_CLASS_MARKER)) {
+                                /**
+                                 * TODO: mention in readme about this limitation
+                                 */
+                                // limit applying of wildcard :is and :not pseudo-class only to html children
+                                // e.g. *:is(.page, .main) > .banner
+                                // or   *:not(span):not(p)
+                                initDefaultAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
+                            } else {
+                                // e.g. '.banner > p'
+                                // or   '#top > div.ad'
+                                // or   '[class][style][attr]'
+                                initDefaultAst(tokenValue);
+                            }
+                        } else if (bufferNode.type === NodeType.RegularSelector) {
                             updateBufferNode(tokenValue);
-                        } else if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            if (tokenValue === BRACKETS.SQUARE.OPEN) {
+                                // needed for proper handling value with comma
+                                // e.g. div[data-comma="0,1"]
+                                context.isAttributeBracketsOpen = true;
+                            }
+                        } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
+                            updateBufferNode(tokenValue);
+                        } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             initRelativeSubtree(tokenValue);
-                        } else if (bufferNode?.type === NodeType.SelectorList) {
+                        } else if (bufferNode.type === NodeType.SelectorList) {
                             addAnySelectorNode(NodeType.Selector);
                             addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                         }
                         break;
                     case BRACKETS.SQUARE.CLOSE:
                         if (bufferNode?.type === NodeType.RegularSelector) {
+                            context.isAttributeBracketsOpen = false;
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
@@ -329,6 +373,14 @@ export const parse = (selector: string) => {
                                 // limit applying of "naked" :xpath pseudo-class
                                 // https://github.com/AdguardTeam/ExtendedCss/issues/115
                                 initDefaultAst('body');
+                            } else if (nextTokenValue === IS_PSEUDO_CLASS_MARKER
+                                || nextTokenValue === NOT_PSEUDO_CLASS_MARKER) {
+                                // for extended pseudo-class :is we use parent element and scope selection
+                                // and element selecting fails if there is no parentNode
+                                // so we need to avoid the root node checking if rule starts with *:is()
+                                // e.g. :is(.page, .main) > .banner
+                                // or   :not(span):not(p)
+                                initDefaultAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
                             } else {
                                 // e.g. :contains(text)
                                 initDefaultAst(ASTERISK);
@@ -337,8 +389,25 @@ export const parse = (selector: string) => {
                             // bufferNode should be updated for following checking
                             bufferNode = getBufferNode();
                         }
-                        // it supposed to be pseudo-class — regular or extended
+                        if (bufferNode?.type === NodeType.SelectorList) {
+                            // bufferNode is SelectorList after comma has been parsed
+                            addAnySelectorNode(NodeType.Selector);
+                            // add empty value RegularSelector anyway as any selector should start with it
+                            // and check previous token on the next step
+                            addAnySelectorNode(NodeType.RegularSelector);
+                            // bufferNode should be updated for following checking
+                            bufferNode = getBufferNode();
+                        }
                         if (bufferNode?.type === NodeType.RegularSelector) {
+                            // so it can be extended selector or standard pseudo
+                            // e.g. #share, :contains(share it)
+                            // e.g. div, :hover
+                            if (prevTokenValue === SPACE
+                                || prevTokenValue === COMMA) {
+                                // case with colon at the start of string - e.g. ':contains(text)'
+                                // is covered by 'bufferNode === null' checking above
+                                updateBufferNode(ASTERISK);
+                            }
                             // Disallow :has(), :is(), :where() inside :has() argument
                             // to avoid increasing the :has() invalidation complexity
                             // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
@@ -398,7 +467,7 @@ export const parse = (selector: string) => {
                             initRelativeSubtree(ASTERISK);
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
                                 // so it is a part of regular selector
-                                // e.g. :not pseudo-class arg in rule:  .yellow:not(:nth-child(3))
+                                // e.g. :where pseudo-class arg in rule:  .yellow:where(:nth-child(3))
                                 updateBufferNode(tokenValue);
                                 context.standardPseudoNamesStack.push(nextTokenValue);
                             } else {
@@ -449,15 +518,17 @@ export const parse = (selector: string) => {
                             context.extendedPseudoNamesStack.pop();
                             if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
                                 updateBufferNode(tokenValue);
-                            } else if (context.extendedPseudoBracketsStack.length === 0
-                                && context.extendedPseudoNamesStack.length === 0) {
+                            } else if (context.extendedPseudoBracketsStack.length >= 0
+                                && context.extendedPseudoNamesStack.length >= 0) {
                                 // assume it's combined
                                 // e.g. p:contains(PR):upward(2)
+                                // e.g. div:has(.banner, :contains(ads))
                                 upToClosest(NodeType.Selector);
                             }
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            if (context.standardPseudoNamesStack.length > 0) {
+                            if (context.standardPseudoNamesStack.length > 0
+                                && context.standardPseudoBracketsStack.length > 0) {
                                 // standard pseudo-classes, e.g. div:where(.class)
                                 updateBufferNode(tokenValue);
                                 context.standardPseudoBracketsStack.pop();
@@ -481,7 +552,20 @@ export const parse = (selector: string) => {
                                 upToClosest(NodeType.Selector);
                             }
                         }
+                        if (bufferNode?.type === NodeType.Selector) {
+                            // e.g. div:has(.banner, :contains(ads))
+                            context.extendedPseudoBracketsStack.pop();
+                            context.extendedPseudoNamesStack.pop();
+                            upToClosest(NodeType.ExtendedSelector);
+                            upToClosest(NodeType.Selector);
+                        }
                         break;
+                    case NEWLINE:
+                    case FORM_FEED:
+                    case CARRIAGE_RETURN:
+                        // such characters should be trimmed
+                        // so is there is one them among tokens, it is not valid selector
+                        throw new Error(`${selector} is not a valid selector`);
                     // TODO:
                     // case SINGLE_QUOTE:
                     // case DOUBLE_QUOTE:

@@ -149,7 +149,7 @@ const hasRelativesBySelectorList = (
             }
 
             if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible`);
+                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
             }
 
             let relativeElements;
@@ -346,6 +346,10 @@ export const querySelectorAll = (selector: string, document: Document): Element[
      * TODO: cache ast results for selector
      */
     const ast = parse(selector);
+
+    if (ast === null) {
+        throw new Error(`'${selector}' is not a valid selector`);
+    }
 
     ast?.children.forEach((selectorNode: AnySelectorNodeInterface) => {
         resultElementsForSelectorList.push(...getElementsForSelectorNode(selectorNode, document));

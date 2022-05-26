@@ -42,6 +42,16 @@ export const DOLLAR_SIGN = '$';
 
 export const EQUAL_SIGN = '=';
 
+export const CARRIAGE_RETURN = '\r';
+export const NEWLINE = '\n';
+export const FORM_FEED = '\f';
+
+const CONTROL_CHARACTERS = [
+    CARRIAGE_RETURN,
+    NEWLINE,
+    FORM_FEED,
+];
+
 // for universal selector and attributes
 export const ASTERISK = '*';
 export const ID_MARKER = '#';
@@ -82,6 +92,7 @@ export const ACCEPTABLE_MARKS = [
     CHILD_COMBINATOR,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
+    ...CONTROL_CHARACTERS,
 ];
 
 // absolute:
@@ -105,8 +116,8 @@ export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
 /**
  * :upward() can get number or selector arg
- * but selector should be standard, not extended
- * so it's always absolute
+ * and if the arg is selector it should be standard, not extended
+ * so :upward pseudo-class is always absolute
  */
 export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 
@@ -170,3 +181,7 @@ export const REGULAR_PSEUDO_ELEMENTS = {
     SPELLING_ERROR: 'spelling-error',
     TARGET_TEXT: 'target-text',
 };
+
+// limit applying of wildcard :is and :not pseudo-class only to html children
+// e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
+export const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;

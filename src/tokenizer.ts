@@ -1,3 +1,5 @@
+import { beautify } from './beautifier';
+
 import { ACCEPTABLE_MARKS } from './constants';
 
 export enum TokenType {
@@ -12,9 +14,11 @@ export interface Token {
 
 /**
  * Splits selector string into tokens
- * @param selector css selector
+ * @param rawSelector raw css selector
  */
-export const tokenize = (selector: string): Token[] => {
+export const tokenize = (rawSelector: string): Token[] => {
+    const selector = beautify(rawSelector);
+
     // currently processed
     let symbol;
     // for words collecting while iterating
