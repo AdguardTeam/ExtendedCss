@@ -87,6 +87,7 @@ describe('regular selectors', () => {
             'div#top[onclick*="redirect"]',
             'div[data-comma="0,1"]',
             'input[data-comma=\'0,1\']',
+            'div[class*=" "]',
         ];
 
         test.each(
@@ -139,6 +140,9 @@ describe('regular selectors', () => {
         expect(parse(selector)).toEqual(expected);
 
         selector = 'div,span';
+        expect(parse(selector)).toEqual(expected);
+
+        selector = 'div , span';
         expect(parse(selector)).toEqual(expected);
 
         selector = 'div.banner, span[ad], div > a > img';
@@ -248,10 +252,15 @@ describe('regular selectors', () => {
             ':lang(c++)',
         ];
 
-        test.each([
+        const testsInputs = [
             { selector: 'div:hover', expected: 'div:hover' },
+            { selector: '.post-content > p:empty::before', expected: '.post-content > p:empty::before' },
+            { selector: '.block:nth-child(2) .inner', expected: '.block:nth-child(2) .inner' },
+            { selector: '.block:nth-child(2) > .inner', expected: '.block:nth-child(2) > .inner' },
             ...wildcardSelectors.map((selector) => ({ selector, expected: `*${selector}` })),
-        ])('%s', ({ selector, expected }) => {
+        ];
+
+        test.each(testsInputs)('%s', ({ selector, expected }) => {
             expectRegularSelector(selector, expected);
         });
     });
@@ -270,7 +279,7 @@ describe('regular selectors', () => {
 describe('absolute extended selectors', () => {
     describe('contains pseudo-class', () => {
         const pseudoName = 'contains';
-        const selectorsData = [
+        const testsInputs = [
             {
                 selector: 'span:contains(text)',
                 expectedRegular: 'span',
@@ -302,14 +311,14 @@ describe('absolute extended selectors', () => {
                 expectedContainsArg: '/[\\w]{9,}/',
             },
         ];
-        test.each(selectorsData)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
+        test.each(testsInputs)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
             expectAbsolutePseudoClassSelector(selector, expectedRegular, pseudoName, expectedContainsArg);
         });
     });
 
     describe('matches-css pseudo-class', () => {
         const pseudoName = 'matches-css';
-        const selectorsData = [
+        const testsInputs = [
             {
                 selector: '*:matches-css(width:400px)',
                 expectedRegular: '*',
@@ -331,7 +340,7 @@ describe('absolute extended selectors', () => {
                 expectedContainsArg: '   background-image: /v\\.ping\\.pl\\/MjAxOTA/   ',
             },
         ];
-        test.each(selectorsData)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
+        test.each(testsInputs)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
             expectAbsolutePseudoClassSelector(selector, expectedRegular, pseudoName, expectedContainsArg);
         });
     });
@@ -349,7 +358,7 @@ describe('absolute extended selectors', () => {
     describe('xpath pseudo-class', () => {
         const pseudoName = 'xpath';
         /* eslint-disable max-len */
-        const selectorsData = [
+        const testsInputs = [
             {
                 selector: 'div:xpath(//h3[contains(text(),"Share it!")]/..)',
                 expectedRegular: 'div',
@@ -397,7 +406,7 @@ describe('absolute extended selectors', () => {
             },
         ];
         /* eslint-enable max-len */
-        test.each(selectorsData)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
+        test.each(testsInputs)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
             expectAbsolutePseudoClassSelector(selector, expectedRegular, pseudoName, expectedContainsArg);
         });
     });
@@ -409,7 +418,7 @@ describe('absolute extended selectors', () => {
         });
         describe('upward with selector arg', () => {
             const pseudoName = 'upward';
-            const selectorsData = [
+            const testsInputs = [
                 {
                     selector: 'div.advert:upward(.info)',
                     expectedRegular: 'div.advert',
@@ -426,7 +435,7 @@ describe('absolute extended selectors', () => {
                     expectedContainsArg: '[id][class]',
                 },
             ];
-            test.each(selectorsData)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
+            test.each(testsInputs)('%s', ({ selector, expectedRegular, expectedContainsArg }) => {
                 expectAbsolutePseudoClassSelector(selector, expectedRegular, pseudoName, expectedContainsArg);
             });
         });
@@ -1438,6 +1447,62 @@ describe('combined extended selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
+    it('selector list with extra space - has , regular selector', () => {
+        const selector = '.block:has(> img) , .banner)';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.block',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '> img',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: '.banner',
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
     it(':has(:matches-css-before())', () => {
         // eslint-disable-next-line max-len
         const selector = 'body.zen .zen-lib div.feed__item:has(> div > div > div[class*="__label"] > span:matches-css-before(content:*Яндекс.Директ))';
@@ -1538,6 +1603,63 @@ describe('combined extended selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
+    it('upward not', () => {
+        const selector = 'div[style="width:640px;height:360px"][id="video-player"]:upward(div):not([class])';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        {
+                            type: NodeType.RegularSelector,
+                            value: 'div[style="width:640px;height:360px"][id="video-player"]',
+                            children: [],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.AbsolutePseudoClass,
+                                    name: 'upward',
+                                    arg: 'div',
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        {
+                                                            type: NodeType.RegularSelector,
+                                                            value: '[class]',
+                                                            children: [],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(selector)).toEqual(expected);
+    });
+
     it(':contains():upward()', () => {
         const selector = 'div > p:contains(PR):upward(2)';
         const expected = {
@@ -1622,54 +1744,6 @@ describe('combined extended selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    /**
-     * TODO
-     */
-    // it(':contains() + :contains()', () => {
-    //     const selector = 'div:contains(base) + .paragraph:contains(text)';
-    //     const expected = {
-    //         type: NodeType.SelectorList,
-    //         children: [
-    //             {
-    //                 type: NodeType.Selector,
-    //                 children: [
-    //                     {
-    //                         type: NodeType.RegularSelector,
-    //                         value: 'div',
-    //                     },
-    //                     {
-    //                         type: NodeType.ExtendedSelector,
-    //                         children: [
-    //                             {
-    //                                 type: NodeType.AbsolutePseudoClass,
-    //                                 name: 'contains',
-    //                                 arg: 'base',
-    //                             },
-    //                         ],
-    //                     },
-    //                     {
-    //                         type: NodeType.RegularSelector,
-    //                         value: ' + .paragraph',
-    //                     },
-    //                     {
-    //                         type: NodeType.ExtendedSelector,
-    //                         children: [
-    //                             {
-    //                                 type: NodeType.AbsolutePseudoClass,
-    //                                 name: 'contains',
-    //                                 arg: 'text',
-    //                             },
-    //                         ],
-    //                     },
-    //                 ],
-    //             },
-    //         ],
-    //     };
-    //     expect(parse(selector)).toEqual(expected);
-    // });
-});
-
-describe('combined selectors', () => {
     it(':has(:not())', () => {
         const selector = 'div:has(:not(span))';
         const expected = {
@@ -1871,28 +1945,8 @@ describe('combined selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    it(':empty::before', () => {
-        const selector = '.post-content > p:empty::before';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '.post-content > p:empty::before',
-                            children: [],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
-
-    it(':not::selection', () => {
-        const selector = '*:not(input)::selection';
+    it('two not with simple selector next to each other', () => {
+        const selector = ':not(span):not(p)';
         const expected = {
             type: NodeType.SelectorList,
             children: [
@@ -1919,58 +1973,7 @@ describe('combined selectors', () => {
                                                     children: [
                                                         {
                                                             type: NodeType.RegularSelector,
-                                                            value: 'input',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '::selection',
-                            children: [],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
-
-    it(':not():not()::selection', () => {
-        const selector = 'html > body *:not(input):not(textarea)::selection';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: 'html > body *',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: 'input',
+                                                            value: 'span',
                                                             children: [],
                                                         },
                                                     ],
@@ -1996,84 +1999,7 @@ describe('combined selectors', () => {
                                                     children: [
                                                         {
                                                             type: NodeType.RegularSelector,
-                                                            value: 'textarea',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '::selection',
-                            children: [],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
-
-    it(':not():has(:only-child)', () => {
-        const selector = '#snippet-list-posts > .item:not([id]):has(> .box-responsive:only-child > div[id]:only-child)';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '#snippet-list-posts > .item',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '[id]',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'has',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '> .box-responsive:only-child > div[id]:only-child',
+                                                            value: 'p',
                                                             children: [],
                                                         },
                                                     ],
@@ -2090,143 +2016,421 @@ describe('combined selectors', () => {
         };
         expect(parse(selector)).toEqual(expected);
     });
+});
 
-    it(':last-child:has()', () => {
-        const selector = '#__next > div:last-child:has(button.privacy-policy__btn)';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '#__next > div:last-child',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'has',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: 'button.privacy-policy__btn',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
+describe('combined selectors', () => {
+    describe('selectors with standard pseudos', () => {
+        it(':not::selection', () => {
+            const selector = '*:not(input)::selection';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'html *',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'input',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '::selection',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
 
-    it(':not(:nth-child())', () => {
-        const selector = '.yellow:not(:nth-child(3))';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '.yellow',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '*:nth-child(3)',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
+        it(':not():not()::selection', () => {
+            const selector = 'html > body *:not(input):not(textarea)::selection';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'html > body *',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'input',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'textarea',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '::selection',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
 
-    it(':nth-child():has()', () => {
-        const selector = '.entry_text:nth-child(2):has(> #ninja-blog-inactive)';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: '.entry_text:nth-child(2)',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'has',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '> #ninja-blog-inactive',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
+        it(':not():has(:only-child)', () => {
+            // eslint-disable-next-line max-len
+            const selector = '#snippet-list-posts > .item:not([id]):has(> .box-responsive:only-child > div[id]:only-child)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#snippet-list-posts > .item',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                // eslint-disable-next-line max-len
+                                                                value: '> .box-responsive:only-child > div[id]:only-child',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it(':last-child:has()', () => {
+            const selector = '#__next > div:last-child:has(button.privacy-policy__btn)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#__next > div:last-child',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'button.privacy-policy__btn',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it(':not(:nth-child())', () => {
+            const selector = '.yellow:not(:nth-child(3))';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.yellow',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '*:nth-child(3)',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it(':nth-child():has()', () => {
+            const selector = '.entry_text:nth-child(2):has(> #ninja-blog-inactive)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.entry_text:nth-child(2)',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '> #ninja-blog-inactive',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('two not with standard pseudo next to each other', () => {
+            const selector = ':not(:empty):not(:hover)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'html *',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '*:empty',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '*:hover',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
     });
 
     it('selector list with regular "any" and extended :contains', () => {
@@ -2518,150 +2722,6 @@ describe('combined selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    it('two not with simple selector next to each other', () => {
-        const selector = ':not(span):not(p)';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: 'html *',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: 'span',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: 'p',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
-
-    it('two not with standard pseudo next to each other', () => {
-        const selector = ':not(:empty):not(:hover)';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: 'html *',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '*:empty',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'not',
-                                    children: [
-                                        {
-                                            type: NodeType.SelectorList,
-                                            children: [
-                                                {
-                                                    type: NodeType.Selector,
-                                                    children: [
-                                                        {
-                                                            type: NodeType.RegularSelector,
-                                                            value: '*:hover',
-                                                            children: [],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
-
     it('super stressor', () => {
         // eslint-disable-next-line max-len
         const selector = 'a[class*=blog]:not(:has(*, :contains(!)), :contains(!)), br:contains(]), p:contains(]), :not(:empty):not(:parent)';
@@ -2881,37 +2941,1931 @@ describe('combined selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
-    it(':has limitation - no inner :has, :is, :where', () => {
-        let selector: string;
+    describe('has pseudo-class limitation', () => {
+        it('no inner :has, :is, :where for :has', () => {
+            let selector: string;
 
-        selector = 'banner:has(> div:has(> img))';
-        expect(() => {
-            parse(selector);
-        }).toThrow('Usage of :has pseudo-class is not allowed inside upper :has');
+            selector = 'banner:has(> div:has(> img))';
+            expect(() => {
+                parse(selector);
+            }).toThrow('Usage of :has pseudo-class is not allowed inside upper :has');
 
-        selector = 'banner:has(> div:is(> img))';
-        expect(() => {
-            parse(selector);
-        }).toThrow('Usage of :is pseudo-class is not allowed inside upper :has');
+            selector = 'banner:has(> div:is(> img))';
+            expect(() => {
+                parse(selector);
+            }).toThrow('Usage of :is pseudo-class is not allowed inside upper :has');
 
-        selector = 'banner:has(> div:where(> img))';
-        expect(() => {
-            parse(selector);
-        }).toThrow('Usage of :where pseudo-class is not allowed inside upper :has');
+            selector = 'banner:has(> div:where(> img))';
+            expect(() => {
+                parse(selector);
+            }).toThrow('Usage of :where pseudo-class is not allowed inside upper :has');
+        });
+
+        it('no :has inside regular pseudos', () => {
+            const selector = '::slotted(:has(.a))';
+            expect(() => {
+                parse(selector);
+            }).toThrow('Usage of :has pseudo-class is not allowed inside regular pseudo');
+        });
+
+        it('no :has after pseudo-elements', () => {
+            const selector = '::part(foo):has(.a)';
+            expect(() => {
+                parse(selector);
+            }).toThrow('Usage of :has pseudo-class is not allowed after any regular pseudo-element');
+        });
     });
 
-    it(':has limitation - no :has inside regular pseudos', () => {
-        const selector = '::slotted(:has(.a))';
-        expect(() => {
-            parse(selector);
-        }).toThrow('Usage of :has pseudo-class is not allowed inside regular pseudo');
+    describe('regular selector AFTER extended absolute selector', () => {
+        it('absolute pseudo-class + space after it', () => {
+            let selector;
+            let expected;
+
+            selector = '.test:upward(3) .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '3',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.test:nth-ancestor(1) > .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'nth-ancestor',
+                                        arg: '1',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> .banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.test:upward(3) > .banner > *';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '3',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> .banner > *',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.test:upward(#top .block) .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '#top .block',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.test:upward(#top > .block) .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '#top > .block',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.test:nth-ancestor(1)> .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.test',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'nth-ancestor',
+                                        arg: '1',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> .banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '#main .target:nth-ancestor(2)+ .banner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#main .target',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'nth-ancestor',
+                                        arg: '2',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '+ .banner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
     });
 
-    it(':has limitation - no :has after pseudo-elements', () => {
-        const selector = '::part(foo):has(.a)';
-        expect(() => {
-            parse(selector);
-        }).toThrow('Usage of :has pseudo-class is not allowed after any regular pseudo-element');
+    describe('regular selector AFTER extended relative selector', () => {
+        it('relative pseudo-class and following regular selector', () => {
+            let selector;
+            let expected;
+
+            selector = '.banner:has(img) .inner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.banner',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'img',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.inner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = ':not([class^="Navigation__subscribe"]) > div[data-cm-unit="show-failsafe"]';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'html *',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class^="Navigation__subscribe"]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[data-cm-unit="show-failsafe"]',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = '.header > header + [id*="-"]:not([class]) > a[href*="adblock"]';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.header > header + [id*="-"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> a[href*="adblock"]',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = 'html:has(> body) > body.no_scroll';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'html',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '> body',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> body.no_scroll',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = 'td[align="left"]:not([width]) > a > img';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'td[align="left"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[width]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> a > img',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('relative pseudo-class + specified combinator after it', () => {
+            let selector;
+            let expected;
+
+            selector = 'div:has(> #banner)> .inner';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '> #banner',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> .inner',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+
+            selector = 'td[align="left"]:not([width])+ a > img';
+            expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'td[align="left"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[width]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '+ a > img',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+    });
+
+    describe('combined after combined with any combinator between', () => {
+        it('contains + contains', () => {
+            const selector = 'div:contains(base) + .paragraph:contains(text)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'contains',
+                                        arg: 'base',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '+ .paragraph',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'contains',
+                                        arg: 'text',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not > contains', () => {
+            const selector = '#root > div:not([class]) > div:contains(PRIVACY)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#root > div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'contains',
+                                        arg: 'PRIVACY',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('matches-attr > has', () => {
+            // eslint-disable-next-line max-len
+            const selector = '#app > div[class]:matches-attr("/data-v-/") > div > div:has(> a[href="https://example.com"])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#app > div[class]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'matches-attr',
+                                        arg: '"/data-v-/"',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div > div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '> a[href="https://example.com"]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not not > has', () => {
+            // eslint-disable-next-line max-len
+            const selector = 'tr[data-id]:not([class]):not([id]) > td[class] > div[class*=" "]:has(> div[class*=" "] > iframe[src^="https://example.org/"])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'tr[data-id]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> td[class] > div[class*=" "]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                // eslint-disable-next-line max-len
+                                                                value: '> div[class*=" "] > iframe[src^="https://example.org/"]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not > not not has', () => {
+            // eslint-disable-next-line max-len
+            const selector = 'div:not([style^="min-height:"]) > div[id][data-id^="toolkit-"]:not([data-bem]):not([data-m]):has(a[href^="https://example."]>img)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[style^="min-height:"]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[id][data-id^="toolkit-"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[data-bem]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[data-m]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: 'a[href^="https://example."]>img',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not > upward', () => {
+            // eslint-disable-next-line max-len
+            const selector = '#root > div:not([class])> div[class] > div[class] > span[class] + a[href="https://example.org/test"]:upward(2)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#root > div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[class] > div[class] > span[class] + a[href="https://example.org/test"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '2',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not not > regular', () => {
+            const selector = 'body > div[id="root"] ~ script +div:not([class]):not([id]) > div[class*=" "]';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'body > div[id="root"] ~ script +div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[class*=" "]',
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not not > not not', () => {
+            // eslint-disable-next-line max-len
+            const selector = '#peek > div:not([class]):not([id]) > div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]:not([class]):not([id])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#peek > div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                // eslint-disable-next-line max-len
+                                value: '> div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('matches-css > contains upward', () => {
+            // eslint-disable-next-line max-len
+            const selector = '#content-container > div[class] > div[class]:matches-css(z-index: 10) > div[class] > div[class] > h4:contains(cookies):upward(4)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '#content-container > div[class] > div[class]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'matches-css',
+                                        arg: 'z-index: 10',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[class] > div[class] > h4',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'contains',
+                                        arg: 'cookies',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '4',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not > has(not > regular)', () => {
+            // eslint-disable-next-line max-len
+            const selector = 'body > div:not([class]) > div[class]:has(> div:not([class]) > .branch-journeys-top a[target="_blank"][href^="/policy/"])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'body > div',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> div[class]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '> div',
+                                                                children: [],
+                                                            },
+                                                            {
+                                                                type: NodeType.ExtendedSelector,
+                                                                children: [
+                                                                    {
+                                                                        type: NodeType.RelativePseudoClass,
+                                                                        name: 'not',
+                                                                        children: [
+                                                                            {
+                                                                                type: NodeType.SelectorList,
+                                                                                children: [
+                                                                                    {
+                                                                                        type: NodeType.Selector,
+                                                                                        children: [
+                                                                                            {
+                                                                                                type: NodeType.RegularSelector, // eslint-disable-line max-len
+                                                                                                value: '[class]',
+                                                                                                children: [],
+                                                                                            },
+                                                                                        ],
+                                                                                    },
+                                                                                ],
+                                                                            },
+                                                                        ],
+                                                                    },
+                                                                ],
+                                                            },
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                // eslint-disable-next-line max-len
+                                                                value: '> .branch-journeys-top a[target="_blank"][href^="/policy/"]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not > only-child contains upward', () => {
+            // eslint-disable-next-line max-len
+            const selector = '.content > .block.rel ~ div[class*=" "]:not(.clear) > a[href="javascript:void(0)"]:only-child:contains(/^Open app$/):upward(1)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.content > .block.rel ~ div[class*=" "]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '.clear',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '> a[href="javascript:void(0)"]:only-child',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'contains',
+                                        arg: '/^Open app$/',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.AbsolutePseudoClass,
+                                        name: 'upward',
+                                        arg: '1',
+                                        children: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('not~not', () => {
+            const selector = 'article>div[id]:not([class])~div[class]:not([id])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'article>div[id]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '~div[class]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('empty not not ~ empty not not + empty not not + not', () => {
+            // eslint-disable-next-line max-len
+            const selector = 'body > script + div:empty:not([class]):not([id]) ~ div:empty:not([class]):not([id]) + div:empty:not([class]):not([id]) + [id]:not([class])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: 'body > script + div:empty',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '~ div:empty',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '+ div:empty',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[id]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '+ [id]',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '[class]',
+                                                                children: [],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('has(matches-css+ matches-css)', () => {
+            // eslint-disable-next-line max-len
+            const selector = '.category-double-article-container:has(.half-article:matches-css(display:none)+ .half-article:matches-css(display:none))';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            {
+                                type: NodeType.RegularSelector,
+                                value: '.category-double-article-container',
+                                children: [],
+                            },
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '.half-article',
+                                                                children: [],
+                                                            },
+                                                            {
+                                                                type: NodeType.ExtendedSelector,
+                                                                children: [
+                                                                    {
+                                                                        type: NodeType.AbsolutePseudoClass,
+                                                                        name: 'matches-css',
+                                                                        arg: 'display:none',
+                                                                        children: [],
+                                                                    },
+                                                                ],
+                                                            },
+                                                            {
+                                                                type: NodeType.RegularSelector,
+                                                                value: '+ .half-article',
+                                                                children: [],
+                                                            },
+                                                            {
+                                                                type: NodeType.ExtendedSelector,
+                                                                children: [
+                                                                    {
+                                                                        type: NodeType.AbsolutePseudoClass,
+                                                                        name: 'matches-css',
+                                                                        arg: 'display:none',
+                                                                        children: [],
+                                                                    },
+                                                                ],
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
     });
 });
 
@@ -2965,7 +4919,9 @@ describe('check case-insensitive attributes parsing', () => {
         )('%s', ({ selector }) => {
             expectRegularSelector(selector);
         });
+    });
 
+    it('selector list', () => {
         const selectorList = 'a[data-st-area*="backTo" i], a[data-st-area*="goToSG" i]';
         const expected = {
             type: NodeType.SelectorList,
@@ -3073,149 +5029,3 @@ describe('check case-insensitive attributes parsing', () => {
         expect(parse(selector)).toEqual(expected);
     });
 });
-
-/**
- * TODO: extended and standard pseudo-classes combined, and other combinations
- *
- * div[style="width:640px;height:360px"][id="video-player"]:upward(div:not([class]))
- * a[href^="https://kampanj."]:upward(1):not(section)
- *
- * .vjs-playing:upward(1) ~ .no-autoplay-overlay
- */
-
-/**
- * TODO: fix test after style declaration support
- */
-// describe('style declaration', () => {
-//     it('style declaration', () => {
-//         let selector = 'div { display: none; }';
-//         let expected = {
-//             type: 'CosmeticRule',
-//             start: 0,
-//             end: 21,
-//             children: [
-//                 {
-//                     type: NodeTypes.REGULAR, // no pseudo in it
-//                     start: 0,
-//                     end: 2,
-//                     children: [
-//                         {
-//                             type: 'SimpleSelector',
-//                             start: 0,
-//                             end: 2,
-//                             children: [
-//                                 {
-//                                     type: 'TypeSelector',
-//                                     start: 0,
-//                                     end: 2,
-//                                     value: 'div',
-//                                 },
-//                             ],
-//                         },
-//                     ],
-//                 },
-//                 {
-//                     type: 'Space',
-//                     start: 3,
-//                     end: 4,
-//                     // children: null, // TODO: remove later
-//                 },
-//                 {
-//                     type: 'DeclarationBlock',
-//                     start: 4,
-//                     end: 21,
-//                     children: [
-//                         {
-//                             type: 'Declaration',
-//                             start: 6,
-//                             end: 19,
-//                             children: [
-//                                 {
-//                                     type: 'Property',
-//                                     start: 6,
-//                                     end: 13,
-//                                     value: 'display',
-//                                 },
-//                                 {
-//                                     type: 'Value',
-//                                     start: 14,
-//                                     end: 21,
-//                                     value: 'display',
-//                                 },
-//                             ],
-//                         },
-//                     ],
-//                 },
-//             ],
-//         };
-//         expect(parser(selector)).toEqual(expected);
-
-//         selector = 'div { display: none!important; }';
-//         expected = {
-//             type: 'CosmeticRule',
-//             start: 0,
-//             end: 32,
-//             children: [
-//                 {
-//                     type: NodeTypes.REGULAR, // no pseudo in it
-//                     start: 0,
-//                     end: 2,
-//                     children: [
-//                         {
-//                             type: 'SimpleSelector',
-//                             start: 0,
-//                             end: 2,
-//                             children: [
-//                                 {
-//                                     type: 'TypeSelector',
-//                                     start: 0,
-//                                     end: 2,
-//                                     value: 'div',
-//                                 },
-//                             ],
-//                         },
-//                     ],
-//                 },
-//                 {
-//                     type: 'Space',
-//                     start: 3,
-//                     end: 4,
-//                     // children: null, // TODO: remove later
-//                 },
-//                 {
-//                     type: 'DeclarationBlock',
-//                     start: 4,
-//                     end: 32,
-//                     children: [
-//                         {
-//                             type: 'Declaration',
-//                             start: 6,
-//                             end: 19,
-//                             children: [
-//                                 {
-//                                     type: 'Property',
-//                                     start: 6,
-//                                     end: 13,
-//                                     value: 'display',
-//                                 },
-//                                 {
-//                                     type: 'Value',
-//                                     start: 14,
-//                                     end: 21,
-//                                     value: 'display',
-//                                 },
-//                                 {
-//                                     type: 'CssRule',
-//                                     start: 20,
-//                                     end: 29,
-//                                     value: 'important',
-//                                 },
-//                             ],
-//                         },
-//                     ],
-//                 },
-//             ],
-//         };
-//         expect(parser(selector)).toEqual(expected);
-//     });
-// });

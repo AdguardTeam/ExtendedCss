@@ -66,6 +66,10 @@ const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: st
         || nextTokenValue === CLASS_MARKER
         // e.g. div :where(.content)
         || nextTokenValue === COLON
+        // e.g. div[class*=' ']
+        || nextTokenValue === SINGLE_QUOTE
+        // e.g. div[class*=" "]
+        || nextTokenValue === DOUBLE_QUOTE
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
 };
 
@@ -194,12 +198,27 @@ export const parse = (selector: string) => {
         addAnySelectorNode(NodeType.RegularSelector, tokenValue);
     };
 
+    /**
+     * Updates path to buffer node for proper ast collecting of selectors while parsing
+     * @param neededNodeType
+     */
     const upToClosest = (neededNodeType: NodeType): void => {
         for (let i = context.pathToBufferNode.length - 1; i >= 0; i -= 1) {
             if (context.pathToBufferNode[i].type === neededNodeType) {
                 context.pathToBufferNode = context.pathToBufferNode.slice(0, i + 1);
                 break;
             }
+        }
+    };
+
+    const removeBufferNode = (): void => {
+        const nodeToRemove = getBufferNode();
+        if (nodeToRemove?.type === NodeType.RegularSelector) {
+            // if RegularSelector node has to be removed
+            // we need to remove the last child of it's parent which is Selector
+            upToClosest(NodeType.Selector);
+            const parentNode = getBufferNode();
+            parentNode?.children.pop();
         }
     };
 
@@ -267,7 +286,15 @@ export const parse = (selector: string) => {
                             if (context.isAttributeBracketsOpen) {
                                 updateBufferNode(tokenValue);
                             } else {
-                                // otherwise new selector should be collected to selector list
+                                if (!bufferNode.value) {
+                                    // it might be comma after extra space after extended pseudo in selector list,
+                                    // parser position on the comma now:
+                                    // e.g. '.block:has(> img) , .banner)'
+                                    // so we need no comma collect, and remove bufferNode
+                                    // as RegularSelector should be added as NEW Selector to SelectorList
+                                    removeBufferNode();
+                                }
+                                // new selector should be collected to selector list
                                 upToClosest(NodeType.SelectorList);
                             }
                         }
@@ -284,9 +311,16 @@ export const parse = (selector: string) => {
                         if (bufferNode?.type === NodeType.RegularSelector
                             && (doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)
                                 || !nextTokenValue)) {
-                            // if regular selector collecting in process
-                            // this space is part of it
-                            updateBufferNode(tokenValue);
+                            if (!bufferNode.value) {
+                                // it might be space in selector list after comma after extra space
+                                // so no need to collect it.
+                                // parser position on space after the comma now:
+                                // e.g. '.block:has(> img) , .banner)'
+                            } else {
+                                // if regular selector collecting in process
+                                // this space is part of it
+                                updateBufferNode(tokenValue);
+                            }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
@@ -297,6 +331,12 @@ export const parse = (selector: string) => {
                             // as the space is not needed for selector value
                             // e.g. 'p:not( .content )'
                             initRelativeSubtree();
+                        }
+                        if (bufferNode?.type === NodeType.Selector) {
+                            // regular selector after the extended
+                            // e.g. .banner:upward(2) > .block
+                            // so do not save this extra space before combinator or selector
+                            addAnySelectorNode(NodeType.RegularSelector);
                         }
                         break;
                     case DESCENDANT_COMBINATOR:
@@ -352,6 +392,13 @@ export const parse = (selector: string) => {
                             updateBufferNode(tokenValue);
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             initRelativeSubtree(tokenValue);
+                        } else if (bufferNode.type === NodeType.Selector) {
+                            // regular selector after the extended
+                            // e.g. .banner:upward(2)> .block
+                            // or   .inner:nth-ancestor(1)~ .banner
+                            if (COMBINATORS.includes(tokenValue)) {
+                                addAnySelectorNode(NodeType.RegularSelector, tokenValue);
+                            }
                         } else if (bufferNode.type === NodeType.SelectorList) {
                             addAnySelectorNode(NodeType.Selector);
                             addAnySelectorNode(NodeType.RegularSelector, tokenValue);

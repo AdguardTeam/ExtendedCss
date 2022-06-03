@@ -22,6 +22,8 @@ import {
     UPWARD_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,
     REGULAR_PSEUDO_CLASSES,
+    DESCENDANT_COMBINATOR,
+    CHILD_COMBINATOR,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
     IS_PSEUDO_CLASS_MARKER,
@@ -32,23 +34,24 @@ import {
 
 /**
  * Selects dom elements by value of RegularSelector
- * @param selectorNode
- * @param root
+ * @param regularSelectorNode RegularSelector node
+ * @param root root element
+ * @param specificity
  */
 const getByRegularSelector = (
-    selectorNode: AnySelectorNodeInterface,
+    regularSelectorNode: AnySelectorNodeInterface,
     root: Document | Element,
     specificity?: string,
 ): Element[] => {
-    if (!selectorNode) {
+    if (!regularSelectorNode) {
         throw new Error('selectorNode should be specified');
     }
-    if (!selectorNode.value) {
+    if (!regularSelectorNode.value) {
         throw new Error('RegularSelector value should be specified');
     }
     const selectorText = specificity
-        ? `${specificity}${selectorNode.value}`
-        : selectorNode.value;
+        ? `${specificity}${regularSelectorNode.value}`
+        : regularSelectorNode.value;
     return Array.from(root.querySelectorAll(selectorText));
 };
 
@@ -133,7 +136,7 @@ const hasRelativesBySelectorList = (
                  */
                 rootElement = element.parentElement;
                 const elementSelectorText = element.tagName.toLowerCase();
-                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
             } else {
                 // e.g. "a:has(> img)", ".block(div > span)"
                 /**
@@ -144,7 +147,7 @@ const hasRelativesBySelectorList = (
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
                  */
-                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} `;
+                specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${DESCENDANT_COMBINATOR}`;
                 rootElement = element;
             }
 
@@ -185,7 +188,7 @@ const isAnyElementBySelectorList = (
             }
 
             const elementSelectorText = utils.getElementSelectorText(element);
-            const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE} > ${elementSelectorText}`;
+            const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
 
             let anyElements;
             try {
@@ -205,100 +208,101 @@ const isAnyElementBySelectorList = (
 };
 
 /**
- * Returns list of dom nodes filtered or selected by selector node
- * @param domElements dom nodes
- * @param selectorNode Selector node child
+ * Returns list of dom nodes filtered or selected by ExtendedSelector node
+ * @param domElements array of dom nodes
+ * @param extendedSelectorNode ExtendedSelector node
  * @returns array of dom nodes
  */
-const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNodeInterface): Element[] => {
+const getByExtendedSelector = (domElements: Element[], extendedSelectorNode: AnySelectorNodeInterface): Element[] => {
     let foundElements: Element[] = [];
     /**
      * TODO: refactor later
      */
-    if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
-        if (!selectorNode.children[0].arg) {
-            throw new Error(`Missing arg for :${selectorNode.children[0].name} pseudo-class`);
+    if (extendedSelectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
+        if (!extendedSelectorNode.children[0].arg) {
+            throw new Error(`Missing arg for :${extendedSelectorNode.children[0].name} pseudo-class`);
         }
         foundElements = findPseudo.nthAncestor(
             domElements,
-            selectorNode.children[0].arg,
-            selectorNode.children[0].name,
+            extendedSelectorNode.children[0].arg,
+            extendedSelectorNode.children[0].name,
         );
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name === XPATH_PSEUDO_CLASS_MARKER) {
-        if (!selectorNode.children[0].arg) {
+    } else if (extendedSelectorNode.children[0].name === XPATH_PSEUDO_CLASS_MARKER) {
+        if (!extendedSelectorNode.children[0].arg) {
             throw new Error('Missing arg for :xpath pseudo-class');
         }
         try {
-            document.createExpression(selectorNode.children[0].arg, null);
+            document.createExpression(extendedSelectorNode.children[0].arg, null);
         } catch (e) {
-            throw new Error(`Invalid argument of :xpath pseudo-class: '${selectorNode.children[0].arg}'`);
+            throw new Error(`Invalid argument of :xpath pseudo-class: '${extendedSelectorNode.children[0].arg}'`);
         }
-        foundElements = findPseudo.xpath(domElements, selectorNode.children[0].arg);
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER) {
-        if (!selectorNode.children[0].arg) {
+        foundElements = findPseudo.xpath(domElements, extendedSelectorNode.children[0].arg);
+    } else if (extendedSelectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER) {
+        if (!extendedSelectorNode.children[0].arg) {
             throw new Error('Missing arg for :upward pseudo-class');
         }
-        if (Number.isNaN(Number(selectorNode.children[0].arg))) {
+        if (Number.isNaN(Number(extendedSelectorNode.children[0].arg))) {
             // so arg is selector, not a number
-            foundElements = findPseudo.upward(domElements, selectorNode.children[0].arg);
+            foundElements = findPseudo.upward(domElements, extendedSelectorNode.children[0].arg);
         } else {
             foundElements = findPseudo.nthAncestor(
                 domElements,
-                selectorNode.children[0].arg,
-                selectorNode.children[0].name,
+                extendedSelectorNode.children[0].arg,
+                extendedSelectorNode.children[0].name,
             );
         }
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name
-        && HAS_PSEUDO_CLASS_MARKERS.includes(selectorNode.children[0].name)) {
-        if (selectorNode.children[0].children.length === 0) {
+    } else if (extendedSelectorNode.children[0].name
+        && HAS_PSEUDO_CLASS_MARKERS.includes(extendedSelectorNode.children[0].name)) {
+        if (extendedSelectorNode.children[0].children.length === 0) {
             throw new Error('Missing arg for :has pseudo-class');
         }
-        foundElements = domElements.filter((el) => {
-            return hasRelativesBySelectorList(el, selectorNode.children[0].children[0], selectorNode.children[0].name);
+        foundElements = domElements.filter((element) => {
+            return hasRelativesBySelectorList(
+                element,
+                extendedSelectorNode.children[0].children[0],
+                extendedSelectorNode.children[0].name,
+            );
         });
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name
-        && selectorNode.children[0].name === IF_NOT_PSEUDO_CLASS_MARKER) {
-        if (selectorNode.children[0].children.length === 0) {
+    } else if (extendedSelectorNode.children[0].name
+        && extendedSelectorNode.children[0].name === IF_NOT_PSEUDO_CLASS_MARKER) {
+        if (extendedSelectorNode.children[0].children.length === 0) {
             throw new Error('Missing arg for :if-not pseudo-class');
         }
-        foundElements = domElements.filter((el) => {
-            return !hasRelativesBySelectorList(el, selectorNode.children[0].children[0], selectorNode.children[0].name);
+        foundElements = domElements.filter((element) => {
+            return !hasRelativesBySelectorList(
+                element,
+                extendedSelectorNode.children[0].children[0],
+                extendedSelectorNode.children[0].name,
+            );
         });
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name
-        && selectorNode.children[0].name === IS_PSEUDO_CLASS_MARKER) {
-        if (selectorNode.children[0].children.length === 0) {
+    } else if (extendedSelectorNode.children[0].name
+        && extendedSelectorNode.children[0].name === IS_PSEUDO_CLASS_MARKER) {
+        if (extendedSelectorNode.children[0].children.length === 0) {
             throw new Error('Missing arg for :is pseudo-class');
         }
         foundElements = domElements.filter((el) => {
             return isAnyElementBySelectorList(
                 el,
-                selectorNode.children[0].children[0],
-                selectorNode.children[0].name,
+                extendedSelectorNode.children[0].children[0],
+                extendedSelectorNode.children[0].name,
             );
         });
-    } else if (selectorNode.type === NodeType.ExtendedSelector
-        && selectorNode.children[0].name
-        && selectorNode.children[0].name === NOT_PSEUDO_CLASS_MARKER) {
-        if (selectorNode.children[0].children.length === 0) {
+    } else if (extendedSelectorNode.children[0].name
+        && extendedSelectorNode.children[0].name === NOT_PSEUDO_CLASS_MARKER) {
+        if (extendedSelectorNode.children[0].children.length === 0) {
             throw new Error('Missing arg for :not pseudo-class');
         }
         foundElements = domElements.filter((el) => {
             return !isAnyElementBySelectorList(
                 el,
-                selectorNode.children[0].children[0],
-                selectorNode.children[0].name,
+                extendedSelectorNode.children[0].children[0],
+                extendedSelectorNode.children[0].name,
                 true,
             );
         });
     } else {
         foundElements = domElements.filter((el) => {
-            return isMatching(el, selectorNode);
+            return isMatching(el, extendedSelectorNode);
         });
     }
 
@@ -306,9 +310,62 @@ const getBySelectorNode = (domElements: Element[], selectorNode: AnySelectorNode
 };
 
 /**
+ * Returns list of dom nodes which selected by
+ * @param domElements array of dom nodes
+ * @param regularSelectorNode RegularSelector node
+ * @returns array of dom nodes
+ */
+const getByFollowingRegularSelector = (
+    domElements: Element[],
+    regularSelectorNode: AnySelectorNodeInterface,
+): Element[] => {
+    let foundElements = [];
+    const { value } = regularSelectorNode;
+    if (!value) {
+        throw new Error('RegularSelector should have a value.');
+    }
+
+    if (value.startsWith(CHILD_COMBINATOR)) {
+        // e.g. div:has(> img) > .banner
+        foundElements = domElements
+            .map((root) => {
+                const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}`;
+                return getByRegularSelector(regularSelectorNode, root, specificity);
+            });
+    } else if (value.startsWith(NEXT_SIBLING_COMBINATOR)
+        || value.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
+        // e.g. div:has(> img) + .banner
+        // or   div:has(> img) ~ .banner
+        foundElements = domElements
+            .map((element) => {
+                const rootElement = element.parentElement;
+                if (!rootElement) {
+                    throw new Error(`Selection by '${value}' part of selector is not possible.`);
+                }
+                const elementSelectorText = utils.getElementSelectorText(element);
+                const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
+                const selected = getByRegularSelector(regularSelectorNode, rootElement, specificity);
+                return selected;
+            });
+    } else {
+        // space-separated regular selector after extended one
+        // e.g. div:has(> img) .banner
+        foundElements = domElements
+            .map((root) => {
+                const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${DESCENDANT_COMBINATOR}`;
+                return getByRegularSelector(regularSelectorNode, root, specificity);
+            });
+    }
+    // foundElements should be flattened
+    // as getByRegularSelector() returns elements array, and map() collects them to array
+    return foundElements.flat(1);
+};
+
+/**
  * Gets elements nodes for Selector node
- * @param selectorTree
- * @param root
+ * @param selectorTree Selector node
+ * @param root root element
+ * @param specificity
  */
 const getElementsForSelectorNode = (
     selectorTree: AnySelectorNodeInterface,
@@ -322,9 +379,11 @@ const getElementsForSelectorNode = (
         if (i === 0) {
             // select start nodes by regular selector
             selectedElements = getByRegularSelector(selectorNode, root, specificity);
-        } else {
+        } else if (selectorNode.type === NodeType.ExtendedSelector) {
             // filter previously selected elements by next selector nodes
-            selectedElements = getBySelectorNode(selectedElements, selectorNode);
+            selectedElements = getByExtendedSelector(selectedElements, selectorNode);
+        } else if (selectorNode.type === NodeType.RegularSelector) {
+            selectedElements = getByFollowingRegularSelector(selectedElements, selectorNode);
         }
         i += 1;
     }
@@ -334,12 +393,9 @@ const getElementsForSelectorNode = (
 /**
  * Selects elements by selector
  * @param selector
- * @param document
+ * @param doc
  */
-export const querySelectorAll = (selector: string, document: Document): Element[] => {
-    /**
-     * TODO: document should be default param
-     */
+export const querySelectorAll = (selector: string, doc = document): Element[] => {
     const resultElementsForSelectorList: Element[] = [];
 
     /**
@@ -352,7 +408,7 @@ export const querySelectorAll = (selector: string, document: Document): Element[
     }
 
     ast?.children.forEach((selectorNode: AnySelectorNodeInterface) => {
-        resultElementsForSelectorList.push(...getElementsForSelectorNode(selectorNode, document));
+        resultElementsForSelectorList.push(...getElementsForSelectorNode(selectorNode, doc));
     });
 
     // since resultElements is array of arrays with elements
