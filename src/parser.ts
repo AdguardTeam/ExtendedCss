@@ -60,15 +60,15 @@ const isSupportedExtendedPseudo = (token: string): boolean => SUPPORTED_PSEUDO_C
 const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: string): boolean => {
     return COMBINATORS.includes(nextTokenValue)
         || nextTokenType === TokenType.Word
-        // e.g. #main *:has(> .ad)
+        // e.g. '#main *:has(> .ad)'
         || nextTokenValue === ASTERISK
         || nextTokenValue === ID_MARKER
         || nextTokenValue === CLASS_MARKER
-        // e.g. div :where(.content)
+        // e.g. 'div :where(.content)'
         || nextTokenValue === COLON
-        // e.g. div[class*=' ']
+        // e.g. "div[class*=' ']"
         || nextTokenValue === SINGLE_QUOTE
-        // e.g. div[class*=" "]
+        // e.g. 'div[class*=" "]'
         || nextTokenValue === DOUBLE_QUOTE
         || nextTokenValue === BRACKETS.SQUARE.OPEN;
 };
@@ -132,16 +132,20 @@ export const parse = (selector: string) => {
         isAttributeBracketsOpen: false,
     };
 
+    /**
+     * Gets the node which is being collected
+     * or null if there is no such one
+     */
     const getBufferNode = (): AnySelectorNodeInterface | null => {
         if (context.pathToBufferNode.length === 0) {
             return null;
         }
-        // buffer node is always the last in the path stack
+        // buffer node is always the last in the pathToBufferNode stack
         return context.pathToBufferNode[context.pathToBufferNode.length - 1];
     };
 
     /**
-     * Updates needed buffered node property value while tokens iterating
+     * Updates needed buffer node value while tokens iterating
      * @param tokenValue
      */
     const updateBufferNode = (tokenValue: string): void => {
@@ -157,20 +161,27 @@ export const parse = (selector: string) => {
     };
 
     /**
-     * Starts context.ast with SelectorList node
+     * Adds SelectorList node to context.ast at the begin of ast collecting
      */
-    const startSelectorList = () => {
+    const addSelectorListNode = () => {
         const selectorListNode = new AnySelectorNode(NodeType.SelectorList);
         context.ast = selectorListNode;
         context.pathToBufferNode.push(selectorListNode);
     };
 
+    /**
+     * Adds new node to buffer node children.
+     * New added node will be considered as buffer node after it
+     * @param type type of node to add
+     * @param tokenValue optional, value of processing token
+     */
     const addAnySelectorNode = (type: NodeType, tokenValue = ''): void => {
         const bufferNode = getBufferNode();
         if (bufferNode === null) {
             throw new Error('No buffer node');
         }
-        // for SelectorList || Selector || ExtendedSelector
+
+        // SelectorList || Selector || ExtendedSelector
         let node = new AnySelectorNode(type);
 
         if (type === NodeType.RegularSelector) {
@@ -185,13 +196,21 @@ export const parse = (selector: string) => {
         context.pathToBufferNode.push(node);
     };
 
-    const initDefaultAst = (tokenValue: string): void => {
-        startSelectorList();
+    /**
+     * The very beginning of ast collecting
+     * @param tokenValue value of regular selector
+     */
+    const initAst = (tokenValue: string): void => {
+        addSelectorListNode();
         addAnySelectorNode(NodeType.Selector);
-        // start with regular selector node as default
+        // RegularSelector node is always the first child of Selector node
         addAnySelectorNode(NodeType.RegularSelector, tokenValue);
     };
 
+    /**
+     * Inits selector list subtree for relative extended pseudo-classes, e.g. :has(), :not()
+     * @param tokenValue optional, value of inner regular selector
+     */
     const initRelativeSubtree = (tokenValue = '') => {
         addAnySelectorNode(NodeType.SelectorList);
         addAnySelectorNode(NodeType.Selector);
@@ -199,32 +218,24 @@ export const parse = (selector: string) => {
     };
 
     /**
-     * Updates path to buffer node for proper ast collecting of selectors while parsing
-     * @param neededNodeType
+     * Goes to closest parent specified by type.
+     * Actually updates path to buffer node for proper ast collecting of selectors while parsing
+     * @param parentType
      */
-    const upToClosest = (neededNodeType: NodeType): void => {
+    const upToClosest = (parentType: NodeType): void => {
         for (let i = context.pathToBufferNode.length - 1; i >= 0; i -= 1) {
-            if (context.pathToBufferNode[i].type === neededNodeType) {
+            if (context.pathToBufferNode[i].type === parentType) {
                 context.pathToBufferNode = context.pathToBufferNode.slice(0, i + 1);
                 break;
             }
         }
     };
 
-    const removeBufferNode = (): void => {
-        const nodeToRemove = getBufferNode();
-        if (nodeToRemove?.type === NodeType.RegularSelector) {
-            // if RegularSelector node has to be removed
-            // we need to remove the last child of it's parent which is Selector
-            upToClosest(NodeType.Selector);
-            const parentNode = getBufferNode();
-            parentNode?.children.pop();
-        }
-    };
-
     let i = 0;
     while (i < tokens.length) {
         const token = tokens[i];
+
+        // Token to process
         const { type: tokenType, value: tokenValue } = token;
 
         // needed for SPACE and COLON tokens checking
@@ -232,7 +243,8 @@ export const parse = (selector: string) => {
         const { type: nextTokenType, value: nextTokenValue } = nextToken;
 
         // needed for COLON token checking for none-specified regular selector before extended one
-        // e.g. 'p, :hover' OR '.banner, :contains(ads)'
+        // e.g. 'p, :hover'
+        // or   '.banner, :contains(ads)'
         const previousToken = tokens[i - 1] || [];
         const { value: prevTokenValue } = previousToken;
 
@@ -241,89 +253,64 @@ export const parse = (selector: string) => {
         switch (tokenType) {
             case TokenType.Word:
                 if (bufferNode === null) {
-                    // very beginning
-                    initDefaultAst(tokenValue);
+                    // there is no buffer node only in one case — no ast collecting has been started
+                    initAst(tokenValue);
                 } else if (bufferNode.type === NodeType.SelectorList) {
                     // add new selector to selector list
                     addAnySelectorNode(NodeType.Selector);
                     addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                 } else if (bufferNode.type === NodeType.RegularSelector) {
                     updateBufferNode(tokenValue);
-                }
-
-                // TODO: ditch optional chaining
-                if (bufferNode?.type === NodeType.ExtendedSelector) {
-                    // store for brackets balance checking
+                } else if (bufferNode.type === NodeType.ExtendedSelector) {
+                    // save pseudo-class name for brackets balance checking
                     context.extendedPseudoNamesStack.push(tokenValue);
-
                     if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue)) {
                         addAnySelectorNode(NodeType.AbsolutePseudoClass, tokenValue);
                     } else {
                         // if it is not absolute pseudo-class, it must be relative one
-                        // can not be third option
+                        // add RelativePseudoClass with tokenValue as pseudo-class name to ExtendedSelector children
                         addAnySelectorNode(NodeType.RelativePseudoClass, tokenValue);
                     }
-                } else if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
+                } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
                     // collect absolute pseudo-class arg
                     updateBufferNode(tokenValue);
-                } else if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                     initRelativeSubtree(tokenValue);
                 }
                 break;
             case TokenType.Mark:
                 switch (tokenValue) {
                     case COMMA:
-                        // consider the selector is invalid
-                        // if there is no bufferNode yet (e.g. ', a')
-                        // or if there is nothing after the comma (e.g. 'div, ')
-                        if (!bufferNode
-                            || typeof bufferNode !== 'undefined' && !nextTokenValue) {
+                        if (!bufferNode || (typeof bufferNode !== 'undefined' && !nextTokenValue)) {
+                            // consider the selector is invalid if there is no bufferNode yet (e.g. ', a')
+                            // or there is nothing after the comma while bufferNode is defined (e.g. 'div, ')
                             throw new Error(`'${nextTokenValue}' is not a valid selector`);
-                        }
-                        if (bufferNode?.type === NodeType.RegularSelector) {
-                            // it might be comma inside element attribute value
-                            // e.g. div[data-comma="0,1"]
+                        } else if (bufferNode.type === NodeType.RegularSelector) {
                             if (context.isAttributeBracketsOpen) {
+                                // the comma might be inside element attribute value
+                                // e.g. 'div[data-comma="0,1"]'
                                 updateBufferNode(tokenValue);
                             } else {
-                                if (!bufferNode.value) {
-                                    // it might be comma after extra space after extended pseudo in selector list,
-                                    // parser position on the comma now:
-                                    // e.g. '.block:has(> img) , .banner)'
-                                    // so we need no comma collect, and remove bufferNode
-                                    // as RegularSelector should be added as NEW Selector to SelectorList
-                                    removeBufferNode();
-                                }
-                                // new selector should be collected to selector list
+                                // new Selector should be collected to upper SelectorList
                                 upToClosest(NodeType.SelectorList);
                             }
-                        }
-                        if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
+                        } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
+                            // the comma inside arg of absolute extended pseudo
+                            // e.g. 'div:xpath(//h3[contains(text(),"Share it!")]/..)'
                             updateBufferNode(tokenValue);
-                        }
-                        if (bufferNode?.type === NodeType.Selector) {
-                            // new selector should be collected
+                        } else if (bufferNode?.type === NodeType.Selector) {
+                            // new Selector should be collected to upper SelectorList
+                            // if parser position is on Selector node
                             upToClosest(NodeType.SelectorList);
                         }
                         break;
                     case SPACE:
                         if (bufferNode?.type === NodeType.RegularSelector
-                            && (doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)
-                                || !nextTokenValue)) {
-                            if (!bufferNode.value) {
-                                // it might be space in selector list after comma after extra space
-                                // so no need to collect it.
-                                // parser position on space after the comma now:
-                                // e.g. '.block:has(> img) , .banner)'
-                            } else {
-                                // if regular selector collecting in process
-                                // this space is part of it
-                                updateBufferNode(tokenValue);
-                            }
+                            && (!nextTokenValue || doesRegularContinueAfterSpace(nextTokenType, nextTokenValue))) {
+                            updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
+                            // e.g. 'div:xpath(//h3[contains(text(),"Share it!")]/..)'
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
@@ -333,10 +320,20 @@ export const parse = (selector: string) => {
                             initRelativeSubtree();
                         }
                         if (bufferNode?.type === NodeType.Selector) {
-                            // regular selector after the extended
-                            // e.g. .banner:upward(2) > .block
-                            // so do not save this extra space before combinator or selector
-                            addAnySelectorNode(NodeType.RegularSelector);
+                            /**
+                             * do NOT add RegularSelector if parser position on space BEFORE the comma in selector list
+                             * e.g. '.block:has(> img) , .banner)'
+                             */
+                            if (nextTokenValue && doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)) {
+                                /**
+                                 * regular selector might be after the extended one.
+                                 * extra space before combinator or selector should not be collected
+                                 * e.g. '.banner:upward(2) .block'
+                                 *      '.banner:upward(2) > .block'
+                                 * so no tokenValue passed to addAnySelectorNode()
+                                 */
+                                addAnySelectorNode(NodeType.RegularSelector);
+                            }
                         }
                         break;
                     case DESCENDANT_COMBINATOR:
@@ -356,88 +353,117 @@ export const parse = (selector: string) => {
                     case ID_MARKER:
                     case CLASS_MARKER:
                     case BRACKETS.SQUARE.OPEN:
-                        /**
-                         * TODO support old extended pseudo-class syntax
-                         * e.g. -ext-contains, -ext-has etc
-                         *
-                         * '-ext-contains' is not valid attribute name so it's definitely extended pseudo
-                         */
                         if (bufferNode === null) {
+                            // no ast collecting has been started
                             if (tokenValue === ASTERISK
                                 && nextTokenValue === COLON
                                 && tokens[i + 2]
                                 && (tokens[i + 2].value === IS_PSEUDO_CLASS_MARKER
                                     || tokens[i + 2].value === NOT_PSEUDO_CLASS_MARKER)) {
                                 /**
-                                 * TODO: mention in readme about this limitation
+                                 * TODO: mention this limitation in readme
                                  */
-                                // limit applying of wildcard :is and :not pseudo-class only to html children
-                                // e.g. *:is(.page, .main) > .banner
-                                // or   *:not(span):not(p)
-                                initDefaultAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
+                                /**
+                                 * limit applying of wildcard :is() and :not() pseudo-class only to html children
+                                 * as we check element parent for them and there is no parent for html
+                                 * e.g. '*:is(.page, .main) > .banner'
+                                 * or   '*:not(span):not(p)'
+                                 */
+                                initAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
                             } else {
                                 // e.g. '.banner > p'
                                 // or   '#top > div.ad'
                                 // or   '[class][style][attr]'
-                                initDefaultAst(tokenValue);
+                                initAst(tokenValue);
                             }
                         } else if (bufferNode.type === NodeType.RegularSelector) {
+                            // collect the mark to the value of RegularSelector node
                             updateBufferNode(tokenValue);
                             if (tokenValue === BRACKETS.SQUARE.OPEN) {
-                                // needed for proper handling value with comma
-                                // e.g. div[data-comma="0,1"]
+                                // needed for proper handling element attribute value with comma
+                                // e.g. 'div[data-comma="0,1"]'
                                 context.isAttributeBracketsOpen = true;
                             }
                         } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
+                            // collect the mark to the arg of AbsolutePseudoClass node
                             updateBufferNode(tokenValue);
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
+                            // add SelectorList to children of RelativePseudoClass node
                             initRelativeSubtree(tokenValue);
                         } else if (bufferNode.type === NodeType.Selector) {
-                            // regular selector after the extended
-                            // e.g. .banner:upward(2)> .block
-                            // or   .inner:nth-ancestor(1)~ .banner
+                            // after the extended pseudo closing parentheses
+                            // parser position is on Selector node
+                            // and regular selector can be after the extended one
+                            // e.g. '.banner:upward(2)> .block'
+                            // or   '.inner:nth-ancestor(1)~ .banner'
                             if (COMBINATORS.includes(tokenValue)) {
                                 addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                             }
                         } else if (bufferNode.type === NodeType.SelectorList) {
+                            // add Selector to SelectorList
                             addAnySelectorNode(NodeType.Selector);
+                            // and RegularSelector as it is always the first child of Selector
                             addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                         }
                         break;
                     case BRACKETS.SQUARE.CLOSE:
                         if (bufferNode?.type === NodeType.RegularSelector) {
+                            // needed for proper parsing regular selectors after the attributes with comma
+                            // e.g. 'div[data-comma="0,1"] > img'
                             context.isAttributeBracketsOpen = false;
+                            // collect the bracket to the value of RegularSelector node
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
+                            // :xpath() expended pseudo-class arg might contain square bracket
+                            // so it should be collected
+                            // e.g. 'div:xpath(//h3[contains(text(),"Share it!")]/..)'
                             updateBufferNode(tokenValue);
                         }
                         break;
                     case COLON:
                         if (bufferNode === null) {
+                            // no ast collecting has been started
                             if (nextTokenValue === XPATH_PSEUDO_CLASS_MARKER) {
                                 // limit applying of "naked" :xpath pseudo-class
                                 // https://github.com/AdguardTeam/ExtendedCss/issues/115
-                                initDefaultAst('body');
+                                initAst('body');
                             } else if (nextTokenValue === IS_PSEUDO_CLASS_MARKER
                                 || nextTokenValue === NOT_PSEUDO_CLASS_MARKER) {
-                                // for extended pseudo-class :is we use parent element and scope selection
-                                // and element selecting fails if there is no parentNode
-                                // so we need to avoid the root node checking if rule starts with *:is()
-                                // e.g. :is(.page, .main) > .banner
-                                // or   :not(span):not(p)
-                                initDefaultAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
+                                /**
+                                 * TODO: mention this limitation in readme
+                                 */
+                                /**
+                                 * parent element checking is used for extended pseudo-class :is() and :not().
+                                 * as there is no parentNode for root element (html)
+                                 * element selection should be limited to it's children.
+                                 * e.g. :is(.page, .main) > .banner
+                                 * or   :not(span):not(p)
+                                 */
+                                initAst(IS_OR_NOT_PSEUDO_SELECTING_ROOT);
                             } else {
-                                // e.g. :contains(text)
-                                initDefaultAst(ASTERISK);
+                                // make it more obvious if selector starts with pseudo with no tag specified
+                                // e.g. ':has(a)' -> '*:has(a)'
+                                // or   ':empty'  -> '*:empty'
+                                initAst(ASTERISK);
                             }
 
                             // bufferNode should be updated for following checking
                             bufferNode = getBufferNode();
                         }
-                        if (bufferNode?.type === NodeType.SelectorList) {
-                            // bufferNode is SelectorList after comma has been parsed
+
+                        /**
+                         * TODO: MIGHT HELP WITH OPTIONAL CHAINING
+                         * BUT BREAKS PARSING
+                         */
+                        if (!bufferNode) {
+                            throw new Error('bufferNode has to be specified by now');
+                        }
+
+                        if (bufferNode.type === NodeType.SelectorList) {
+                            // bufferNode is SelectorList after comma has been parsed.
+                            // parser position is on colon now:
+                            // e.g. 'img,:not(.content)'
                             addAnySelectorNode(NodeType.Selector);
                             // add empty value RegularSelector anyway as any selector should start with it
                             // and check previous token on the next step
@@ -446,13 +472,13 @@ export const parse = (selector: string) => {
                             bufferNode = getBufferNode();
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            // so it can be extended selector or standard pseudo
-                            // e.g. #share, :contains(share it)
-                            // e.g. div, :hover
+                            // it can be extended or standard pseudo
+                            // e.g. '#share, :contains(share it)'
+                            // or   'div, :hover'
                             if (prevTokenValue === SPACE
                                 || prevTokenValue === COMMA) {
                                 // case with colon at the start of string - e.g. ':contains(text)'
-                                // is covered by 'bufferNode === null' checking above
+                                // is covered by 'bufferNode === null' above at start of COLON checking
                                 updateBufferNode(ASTERISK);
                             }
                             // Disallow :has(), :is(), :where() inside :has() argument
@@ -465,21 +491,24 @@ export const parse = (selector: string) => {
                                 && (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
                                     || nextTokenValue === IS_PSEUDO_CLASS_MARKER
                                     || nextTokenValue === REGULAR_PSEUDO_CLASSES.WHERE)) {
-                                // eslint-disable-next-line max-len
-                                throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside upper :has`);
+                                throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside upper :has`); // eslint-disable-line max-len
                             }
 
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
-                                // so it is a part of regular selector
-                                // e.g. .entry_text:nth-child(2)
+                                // if following token is not an extended pseudo
+                                // the colon should be collected to value of RegularSelector
+                                // e.g. '.entry_text:nth-child(2)'
                                 updateBufferNode(tokenValue);
-                                // no need to balance parentheses
-                                // if extended pseudo-class is next to standard one with no brackets
-                                // e.g. div:last-child:has(button.privacy-policy__btn)
+                                // check the token after the pseudo and do balance parentheses later
+                                // only if it is functional pseudo-class (standard with brackets, e.g. ':lang()').
+                                // no brackets balance needed for such case,
+                                // parser position is on first colon after the 'div':
+                                // e.g. 'div:last-child:has(button.privacy-policy__btn)'
                                 if (tokens[i + 2] && tokens[i + 2].value === BRACKETS.PARENTHESES.OPEN) {
                                     context.standardPseudoNamesStack.push(nextTokenValue);
                                 }
                             } else {
+                                // it is supported extended pseudo-class.
                                 // Disallow :has() inside the pseudos accepting only compound selectors
                                 // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [2]
                                 if (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
@@ -487,39 +516,53 @@ export const parse = (selector: string) => {
                                     // eslint-disable-next-line max-len
                                     throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside regular pseudo: '${context.standardPseudoNamesStack[context.standardPseudoNamesStack.length - 1]}'`);
                                 } else {
-                                    // add ExtendedSelector to Selector children
+                                    // stop RegularSelector value collecting
                                     upToClosest(NodeType.Selector);
+                                    // add ExtendedSelector to Selector children
                                     addAnySelectorNode(NodeType.ExtendedSelector);
                                 }
                             }
                         }
                         if (bufferNode?.type === NodeType.Selector) {
-                            // few extended pseudo-classes might be used in row
-                            // e.g. p:contains(PR):upward(2)
-                            // and bufferNode was changed on parentheses closing
+                            // after the extended pseudo closing parentheses
+                            // parser position is on Selector node
+                            // and there is might be another extended selector.
+                            // parser position is on colon before 'upward':
+                            // e.g. 'p:contains(PR):upward(2)'
                             if (isSupportedExtendedPseudo(nextTokenValue)) {
+                                // if supported extended pseudo-class is next to colon
+                                // add ExtendedSelector to Selector children
                                 addAnySelectorNode(NodeType.ExtendedSelector);
                             } else {
-                                // otherwise it might be standard pseudo after extended pseudo-class
-                                // e.g. html > body *:not(input)::selection
+                                // otherwise it is standard pseudo after extended pseudo-class
+                                // and colon should be collected to value of RegularSelector
+                                // e.g. 'body *:not(input)::selection'
                                 addAnySelectorNode(NodeType.RegularSelector, tokenValue);
                             }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // collecting arg for absolute pseudo-class
-                            // e.g. div:matches-css(width:400px)
+                            // e.g. 'div:matches-css(width:400px)'
                             updateBufferNode(tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            // make it more obvious if selector starts with pseudo with no tag specified
+                            // parser position is on colon inside :has() arg
+                            // e.g. 'div:has(:contains(text))'
+                            // or   'div:not(:empty)'
                             initRelativeSubtree(ASTERISK);
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
-                                // so it is a part of regular selector
-                                // e.g. :where pseudo-class arg in rule:  .yellow:where(:nth-child(3))
+                                // collect the colon to value of RegularSelector
+                                // e.g. 'div:not(:empty)'
                                 updateBufferNode(tokenValue);
-                                context.standardPseudoNamesStack.push(nextTokenValue);
+                                // parentheses should be balanced only for functional pseudo-classes
+                                // e.g. '.yellow:not(:nth-child(3))'
+                                if (tokens[i + 2] && tokens[i + 2].value === BRACKETS.PARENTHESES.OPEN) {
+                                    context.standardPseudoNamesStack.push(nextTokenValue);
+                                }
                             } else {
                                 // add ExtendedSelector to Selector children
-                                // e.g. div:has(:contains(text))
+                                // e.g. 'div:has(:contains(text))'
                                 upToClosest(NodeType.Selector);
                                 addAnySelectorNode(NodeType.ExtendedSelector);
                             }
@@ -527,17 +570,15 @@ export const parse = (selector: string) => {
                         break;
                     case BRACKETS.PARENTHESES.OPEN:
                         // start of pseudo-class arg
-                        if (context.extendedPseudoNamesStack.length === 0) {
-                            // it might be error
-                        }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // if previous token is escaped parentheses
-                            // just update the buffer node
-                            if (tokens[i - 1].value === BACKSLASH) {
-                                // e.g. div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)
+                            if (prevTokenValue === BACKSLASH) {
+                                // if the parentheses is escaped it should be part of regexp
+                                // collect it to arg of AbsolutePseudoClass
+                                // e.g. 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)'
                                 updateBufferNode(tokenValue);
                             } else {
-                                // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
+                                // otherwise brackets should be balanced
+                                // e.g. 'div:xpath(//h3[contains(text(),"Share it!")]/..)'
                                 context.extendedPseudoBracketsStack.push(tokenValue);
                                 // eslint-disable-next-line max-len
                                 if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
@@ -545,12 +586,9 @@ export const parse = (selector: string) => {
                                 }
                             }
                         }
-                        if (bufferNode?.type === NodeType.RelativePseudoClass) {
-                            // e.g. div:xpath(//h3[contains(text(),"Share it!")]/..)
-                            context.extendedPseudoBracketsStack.push(tokenValue);
-                        }
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            // standard pseudo-classes, e.g. .banner:not(div)
+                            // continue RegularSelector value collecting for standard pseudo-classes
+                            // e.g. '.banner:where(div)'
                             if (context.standardPseudoNamesStack.length > 0) {
                                 updateBufferNode(tokenValue);
                                 context.standardPseudoBracketsStack.push(tokenValue);
@@ -559,32 +597,47 @@ export const parse = (selector: string) => {
                         break;
                     case BRACKETS.PARENTHESES.CLOSE:
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. h3:contains((Ads))
-                            // or   div:xpath(//h3[contains(text(),"Share it!")]/..)
+                            // remove stacked open parentheses for brackets balance
+                            // and stacked name of extended pseudo-class
+                            // e.g. 'h3:contains((Ads))'
+                            // or   'div:xpath(//h3[contains(text(),"Share it!")]/..)'
                             context.extendedPseudoBracketsStack.pop();
                             context.extendedPseudoNamesStack.pop();
                             if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
+                                // if brackets stack is not empty yet, save tokenValue to arg of AbsolutePseudoClass
+                                // parser position on first closing bracket after 'Ads':
+                                // e.g. 'h3:contains((Ads))'
                                 updateBufferNode(tokenValue);
                             } else if (context.extendedPseudoBracketsStack.length >= 0
                                 && context.extendedPseudoNamesStack.length >= 0) {
-                                // assume it's combined
-                                // e.g. p:contains(PR):upward(2)
-                                // e.g. div:has(.banner, :contains(ads))
+                                // assume it is combined extended pseudo-classes
+                                // parser position on first closing bracket after 'advert':
+                                // e.g. 'div:has(.banner, :contains(advert))'
                                 upToClosest(NodeType.Selector);
                             }
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
                             if (context.standardPseudoNamesStack.length > 0
                                 && context.standardPseudoBracketsStack.length > 0) {
-                                // standard pseudo-classes, e.g. div:where(.class)
+                                // standard pseudo-class was processing.
+                                // collect the closing bracket to value of RegularSelector
+                                // parser position is on bracket after 'class' now:
+                                // e.g. 'div:where(.class)'
                                 updateBufferNode(tokenValue);
+                                // remove bracket and pseudo name from stacks
                                 context.standardPseudoBracketsStack.pop();
-                                const lastStandardPseudo = context.standardPseudoNamesStack.pop() || '';
+                                const lastStandardPseudo = context.standardPseudoNamesStack.pop();
+                                if (!lastStandardPseudo) {
+                                    // standard pseudo should be in standardPseudoNamesStack
+                                    // as related to standardPseudoBracketsStack
+                                    throw new Error(`Parsing error. Invalid selector: ${selector}`);
+                                }
                                 // Disallow :has() after regular pseudo-elements
                                 // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [3]
                                 if (Object.values(REGULAR_PSEUDO_ELEMENTS).includes(lastStandardPseudo)
                                     // check token which is next to closing parentheses and token after it
-                                    // e.g. ::part(foo):has(.a) - parser position is on bracket after 'foo' now
+                                    // parser position is on bracket after 'foo' now:
+                                    // e.g. '::part(foo):has(.a)'
                                     && nextTokenValue === COLON
                                     && tokens[i + 2]
                                     && HAS_PSEUDO_CLASS_MARKERS.includes(tokens[i + 2].value)) {
@@ -592,15 +645,21 @@ export const parse = (selector: string) => {
                                     throw new Error(`Usage of :${tokens[i + 2].value} pseudo-class is not allowed after any regular pseudo-element: '${lastStandardPseudo}'`);
                                 }
                             } else {
-                                // e.g. div:has(h3)
+                                // extended pseudo-class was processing.
+                                // e.g. 'div:has(h3)'
+                                // remove bracket and pseudo name from stacks
                                 context.extendedPseudoBracketsStack.pop();
                                 context.extendedPseudoNamesStack.pop();
                                 upToClosest(NodeType.ExtendedSelector);
+                                // go to upper selector for possible selector continuation after extended pseudo-class
+                                // e.g. 'div:has(h3) > img'
                                 upToClosest(NodeType.Selector);
                             }
                         }
                         if (bufferNode?.type === NodeType.Selector) {
-                            // e.g. div:has(.banner, :contains(ads))
+                            // after inner extended pseudo-class bufferNode is Selector.
+                            // parser position is on last bracket now:
+                            // e.g. 'div:has(.banner, :contains(ads))'
                             context.extendedPseudoBracketsStack.pop();
                             context.extendedPseudoNamesStack.pop();
                             upToClosest(NodeType.ExtendedSelector);
@@ -613,11 +672,6 @@ export const parse = (selector: string) => {
                         // such characters should be trimmed
                         // so is there is one them among tokens, it is not valid selector
                         throw new Error(`${selector} is not a valid selector`);
-                    // TODO:
-                    // case SINGLE_QUOTE:
-                    // case DOUBLE_QUOTE:
-                    //     //
-                    //     break;
                 }
                 break;
         }
