@@ -1,4 +1,4 @@
-import { querySelectorAll } from '../../../src/selector';
+import { ExtCssDocument } from '../../../src/selector';
 
 /**
  * Checks whether selectedElements and expectedElements are the same
@@ -26,7 +26,8 @@ interface SuccessSelectorInput {
 }
 export const expectSuccessInput = (input: SuccessSelectorInput): void => {
     const { actual, expected } = input;
-    const selectedElements = querySelectorAll(actual);
+    const extCssDoc = new ExtCssDocument();
+    const selectedElements = extCssDoc.querySelectorAll(actual);
     const expectedElements = document.querySelectorAll(expected);
     expectTheSameElements(selectedElements, expectedElements);
 };
@@ -36,7 +37,8 @@ interface NoMatchSelectorInput {
 }
 export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
     const { selector } = input;
-    const selectedElements = querySelectorAll(selector);
+    const extCssDoc = new ExtCssDocument();
+    const selectedElements = extCssDoc.querySelectorAll(selector);
     expectNoMatch(selectedElements);
 };
 
@@ -46,8 +48,9 @@ interface ToThrowSelectorInput {
 }
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;
+    const extCssDoc = new ExtCssDocument();
     expect(() => {
-        querySelectorAll(selector);
+        extCssDoc.querySelectorAll(selector);
     }).toThrow(error);
 };
 

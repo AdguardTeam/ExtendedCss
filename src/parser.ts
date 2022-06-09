@@ -625,5 +625,9 @@ export const parse = (selector: string) => {
         i += 1;
     }
 
+    if (context.ast === null) {
+        throw new Error(`'${selector}' is not a valid selector`);
+    }
+
     return context.ast;
 };
