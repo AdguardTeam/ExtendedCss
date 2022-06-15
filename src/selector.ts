@@ -30,6 +30,8 @@ import {
     NOT_PSEUDO_CLASS_MARKER,
     IF_NOT_PSEUDO_CLASS_MARKER,
     COLON,
+    ABSOLUTE_PSEUDO_CLASSES,
+    RELATIVE_PSEUDO_CLASSES,
 } from './constants';
 
 /**
@@ -43,9 +45,6 @@ const getByRegularSelector = (
     root: Document | Element,
     specificity?: string,
 ): Element[] => {
-    if (!regularSelectorNode) {
-        throw new Error('selectorNode should be specified');
-    }
     if (!regularSelectorNode.value) {
         throw new Error('RegularSelector value should be specified');
     }
@@ -56,69 +55,41 @@ const getByRegularSelector = (
 };
 
 /**
- * Checks whether the domElement satisfies condition of extended pseudo-class
+ * Checks whether the domElement satisfies condition of absolute extended pseudo-class
  * @param domElement dom node, i.e html element
- * @param extendedPseudo absolute extended pseudo-class node
+ * @param pseudoName pseudo-class name
+ * @param pseudoArg pseudo-class arg
  */
-const isAbsoluteMatching = (domElement: Element, extendedPseudo: AnySelectorNodeInterface): boolean => {
+const isAbsoluteMatching = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     let isMatching = false;
-    const { name, arg } = extendedPseudo;
-    if (!name || !arg) {
-        throw new Error('Pseudo-class name or arg is missing in AbsolutePseudoClass');
+    if (CONTAINS_PSEUDO_CLASS_MARKERS.includes(pseudoName)) {
+        isMatching = matchPseudo.contains(domElement, pseudoArg);
+    } else if (MATCHES_CSS_PSEUDO_CLASS_MARKERS.includes(pseudoName)) {
+        isMatching = matchPseudo.matchesCss(domElement, pseudoName, pseudoArg);
+    } else if (pseudoName === MATCHES_ATTR_PSEUDO_CLASS_MARKER) {
+        isMatching = matchPseudo.matchesAttr(domElement, pseudoName, pseudoArg);
+    } else if (pseudoName === MATCHES_PROPERTY_PSEUDO_CLASS_MARKER) {
+        isMatching = matchPseudo.matchesProperty(domElement, pseudoName, pseudoArg);
     }
-
-    if (CONTAINS_PSEUDO_CLASS_MARKERS.includes(name)) {
-        isMatching = matchPseudo.contains(domElement, arg);
-    }
-
-    if (MATCHES_CSS_PSEUDO_CLASS_MARKERS.includes(name)) {
-        isMatching = matchPseudo.matchesCss(domElement, name, arg);
-    }
-
-    if (name === MATCHES_ATTR_PSEUDO_CLASS_MARKER) {
-        isMatching = matchPseudo.matchesAttr(domElement, name, arg);
-    }
-
-    if (name === MATCHES_PROPERTY_PSEUDO_CLASS_MARKER) {
-        isMatching = matchPseudo.matchesProperty(domElement, name, arg);
-    }
-
     return isMatching;
 };
 
 /**
- *
- * @param domElement dom node
- * @param selectorNode Selector node child
+ * Checks whether the element has all relative elements specified by pseudo-class arg
+ * Used for :has() and :if-not()
+ * @param element dom node
+ * @param selectorList SelectorList node
+ * @param pseudoName relative pseudo-class name
  */
-const isMatching = (domElement: Element, selectorNode: AnySelectorNodeInterface): boolean => {
-    let match = false;
-    if (selectorNode.type === NodeType.RegularSelector) {
-        // TODO: regular selector part after extended pseudo-class
-        // e.g. " ~ p" in rule "div:has(a) ~ p"
-    } else if (selectorNode.type === NodeType.ExtendedSelector) {
-        /**
-         * TODO: consider to deprecate NodeTypes.ExtendedSelector
-         */
-        const extendedPseudo = selectorNode.children[0];
-        if (extendedPseudo.type === NodeType.AbsolutePseudoClass) {
-            match = isAbsoluteMatching(domElement, extendedPseudo);
-        }
-    } else {
-        // it might be error if there is neither RegularSelector nor ExtendedSelector among Selector.children
-    }
-    return match;
-};
-
 const hasRelativesBySelectorList = (
     element: Element,
     selectorList: AnySelectorNodeInterface,
     pseudoName: string | undefined,
 ): boolean => {
     return selectorList.children
-        // "every" is used here as each selector from selector list should exist on page
+        // "every" is used here as each Selector node from SelectorList should exist on page
         .every((selector) => {
-            // selectorList.children always starts with regular selector
+            // selectorList.children always starts with regular selector as any selector generally
             const relativeRegularSelector = selector.children[0];
             if (!relativeRegularSelector) {
                 throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
@@ -131,14 +102,13 @@ const hasRelativesBySelectorList = (
                 /**
                  * For matching the element by "element:has(+ next-sibling)" and "element:has(~ sibling)"
                  * we check whether the element's parentElement has specific direct child combination
-                 * e.g. 'h1:has(+ .share)' -> h1.parentElement.querySelectorAll(':scope > h1 + .share')
+                 * e.g. 'h1:has(+ .share)' -> `h1Node.parentElement.querySelectorAll(':scope > h1 + .share')`
                  * https://www.w3.org/TR/selectors-4/#relational
                  */
                 rootElement = element.parentElement;
                 const elementSelectorText = element.tagName.toLowerCase();
                 specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
             } else {
-                // e.g. "a:has(> img)", ".block(div > span)"
                 /**
                  * TODO: figure out something with :scope usage as IE does not support it
                  * https://developer.mozilla.org/en-US/docs/Web/CSS/:scope#browser_compatibility
@@ -146,6 +116,8 @@ const hasRelativesBySelectorList = (
                 /**
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
+                 * e.g. 'a:has(> img)' -> `aNode.querySelectorAll(':scope > img')`
+                 * OR '.block(div > span)' -> `blockClassNode.querySelectorAll(':scope div > span')`
                  */
                 specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${DESCENDANT_COMBINATOR}`;
                 rootElement = element;
@@ -160,13 +132,20 @@ const hasRelativesBySelectorList = (
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
-                // fail for invalid selectors
+                // fail for invalid selector
                 throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`);
             }
             return relativeElements.length > 0;
         });
 };
 
+/**
+ * Checks whether the element is an any element specified by pseudo-class arg.
+ * Used for :is() and :not()
+ * @param element dom node
+ * @param selectorList SelectorList node
+ * @param pseudoName relative pseudo-class name
+ */
 const isAnyElementBySelectorList = (
     element: Element,
     selectorList: AnySelectorNodeInterface,
@@ -182,11 +161,20 @@ const isAnyElementBySelectorList = (
                 throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
             }
 
+            /**
+             * For checking the element by 'div:is(.banner)' and 'div:not([data="content"])
+             * we check whether the element's parentElement has any specific direct child
+             */
             const rootElement = element.parentElement;
             if (!rootElement) {
                 throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
             }
 
+            /**
+             * So we calculate the element "description" by it's tagname and attributes for targeting
+             * and use it to specify the selection
+             * e.g. 'div:is(.banner)' -> `divNode.parentElement.querySelectorAll(':scope > div[class="banner"]')`
+             */
             const elementSelectorText = utils.getElementSelectorText(element);
             const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
 
@@ -196,10 +184,10 @@ const isAnyElementBySelectorList = (
                 anyElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
                 if (errorOnInvalidSelector) {
-                    // fail on invalid selectors for :not
+                    // fail on invalid selectors for :not()
                     throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
                 } else {
-                    // do not fail on invalid selectors for :is
+                    // do not fail on invalid selectors for :is()
                     return false;
                 }
             }
@@ -215,102 +203,104 @@ const isAnyElementBySelectorList = (
  */
 const getByExtendedSelector = (domElements: Element[], extendedSelectorNode: AnySelectorNodeInterface): Element[] => {
     let foundElements: Element[] = [];
+    const extPseudoName = extendedSelectorNode.children[0].name;
+    if (!extPseudoName) {
+        // extended pseudo-classes should have a name
+        throw new Error('Extended pseudo-class should have a name');
+    }
+
     /**
      * TODO: refactor later
      */
-    if (extendedSelectorNode.children[0].name === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
-        if (!extendedSelectorNode.children[0].arg) {
-            throw new Error(`Missing arg for :${extendedSelectorNode.children[0].name} pseudo-class`);
+    if (ABSOLUTE_PSEUDO_CLASSES.includes(extPseudoName)) {
+        const absolutePseudoArg = extendedSelectorNode.children[0].arg;
+        if (!absolutePseudoArg) {
+            // absolute extended pseudo-classes should have an argument
+            throw new Error(`Missing arg for :${extPseudoName} pseudo-class`);
         }
-        foundElements = findPseudo.nthAncestor(
-            domElements,
-            extendedSelectorNode.children[0].arg,
-            extendedSelectorNode.children[0].name,
-        );
-    } else if (extendedSelectorNode.children[0].name === XPATH_PSEUDO_CLASS_MARKER) {
-        if (!extendedSelectorNode.children[0].arg) {
-            throw new Error('Missing arg for :xpath pseudo-class');
-        }
-        try {
-            document.createExpression(extendedSelectorNode.children[0].arg, null);
-        } catch (e) {
-            throw new Error(`Invalid argument of :xpath pseudo-class: '${extendedSelectorNode.children[0].arg}'`);
-        }
-        foundElements = findPseudo.xpath(domElements, extendedSelectorNode.children[0].arg);
-    } else if (extendedSelectorNode.children[0].name === UPWARD_PSEUDO_CLASS_MARKER) {
-        if (!extendedSelectorNode.children[0].arg) {
-            throw new Error('Missing arg for :upward pseudo-class');
-        }
-        if (Number.isNaN(Number(extendedSelectorNode.children[0].arg))) {
-            // so arg is selector, not a number
-            foundElements = findPseudo.upward(domElements, extendedSelectorNode.children[0].arg);
+
+        if (extPseudoName === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
+            // :nth-ancestor()
+            foundElements = findPseudo.nthAncestor(domElements, absolutePseudoArg, extPseudoName);
+        } else if (extPseudoName === XPATH_PSEUDO_CLASS_MARKER) {
+            // :xpath()
+            try {
+                document.createExpression(absolutePseudoArg, null);
+            } catch (e) {
+                throw new Error(`Invalid argument of :${extPseudoName} pseudo-class: '${absolutePseudoArg}'`);
+            }
+            foundElements = findPseudo.xpath(domElements, absolutePseudoArg);
+        } else if (extPseudoName === UPWARD_PSEUDO_CLASS_MARKER) {
+            // :upward()
+            if (Number.isNaN(Number(absolutePseudoArg))) {
+                // so arg is selector, not a number
+                foundElements = findPseudo.upward(domElements, absolutePseudoArg);
+            } else {
+                foundElements = findPseudo.nthAncestor(domElements, absolutePseudoArg, extPseudoName);
+            }
         } else {
-            foundElements = findPseudo.nthAncestor(
-                domElements,
-                extendedSelectorNode.children[0].arg,
-                extendedSelectorNode.children[0].name,
-            );
+            // all other absolute extended pseudo-classes
+            // e.g. contains, matches-attr, etc.
+            foundElements = domElements.filter((element) => {
+                return isAbsoluteMatching(element, extPseudoName, absolutePseudoArg);
+            });
         }
-    } else if (extendedSelectorNode.children[0].name
-        && HAS_PSEUDO_CLASS_MARKERS.includes(extendedSelectorNode.children[0].name)) {
-        if (extendedSelectorNode.children[0].children.length === 0) {
-            throw new Error('Missing arg for :has pseudo-class');
+    } else if (RELATIVE_PSEUDO_CLASSES.includes(extPseudoName)) {
+        const relativeSelectorNodes = extendedSelectorNode.children[0].children;
+        if (relativeSelectorNodes.length === 0) {
+            // extended relative pseudo-classes should have an argument as well
+            throw new Error(`Missing arg for :${extPseudoName} pseudo-class`);
         }
-        foundElements = domElements.filter((element) => {
-            return hasRelativesBySelectorList(
-                element,
-                extendedSelectorNode.children[0].children[0],
-                extendedSelectorNode.children[0].name,
-            );
-        });
-    } else if (extendedSelectorNode.children[0].name
-        && extendedSelectorNode.children[0].name === IF_NOT_PSEUDO_CLASS_MARKER) {
-        if (extendedSelectorNode.children[0].children.length === 0) {
-            throw new Error('Missing arg for :if-not pseudo-class');
+
+        if (HAS_PSEUDO_CLASS_MARKERS.includes(extPseudoName)) {
+            // :has(), :if(), :-abp-has()
+            foundElements = domElements.filter((element) => {
+                return hasRelativesBySelectorList(
+                    element,
+                    relativeSelectorNodes[0],
+                    extPseudoName,
+                );
+            });
+        } else if (extPseudoName === IF_NOT_PSEUDO_CLASS_MARKER) {
+            // :if-not()
+            foundElements = domElements.filter((element) => {
+                return !hasRelativesBySelectorList(
+                    element,
+                    relativeSelectorNodes[0],
+                    extPseudoName,
+                );
+            });
+        } else if (extPseudoName === IS_PSEUDO_CLASS_MARKER) {
+            // :is()
+            foundElements = domElements.filter((element) => {
+                return isAnyElementBySelectorList(
+                    element,
+                    relativeSelectorNodes[0],
+                    extPseudoName,
+                );
+            });
+        } else if (extPseudoName === NOT_PSEUDO_CLASS_MARKER) {
+            // :not()
+            foundElements = domElements.filter((element) => {
+                return !isAnyElementBySelectorList(
+                    element,
+                    relativeSelectorNodes[0],
+                    extPseudoName,
+                    // 'true' for error throwing on invalid selector
+                    true,
+                );
+            });
         }
-        foundElements = domElements.filter((element) => {
-            return !hasRelativesBySelectorList(
-                element,
-                extendedSelectorNode.children[0].children[0],
-                extendedSelectorNode.children[0].name,
-            );
-        });
-    } else if (extendedSelectorNode.children[0].name
-        && extendedSelectorNode.children[0].name === IS_PSEUDO_CLASS_MARKER) {
-        if (extendedSelectorNode.children[0].children.length === 0) {
-            throw new Error('Missing arg for :is pseudo-class');
-        }
-        foundElements = domElements.filter((el) => {
-            return isAnyElementBySelectorList(
-                el,
-                extendedSelectorNode.children[0].children[0],
-                extendedSelectorNode.children[0].name,
-            );
-        });
-    } else if (extendedSelectorNode.children[0].name
-        && extendedSelectorNode.children[0].name === NOT_PSEUDO_CLASS_MARKER) {
-        if (extendedSelectorNode.children[0].children.length === 0) {
-            throw new Error('Missing arg for :not pseudo-class');
-        }
-        foundElements = domElements.filter((el) => {
-            return !isAnyElementBySelectorList(
-                el,
-                extendedSelectorNode.children[0].children[0],
-                extendedSelectorNode.children[0].name,
-                true,
-            );
-        });
     } else {
-        foundElements = domElements.filter((el) => {
-            return isMatching(el, extendedSelectorNode);
-        });
+        // extra check is parser missed something
+        throw new Error(`Unknown extended pseudo-class: ':${extPseudoName}'`);
     }
 
     return foundElements;
 };
 
 /**
- * Returns list of dom nodes which selected by
+ * Returns list of dom nodes which is selected by RegularSelector value
  * @param domElements array of dom nodes
  * @param regularSelectorNode RegularSelector node
  * @returns array of dom nodes
@@ -362,28 +352,38 @@ const getByFollowingRegularSelector = (
 };
 
 /**
- * Gets elements nodes for Selector node
- * @param selectorTree Selector node
+ * Gets elements nodes for Selector node.
+ * As far as any selector always starts with regular part,
+ * it selects by RegularSelector first and checks found elements later.
+ *
+ * Relative pseudo-classes has it's own subtree so getElementsForSelectorNode is called recursively.
+ *
+ * 'specificity' is needed for :has(), :is() and :not() pseudo-classes.
+ * e.g. ':scope' specification is needed for proper descendants selection for 'div:has(> img)'
+ * as native querySelectorAll() does not select exact element descendants even if it is called on 'div'.
+ * so we check `divNode.querySelectorAll(':scope > img').length > 0`
+ *
+ * @param selectorNode Selector node
  * @param root root element
- * @param specificity
+ * @param specificity needed element specification
  */
 const getElementsForSelectorNode = (
-    selectorTree: AnySelectorNodeInterface,
+    selectorNode: AnySelectorNodeInterface,
     root: Document | Element | HTMLElement,
     specificity?: string,
 ): Element[] => {
     let selectedElements: Element[] = [];
     let i = 0;
-    while (i < selectorTree.children.length) {
-        const selectorNode = selectorTree.children[i];
+    while (i < selectorNode.children.length) {
+        const selectorNodeChild = selectorNode.children[i];
         if (i === 0) {
-            // select start nodes by regular selector
-            selectedElements = getByRegularSelector(selectorNode, root, specificity);
-        } else if (selectorNode.type === NodeType.ExtendedSelector) {
+            // any selector always starts with regular selector
+            selectedElements = getByRegularSelector(selectorNodeChild, root, specificity);
+        } else if (selectorNodeChild.type === NodeType.ExtendedSelector) {
             // filter previously selected elements by next selector nodes
-            selectedElements = getByExtendedSelector(selectedElements, selectorNode);
-        } else if (selectorNode.type === NodeType.RegularSelector) {
-            selectedElements = getByFollowingRegularSelector(selectedElements, selectorNode);
+            selectedElements = getByExtendedSelector(selectedElements, selectorNodeChild);
+        } else if (selectorNodeChild.type === NodeType.RegularSelector) {
+            selectedElements = getByFollowingRegularSelector(selectedElements, selectorNodeChild);
         }
         i += 1;
     }
@@ -397,6 +397,8 @@ const getElementsForSelectorNode = (
  */
 const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = document): Element[] => {
     const selectedElements: Element[] = [];
+    // ast root is SelectorList node;
+    // it has Selector nodes as children which should be processed separately
     ast.children.forEach((selectorNode: AnySelectorNodeInterface) => {
         selectedElements.push(...getElementsForSelectorNode(selectorNode, doc));
     });

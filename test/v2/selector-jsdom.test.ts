@@ -499,7 +499,7 @@ describe('extended pseudo-classes', () => {
         describe('matches-attr - invalid args', () => {
             const matchAttrErrorText = 'Error while matching attributes by arg';
             const toThrowInputs = [
-                { selector: 'div:matches-attr()', error: 'name or arg is missing in AbsolutePseudoClass' },
+                { selector: 'div:matches-attr()', error: 'Missing arg for :matches-attr pseudo-class' },
                 { selector: 'div:matches-attr("//")', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(*)', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
@@ -682,7 +682,7 @@ describe('extended pseudo-classes', () => {
         describe('matches-property - invalid args', () => {
             const matchPropErrorText = 'Error while matching properties by arg';
             const toThrowInputs = [
-                { selector: 'div:matches-property()', error: 'name or arg is missing in AbsolutePseudoClass' },
+                { selector: 'div:matches-property()', error: 'Missing arg for :matches-property pseudo-class' },
                 { selector: 'div:matches-property("//")', error: matchPropErrorText },
                 { selector: 'div:matches-property(".?"="/^[0-9]*$/")', error: matchPropErrorText },
                 { selector: 'div:matches-property(.prop.id)', error: matchPropErrorText },

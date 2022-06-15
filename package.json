@@ -13,7 +13,7 @@
   },
   "scripts": {
     "test": "node tasks/tests.js",
-    "test-v2": "yarn build-v2:test-selector && jest --testPathPattern=test/v2/parser --silent",
+    "test-v2": "yarn build-v2:test-selector && jest --testPathPattern=test/v2 --silent",
     "watch": "",
     "build": "node tasks/compile.js",
     "build-v2": "rollup -c rollup.config.ts",
