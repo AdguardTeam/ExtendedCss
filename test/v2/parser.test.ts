@@ -333,40 +333,6 @@ describe('absolute extended selectors', () => {
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
-
-    /**
-     * TODO: ditch while AG-12806
-     */
-    it('remove', () => {
-        const selector = 'div[id][class][style]:remove()';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: 'div[id][class][style]',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.AbsolutePseudoClass,
-                                    name: 'remove',
-                                    arg: '',
-                                    children: [],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
-    });
 });
 
 describe('relative extended selectors', () => {
@@ -384,6 +350,14 @@ describe('relative extended selectors', () => {
                 actual: 'div.banner > div:has(> a[class^="ad"])',
                 expected: [
                     { isRegular: true, value: 'div.banner > div' },
+                    { isRelative: true, name, value: '> a[class^="ad"]' },
+                ],
+            },
+            {
+                actual: '.banner:has(:scope > a[class^="ad"])',
+                // :scope inside :has should be handled by converter before tokenization
+                expected: [
+                    { isRegular: true, value: '.banner' },
                     { isRelative: true, name, value: '> a[class^="ad"]' },
                 ],
             },
@@ -608,21 +582,173 @@ describe('relative extended selectors', () => {
     });
 });
 
-/**
- * TODO:
- */
-// describe('old extended pseudo-class syntax', () => {
-//     describe('old contains', () => {
-//         it('simple', () => {
-//             // a[target="_blank"][-ext-contains="Advertisement"]
-//         });
-// eslint-disable-next-line max-len
-// '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']'
-//         it('contains + contains', () => {
-//             // const selector = '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/checking/)';
-//         });
-//     });
-// });
+describe('old syntax', () => {
+    const testsInputs = [
+        {
+            actual: 'div[-ext-has=".banner"]',
+            expected: [
+                { isRegular: true, value: 'div' },
+                { isRelative: true, name: 'has', value: '.banner' },
+            ],
+        },
+        {
+            actual: '[-ext-has="div.advert"]',
+            expected: [
+                { isRegular: true, value: '*' },
+                { isRelative: true, name: 'has', value: 'div.advert' },
+            ],
+        },
+        {
+            actual:  '.block[-ext-has=\'a[href^="https://example.net/"]\']',
+            expected: [
+                { isRegular: true, value: '.block' },
+                { isRelative: true, name: 'has', value: 'a[href^="https://example.net/"]' },
+            ],
+        },
+        {
+            actual: 'div[style*="z-index:"][-ext-has=\'>div[id$="_content"]>iframe#overlay_iframe\']',
+            expected: [
+                { isRegular: true, value: 'div[style*="z-index:"]' },
+                { isRelative: true, name: 'has', value: '>div[id$="_content"]>iframe#overlay_iframe' },
+            ],
+        },
+        {
+            actual: 'div a[-ext-contains="text"]',
+            expected: [
+                { isRegular: true, value: 'div a' },
+                { isAbsolute: true, name: 'contains', arg: 'text' },
+            ],
+        },
+        {
+            actual: 'a[-ext-contains=""extra-quotes""]',
+            expected: [
+                { isRegular: true, value: 'a' },
+                { isAbsolute: true, name: 'contains', arg: '"extra-quotes"' },
+            ],
+        },
+        {
+            actual: '#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]',
+            expected: [
+                { isRegular: true, value: '#test-matches-css div' },
+                { isAbsolute: true, name: 'matches-css', arg: 'background-image: url(data:*)' },
+            ],
+        },
+        {
+            actual: '#test-matches-css div[-ext-matches-css-before="content: *find me*"]',
+            expected: [
+                { isRegular: true, value: '#test-matches-css div' },
+                { isAbsolute: true, name: 'matches-css-before', arg: 'content: *find me*' },
+            ],
+        },
+        {
+            actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
+            expected: [
+                { isRegular: true, value: 'div[style="text-align: center"] > b' },
+                { isAbsolute: true, name: 'contains', arg: 'Ads:' },
+                { isRegular: true, value: '+a[href^="http://example.com/test.html?id="]+br' },
+            ],
+        },
+
+        {
+            actual: 'div[-ext-contains="test"][-ext-has="div.test-class-two"]',
+            expected: [
+                { isRegular: true, value: 'div' },
+                { isAbsolute: true, name: 'contains', arg: 'test' },
+                { isRelative: true, name: 'has', value: 'div.test-class-two' },
+            ],
+        },
+        {
+            actual: 'div[i18n][-ext-contains="test"][-ext-has="div.test-class-two"]',
+            expected: [
+                { isRegular: true, value: 'div[i18n]' },
+                { isAbsolute: true, name: 'contains', arg: 'test' },
+                { isRelative: true, name: 'has', value: 'div.test-class-two' },
+            ],
+        },
+        {
+            actual: 'div[-ext-has="div.test-class-two"] > .test-class[-ext-contains="test"]',
+            expected: [
+                { isRegular: true, value: 'div' },
+                { isRelative: true, name: 'has', value: 'div.test-class-two' },
+                { isRegular: true, value: '> .test-class' },
+                { isAbsolute: true, name: 'contains', arg: 'test' },
+            ],
+        },
+        {
+            actual: '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)',
+            expected: [
+                { isRegular: true, value: '*' },
+                { isAbsolute: true, name: 'contains', arg: '/\\s[a-t]{8}$/' },
+                { isRegular: true, value: '+ *' },
+                { isAbsolute: true, name: 'contains', arg: '/^[^\\"\\\'"]{30}quickly/' },
+            ],
+        },
+    ];
+    test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+
+    it('old syntax - has(> contains)', () => {
+        let actual;
+        let expected;
+
+        actual = '.sidebar > h3[-ext-has="a:contains(Recommended)"]';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('.sidebar > h3'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        getSingleSelectorAstWithAnyChildren([
+                                            { isRegular: true, value: 'a' },
+                                            { isAbsolute: true, name: 'contains', arg: 'Recommended' },
+                                        ]),
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+
+        actual = '#sidebar div[class^="text-"][-ext-has=">.box-inner>h2:contains(ads)"]';
+        expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('#sidebar div[class^="text-"]'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        getSingleSelectorAstWithAnyChildren([
+                                            { isRegular: true, value: '>.box-inner>h2' },
+                                            { isAbsolute: true, name: 'contains', arg: 'ads' },
+                                        ]),
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+});
 
 describe('combined extended selectors', () => {
     it('has contains', () => {
@@ -818,51 +944,6 @@ describe('combined extended selectors', () => {
             ],
         };
         expect(parse(actual)).toEqual(expected);
-    });
-
-    /**
-     * TODO: ditch while AG-12806
-     */
-    it(':upward():remove()', () => {
-        const selector = 'div:upward(.ads):remove()';
-        const expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        {
-                            type: NodeType.RegularSelector,
-                            value: 'div',
-                            children: [],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.AbsolutePseudoClass,
-                                    name: 'upward',
-                                    arg: '.ads',
-                                    children: [],
-                                },
-                            ],
-                        },
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.AbsolutePseudoClass,
-                                    name: 'remove',
-                                    arg: '',
-                                    children: [],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(selector)).toEqual(expected);
     });
 
     it('upward not', () => {
@@ -1784,4 +1865,27 @@ describe('check case-insensitive attributes parsing', () => {
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
+});
+
+describe('remove pseudo-class is invalid for selector parser', () => {
+    const error = 'Parser error: selector should contains :remove() pseudo-class.';
+    const toThrowInputs = [
+        {
+            selector: 'div[id][class][style]:remove()',
+            error,
+        },
+        {
+            selector: '.banner > *:remove()',
+            error,
+        },
+        {
+            selector: 'div:upward(.ads):remove()',
+            error,
+        },
+        {
+            selector: 'body > div:not([id]):not([class]):not([style]):empty:remove()',
+            error,
+        },
+    ];
+    test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
 });

@@ -1,4 +1,4 @@
-import { beautify } from './beautifier';
+import { convert } from './converter';
 
 import { ACCEPTABLE_MARKS } from './constants';
 
@@ -17,7 +17,7 @@ export interface Token {
  * @param rawSelector raw css selector
  */
 export const tokenize = (rawSelector: string): Token[] => {
-    const selector = beautify(rawSelector);
+    const selector = convert(rawSelector);
 
     // currently processed
     let symbol;

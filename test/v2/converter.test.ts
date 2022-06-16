@@ -1,0 +1,136 @@
+import { convert } from '../../src/converter';
+
+describe('converter', () => {
+    describe('trim selectors', () => {
+        const rawSelectors = [
+            ' #test p',
+            '   #test p',
+            '\t#test p',
+            '\r#test p',
+            '\n#test p',
+            '\f#test p',
+            '#test p ',
+            '#test p   ',
+            '#test p\t',
+            '#test p\r',
+            '#test p\n',
+            '#test p\f',
+        ];
+        const expected = '#test p';
+
+        test.each(rawSelectors)('%s', (raw) => {
+            expect(convert(raw)).toEqual(expected);
+        });
+    });
+
+    describe('obvious scope inside has', () => {
+        const testsInputs = [
+            { actual: 'div:has(:scope > a > img[id])', expected: 'div:has(> a > img[id])' },
+            { actual: '.block:-abp-has(:scope > .banner)', expected: '.block:-abp-has(> .banner)' },
+            { actual: 'div.r-block:-abp-has(:scope > [id^=one2n-])', expected: 'div.r-block:-abp-has(> [id^=one2n-])' },
+        ];
+        test.each(testsInputs)('%s', ({ actual, expected }) => {
+            expect(convert(actual)).toEqual(expected);
+        });
+    });
+
+    describe('old syntax', () => {
+        const testsInputs = [
+            // has
+            {
+                actual: 'div[-ext-has=".banner"]',
+                expected: 'div:has(.banner)',
+            },
+            {
+                actual: 'div.test-class[-ext-has="time.g-time"]',
+                expected: 'div.test-class:has(time.g-time)',
+            },
+            {
+                actual: 'div#test-div[-ext-has="#test"]',
+                expected: 'div#test-div:has(#test)',
+            },
+            {
+                actual: '[-ext-has="div.advert"]',
+                expected: ':has(div.advert)',
+            },
+            {
+                actual: '[-ext-has="div.test-class-two"]',
+                expected: ':has(div.test-class-two)',
+            },
+            {
+                actual:  '.block[-ext-has=\'a[href^="https://example.net/"]\']',
+                expected: '.block:has(a[href^="https://example.net/"])',
+            },
+            {
+                actual: 'div[style*="z-index:"][-ext-has=\'>div[id$="_content"]>iframe#overlay_iframe\']',
+                expected: 'div[style*="z-index:"]:has(>div[id$="_content"]>iframe#overlay_iframe)',
+            },
+            // contains
+            {
+                actual: 'div a[-ext-contains="text"]',
+                expected: 'div a:contains(text)',
+            },
+            {
+                actual: 'a[-ext-contains=""extra-quotes""]',
+                expected: 'a:contains("extra-quotes")',
+            },
+            {
+                actual: 'a[target="_blank"][-ext-contains="Advertisement"]',
+                expected: 'a[target="_blank"]:contains(Advertisement)',
+            },
+            {
+                actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
+                expected: 'div[style="text-align: center"] > b:contains(Ads:)+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
+            },
+            // matches-css
+            {
+                actual: '#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]',
+                expected: '#test-matches-css div:matches-css(background-image: url(data:*))',
+            },
+            {
+                actual: '#test-opacity-property[-ext-matches-css="opacity: 0.9"]',
+                expected: '#test-opacity-property:matches-css(opacity: 0.9)',
+            },
+            {
+                actual: '#test-matches-css div[-ext-matches-css-before="content: *find me*"]',
+                expected: '#test-matches-css div:matches-css-before(content: *find me*)',
+            },
+            {
+                actual: '#test-matches-css div[-ext-matches-css-after="content: *find me*"]',
+                expected: '#test-matches-css div:matches-css-after(content: *find me*)',
+            },
+            // combinations
+            {
+                actual: 'div[-ext-contains="adg-test"][-ext-has="div.test-class-two"]',
+                expected: 'div:contains(adg-test):has(div.test-class-two)',
+            },
+            {
+                actual: 'div[i18n][-ext-contains="adg-test"][-ext-has="div.test-class-two"]',
+                expected: 'div[i18n]:contains(adg-test):has(div.test-class-two)',
+            },
+            {
+                actual: 'div[-ext-has="div.test-class-two"] > .test-class[-ext-contains="test"]',
+                expected: 'div:has(div.test-class-two) > .test-class:contains(test)',
+            },
+            {
+                actual: '#sidebar div[class^="text-"][-ext-has=">.box-inner>h2:contains(ads)"]',
+                expected: '#sidebar div[class^="text-"]:has(>.box-inner>h2:contains(ads))',
+            },
+            {
+                actual:  '.sidebar > h3[-ext-has="a:contains(Recommended)"]',
+                expected: '.sidebar > h3:has(a:contains(Recommended))',
+            },
+            {
+                actual: '.sidebar > h3[-ext-has="a:contains(Recommended)"] + div',
+                expected: '.sidebar > h3:has(a:contains(Recommended)) + div',
+            },
+            {
+                actual: '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)',
+                expected: '*:contains(/\\s[a-t]{8}$/) + *:contains(/^[^\\"\\\'"]{30}quickly/)',
+            },
+        ];
+        test.each(testsInputs)('%s', ({ actual, expected }) => {
+            expect(convert(actual)).toEqual(expected);
+        });
+    });
+});

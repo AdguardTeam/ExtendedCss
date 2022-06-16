@@ -113,13 +113,20 @@ export const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
 export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
 export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
-const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
+
 /**
  * :upward() can get number or selector arg
  * and if the arg is selector it should be standard, not extended
  * so :upward pseudo-class is always absolute
  */
 export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
+
+/**
+ * :remove() pseudo-class is used for element actions, not for element selecting
+ * and 'clear' selector should not contain it
+ * so selector parser should consider it as invalid
+ */
+export const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
 
 // relative:
 export const HAS_PSEUDO_CLASS_MARKERS = [
@@ -139,7 +146,6 @@ export const ABSOLUTE_PSEUDO_CLASSES = [
     XPATH_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     UPWARD_PSEUDO_CLASS_MARKER,
-    REMOVE_PSEUDO_CLASS_MARKER,
 ];
 
 export const RELATIVE_PSEUDO_CLASSES = [

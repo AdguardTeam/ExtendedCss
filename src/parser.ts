@@ -26,23 +26,24 @@ import {
     SPACE,
     ASTERISK,
     COMMA,
-    SUPPORTED_PSEUDO_CLASSES,
-    ABSOLUTE_PSEUDO_CLASSES,
-    XPATH_PSEUDO_CLASS_MARKER,
     BACKSLASH,
     SLASH,
     SINGLE_QUOTE,
     DOUBLE_QUOTE,
     CARET,
     DOLLAR_SIGN,
-    HAS_PSEUDO_CLASS_MARKERS,
-    IS_PSEUDO_CLASS_MARKER,
-    REGULAR_PSEUDO_CLASSES,
-    REGULAR_PSEUDO_ELEMENTS,
     NEWLINE,
     CARRIAGE_RETURN,
     FORM_FEED,
+    SUPPORTED_PSEUDO_CLASSES,
+    ABSOLUTE_PSEUDO_CLASSES,
+    XPATH_PSEUDO_CLASS_MARKER,
+    HAS_PSEUDO_CLASS_MARKERS,
+    IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
+    REMOVE_PSEUDO_CLASS_MARKER,
+    REGULAR_PSEUDO_CLASSES,
+    REGULAR_PSEUDO_ELEMENTS,
     IS_OR_NOT_PSEUDO_SELECTING_ROOT,
 } from './constants';
 
@@ -495,6 +496,12 @@ export const parse = (selector: string) => {
                             }
 
                             if (!isSupportedExtendedPseudo(nextTokenValue)) {
+                                if (nextTokenValue === REMOVE_PSEUDO_CLASS_MARKER) {
+                                    // :remove() pseudo-class should be handled before
+                                    // as it is not about element selecting but actions with elements
+                                    // e.g. 'body > div:empty:remove()'
+                                    throw new Error('Parser error: selector should contains :remove() pseudo-class.');
+                                }
                                 // if following token is not an extended pseudo
                                 // the colon should be collected to value of RegularSelector
                                 // e.g. '.entry_text:nth-child(2)'
@@ -533,6 +540,11 @@ export const parse = (selector: string) => {
                                 // if supported extended pseudo-class is next to colon
                                 // add ExtendedSelector to Selector children
                                 addAnySelectorNode(NodeType.ExtendedSelector);
+                            } else if (nextTokenValue === REMOVE_PSEUDO_CLASS_MARKER) {
+                                // :remove() pseudo-class should be handled before
+                                // as it is not about element selecting but actions with elements
+                                // e.g. '#banner:upward(2):remove()'
+                                throw new Error('Parser error: selector should contains :remove() pseudo-class.');
                             } else {
                                 // otherwise it is standard pseudo after extended pseudo-class
                                 // and colon should be collected to value of RegularSelector

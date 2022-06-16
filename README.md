@@ -22,6 +22,8 @@ Module for applying CSS styles with extended selection properties.
 
 ## Extended capabilities
 
+> Extended pseudo-class should specify the element selection at the end of it's selector representation after the standard part. So `div[class="ad"]:has(img)` is valid, but `div:has(img)[class="ad"]` is not.
+
 <a id="extended-css-has"></a>
 ### Pseudo-class `:has()`
 

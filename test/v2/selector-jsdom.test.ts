@@ -342,6 +342,25 @@ describe('extended pseudo-classes', () => {
             const expected = 'a#target';
             expectSuccessInput({ actual, expected });
         });
+
+        it('old syntax', () => {
+            document.body.innerHTML = `
+                <div id="container">
+                    <span id="target">text for contains pseudo checking</span>
+                    <span id="NOT_A_TARGET_2">123456</span>
+                </div>
+            `;
+            let actual;
+            let expected;
+
+            actual = 'div[-ext-contains="text"]';
+            expected = 'div#container';
+            expectSuccessInput({ actual, expected });
+
+            actual = 'div *[-ext-contains="text"]';
+            expected = 'span#target';
+            expectSuccessInput({ actual, expected });
+        });
     });
 
     describe('matches-css pseudos', () => {
@@ -926,6 +945,10 @@ describe('extended pseudo-classes', () => {
                 { actual: '* > #paragraph ~ div:has(a[href^="/inner"])', expected: 'div#child' },
                 { actual: '* > a[href*="test"] + div:has(a[href^="/inner"])', expected: 'div#child' },
                 { actual: '#root div > div:has(.banner)', expected: 'div#child' },
+                // obvious :scope pseudo inside :has
+                { actual: 'div:has(:scope > #child)', expected: 'div#parent' },
+                // old syntax
+                { actual: 'div[-ext-has="> #child"]', expected: 'div#parent' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
@@ -1214,17 +1237,6 @@ describe('combined pseudo-classes', () => {
             const expected = 'div#inner2';
             expectSuccessInput({ actual, expected });
         });
-
-        /**
-         * TODO: :scope pseudo specified for :has will be handled by beautifier. AG-12806
-         */
-        // it('has with specified scope pseudo', () => {
-        //     const targetElements = document.querySelectorAll('div#root');
-        //     // const selector = 'div:has(:scope > a > img[id])';
-        //     const selector = 'div:has(:scope > div > input)';
-        //     const selectedElements = querySelectorAll(selector);
-        //     expectTheSameElements(targetElements, selectedElements);
-        // });
     });
 
     describe('has limitation', () => {
@@ -1554,9 +1566,3 @@ describe('check valid regular selectors', () => {
         test.each(actualSelectors)('%s', (actual) => expectSuccessInput({ actual, expected }));
     });
 });
-
-/**
- * TODO: after old syntax support by parser
- * and another regular selector after first extended :contains
- */
-// selector = '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/checking/)';
