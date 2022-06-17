@@ -956,6 +956,17 @@ describe('combined extended selectors', () => {
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
 
+    it('upward not not', () => {
+        const actual = 'a[href^="https://example."]:upward(1):not(section):not(div[class^="article"])';
+        const expected = [
+            { isRegular: true, value: 'a[href^="https://example."]' },
+            { isAbsolute: true, name: 'upward', arg: '1' },
+            { isRelative: true, name: 'not', value: 'section' },
+            { isRelative: true, name: 'not', value: 'div[class^="article"]' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
     it('contains upward', () => {
         const actual = 'div > p:contains(PR):upward(2)';
         const expected = [
