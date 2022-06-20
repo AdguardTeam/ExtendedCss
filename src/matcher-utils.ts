@@ -270,9 +270,9 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
     let attrNameMatch;
     try {
         attrNameMatch = getValidMatcherArg(rawAttrName);
-    } catch (e) {
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         utils.logError(e);
-        throw new SyntaxError();
+        throw new SyntaxError(e.message);
     }
 
     let isMatching = false;
@@ -292,9 +292,9 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
             let attrValueMatch;
             try {
                 attrValueMatch = getValidMatcherArg(rawAttrValue);
-            } catch (e) {
+            } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
                 utils.logError(e);
-                throw new SyntaxError();
+                throw new SyntaxError(e.message);
             }
             const isValueMatching = attrValueMatch instanceof RegExp
                 ? attrValueMatch.test(attr.value)
@@ -458,9 +458,9 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
     let propChainMatches;
     try {
         propChainMatches = parseRawPropChain(rawPropertyName);
-    } catch (e) {
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         utils.logError(e);
-        throw new SyntaxError();
+        throw new SyntaxError(e.message);
     }
 
     const ownerObjArr = filterRootsByRegexpChain(domElement, propChainMatches);
@@ -474,9 +474,9 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
         let propValueMatch;
         try {
             propValueMatch = getValidMatcherArg(rawPropertyValue);
-        } catch (e) {
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             utils.logError(e);
-            throw new SyntaxError();
+            throw new SyntaxError(e.message);
         }
 
         if (propValueMatch) {
