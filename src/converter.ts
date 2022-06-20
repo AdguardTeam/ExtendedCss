@@ -8,7 +8,7 @@ const reAttrFallback = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
  * @param match     Whole matched string
  * @param name      Group 1
  * @param quoteChar Group 2
- * @param rawValue     Group 3
+ * @param rawValue  Group 3
  */
 const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue: string) => {
     // Unescape quotes

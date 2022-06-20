@@ -123,6 +123,15 @@ interface PseudoArgData {
     value?: string,
 }
 
+/**
+ * Parses arg of absolute pseudo-class into 'name' and 'value' if set.
+ *
+ * Used for :matches-css() - with COLON as separator,
+ * for :matches-attr() and :matches-property() - with EQUAL_SIGN as separator
+ * @param pseudoArg
+ * @param separator
+ * @returns {PseudoArgData} { name, value } where 'value' can be undefined
+ */
 const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData => {
     const index = pseudoArg.indexOf(separator);
     let name;
@@ -139,7 +148,7 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
 };
 
 /**
- * Checks whether the domElement is matched by :matches-css arg
+ * Checks whether the domElement is matched by :matches-css() arg
  * @param domElement
  * @param pseudoName
  * @param pseudoArg
@@ -186,6 +195,7 @@ const validateStrMatcherArg = (arg: string): boolean => {
 /**
  * Returns valid arg for :matches-attr and :matcher-property
  * @param rawArg arg pattern
+ * @param isWildcardAllowed flag for allowing of usage of '*' as pseudo-class arg
  */
 export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): string | RegExp => {
     // if rawArg is missing for pseudo-class
@@ -242,6 +252,12 @@ export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMa
     return { rawName, rawValue };
 };
 
+/**
+ * Checks whether the domElement is matched by :matches-attr() arg
+ * @param domElement element to check
+ * @param pseudoName name of pseudo-class
+ * @param pseudoArg arg of pseudo-class
+ */
 export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     const elementAttributes = domElement.attributes;
     // no match if dom element has no attributes
@@ -293,8 +309,8 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
 };
 
 /**
- * Parses raw property arg
- * @param input
+ * Parses raw :matches-property() arg which may be chain of properties
+ * @param input argument of :matches-property()
  */
 export const parseRawPropChain = (input: string): (string | RegExp)[] => {
     if (input.length > 1 && input.startsWith(DOUBLE_QUOTE) && input.endsWith(DOUBLE_QUOTE)) {
@@ -412,12 +428,6 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
         });
     }
 
-    // TODO: check later if it is needed
-    // // avoid TypeError while accessing to null-prop's child
-    // if (base === null) {
-    //     return;
-    // }
-
     if (base && typeof tempProp === 'string') {
         const nextBase = Object.getOwnPropertyDescriptor(base, tempProp)?.value;
         chain = chain.slice(1);
@@ -429,6 +439,12 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
     return output;
 };
 
+/**
+ * Checks whether the domElement is matched by :matches-property() arg
+ * @param domElement element to check
+ * @param pseudoName name of pseudo-class
+ * @param pseudoArg arg of pseudo-class
+ */
 export const matchingProperty = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
 

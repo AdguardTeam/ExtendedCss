@@ -162,7 +162,7 @@ export const parse = (selector: string) => {
     };
 
     /**
-     * Adds SelectorList node to context.ast at the begin of ast collecting
+     * Adds SelectorList node to context.ast at the start of ast collecting
      */
     const addSelectorListNode = () => {
         const selectorListNode = new AnySelectorNode(NodeType.SelectorList);
