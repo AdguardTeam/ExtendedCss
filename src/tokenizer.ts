@@ -33,7 +33,7 @@ export const tokenize = (rawSelector: string): Token[] => {
             tokens.push({ type: TokenType.Mark, value: symbol });
             continue;
         }
-        buffer = `${buffer}${symbol}`;
+        buffer += symbol;
         const nextSymbol = selector[i + 1];
         // string end has been reached if nextSymbol is undefined
         if (!nextSymbol || ACCEPTABLE_MARKS.indexOf(nextSymbol) > -1) {

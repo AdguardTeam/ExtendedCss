@@ -687,6 +687,11 @@ export const parse = (selector: string) => {
                         throw new Error(`${selector} is not a valid selector`);
                 }
                 break;
+                // no default statement for Marks as they are limited to ACCEPTABLE_MARKS
+                // and all other symbol combinations are tokenized as Word
+                // so error for invalid Word will be thrown later while element selecting by parsed ast
+            default:
+                throw new Error(`Unknown type of token: '${tokenValue}'.`);
         }
 
         i += 1;
