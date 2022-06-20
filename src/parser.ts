@@ -182,15 +182,16 @@ export const parse = (selector: string) => {
             throw new Error('No buffer node');
         }
 
-        // SelectorList || Selector || ExtendedSelector
-        let node = new AnySelectorNode(type);
-
+        let node;
         if (type === NodeType.RegularSelector) {
             node = new RegularSelectorNode(tokenValue);
         } else if (type === NodeType.AbsolutePseudoClass) {
             node = new AbsolutePseudoClassNode(tokenValue);
         } else if (type === NodeType.RelativePseudoClass) {
             node = new RelativePseudoClassNode(tokenValue);
+        } else {
+            // SelectorList || Selector || ExtendedSelector
+            node = new AnySelectorNode(type);
         }
 
         bufferNode.addChild(node);
