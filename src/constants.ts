@@ -164,11 +164,22 @@ export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
 export const REGEXP_ANY_SYMBOL = '.*';
 
+/**
+ * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not()
+ *
+ * ':where' is needed for limitation it's using inside :has() arg
+ * https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
+ */
 export const REGULAR_PSEUDO_CLASSES = {
     SCOPE: 'scope',
     WHERE: 'where',
 };
 
+/**
+ * ':after' and ':before' are needed for :matches-css() pseudo-class
+ * all other are needed for :has() limitation after regular pseudo-elements
+ * https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [3]
+ */
 export const REGULAR_PSEUDO_ELEMENTS = {
     AFTER: 'after',
     BACKDROP: 'backdrop',
