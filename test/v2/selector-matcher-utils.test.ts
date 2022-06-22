@@ -5,7 +5,7 @@
 import {
     getValidMatcherArg,
     parseRawPropChain,
-} from '../../src/matcher-utils';
+} from '../../src/selector/matcher-utils';
 
 describe('matcher-utils tests', () => {
     describe('test getValidMatcherArg', () => {

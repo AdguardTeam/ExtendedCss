@@ -45,7 +45,7 @@ import {
     REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
     IS_OR_NOT_PSEUDO_SELECTING_ROOT,
-} from './constants';
+} from '../constants';
 
 /**
  * Checks whether the passed token is supported extended pseudo-class

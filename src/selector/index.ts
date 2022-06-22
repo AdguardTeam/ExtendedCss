@@ -10,7 +10,7 @@ import {
     AnySelectorNodeInterface,
 } from './nodes';
 
-import utils from './utils';
+import utils from '../utils';
 
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
@@ -32,7 +32,7 @@ import {
     COLON,
     ABSOLUTE_PSEUDO_CLASSES,
     RELATIVE_PSEUDO_CLASSES,
-} from './constants';
+} from '../constants';
 
 /**
  * Selects dom elements by value of RegularSelector

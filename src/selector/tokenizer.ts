@@ -1,6 +1,6 @@
 import { convert } from './converter';
 
-import { ACCEPTABLE_MARKS } from './constants';
+import { ACCEPTABLE_MARKS } from '../constants';
 
 export enum TokenType {
     Mark = 'mark',

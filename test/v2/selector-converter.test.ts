@@ -1,4 +1,4 @@
-import { convert } from '../../src/converter';
+import { convert } from '../../src/selector/converter';
 
 describe('converter', () => {
     describe('trim selectors', () => {

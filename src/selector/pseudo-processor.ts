@@ -1,4 +1,4 @@
-import utils from './utils';
+import utils from '../utils';
 
 import {
     matchingText,
@@ -19,7 +19,7 @@ import {
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
     REGULAR_PSEUDO_ELEMENTS,
-} from './constants';
+} from '../constants';
 
 export const matchPseudo = {
     /**

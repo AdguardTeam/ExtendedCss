@@ -7,9 +7,9 @@ import {
     REGEXP_ANY_SYMBOL,
     REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
-} from './constants';
+} from '../constants';
 
-import utils from './utils';
+import utils from '../utils';
 
 /**
  * Removes quotes for specified content value.

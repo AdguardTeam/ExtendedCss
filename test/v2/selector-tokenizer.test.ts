@@ -1,4 +1,4 @@
-import { tokenize } from '../../src/tokenizer';
+import { tokenize } from '../../src/selector/tokenizer';
 
 describe('tokenizer', () => {
     it('simple', () => {

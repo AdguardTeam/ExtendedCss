@@ -24,7 +24,6 @@ const utils = {
      */
     logError: (typeof console !== 'undefined'
         && console.error
-        && Function.prototype.bind
         && console.error.bind)
         ? console.error.bind(window.console)
         : console.error,
