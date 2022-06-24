@@ -107,7 +107,7 @@ describe('regular selectors', () => {
         });
     });
 
-    describe('invalid selector - should not fail while parsing', () => {
+    describe('not a valid selector for querySelectorAll - should not fail while parsing', () => {
         const invalidSelectors = [
             'div >',
             'div:invalid-pseudo(1)',
@@ -128,6 +128,13 @@ describe('absolute extended selectors', () => {
                 expected: [
                     { isRegular: true, value: 'span' },
                     { isAbsolute: true, name, arg: 'text' },
+                ],
+            },
+            {
+                actual: 'span:contains("some text")',
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, arg: '"some text"' },
                 ],
             },
             {
@@ -1878,8 +1885,71 @@ describe('check case-insensitive attributes parsing', () => {
     });
 });
 
+describe('check pseudo-class names case-insensitivity', () => {
+    const testsInputs = [
+        {
+            actual: 'div.base[level="3"]:UPWARD([level="0"])',
+            expected: [
+                { isRegular: true, value: 'div.base[level="3"]' },
+                { isAbsolute: true, name: 'upward', arg: '[level="0"]' },
+            ],
+        },
+        {
+            actual: 'div.base[LEVEL="3"]:UPWARD([level="0"])',
+            expected: [
+                { isRegular: true, value: 'div.base[LEVEL="3"]' },
+                { isAbsolute: true, name: 'upward', arg: '[level="0"]' },
+            ],
+        },
+        {
+            actual: 'div.base[LEVEL="3"]:UPWARD([LEVEL="0"])',
+            expected: [
+                { isRegular: true, value: 'div.base[LEVEL="3"]' },
+                { isAbsolute: true, name: 'upward', arg: '[LEVEL="0"]' },
+            ],
+        },
+        {
+            actual: 'div:HAS(> #paragraph)',
+            expected: [
+                { isRegular: true, value: 'div' },
+                { isRelative: true, name: 'has', value: '> #paragraph' },
+            ],
+        },
+        {
+            actual: '#root p:CONTAINS(text)',
+            expected: [
+                { isRegular: true, value: '#root p' },
+                { isAbsolute: true, name: 'contains', arg: 'text' },
+            ],
+        },
+        {
+            actual: '#root p:CONTAINS(UPPER)',
+            expected: [
+                { isRegular: true, value: '#root p' },
+                { isAbsolute: true, name: 'contains', arg: 'UPPER' },
+            ],
+        },
+        {
+            actual: '#parent *:NOT([class])',
+            expected: [
+                { isRegular: true, value: '#parent *' },
+                { isRelative: true, name: 'not', value: '[class]' },
+            ],
+        },
+        {
+            actual: '#parent *:NOT([CLASS]):CONTAINS(text)',
+            expected: [
+                { isRegular: true, value: '#parent *' },
+                { isRelative: true, name: 'not', value: '[CLASS]' },
+                { isAbsolute: true, name: 'contains', arg: 'text' },
+            ],
+        },
+    ];
+    test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+});
+
 describe('remove pseudo-class is invalid for selector parser', () => {
-    const error = 'Parser error: selector should contains :remove() pseudo-class.';
+    const error = 'Selector parser error: invalid :remove() pseudo-class in selector:';
     const toThrowInputs = [
         {
             selector: 'div[id][class][style]:remove()',
@@ -1899,4 +1969,45 @@ describe('remove pseudo-class is invalid for selector parser', () => {
         },
     ];
     test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+});
+
+describe('fail on white space which is before or after extended pseudo-class name', () => {
+    describe('supported extended pseudo-classes', () => {
+        // No white space is allowed between the colon and the name of the pseudo-class,
+        // nor, as usual for CSS syntax, between name of extended pseudo-class and its opening parenthesis
+        // https://www.w3.org/TR/selectors-4/#pseudo-classes
+        const error = 'No white space is allowed before or after extended pseudo-class name in selector:';
+        const invalidSelectors = [
+            // white space before pseudo-class name
+            'span: contains(text)',
+            'span:\tcontains(text)',
+            'div:\nmatches-attr(data=ad)',
+            // after
+            '.banner:has (> div > img)',
+            '.banner > *:not\r(.content)',
+            '.banner > :is\f(img, p)',
+            // before and after
+            'span: not (.text)',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('standard or invalid pseudos', () => {
+        const error = 'is not a valid selector';
+        const invalidSelectors = [
+            // the same for standard pseudo
+            // and invalid pseudo as well as it will be validated later.
+            // white space before the pseudo
+            'body > script + div: empty',
+            '.block: nth-child(2) .inner',
+            'div:has(> .box:\fonly-child)',
+            'div: invalid-pseudo(1)',
+            'div:\finvalid-pseudo(1)',
+            // after the pseudo
+            'div:invalid-pseudo (1)',
+            '.block:nth-child (2) .inner',
+            '.block:nth-child\t(2) .inner',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
 });

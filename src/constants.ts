@@ -1,22 +1,22 @@
-const OPEN_SQUARE = '[';
-const CLOSE_SQUARE = ']';
-const OPEN_PARENTHESES = '(';
-const CLOSE_PARENTHESES = ')';
-const OPEN_CURLY = '{';
-const CLOSE_CURLY = '}';
+const LEFT_SQUARE_BRACKET = '[';
+const RIGHT_SQUARE_BRACKET = ']';
+const LEFT_PARENTHESIS = '(';
+const RIGHT_PARENTHESIS = ')';
+const LEFT_CURLY_BRACKET = '{';
+const RIGHT_CURLY_BRACKET = '}';
 
 export const BRACKETS = {
     SQUARE: {
-        OPEN: OPEN_SQUARE,
-        CLOSE: CLOSE_SQUARE,
+        LEFT: LEFT_SQUARE_BRACKET,
+        RIGHT: RIGHT_SQUARE_BRACKET,
     },
     PARENTHESES: {
-        OPEN: OPEN_PARENTHESES,
-        CLOSE: CLOSE_PARENTHESES,
+        LEFT: LEFT_PARENTHESIS,
+        RIGHT: RIGHT_PARENTHESIS,
     },
     CURLY: {
-        OPEN: OPEN_CURLY,
-        CLOSE: CLOSE_CURLY,
+        LEFT: LEFT_CURLY_BRACKET,
+        RIGHT: RIGHT_CURLY_BRACKET,
     },
 };
 
@@ -42,13 +42,16 @@ export const DOLLAR_SIGN = '$';
 
 export const EQUAL_SIGN = '=';
 
+export const TAB = '\t';
 export const CARRIAGE_RETURN = '\r';
-export const NEWLINE = '\n';
+export const LINE_FEED = '\n';
 export const FORM_FEED = '\f';
 
-const CONTROL_CHARACTERS = [
+export const WHITE_SPACE_CHARACTERS = [
+    SPACE,
+    TAB,
     CARRIAGE_RETURN,
-    NEWLINE,
+    LINE_FEED,
     FORM_FEED,
 ];
 
@@ -70,12 +73,12 @@ export const COMBINATORS = [
 ];
 
 export const ACCEPTABLE_MARKS = [
-    OPEN_SQUARE,
-    CLOSE_SQUARE,
-    OPEN_PARENTHESES,
-    CLOSE_PARENTHESES,
-    OPEN_CURLY,
-    CLOSE_CURLY,
+    LEFT_SQUARE_BRACKET,
+    RIGHT_SQUARE_BRACKET,
+    LEFT_PARENTHESIS,
+    RIGHT_PARENTHESIS,
+    LEFT_CURLY_BRACKET,
+    RIGHT_CURLY_BRACKET,
     SLASH,
     BACKSLASH,
     SEMICOLON,
@@ -92,7 +95,10 @@ export const ACCEPTABLE_MARKS = [
     CHILD_COMBINATOR,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
-    ...CONTROL_CHARACTERS,
+    TAB,
+    CARRIAGE_RETURN,
+    LINE_FEED,
+    FORM_FEED,
 ];
 
 // absolute:

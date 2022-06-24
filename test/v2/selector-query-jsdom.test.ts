@@ -1566,3 +1566,26 @@ describe('check valid regular selectors', () => {
         test.each(actualSelectors)('%s', (actual) => expectSuccessInput({ actual, expected }));
     });
 });
+
+describe('case-insensitivity for pseudo-class names', () => {
+    document.body.innerHTML = `
+        <div id="root" level="0">
+            <div id="parent" level="1">
+                <p id="paragraph">text</p>
+                <div id="child" class="base" level="2">
+                    <div id="inner" class="base" level="3"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const testInputs = [
+        { actual: 'div.base[level="3"]:UPWARD([level="0"])', expected: 'div#root' },
+        { actual: 'div.base[LEVEL="3"]:UPWARD([level="0"])', expected: 'div#root' },
+        { actual: 'div:HAS(> #paragraph)', expected: 'div#parent' },
+        { actual: '#root p:CONTAINS(text)', expected: 'div#paragraph' },
+        { actual: '#parent *:NOT([class])', expected: 'div#paragraph' },
+        { actual: '#parent *:NOT([CLASS]):CONTAINS(text)', expected: 'div#paragraph' },
+    ];
+    test.each(testInputs)('%s', (input) => expectSuccessInput(input));
+});

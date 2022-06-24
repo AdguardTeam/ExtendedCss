@@ -32,9 +32,11 @@ import {
     DOUBLE_QUOTE,
     CARET,
     DOLLAR_SIGN,
-    NEWLINE,
+    TAB,
+    LINE_FEED,
     CARRIAGE_RETURN,
     FORM_FEED,
+    WHITE_SPACE_CHARACTERS,
     SUPPORTED_PSEUDO_CLASSES,
     ABSOLUTE_PSEUDO_CLASSES,
     XPATH_PSEUDO_CLASS_MARKER,
@@ -71,7 +73,7 @@ const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: st
         || nextTokenValue === SINGLE_QUOTE
         // e.g. 'div[class*=" "]'
         || nextTokenValue === DOUBLE_QUOTE
-        || nextTokenValue === BRACKETS.SQUARE.OPEN;
+        || nextTokenValue === BRACKETS.SQUARE.LEFT;
 };
 
 interface Context {
@@ -224,15 +226,6 @@ const upToClosest = (context: Context, parentType: NodeType): void => {
  * @param selector
  */
 export const parse = (selector: string) => {
-
-    // TODO 1:
-    // Like all CSS keywords, pseudo-class names are ASCII case-insensitive.
-    // https://www.w3.org/TR/selectors-4/#pseudo-classes
-
-    // TODO 2:
-    // No white space is allowed between the colon and the name of the pseudo-class,
-    // nor, as usual for CSS syntax, between a functional pseudo-class’s name and its opening parenthesis
-
     const tokens = tokenize(selector);
 
     const context: Context = {
@@ -256,11 +249,18 @@ export const parse = (selector: string) => {
         const nextToken = tokens[i + 1] || [];
         const { type: nextTokenType, value: nextTokenValue } = nextToken;
 
+        // needed for limitations
+        // - :not() and :is() root element
+        // - :has() usage
+        // - white space before and after pseudo-class name
+        const nextToNextToken = tokens[i + 2] || [];
+        const { value: nextToNextTokenValue } = nextToNextToken;
+
         // needed for COLON token checking for none-specified regular selector before extended one
         // e.g. 'p, :hover'
         // or   '.banner, :contains(ads)'
         const previousToken = tokens[i - 1] || [];
-        const { value: prevTokenValue } = previousToken;
+        const { type: prevTokenType, value: prevTokenValue } = previousToken;
 
         let bufferNode = getBufferNode(context);
 
@@ -276,14 +276,25 @@ export const parse = (selector: string) => {
                 } else if (bufferNode.type === NodeType.RegularSelector) {
                     updateBufferNode(context, tokenValue);
                 } else if (bufferNode.type === NodeType.ExtendedSelector) {
+                    // No white space is allowed between the name of extended pseudo-class
+                    // and its opening parenthesis
+                    // https://www.w3.org/TR/selectors-4/#pseudo-classes
+                    // e.g. 'span:contains (text)'
+                    if (WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
+                        && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
+                        throw new Error(`No white space is allowed before or after extended pseudo-class name in selector: '${selector}'`); // eslint-disable-line max-len
+                    }
                     // save pseudo-class name for brackets balance checking
-                    context.extendedPseudoNamesStack.push(tokenValue);
-                    if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue)) {
-                        addAnySelectorNode(context, NodeType.AbsolutePseudoClass, tokenValue);
+                    context.extendedPseudoNamesStack.push(tokenValue.toLowerCase());
+                    // extended pseudo-class name are parsed in lower case
+                    // as they should be case-insensitive
+                    // https://www.w3.org/TR/selectors-4/#pseudo-classes
+                    if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue.toLowerCase())) {
+                        addAnySelectorNode(context, NodeType.AbsolutePseudoClass, tokenValue.toLowerCase());
                     } else {
                         // if it is not absolute pseudo-class, it must be relative one
                         // add RelativePseudoClass with tokenValue as pseudo-class name to ExtendedSelector children
-                        addAnySelectorNode(context, NodeType.RelativePseudoClass, tokenValue);
+                        addAnySelectorNode(context, NodeType.RelativePseudoClass, tokenValue.toLowerCase());
                     }
                 } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
                     // collect absolute pseudo-class arg
@@ -298,7 +309,7 @@ export const parse = (selector: string) => {
                         if (!bufferNode || (typeof bufferNode !== 'undefined' && !nextTokenValue)) {
                             // consider the selector is invalid if there is no bufferNode yet (e.g. ', a')
                             // or there is nothing after the comma while bufferNode is defined (e.g. 'div, ')
-                            throw new Error(`'${nextTokenValue}' is not a valid selector`);
+                            throw new Error(`'${selector}' is not a valid selector`);
                         } else if (bufferNode.type === NodeType.RegularSelector) {
                             if (context.isAttributeBracketsOpen) {
                                 // the comma might be inside element attribute value
@@ -319,12 +330,34 @@ export const parse = (selector: string) => {
                         }
                         break;
                     case SPACE:
-                        if (bufferNode?.type === NodeType.RegularSelector
-                            && (!nextTokenValue || doesRegularContinueAfterSpace(nextTokenType, nextTokenValue))) {
-                            updateBufferNode(context, tokenValue);
+                        if (bufferNode?.type === NodeType.RegularSelector) {
+                            // standard selectors with white space between colon and name of pseudo
+                            // are invalid for native document.querySelectorAll() anyway,
+                            // so throwing the error here is better
+                            // than proper parsing of invalid selector and passing it further.
+                            // first of all do not check attributes
+                            // e.g. div[style="text-align: center"]
+                            if (!context.isAttributeBracketsOpen
+                                // check the space after the colon and before the pseudo
+                                // e.g. '.block: nth-child(2)
+                                && ((prevTokenValue === COLON && nextTokenType === TokenType.Word)
+                                    // or after the pseudo and before the opening parenthesis
+                                    // e.g. '.block:nth-child (2)
+                                    || (prevTokenType === TokenType.Word
+                                        && nextTokenValue === BRACKETS.PARENTHESES.LEFT))
+                            ) {
+                                throw new Error(`'${selector}' is not a valid selector.`);
+                            }
+                            // collect current tokenValue to value of RegularSelector
+                            // if it is the last token or standard selector continues after the space.
+                            // otherwise it will be skipped
+                            if (!nextTokenValue || doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)) {
+                                updateBufferNode(context, tokenValue);
+                            }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // e.g. 'div:xpath(//h3[contains(text(),"Share it!")]/..)'
+                            // space inside extended pseudo-class arg
+                            // e.g. 'span:contains(some text)'
                             updateBufferNode(context, tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
@@ -361,19 +394,18 @@ export const parse = (selector: string) => {
                     case DOUBLE_QUOTE:
                     case CARET:
                     case DOLLAR_SIGN:
-                    case BRACKETS.CURLY.OPEN:
-                    case BRACKETS.CURLY.CLOSE:
+                    case BRACKETS.CURLY.LEFT:
+                    case BRACKETS.CURLY.RIGHT:
                     case ASTERISK:
                     case ID_MARKER:
                     case CLASS_MARKER:
-                    case BRACKETS.SQUARE.OPEN:
+                    case BRACKETS.SQUARE.LEFT:
                         if (bufferNode === null) {
                             // no ast collecting has been started
                             if (tokenValue === ASTERISK
                                 && nextTokenValue === COLON
-                                && tokens[i + 2]
-                                && (tokens[i + 2].value === IS_PSEUDO_CLASS_MARKER
-                                    || tokens[i + 2].value === NOT_PSEUDO_CLASS_MARKER)) {
+                                && (nextToNextTokenValue === IS_PSEUDO_CLASS_MARKER
+                                    || nextToNextTokenValue === NOT_PSEUDO_CLASS_MARKER)) {
                                 /**
                                  * TODO: mention this limitation in readme
                                  */
@@ -393,7 +425,7 @@ export const parse = (selector: string) => {
                         } else if (bufferNode.type === NodeType.RegularSelector) {
                             // collect the mark to the value of RegularSelector node
                             updateBufferNode(context, tokenValue);
-                            if (tokenValue === BRACKETS.SQUARE.OPEN) {
+                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
                                 // needed for proper handling element attribute value with comma
                                 // e.g. 'div[data-comma="0,1"]'
                                 context.isAttributeBracketsOpen = true;
@@ -420,7 +452,7 @@ export const parse = (selector: string) => {
                             addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
                         }
                         break;
-                    case BRACKETS.SQUARE.CLOSE:
+                    case BRACKETS.SQUARE.RIGHT:
                         if (bufferNode?.type === NodeType.RegularSelector) {
                             // needed for proper parsing regular selectors after the attributes with comma
                             // e.g. 'div[data-comma="0,1"] > img'
@@ -436,6 +468,13 @@ export const parse = (selector: string) => {
                         }
                         break;
                     case COLON:
+                        // No white space is allowed between the colon and the following name of the pseudo-class
+                        // https://www.w3.org/TR/selectors-4/#pseudo-classes
+                        // e.g. 'span: contains(text)'
+                        if (WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
+                            && SUPPORTED_PSEUDO_CLASSES.includes(nextToNextTokenValue)) {
+                            throw new Error(`No white space is allowed before or after extended pseudo-class name in selector: '${selector}'`); // eslint-disable-line max-len
+                        }
                         if (bufferNode === null) {
                             // no ast collecting has been started
                             if (nextTokenValue === XPATH_PSEUDO_CLASS_MARKER) {
@@ -508,12 +547,12 @@ export const parse = (selector: string) => {
                                 throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside upper :has`); // eslint-disable-line max-len
                             }
 
-                            if (!isSupportedExtendedPseudo(nextTokenValue)) {
-                                if (nextTokenValue === REMOVE_PSEUDO_CLASS_MARKER) {
+                            if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
+                                if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_CLASS_MARKER) {
                                     // :remove() pseudo-class should be handled before
                                     // as it is not about element selecting but actions with elements
                                     // e.g. 'body > div:empty:remove()'
-                                    throw new Error('Parser error: selector should contains :remove() pseudo-class.');
+                                    throw new Error(`Selector parser error: invalid :remove() pseudo-class in selector: '${selector}'`); // eslint-disable-line max-len
                                 }
                                 // if following token is not an extended pseudo
                                 // the colon should be collected to value of RegularSelector
@@ -524,7 +563,7 @@ export const parse = (selector: string) => {
                                 // no brackets balance needed for such case,
                                 // parser position is on first colon after the 'div':
                                 // e.g. 'div:last-child:has(button.privacy-policy__btn)'
-                                if (tokens[i + 2] && tokens[i + 2].value === BRACKETS.PARENTHESES.OPEN) {
+                                if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
                                     context.standardPseudoNamesStack.push(nextTokenValue);
                                 }
                             } else {
@@ -549,15 +588,15 @@ export const parse = (selector: string) => {
                             // and there is might be another extended selector.
                             // parser position is on colon before 'upward':
                             // e.g. 'p:contains(PR):upward(2)'
-                            if (isSupportedExtendedPseudo(nextTokenValue)) {
+                            if (isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
                                 // if supported extended pseudo-class is next to colon
                                 // add ExtendedSelector to Selector children
                                 addAnySelectorNode(context, NodeType.ExtendedSelector);
-                            } else if (nextTokenValue === REMOVE_PSEUDO_CLASS_MARKER) {
+                            } else if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_CLASS_MARKER) {
                                 // :remove() pseudo-class should be handled before
                                 // as it is not about element selecting but actions with elements
                                 // e.g. '#banner:upward(2):remove()'
-                                throw new Error('Parser error: selector should contains :remove() pseudo-class.');
+                                throw new Error(`Selector parser error: invalid :remove() pseudo-class in selector: '${selector}'`); // eslint-disable-line max-len
                             } else {
                                 // otherwise it is standard pseudo after extended pseudo-class
                                 // and colon should be collected to value of RegularSelector
@@ -576,13 +615,13 @@ export const parse = (selector: string) => {
                             // e.g. 'div:has(:contains(text))'
                             // or   'div:not(:empty)'
                             initRelativeSubtree(context, ASTERISK);
-                            if (!isSupportedExtendedPseudo(nextTokenValue)) {
+                            if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
                                 // collect the colon to value of RegularSelector
                                 // e.g. 'div:not(:empty)'
                                 updateBufferNode(context, tokenValue);
                                 // parentheses should be balanced only for functional pseudo-classes
                                 // e.g. '.yellow:not(:nth-child(3))'
-                                if (tokens[i + 2] && tokens[i + 2].value === BRACKETS.PARENTHESES.OPEN) {
+                                if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
                                     context.standardPseudoNamesStack.push(nextTokenValue);
                                 }
                             } else {
@@ -593,7 +632,7 @@ export const parse = (selector: string) => {
                             }
                         }
                         break;
-                    case BRACKETS.PARENTHESES.OPEN:
+                    case BRACKETS.PARENTHESES.LEFT:
                         // start of pseudo-class arg
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             if (prevTokenValue === BACKSLASH) {
@@ -620,7 +659,7 @@ export const parse = (selector: string) => {
                             }
                         }
                         break;
-                    case BRACKETS.PARENTHESES.CLOSE:
+                    case BRACKETS.PARENTHESES.RIGHT:
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // remove stacked open parentheses for brackets balance
                             // and stacked name of extended pseudo-class
@@ -664,10 +703,10 @@ export const parse = (selector: string) => {
                                     // parser position is on bracket after 'foo' now:
                                     // e.g. '::part(foo):has(.a)'
                                     && nextTokenValue === COLON
-                                    && tokens[i + 2]
-                                    && HAS_PSEUDO_CLASS_MARKERS.includes(tokens[i + 2].value)) {
+                                    && nextToNextTokenValue
+                                    && HAS_PSEUDO_CLASS_MARKERS.includes(nextToNextTokenValue)) {
                                     // eslint-disable-next-line max-len
-                                    throw new Error(`Usage of :${tokens[i + 2].value} pseudo-class is not allowed after any regular pseudo-element: '${lastStandardPseudo}'`);
+                                    throw new Error(`Usage of :${nextToNextTokenValue} pseudo-class is not allowed after any regular pseudo-element: '${lastStandardPseudo}'`);
                                 }
                             } else {
                                 // extended pseudo-class was processing.
@@ -691,12 +730,13 @@ export const parse = (selector: string) => {
                             upToClosest(context, NodeType.Selector);
                         }
                         break;
-                    case NEWLINE:
+                    case TAB:
+                    case LINE_FEED:
                     case FORM_FEED:
                     case CARRIAGE_RETURN:
-                        // such characters should be trimmed
+                        // such characters at start and end of selector should be trimmed
                         // so is there is one them among tokens, it is not valid selector
-                        throw new Error(`${selector} is not a valid selector`);
+                        throw new Error(`'${selector}' is not a valid selector.`);
                 }
                 break;
                 // no default statement for Marks as they are limited to ACCEPTABLE_MARKS
