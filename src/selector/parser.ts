@@ -47,6 +47,7 @@ import {
     REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
     IS_OR_NOT_PSEUDO_SELECTING_ROOT,
+    XPATH_PSEUDO_SELECTING_ROOT,
 } from '../constants';
 
 /**
@@ -112,7 +113,20 @@ interface Context {
      * Flag for processing comma inside attribute value
      */
     isAttributeBracketsOpen: boolean,
+
+    /**
+     * Flag for extended pseudo-class arg regexp values
+     */
+    isRegexpOpen: boolean,
 }
+
+/**
+ * Returns last item from array
+ * @param array
+ */
+const getLast = (array: Array<any>): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return array[array.length - 1];
+};
 
 /**
  * Gets the node which is being collected
@@ -124,7 +138,7 @@ const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
         return null;
     }
     // buffer node is always the last in the pathToBufferNode stack
-    return context.pathToBufferNode[context.pathToBufferNode.length - 1];
+    return getLast(context.pathToBufferNode);
 };
 
 /**
@@ -236,6 +250,7 @@ export const parse = (selector: string) => {
         standardPseudoNamesStack: [],
         standardPseudoBracketsStack: [],
         isAttributeBracketsOpen: false,
+        isRegexpOpen: false,
     };
 
     let i = 0;
@@ -433,6 +448,11 @@ export const parse = (selector: string) => {
                         } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
                             // collect the mark to the arg of AbsolutePseudoClass node
                             updateBufferNode(context, tokenValue);
+                            // 'isRegexpOpen' flag is needed for brackets balancing inside extended pseudo-class arg
+                            if (tokenValue === SLASH && prevTokenValue !== BACKSLASH) {
+                                context.isRegexpOpen = context.extendedPseudoNamesStack.length > 0
+                                    && !context.isRegexpOpen;
+                            }
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             // add SelectorList to children of RelativePseudoClass node
                             initRelativeSubtree(context, tokenValue);
@@ -480,7 +500,7 @@ export const parse = (selector: string) => {
                             if (nextTokenValue === XPATH_PSEUDO_CLASS_MARKER) {
                                 // limit applying of "naked" :xpath pseudo-class
                                 // https://github.com/AdguardTeam/ExtendedCss/issues/115
-                                initAst(context, 'body');
+                                initAst(context, XPATH_PSEUDO_SELECTING_ROOT);
                             } else if (nextTokenValue === IS_PSEUDO_CLASS_MARKER
                                 || nextTokenValue === NOT_PSEUDO_CLASS_MARKER) {
                                 /**
@@ -527,8 +547,9 @@ export const parse = (selector: string) => {
                         if (bufferNode?.type === NodeType.RegularSelector) {
                             // it can be extended or standard pseudo
                             // e.g. '#share, :contains(share it)'
-                            // or   'div, :hover'
-                            if (prevTokenValue === SPACE
+                            // or   'div,:hover'
+                            // of   'div:has(+:contains(text))'  // position is after '+'
+                            if (COMBINATORS.includes(prevTokenValue)
                                 || prevTokenValue === COMMA) {
                                 // case with colon at the start of string - e.g. ':contains(text)'
                                 // is covered by 'bufferNode === null' above at start of COLON checking
@@ -539,7 +560,7 @@ export const parse = (selector: string) => {
                             // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
                             if (context.extendedPseudoNamesStack.length > 0
                                 // check the last extended pseudo-class name from context
-                                && HAS_PSEUDO_CLASS_MARKERS.includes(context.extendedPseudoNamesStack[context.extendedPseudoNamesStack.length - 1]) // eslint-disable-line max-len
+                                && HAS_PSEUDO_CLASS_MARKERS.includes(getLast(context.extendedPseudoNamesStack))
                                 // and check the processing pseudo-class
                                 && (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
                                     || nextTokenValue === IS_PSEUDO_CLASS_MARKER
@@ -573,7 +594,7 @@ export const parse = (selector: string) => {
                                 if (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
                                     && context.standardPseudoNamesStack.length > 0) {
                                     // eslint-disable-next-line max-len
-                                    throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside regular pseudo: '${context.standardPseudoNamesStack[context.standardPseudoNamesStack.length - 1]}'`);
+                                    throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside regular pseudo: '${getLast(context.standardPseudoNamesStack)}'`);
                                 } else {
                                     // stop RegularSelector value collecting
                                     upToClosest(context, NodeType.Selector);
@@ -635,7 +656,10 @@ export const parse = (selector: string) => {
                     case BRACKETS.PARENTHESES.LEFT:
                         // start of pseudo-class arg
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            if (prevTokenValue === BACKSLASH) {
+                            // no brackets balancing needed inside
+                            // 1. :xpath() extended pseudo-class arg
+                            // 2. regexp arg for other extended pseudo-classes
+                            if (bufferNode.name !== XPATH_PSEUDO_CLASS_MARKER && context.isRegexpOpen) {
                                 // if the parentheses is escaped it should be part of regexp
                                 // collect it to arg of AbsolutePseudoClass
                                 // e.g. 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)'
@@ -658,26 +682,43 @@ export const parse = (selector: string) => {
                                 context.standardPseudoBracketsStack.push(tokenValue);
                             }
                         }
+                        if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            /**
+                             * TODO: remake for earlier error throwing
+                             */
+                            // save opening bracket for balancing
+                            // e.g. 'div:not()'  // position is on `(`
+                            context.extendedPseudoBracketsStack.push(tokenValue);
+                        }
                         break;
                     case BRACKETS.PARENTHESES.RIGHT:
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
-                            // remove stacked open parentheses for brackets balance
-                            // and stacked name of extended pseudo-class
-                            // e.g. 'h3:contains((Ads))'
-                            // or   'div:xpath(//h3[contains(text(),"Share it!")]/..)'
-                            context.extendedPseudoBracketsStack.pop();
-                            context.extendedPseudoNamesStack.pop();
-                            if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) {
-                                // if brackets stack is not empty yet, save tokenValue to arg of AbsolutePseudoClass
-                                // parser position on first closing bracket after 'Ads':
-                                // e.g. 'h3:contains((Ads))'
+                            // no brackets balancing needed inside
+                            // 1. :xpath() extended pseudo-class arg
+                            // 2. regexp arg for other extended pseudo-classes
+                            if (bufferNode.name !== XPATH_PSEUDO_CLASS_MARKER && context.isRegexpOpen) {
+                                // if closing bracket is part of regexp
+                                // simply save it to pseudo-class arg
                                 updateBufferNode(context, tokenValue);
-                            } else if (context.extendedPseudoBracketsStack.length >= 0
-                                && context.extendedPseudoNamesStack.length >= 0) {
-                                // assume it is combined extended pseudo-classes
-                                // parser position on first closing bracket after 'advert':
-                                // e.g. 'div:has(.banner, :contains(advert))'
-                                upToClosest(context, NodeType.Selector);
+                            } else {
+                                // remove stacked open parentheses for brackets balance
+                                // and stacked name of extended pseudo-class
+                                // e.g. 'h3:contains((Ads))'
+                                // or   'div:xpath(//h3[contains(text(),"Share it!")]/..)'
+                                context.extendedPseudoBracketsStack.pop();
+                                context.extendedPseudoNamesStack.pop();
+                                if (context.extendedPseudoBracketsStack.length > context.extendedPseudoNamesStack.length) { // eslint-disable-line max-len
+                                    // if brackets stack is not empty yet, save tokenValue to arg of AbsolutePseudoClass
+                                    // parser position on first closing bracket after 'Ads':
+                                    // e.g. 'h3:contains((Ads))'
+                                    updateBufferNode(context, tokenValue);
+                                } else if (context.extendedPseudoBracketsStack.length >= 0
+                                    && context.extendedPseudoNamesStack.length >= 0) {
+                                    // assume it is combined extended pseudo-classes
+                                    // parser position on first closing bracket after 'advert':
+                                    // e.g. 'div:has(.banner, :contains(advert))'
+                                    upToClosest(context, NodeType.Selector);
+                                }
                             }
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
@@ -729,6 +770,19 @@ export const parse = (selector: string) => {
                             upToClosest(context, NodeType.ExtendedSelector);
                             upToClosest(context, NodeType.Selector);
                         }
+                        if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            /**
+                             * TODO: remake for earlier error throwing
+                             */
+                            // save opening bracket for balancing
+                            // e.g. 'div:not()'  // position is on `)`
+                            // context.extendedPseudoBracketsStack.push(tokenValue);
+                            if (context.extendedPseudoNamesStack.length > 0
+                                && context.extendedPseudoBracketsStack.length > 0) {
+                                context.extendedPseudoBracketsStack.pop();
+                                context.extendedPseudoNamesStack.pop();
+                            }
+                        }
                         break;
                     case TAB:
                     case LINE_FEED:
@@ -739,7 +793,7 @@ export const parse = (selector: string) => {
                         throw new Error(`'${selector}' is not a valid selector.`);
                 }
                 break;
-                // no default statement for Marks as they are limited to ACCEPTABLE_MARKS
+                // no default statement for Marks as they are limited to SUPPORTED_SELECTOR_MARKS
                 // and all other symbol combinations are tokenized as Word
                 // so error for invalid Word will be thrown later while element selecting by parsed ast
             default:
@@ -751,6 +805,16 @@ export const parse = (selector: string) => {
 
     if (context.ast === null) {
         throw new Error(`'${selector}' is not a valid selector`);
+    }
+
+    if (context.extendedPseudoNamesStack.length > 0
+        || context.extendedPseudoBracketsStack.length > 0) {
+        // eslint-disable-next-line max-len
+        throw new Error(`Unbalanced brackets for extended pseudo-class: '${getLast(context.extendedPseudoNamesStack)}'`);
+    }
+
+    if (context.isAttributeBracketsOpen) {
+        throw new Error(`Unbalanced brackets for attributes is selector: '${selector}'`);
     }
 
     return context.ast;

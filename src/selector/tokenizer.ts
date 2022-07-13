@@ -1,6 +1,6 @@
 import { convert } from './converter';
 
-import { ACCEPTABLE_MARKS } from '../constants';
+import { SUPPORTED_SELECTOR_MARKS } from '../constants';
 
 export enum TokenType {
     Mark = 'mark',
@@ -29,14 +29,14 @@ export const tokenize = (rawSelector: string): Token[] => {
     // iterate selector chars and collect tokens
     for (let i = 0; i < selector.length; i += 1) {
         symbol = selector[i];
-        if (ACCEPTABLE_MARKS.indexOf(symbol) > -1) {
+        if (SUPPORTED_SELECTOR_MARKS.indexOf(symbol) > -1) {
             tokens.push({ type: TokenType.Mark, value: symbol });
             continue;
         }
         buffer += symbol;
         const nextSymbol = selector[i + 1];
         // string end has been reached if nextSymbol is undefined
-        if (!nextSymbol || ACCEPTABLE_MARKS.indexOf(nextSymbol) > -1) {
+        if (!nextSymbol || SUPPORTED_SELECTOR_MARKS.indexOf(nextSymbol) > -1) {
             tokens.push({ type: TokenType.Word, value: buffer });
             buffer = '';
         }

@@ -128,9 +128,36 @@ describe('converter', () => {
                 actual: '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)',
                 expected: '*:contains(/\\s[a-t]{8}$/) + *:contains(/^[^\\"\\\'"]{30}quickly/)',
             },
+            {
+                actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
+                expected: ':matches-css-before(content:  /^[A-Z][a-z]{2}\\s/  )',
+            },
+            {
+                actual: '[-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']',
+                expected: ':has(+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
+            },
+            {
+                /* eslint-disable max-len */
+                actual: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']',
+                expected: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + :matches-css-before(content:  /^[A-Z][a-z]{2}\\s/  ):has(+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
+                /* eslint-enable max-len */
+            },
         ];
         test.each(testsInputs)('%s', ({ actual, expected }) => {
             expect(convert(actual)).toEqual(expected);
+        });
+    });
+
+    describe('invalid selectors', () => {
+        const error = 'Invalid extended-css old syntax selector';
+        const invalidSelectors = [
+            '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
+            '[-ext-has="a[data-item^=\'{sources:\']"',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => {
+            expect(() => {
+                convert(selector);
+            }).toThrow(error);
         });
     });
 });

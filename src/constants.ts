@@ -72,7 +72,7 @@ export const COMBINATORS = [
     SUBSEQUENT_SIBLING_COMBINATOR,
 ];
 
-export const ACCEPTABLE_MARKS = [
+export const SUPPORTED_SELECTOR_MARKS = [
     LEFT_SQUARE_BRACKET,
     RIGHT_SQUARE_BRACKET,
     LEFT_PARENTHESIS,
@@ -208,3 +208,52 @@ export const REGULAR_PSEUDO_ELEMENTS = {
 // limit applying of wildcard :is and :not pseudo-class only to html children
 // e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
 export const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
+
+// limit applying of :xpath pseudo-class with to 'any' element
+// https://github.com/AdguardTeam/ExtendedCss/issues/115
+export const XPATH_PSEUDO_SELECTING_ROOT = 'body';
+
+// regexp that matches backward compatible syntaxes
+export const REGEXP_VALID_OLD_SYNTAX = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
+// marker for checking invalid selector after old-syntax normalizing by selector converter
+export const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
+
+export const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
+export const REMOVE_PSEUDO_PROPERTY_KEY = REMOVE_PSEUDO_CLASS_MARKER;
+
+export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
+
+// may be used while applying rules with no styles
+// const DISPLAY_CSS_PROPERTY_KEY = 'display';
+// const DISPLAY_CSS_PROPERTY_VALUE = 'none !important';
+// export const DEFAULT_STYLE_MAP = {
+//     [DISPLAY_CSS_PROPERTY_KEY]: DISPLAY_CSS_PROPERTY_VALUE,
+// };
+
+export const REGEXP_LINES_DIVIDER = /\r?\n/;
+
+export const STYLESHEET_BLOCK_MARKS = [
+    LEFT_SQUARE_BRACKET,
+    RIGHT_SQUARE_BRACKET,
+    LEFT_PARENTHESIS,
+    RIGHT_PARENTHESIS,
+    LEFT_CURLY_BRACKET,
+    RIGHT_CURLY_BRACKET,
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE,
+    BACKSLASH,
+];
+
+export const REGEXP_DECLARATION_END = /[;}]/g;
+export const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
+export const REGEXP_NON_WHITESPACE = /\S/g;
+
+export const STYLESHEET_ERROR_PREFIX = {
+    NO_STYLE: 'No style declaration at stylesheet part',
+    INVALID_STYLE: 'Invalid style declaration at stylesheet part',
+    UNCLOSED_STYLE: 'Unclosed style declaration at stylesheet part',
+    NO_PROPERTY: 'Missing style property in declaration at stylesheet part',
+    NO_VALUE: 'Missing style value in declaration at stylesheet part',
+    INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
+    NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
+};

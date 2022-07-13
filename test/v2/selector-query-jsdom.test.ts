@@ -699,15 +699,18 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('matches-property - invalid args', () => {
+            const missingArgErrorText = 'Missing arg for :matches-property pseudo-class';
             const matchPropErrorText = 'Error while matching properties by arg';
+            const unbalancedBracketsErrorText = 'Unbalanced brackets for extended pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:matches-property()', error: 'Missing arg for :matches-property pseudo-class' },
+                { selector: 'div:matches-property()', error: missingArgErrorText },
                 { selector: 'div:matches-property("//")', error: matchPropErrorText },
                 { selector: 'div:matches-property(".?"="/^[0-9]*$/")', error: matchPropErrorText },
                 { selector: 'div:matches-property(.prop.id)', error: matchPropErrorText },
-                { selector: 'div:matches-property(abc./aa.?+./test/)', error: matchPropErrorText },
-                { selector: 'div:matches-property(abc..?+/.test)', error: matchPropErrorText },
-                { selector: 'div:matches-property(abcd.?+/.test)', error: matchPropErrorText },
+                // due to invalid regexp, closing `)` is considered as part of pseudo-class arg
+                { selector: 'div:matches-property(abc./aa.?+./test/)', error: unbalancedBracketsErrorText },
+                { selector: 'div:matches-property(abc..?+/.test)', error: unbalancedBracketsErrorText },
+                { selector: 'div:matches-property(abcd.?+/.test)', error: unbalancedBracketsErrorText },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -737,7 +740,7 @@ describe('extended pseudo-classes', () => {
                 { actual: 'div.base[level="2"]:xpath(../..)', expected: 'div#root' },
                 { actual: ':xpath(//*[@class="baseInner"])', expected: 'div#inner' },
                 { actual: ':xpath(//*[@class="base"]/..)', expected: 'div#parent' },
-                { actual: ':xpath(//div[contains(text(),"test-xpath-content")]', expected: 'div#inner' },
+                { actual: ':xpath(//div[contains(text(),"test-xpath-content")])', expected: 'div#inner' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });

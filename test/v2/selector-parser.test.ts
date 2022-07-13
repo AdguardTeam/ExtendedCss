@@ -185,7 +185,6 @@ describe('absolute extended selectors', () => {
                     { isRegular: true, value: '*' },
                     { isAbsolute: true, name, arg: 'width:400px' },
                 ],
-
             },
             {
                 actual: 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)',
@@ -206,6 +205,13 @@ describe('absolute extended selectors', () => {
                 expected: [
                     { isRegular: true, value: '*' },
                     { isAbsolute: true, name, arg: '   background-image: /v\\.ping\\.pl\\/MjAxOTA/   ' },
+                ],
+            },
+            {
+                actual: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    )',
+                expected: [
+                    { isRegular: true, value: '*' },
+                    { isAbsolute: true, name, arg: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' },
                 ],
             },
         ];
@@ -648,6 +654,13 @@ describe('old syntax', () => {
             ],
         },
         {
+            actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
+            expected: [
+                { isRegular: true, value: '*' },
+                { isAbsolute: true, name: 'matches-css-before', arg: 'content:  /^[A-Z][a-z]{2}\\s/  ' },
+            ],
+        },
+        {
             actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
             expected: [
                 { isRegular: true, value: 'div[style="text-align: center"] > b' },
@@ -655,7 +668,6 @@ describe('old syntax', () => {
                 { isRegular: true, value: '+a[href^="http://example.com/test.html?id="]+br' },
             ],
         },
-
         {
             actual: 'div[-ext-contains="test"][-ext-has="div.test-class-two"]',
             expected: [
@@ -755,6 +767,43 @@ describe('old syntax', () => {
         };
         expect(parse(actual)).toEqual(expected);
     });
+
+    /* eslint-disable max-len */
+    it('old syntax - matches-css + matches-css-before has(matches-css-after contains)', () => {
+        const actual = ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('*'),
+                        getAbsoluteExtendedSelector('matches-css', '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    '),
+                        getRegularSelector('+ *'),
+                        getAbsoluteExtendedSelector('matches-css-before', 'content:  /^[A-Z][a-z]{2}\\s/  '),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        getSingleSelectorAstWithAnyChildren([
+                                            { isRegular: true, value: '+*' },
+                                            { isAbsolute: true, name: 'matches-css-after', arg: ' content  :   /(\\d+\\s)*me/  ' },
+                                            { isAbsolute: true, name: 'contains', arg: '/^(?![\\s\\S])/' },
+                                        ]),
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+    /* eslint-enable max-len */
 });
 
 describe('combined extended selectors', () => {
@@ -1185,6 +1234,37 @@ describe('combined selectors', () => {
                     children: [
                         getRegularSelector('*'),
                         getAbsoluteExtendedSelector('contains', '#ad'),
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    it('has(+*:matches-css-after)', () => {
+        const actual = ':has(+:matches-css-after( content  :   /(\\d+\\s)*me/  ))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('*'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        getSingleSelectorAstWithAnyChildren([
+                                            { isRegular: true, value: '+*' },
+                                            { isAbsolute: true, name: 'matches-css-after', arg: ' content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
+                                        ]),
+                                    ],
+                                },
+                            ],
+                        },
                     ],
                 },
             ],
@@ -2007,6 +2087,36 @@ describe('fail on white space which is before or after extended pseudo-class nam
             'div:invalid-pseudo (1)',
             '.block:nth-child (2) .inner',
             '.block:nth-child\t(2) .inner',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+});
+
+describe('fail on invalid selector', () => {
+    describe('unbalanced brackets - extended pseudo-class', () => {
+        const error = 'Unbalanced brackets for extended pseudo-class';
+        const invalidSelectors = [
+            // part of 'head > style:contains(body{background: #410e13)' before opening `{`
+            'head > style:contains(body{',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('unbalanced brackets - attributes is selector', () => {
+        const error = 'Unbalanced brackets for attributes is selector';
+        const invalidSelectors = [
+            // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
+            'a[href][data-item^=\'{',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('non-closed old syntax', () => {
+        // if may happen while stylesheet parsing
+        const error = 'Invalid extended-css old syntax selector';
+        const invalidSelectors = [
+            // part of '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']' before opening `{`
+            '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
         ];
         test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
     });

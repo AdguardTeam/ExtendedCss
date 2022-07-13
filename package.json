@@ -21,7 +21,7 @@
     "browserstack": "node tasks/tests.js && node tasks/browserstack.js",
     "increment": "yarn version --patch --no-git-tag-version",
     "publish": "",
-    "lint": "eslint 'src/*.ts' 'test/v2/*'",
+    "lint": "eslint 'src/' 'test/v2/*'",
     "lint-staged": "lint-staged"
   },
   "lint-staged": {

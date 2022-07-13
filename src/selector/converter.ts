@@ -1,5 +1,8 @@
-// Regex that matches AdGuard's backward compatible syntaxes
-const reAttrFallback = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
+import {
+    REGEXP_VALID_OLD_SYNTAX,
+    INVALID_OLD_SYNTAX_MARKER,
+} from '../constants';
+
 
 /**
  * Complex replacement function.
@@ -29,8 +32,15 @@ const SCOPE_REPLACER = '(>';
  */
 const normalize = (selector: string): string => {
     const normalizedSelector = selector
-        .replace(reAttrFallback, evaluateMatch)
+        .replace(REGEXP_VALID_OLD_SYNTAX, evaluateMatch)
         .replace(reScope, SCOPE_REPLACER);
+
+    // validate old syntax after normalizing
+    // e.g. '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]'
+    if (normalizedSelector.includes(INVALID_OLD_SYNTAX_MARKER)) {
+        throw new Error(`Invalid extended-css old syntax selector: '${selector}'`);
+    }
+
     return normalizedSelector;
 };
 
