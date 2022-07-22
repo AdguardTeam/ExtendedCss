@@ -23,7 +23,7 @@ const setBodyInnerHtml = async (htmlContent: string): Promise<void> => {
 
 declare global {
     const extCSS: {
-        querySelectorAll(selector: string, document: Document): Element[];
+        querySelectorAll(selector: string, document: Document): HTMLElement[];
     };
 }
 

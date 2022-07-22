@@ -17,7 +17,7 @@ export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): n
  * @param deep
  * @param pseudoName
  */
-export const getNthAncestor = (domElement: Element, deep: number, pseudoName: string): Element | undefined => {
+export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName: string): HTMLElement | undefined => {
     let ancestor;
     let i = 0;
     while (i < deep) {
@@ -32,11 +32,11 @@ export const getNthAncestor = (domElement: Element, deep: number, pseudoName: st
 };
 
 /**
- * Checks whether the element is instance of Element
+ * Checks whether the element is instance of HTMLElement
  * @param element
  */
-export const isElement = (element: Element | Node | null | undefined): element is Element => {
-    return element instanceof Element;
+export const isHtmlElement = (element: HTMLElement | Node | null | undefined): element is HTMLElement => {
+    return element instanceof HTMLElement;
 };
 
 /**

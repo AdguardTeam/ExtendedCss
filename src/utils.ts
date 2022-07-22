@@ -10,7 +10,32 @@ const nodeTextContentGetter = (() => {
     return Object.getOwnPropertyDescriptor(nativeNode.prototype, 'textContent')?.get;
 })();
 
+declare global {
+    interface Window {
+        WebKitMutationObserver: MutationObserver;
+    }
+}
+
 const utils = {
+    MutationObserver: window.MutationObserver || window.WebKitMutationObserver,
+
+    isNumber: (obj: any): boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        return typeof obj === 'number';
+    },
+
+    /**
+     * Gets string without suffix
+     * @param str input string
+     * @param suffix needed to remove
+     */
+    removeSuffix: (str: string, suffix: string): string => {
+        const index = str.indexOf(suffix, str.length - suffix.length);
+        if (index >= 0) {
+            return str.substring(0, index);
+        }
+        return str;
+    },
+
     /**
      * Returns textContent of passed domElement
      * @param domElement
@@ -117,6 +142,46 @@ const utils = {
             })
             .join('');
         return selectorText;
+    },
+
+    /**
+     * Returns string selector path for element in dom
+     * @param inputEl input element
+     */
+    getNodeSelector: (inputEl: HTMLElement): string => {
+        if (!(inputEl instanceof Element)) {
+            throw new Error('Function received argument with wrong type');
+        }
+
+        let el: Element | null;
+
+        el = inputEl;
+        const path = [];
+        // we need to check '!!el' first because it is possible
+        // that some ancestor of the inputEl was removed before it
+        while (!!el && el.nodeType === Node.ELEMENT_NODE) {
+            let selector = el.nodeName.toLowerCase();
+            if (el.id && typeof el.id === 'string') {
+                selector += `#${el.id}`;
+                path.unshift(selector);
+                break;
+            }
+            let sibling = el;
+            let nth = 1;
+            while (sibling.previousElementSibling) {
+                sibling = sibling.previousElementSibling;
+                if (sibling.nodeType === Node.ELEMENT_NODE && sibling.nodeName.toLowerCase() === selector) {
+                    nth += 1;
+                }
+            }
+            if (nth !== 1) {
+                selector += `:nth-of-type(${nth})`;
+            }
+
+            path.unshift(selector);
+            el = el.parentElement;
+        }
+        return path.join(' > ');
     },
 };
 

@@ -44,7 +44,7 @@ const getByRegularSelector = (
     regularSelectorNode: AnySelectorNodeInterface,
     root: Document | Element,
     specificity?: string,
-): Element[] => {
+): HTMLElement[] => {
     if (!regularSelectorNode.value) {
         throw new Error('RegularSelector value should be specified');
     }
@@ -201,8 +201,11 @@ const isAnyElementBySelectorList = (
  * @param extendedSelectorNode ExtendedSelector node
  * @returns array of dom nodes
  */
-const getByExtendedSelector = (domElements: Element[], extendedSelectorNode: AnySelectorNodeInterface): Element[] => {
-    let foundElements: Element[] = [];
+const getByExtendedSelector = (
+    domElements: HTMLElement[],
+    extendedSelectorNode: AnySelectorNodeInterface,
+): HTMLElement[] => {
+    let foundElements: HTMLElement[] = [];
     const extPseudoName = extendedSelectorNode.children[0].name;
     if (!extPseudoName) {
         // extended pseudo-classes should have a name
@@ -306,9 +309,9 @@ const getByExtendedSelector = (domElements: Element[], extendedSelectorNode: Any
  * @returns array of dom nodes
  */
 const getByFollowingRegularSelector = (
-    domElements: Element[],
+    domElements: HTMLElement[],
     regularSelectorNode: AnySelectorNodeInterface,
-): Element[] => {
+): HTMLElement[] => {
     let foundElements = [];
     const { value } = regularSelectorNode;
     if (!value) {
@@ -371,8 +374,8 @@ const getElementsForSelectorNode = (
     selectorNode: AnySelectorNodeInterface,
     root: Document | Element | HTMLElement,
     specificity?: string,
-): Element[] => {
-    let selectedElements: Element[] = [];
+): HTMLElement[] => {
+    let selectedElements: HTMLElement[] = [];
     let i = 0;
     while (i < selectorNode.children.length) {
         const selectorNodeChild = selectorNode.children[i];
@@ -395,8 +398,8 @@ const getElementsForSelectorNode = (
  * @param ast ast of parsed selector
  * @param doc document
  */
-const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = document): Element[] => {
-    const selectedElements: Element[] = [];
+export const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = document): HTMLElement[] => {
+    const selectedElements: HTMLElement[] = [];
     // ast root is SelectorList node;
     // it has Selector nodes as children which should be processed separately
     ast.children.forEach((selectorNode: AnySelectorNodeInterface) => {
@@ -411,7 +414,7 @@ const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = document): Ele
  * Selects elements by selector
  * @param selector
  */
-export const querySelectorAll = (selector: string): Element[] => {
+export const querySelectorAll = (selector: string): HTMLElement[] => {
     const ast = parse(selector);
     return selectElementsByAst(ast);
 };
@@ -467,7 +470,7 @@ export class ExtCssDocument {
      * Selects elements by selector
      * @param selector
      */
-    querySelectorAll(selector: string): Element[] {
+    querySelectorAll(selector: string): HTMLElement[] {
         const ast = this.getSelectorAst(selector);
         return selectElementsByAst(ast);
     }

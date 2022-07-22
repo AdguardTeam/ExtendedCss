@@ -34,15 +34,14 @@ interface RawResultValue {
 }
 type RawResults = Map<string, RawResultValue>;
 
-interface CssStyleMap {
+export interface CssStyleMap {
     [key: string]: string;
 }
 
-interface ExtendedCssRuleData {
+export interface ExtendedCssRuleData {
     selector: string,
     ast: AnySelectorNodeInterface,
     style?: CssStyleMap,
-    remove?: boolean,
     debug?: boolean,
 }
 
@@ -161,10 +160,6 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
         stylesOfSelector = removeSelectorData.stylesOfSelector;
         ast = parseSelector(selector);
         success = true;
-        // if (context.nextIndex === -1) {
-        //     // stop parsing as there is no style declaration and selector parsed fine
-        //     context.cssToParse = '';
-        // }
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         success = false;
     }
@@ -295,8 +290,10 @@ export const prepareRuleData = (
         ruleData[DEBUG_PSEUDO_PROPERTY_KEY] = shouldDebug;
     }
     if (shouldRemove) {
-        // no style is needed to apply if 'remove' is set
-        ruleData[REMOVE_PSEUDO_PROPERTY_KEY] = shouldRemove;
+        // no other styles are needed to apply if 'remove' is set
+        ruleData.style = {
+            [REMOVE_PSEUDO_PROPERTY_KEY]: PSEUDO_PROPERTY_POSITIVE_VALUE,
+        };
     } else {
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object

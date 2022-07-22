@@ -5,7 +5,7 @@ import { ExtCssDocument } from '../../../src/selector';
  * @param selectedElements selected by extCss querySelectorAll()
  * @param expectedElements expected element selected by native document.querySelectorAll()
  */
-export const expectTheSameElements = (selectedElements: Element[], expectedElements: NodeListOf<Element>) => {
+export const expectTheSameElements = (selectedElements: HTMLElement[], expectedElements: NodeListOf<Element>) => {
     expect(selectedElements.length).toEqual(expectedElements.length);
     expectedElements.forEach((expectedElement, index) => {
         expect(selectedElements[index]).toEqual(expectedElement);
@@ -16,7 +16,7 @@ export const expectTheSameElements = (selectedElements: Element[], expectedEleme
  * Checks whether there is no element selected
  * @param selectedElements selected by extCss querySelectorAll()
  */
-export const expectNoMatch = (selectedElements: Element[]) => {
+export const expectNoMatch = (selectedElements: HTMLElement[]) => {
     expect(selectedElements.length).toEqual(0);
 };
 

@@ -359,21 +359,21 @@ describe('stylesheet parser', () => {
                     actual: '.banner { remove: true; }',
                     expected: {
                         selector: '.banner',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: '.banner { remove:true; }',
                     expected: {
                         selector: '.banner',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'head > style:contains(body{background: #410e13) { remove: true; }',
                     expected: {
                         selector: 'head > style:contains(body{background: #410e13)',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
             ];
@@ -386,14 +386,14 @@ describe('stylesheet parser', () => {
                     actual: 'div[class]:remove()',
                     expected: {
                         selector: 'div[class]',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: '.banner > *:remove()',
                     expected: {
                         selector: '.banner > *',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
@@ -402,56 +402,56 @@ describe('stylesheet parser', () => {
                     expected: {
                         // trimmed selector before pseudo-class
                         selector: '.banner >',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'div[id][class][style]:remove()',
                     expected: {
                         selector: 'div[id][class][style]',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'body > div:not([id]):not([class]):not([style]):empty:remove()',
                     expected: {
                         selector: 'body > div:not([id]):not([class]):not([style]):empty',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'div#test-remove #test-remove-inner-id:remove()',
                     expected: {
                         selector: 'div#test-remove #test-remove-inner-id',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'div[id*="remove"]:has(> div > .test-remove-inner-class):remove()',
                     expected: {
                         selector: 'div[id*="remove"]:has(> div > .test-remove-inner-class)',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: 'div[class]:contains(remove):remove()',
                     expected: {
                         selector: 'div[class]:contains(remove)',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: '#test-remove-inner-for-upward:upward(div[id]):remove()',
                     expected: {
                         selector: '#test-remove-inner-for-upward:upward(div[id])',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: '#test-remove-inner-for-xpath-pseudo:xpath(../../..):remove()',
                     expected: {
                         selector: '#test-remove-inner-for-xpath-pseudo:xpath(../../..)',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
             ];
@@ -464,7 +464,7 @@ describe('stylesheet parser', () => {
                     actual: '.banner:remove() { remove: true; }',
                     expected: {
                         selector: '.banner',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
             ];
@@ -539,21 +539,21 @@ describe('stylesheet parser', () => {
                 actual: 'div:has(> div[class]):remove() { display: none !important; }',
                 expected: {
                     selector: 'div:has(> div[class])',
-                    remove: true,
+                    style: { remove: 'true' },
                 },
             },
             {
                 actual: 'div[class]:contains(remove) { display: none !important; remove: true; }',
                 expected: {
                     selector: 'div[class]:contains(remove)',
-                    remove: true,
+                    style: { remove: 'true' },
                 },
             },
             {
                 actual: 'div[class]:contains(remove) { display: none !important; remove: true; debug: true; }',
                 expected: {
                     selector: 'div[class]:contains(remove)',
-                    remove: true,
+                    style: { remove: 'true' },
                     debug: true,
                 },
             },
@@ -561,6 +561,10 @@ describe('stylesheet parser', () => {
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });
 
+    /**
+     * TODO: remake
+     * do NOT merge styles
+     */
     describe('merge styles for same selectors', () => {
         describe('single rule as result', () => {
             const testsInputs = [
@@ -614,14 +618,14 @@ describe('stylesheet parser', () => {
                     actual: '.banner { top: 0 !important }\n .banner { remove: true; }',
                     expected: {
                         selector: '.banner',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 {
                     actual: '.banner { remove: true; } .banner { top: 0 !important }',
                     expected: {
                         selector: '.banner',
-                        remove: true,
+                        style: { remove: 'true' },
                     },
                 },
                 // debug property

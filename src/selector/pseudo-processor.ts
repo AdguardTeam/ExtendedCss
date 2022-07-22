@@ -10,7 +10,7 @@ import {
 import {
     getNthAncestor,
     getValidNumberAncestorArg,
-    isElement,
+    isHtmlElement,
     validateStandardSelector,
 } from './finder-utils';
 
@@ -88,7 +88,7 @@ export const findPseudo = {
      * @param rawPseudoArg number arg of :nth-ancestor or :upward pseudo-class
      * @param pseudoName pseudo-class name
      */
-    nthAncestor: (domElements: Element[], rawPseudoArg: string, pseudoName: string): Element[] => {
+    nthAncestor: (domElements: HTMLElement[], rawPseudoArg: string, pseudoName: string): HTMLElement[] => {
         const deep = getValidNumberAncestorArg(rawPseudoArg, pseudoName);
         const ancestors = domElements
             .map((domElement) => {
@@ -100,7 +100,7 @@ export const findPseudo = {
                 }
                 return ancestor;
             })
-            .filter(isElement);
+            .filter(isHtmlElement);
         return ancestors;
     },
     /**
@@ -108,7 +108,7 @@ export const findPseudo = {
      * @param domElements dom nodes
      * @param rawPseudoArg arg of :xpath pseudo-class
      */
-    xpath: (domElements: Element[], rawPseudoArg: string): Element[] => {
+    xpath: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {
         const foundElements = domElements
             .map((domElement) => {
                 const result = [];
@@ -127,7 +127,7 @@ export const findPseudo = {
                 }
                 let node = xpathResult.iterateNext();
                 while (node) {
-                    if (isElement(node)) {
+                    if (isHtmlElement(node)) {
                         result.push(node);
                     }
                     node = xpathResult.iterateNext();
@@ -143,7 +143,7 @@ export const findPseudo = {
      * @param domElements dom nodes
      * @param rawPseudoArg standard selector arg of :upward pseudo-class
      */
-    upward: (domElements: Element[], rawPseudoArg: string): Element[] => {
+    upward: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {
         if (!validateStandardSelector(rawPseudoArg)) {
             throw new Error(`Invalid argument of :upward pseudo-class: '${rawPseudoArg}'`);
         }
@@ -164,7 +164,7 @@ export const findPseudo = {
                  */
                 return parent.closest(rawPseudoArg);
             })
-            .filter(isElement);
+            .filter(isHtmlElement);
 
         return closestAncestors;
     },
