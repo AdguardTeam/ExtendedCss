@@ -443,6 +443,14 @@ Sometimes, you might need to check the performance of a given selector or a styl
 .banner { display: none; debug: global; }
 ```
 
+> Global debugging mode also can be enabled by positive `debug` property in `ExtCssConfiguration`:
+```js
+const extendedCss = new ExtendedCss({
+  styleSheet, // required, rules as string
+  debug,      // optional, boolean
+});
+```
+
 ### Usage
 
 You can import, require or copy IIFE module with ExtendedCss into your code.

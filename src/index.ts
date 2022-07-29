@@ -15,9 +15,11 @@ import {
     ProtectionCallback,
     ExtMutationObserver,
 } from './helpers/mutation-observer';
+import { TimingStats } from './helpers/timing-stats';
 
 import utils from './utils';
 import {
+    DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REMOVE_PSEUDO_PROPERTY_KEY,
 } from './constants';
@@ -26,7 +28,9 @@ const APPLY_RULES_DELAY = 150;
 
 const isEventListenerSupported = typeof window.addEventListener !== 'undefined';
 
-const observeDocument = (context: Context, callback: EventListener): void => {
+export type MainCallback = () => void;
+
+const observeDocument = (context: Context, callback: MainCallback): void => {
     // We are trying to limit the number of callback calls by not calling it on all kind of "hover" events.
     // The rationale behind this is that "hover" events often cause attributes modification,
     // but re-applying extCSS rules will be useless as these attribute changes are usually transient.
@@ -44,10 +48,7 @@ const observeDocument = (context: Context, callback: EventListener): void => {
             if (eventTracker.isIgnoredEventType() && shouldIgnoreMutations(mutations)) {
                 return;
             }
-            const lastEvent = eventTracker.getLastEvent();
-            if (lastEvent) {
-                callback(lastEvent);
-            }
+            callback();
         }));
         context.domMutationObserver.observe(document, {
             childList: true,
@@ -62,7 +63,7 @@ const observeDocument = (context: Context, callback: EventListener): void => {
     }
 };
 
-const disconnectDocument = (context: Context, callback: EventListener): void => {
+const disconnectDocument = (context: Context, callback: MainCallback): void => {
     if (context.domMutationObserver) {
         context.domMutationObserver.disconnect();
     } else if (isEventListenerSupported) {
@@ -115,7 +116,12 @@ const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => 
         styles.forEach((style) => {
             setStyleToElement(target, style);
         });
+
+        if (typeof observer.styleProtectionCount === 'undefined') {
+            observer.styleProtectionCount = 0;
+        }
         observer.styleProtectionCount += 1;
+
         if (observer.styleProtectionCount < MAX_STYLE_PROTECTION_COUNT) {
             observer.observe(target, protectionObserverOption);
         } else {
@@ -206,6 +212,8 @@ interface ExtCssConfiguration {
     styleSheet: string;
     // the callback that handles affected elements
     beforeStyleApplied?: BeforeStyleAppliedCallback;
+    // flag for applied selectors logging
+    debug?: boolean;
 }
 
 interface RemovalsStatistic {
@@ -259,13 +267,17 @@ const revertStyle = (affElement: AffectedElement): void => {
  * @param ruleData rule to apply
  * @returns List of elements affected by this rule
  */
-const applyRule = (context: Context, ruleData: ExtendedCssRuleData): HTMLElement[] => {
-    // TODO:
-    // const debug = rule.debug;
-    // let start;
-    // if (debug) {
-    //     start = AsyncWrapper.now();
-    // }
+const applyRule = (context: Context, ruleData: ExtendedCssRuleData, asyncWrapper: AsyncWrapper): HTMLElement[] => {
+    // debugging mode can be enabled in two ways:
+    // 1. for separate rules - by `{ debug: true; }`
+    // 2. for all rules simultaneously by:
+    //   - `{ debug: global; }` in any rule
+    //   - positive `debug` property in ExtCssConfiguration
+    const isDebuggingMode = !!ruleData.debug || context.debug;
+    let startTime;
+    if (isDebuggingMode) {
+        startTime = asyncWrapper.now();
+    }
 
     const { ast } = ruleData;
     const nodes = selectElementsByAst(ast);
@@ -290,27 +302,78 @@ const applyRule = (context: Context, ruleData: ExtendedCssRuleData): HTMLElement
         }
     });
 
-    // TODO:
-    // if (debug && start) {
-    //     const elapsed = AsyncWrapper.now() - start;
-    //     if (!('timingStats' in rule)) {
-    //         // TODO: remake stats later
-    //         // rule.timingStats = new utils.Stats();
-    //     }
-    //     rule.timingStats.push(elapsed);
-    // }
+    if (isDebuggingMode && startTime) {
+        const elapsed = asyncWrapper.now() - startTime;
+        if (!ruleData.timingStats) {
+            ruleData.timingStats = new TimingStats();
+        }
+        ruleData.timingStats.push(elapsed);
+    }
 
     return nodes;
+};
+
+interface LoggingStat {
+    selector: string,
+    timings: TimingStats,
+}
+
+/**
+ * Prints timing information if debugging mode is enabled
+ */
+const printTimingInfo = (context: Context): void => {
+    if (context.timingsPrinted) {
+        return;
+    }
+    context.timingsPrinted = true;
+
+    const timingsToLog: LoggingStat[] = [];
+
+    context.parsedRules.forEach((rule) => {
+        if (rule.timingStats) {
+            const record = {
+                selector: rule.selector,
+                timings: rule.timingStats,
+            };
+            timingsToLog.push(record);
+        }
+    });
+
+    if (timingsToLog.length === 0) {
+        return;
+    }
+    // add location.href to the message to distinguish frames
+    utils.logInfo('[ExtendedCss] Timings in milliseconds for %o:\n%o', window.location.href, timingsToLog);
 };
 
 export interface Context {
     beforeStyleApplied?(x: AffectedElement): AffectedElement;
     affectedElements: AffectedElement[],
-    domObserved: boolean,
+    isDomObserved: boolean,
     domMutationObserver?: MutationObserver,
+    mainCallback: MainCallback,
     removalsStatistic: RemovalsStatistic,
     parsedRules: ExtendedCssRuleData[],
+    debug: boolean,
+    timingsPrinted?: boolean
 }
+
+const mainObserve = (context: Context, mainCallback: MainCallback): void => {
+    if (context.isDomObserved) {
+        return;
+    }
+    // handle dynamically added elements
+    context.isDomObserved = true;
+    observeDocument(context, mainCallback);
+};
+
+const mainDisconnect = (context: Context, mainCallback: MainCallback): void => {
+    if (!context.isDomObserved) {
+        return;
+    }
+    context.isDomObserved = false;
+    disconnectDocument(context, mainCallback);
+};
 
 /**
  * Extended css class
@@ -318,9 +381,9 @@ export interface Context {
 export class ExtendedCss {
     private context: Context;
 
-    private applyRulesScheduler:  AsyncWrapper;
+    private applyRulesScheduler: AsyncWrapper;
 
-    private mainCallback: () => void;
+    private mainCallback: MainCallback;
 
     constructor(configuration: ExtCssConfiguration) {
         if (!configuration) {
@@ -329,14 +392,23 @@ export class ExtendedCss {
 
         this.context = {
             beforeStyleApplied: configuration.beforeStyleApplied,
+            debug: configuration.debug || false,
             affectedElements: [],
-            domObserved: false,
+            isDomObserved: false,
             removalsStatistic: {},
             parsedRules: parseStylesheet(configuration.styleSheet),
+            mainCallback: () => {},
         };
+
+        // true if any one rule in styleSheet has `debug: global`
+        this.context.debug = this.context.parsedRules.some((ruleData) => {
+            return ruleData.debug === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE;
+        });
 
         this.applyRulesScheduler = new AsyncWrapper(this.context, this.applyRules, APPLY_RULES_DELAY);
         this.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
+
+        this.context.mainCallback = this.mainCallback;
 
         if (this.context.beforeStyleApplied && typeof this.context.beforeStyleApplied !== 'function') {
             throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`); // eslint-disable-line max-len
@@ -347,54 +419,37 @@ export class ExtendedCss {
      * Applies filtering rules
      */
     private applyRules(context: Context): void {
-        const elementsIndex: HTMLElement[] = [];
+        const newSelectedElements: HTMLElement[] = [];
         // some rules could make call - selector.querySelectorAll() temporarily to change node id attribute
         // this caused MutationObserver to call recursively
         // https://github.com/AdguardTeam/ExtendedCss/issues/81
-        this.stopObserve();
+        mainDisconnect(context, context.mainCallback);
         context.parsedRules.forEach((ruleData) => {
-            const nodes = applyRule(context, ruleData);
-            // Array.prototype.push.apply(elementsIndex, nodes);
-            elementsIndex.push(...nodes);
+            const nodes = applyRule(context, ruleData, this.applyRulesScheduler);
+            Array.prototype.push.apply(newSelectedElements, nodes);
         });
         // Now revert styles for elements which are no more affected
         let l = context.affectedElements.length;
         // do nothing if there is no elements to process
-        if (elementsIndex.length > 0) {
-            while (l--) {
-                const affectedEl = context.affectedElements[l];
-                if (elementsIndex.indexOf(affectedEl.node) === -1) {
-                    // Time to revert style
-                    revertStyle(affectedEl);
-                    context.affectedElements.splice(l, 1);
-                } else if (!affectedEl.removed) {
-                    // Add style protection observer
-                    // Protect "style" attribute from changes
-                    if (!affectedEl.protectionObserver?.isActive) {
-                        affectedEl.protectionObserver = protectStyleAttribute(affectedEl.node, affectedEl.rules);
-                    }
+        while (l) {
+            const affectedEl = context.affectedElements[l - 1];
+            if (!newSelectedElements.includes(affectedEl.node)) {
+                // Time to revert style
+                revertStyle(affectedEl);
+                context.affectedElements.splice(l - 1, 1);
+            } else if (!affectedEl.removed) {
+                // Add style protection observer
+                // Protect "style" attribute from changes
+                if (!affectedEl.protectionObserver?.isActive) {
+                    affectedEl.protectionObserver = protectStyleAttribute(affectedEl.node, affectedEl.rules);
                 }
             }
+            l -= 1;
         }
         // After styles are applied we can start observe again
-        this.observe();
-        // TODO:
-        // printTimingInfo();
-    }
+        mainObserve(context, context.mainCallback);
 
-    private observe(): void {
-        if (this.context.domObserved) {
-            return;
-        }
-        // handle dynamically added elements
-        this.context.domObserved = true;
-        observeDocument(this.context, this.mainCallback);
-    }
-
-    private stopObserve(): void {
-        if (!this.context.domObserved) { return; }
-        this.context.domObserved = false;
-        disconnectDocument(this.context, this.mainCallback);
+        printTimingInfo(context);
     }
 
     apply(): void {
@@ -413,7 +468,7 @@ export class ExtendedCss {
      * Disposes ExtendedCss and removes our styles from matched elements
      */
     dispose(): void {
-        this.stopObserve();
+        mainDisconnect(this.context, this.context.mainCallback);
         this.context.affectedElements.forEach((el) => {
             revertStyle(el);
         });
@@ -426,32 +481,27 @@ export class ExtendedCss {
 
     /**
      * Expose querySelectorAll for debugging and validating selectors
-     *
      * @param {string} selector selector text
+     * @param {boolean} [noTiming=true] if true -- do not print the timing to the console
      * @returns {Array<Node>|NodeList} a list of elements found
      * @throws Will throw an error if the argument is not a valid selector
      */
-    // TODO:
-    // * @param {boolean} noTiming if true -- do not print the timing to the console
-    // query(selector: string, noTiming: boolean): HTMLElement[] {
-    query(selector: string): HTMLElement[] {
+    query(selector: string, noTiming = true): HTMLElement[] {
         if (typeof selector !== 'string') {
-            throw new Error('Selector text is empty');
+            throw new Error('Selector should be defined as a string.');
         }
 
-        // TODO:
-        // const { now } = AsyncWrapper;
-        // const start = now();
+        const asyncWrapper = new AsyncWrapper(this.context);
+        const start = asyncWrapper.now();
 
         try {
             const extCssDoc = new ExtCssDocument();
             return extCssDoc.querySelectorAll(selector);
         } finally {
-            // TODO:
-            // const end = now();
-            // if (!noTiming) {
-            //     utils.logInfo(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
-            // }
+            const end = asyncWrapper.now();
+            if (!noTiming) {
+                utils.logInfo(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
+            }
         }
     }
 
@@ -460,5 +510,3 @@ export class ExtendedCss {
      * as there is such old test "Test using ExtendedCss.query for selectors validation"
      */
 }
-
-export default ExtendedCss;

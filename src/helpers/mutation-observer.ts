@@ -7,13 +7,13 @@ export class ExtMutationObserver {
 
     isActive: boolean;
 
+    // extra property for keeping 'style fix counts'
     styleProtectionCount: number;
 
     constructor(callback: ProtectionCallback) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.observer = new (utils.MutationObserver as any)(callback);
         this.isActive = false;
-        // extra property for keeping 'style fix counts'
         this.styleProtectionCount = 0;
     }
 

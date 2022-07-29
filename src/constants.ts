@@ -222,6 +222,7 @@ export const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
 export const REMOVE_PSEUDO_PROPERTY_KEY = REMOVE_PSEUDO_CLASS_MARKER;
 
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
+export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
 
 // may be used while applying rules with no styles
 // const DISPLAY_CSS_PROPERTY_KEY = 'display';

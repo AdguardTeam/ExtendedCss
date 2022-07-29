@@ -2,8 +2,16 @@
  * @jest-environment jsdom
  */
 
-import ExtendedCss from '../../src';
-// import utils from '../../src/utils';
+import { ExtendedCss } from '../../src';
+
+import { TimingStats } from '../../src/helpers/timing-stats';
+
+import utils from '../../src/utils';
+
+interface TestPropElement extends Element {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    _testProp: string | Object,
+}
 
 /**
  * Applies extended css stylesheet
@@ -16,6 +24,11 @@ const applyExtCss = (styleSheet: string): void => {
 
 interface TestStyleMap {
     [key: string]: string;
+}
+
+interface TestLoggedStats {
+    selector: string,
+    timings: TimingStats,
 }
 
 /**
@@ -64,8 +77,8 @@ describe('extended css library', () => {
                 </div>
             </div>
         `;
-        const cssText = '#case1 > div[-ext-has=".banner"] { display:none !important; }';
-        applyExtCss(cssText);
+        const styleSheet = '#case1 > div[-ext-has=".banner"] { display:none !important; }';
+        applyExtCss(styleSheet);
         expectElementStyle('case1-blocked', { display: 'none' });
     });
 
@@ -77,8 +90,8 @@ describe('extended css library', () => {
                 <div id="case2-not-blocked" class="banner">Leave it be</div>
             </div>
         `;
-        const cssText = '#case2 > div[-ext-contains="Block this"] { display: none!important }';
-        applyExtCss(cssText);
+        const styleSheet = '#case2 > div[-ext-contains="Block this"] { display: none!important }';
+        applyExtCss(styleSheet);
 
         expectElementStyle('case2-blocked1', { display: 'none' });
         expectElementStyle('case2-blocked2', { display: 'none' });
@@ -93,8 +106,8 @@ describe('extended css library', () => {
                 </div>
             </div>
         `;
-        const cssText = '#case3>div[-ext-has=".banner"] { visibility: hidden; }';
-        applyExtCss(cssText);
+        const styleSheet = '#case3>div[-ext-has=".banner"] { visibility: hidden; }';
+        applyExtCss(styleSheet);
         expectElementStyle('case3-modified', { display: 'block', visibility: 'hidden' });
     });
 
@@ -111,22 +124,22 @@ describe('extended css library', () => {
                 </div>
             </div>
         `;
-        const cssText = '#case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }';
-        applyExtCss(cssText);
+        const styleSheet = '#case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }';
+        applyExtCss(styleSheet);
         expectElementStyle('case4-blocked', { 'display': 'none' });
         expectElementStyle('case4-not-blocked', { 'display': '' });
     });
 
-    it('Reaction on DOM modification', () => {
+    it('Reaction on DOM modification', (done) => {
         document.body.innerHTML = `
-        <div id="container">
-            <div id="case5">
-                <div id="case5-blocked" class="banner">Block this</div>
+            <div id="container">
+                <div id="case5">
+                    <div id="case5-blocked" class="banner">Block this</div>
+                </div>
             </div>
-        </div>
         `;
-        const cssText = '#case5 > div[-ext-contains="Block this"] { display: none!important }';
-        applyExtCss(cssText);
+        const styleSheet = '#case5 > div[-ext-contains="Block this"] { display: none!important }';
+        applyExtCss(styleSheet);
         // style should be set by rule
         expectElementStyle('case5-blocked', { display: 'none' });
         const el = document.getElementById('case5-blocked');
@@ -137,12 +150,17 @@ describe('extended css library', () => {
         container?.appendChild(el);
 
         rAF(() => {
-            // style is not set as target element should be direct child of `#case5` by rule
-            expectElementStyle('case5-blocked', { display: '' });
+            try {
+                // style is not set as target element should be direct child of `#case5` by rule
+                expectElementStyle('case5-blocked', { display: '' });
+                done();
+            } catch (error) {
+                done(error);
+            }
         }, 200);
     });
 
-    it('Affected elements length - simple', () => {
+    it('Affected elements length - simple', (done) => {
         document.body.innerHTML = `
             <div id="case6">
                 <div id="case6-blocked"></div>
@@ -164,20 +182,30 @@ describe('extended css library', () => {
         toBeBlocked?.appendChild(banner);
 
         rAF(() => {
-            expectElementStyle('case6-blocked', { display: 'none' });
-            affectedLength = extendedCss._getAffectedElements().length;
-            expect(affectedLength).toBe(startLength + 1);
+            try {
+                expectElementStyle('case6-blocked', { display: 'none' });
+                affectedLength = extendedCss._getAffectedElements().length;
+                expect(affectedLength).toBe(startLength + 1);
+            } catch (error) {
+                done(error);
+            }
 
             toBeBlocked?.removeChild(banner);
+
             rAF(() => {
-                expectElementStyle('case6-blocked', { display: '' });
-                affectedLength = extendedCss._getAffectedElements().length;
-                expect(affectedLength).toBe(startLength);
+                try {
+                    expectElementStyle('case6-blocked', { display: '' });
+                    affectedLength = extendedCss._getAffectedElements().length;
+                    expect(affectedLength).toBe(startLength);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             }, 300);
         }, 300);
     });
 
-    it('Affected elements length - root element removal', () => {
+    it('Affected elements length - root element removal', (done) => {
         document.body.innerHTML = `
             <div id="case7">
                 <div id="case7-blocked">Block this</div>
@@ -197,9 +225,14 @@ describe('extended css library', () => {
         root?.parentNode?.removeChild(root);
 
         rAF(() => {
-            affectedLength = extendedCss._getAffectedElements().length;
-            // no element after root removing
-            expect(affectedLength).toBe(startLength - 1);
+            try {
+                affectedLength = extendedCss._getAffectedElements().length;
+                // no element after root removing
+                expect(affectedLength).toBe(startLength - 1);
+                done();
+            } catch (error) {
+                done(error);
+            }
         }, 200);
     });
 
@@ -235,7 +268,7 @@ describe('extended css library', () => {
         expectElementStyle('case9-not-blocked', { display: '', 'font-size': '16px' });
     });
 
-    it('attribute protection', () => {
+    it('attribute protection', (done) => {
         document.body.innerHTML = `
             <div id="case10">
                 <div id="case10-blocked">Block this</div>
@@ -255,14 +288,19 @@ describe('extended css library', () => {
             rAF(() => {
                 node.style.cssText = 'display: block!important; visibility: visible!important;';
                 rAF(() => {
-                    expectElementStyle('case10-blocked', { display: 'none' });
+                    try {
+                        expectElementStyle('case10-blocked', { display: 'none' });
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
                 }, 100);
             }, 100);
         }, 100);
 
     });
 
-    it('protection from recurring style fixes', () => {
+    it('protection from recurring style fixes', (done) => {
         document.body.innerHTML = '<div id="case11"></div>';
         const styleSheet = '#case11 { display: none; }';
         applyExtCss(styleSheet);
@@ -293,10 +331,15 @@ describe('extended css library', () => {
         );
 
         setTimeout(() => {
-            tamperObserver.disconnect();
-            expect(styleTamperCount < 60).toBeTruthy();
-            expect(styleTamperCount >= 50).toBeTruthy();
-            expect(testNode.hasAttribute('style')).toBeFalsy();
+            try {
+                tamperObserver.disconnect();
+                expect(styleTamperCount < 60).toBeTruthy();
+                expect(styleTamperCount >= 50).toBeTruthy();
+                expect(testNode.hasAttribute('style')).toBeFalsy();
+                done();
+            } catch (error) {
+                done(error);
+            }
         }, 1000);
     });
 
@@ -341,7 +384,7 @@ describe('extended css library', () => {
         expect(isValid('#banner:whatisthispseudo(div)')).toBeFalsy();
     });
 
-    it('style remove pseudo-property', () => {
+    it('style remove pseudo-property', (done) => {
         document.body.innerHTML = '<div id="case-remove-property"></div>';
         const styleSheet = '#case-remove-property { remove: true }';
         applyExtCss(styleSheet);
@@ -354,9 +397,14 @@ describe('extended css library', () => {
         rAF(() => {
             document.body.insertAdjacentHTML('beforeend', nodeHtml);
             rAF(() => {
-                targetElement = document.querySelector('#case-remove-property');
-                // element removed again
-                expect(targetElement).toBeNull();
+                try {
+                    targetElement = document.querySelector('#case-remove-property');
+                    // element removed again
+                    expect(targetElement).toBeNull();
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             }, 100);
         }, 100);
     });
@@ -378,7 +426,7 @@ describe('extended css library', () => {
         expectElementStyle('case15-inner', { color: 'red', background: 'white' });
     });
 
-    it('protect only rule style', () => {
+    it('protect only rule style', (done) => {
         document.body.innerHTML = `
             <div id="case16">
                 <div id="case16-inner" style="background: white;">
@@ -399,13 +447,18 @@ describe('extended css library', () => {
             node.style.cssText = 'background: green;';
             rAF(() => {
                 rAF(() => {
-                    expectElementStyle('case16-inner', { color: 'red', background: 'green' });
+                    try {
+                        expectElementStyle('case16-inner', { color: 'red', background: 'green' });
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
                 }, 100);
             }, 100);
         }, 100);
     });
 
-    it('protected elements are removed only 50 times', () => {
+    it('protected elements are removed only 50 times', (done) => {
         document.body.innerHTML = `
             <div id="protect-node-inside">
                 <div id="case-remove-property-repeatedly"></div>
@@ -437,14 +490,19 @@ describe('extended css library', () => {
         applyExtCss(styleSheet);
 
         setTimeout(() => {
-            observer.disconnect();
-            expect(elementAddCounter < 60).toBeTruthy();
-            expect(elementAddCounter >= 50).toBeTruthy();
-            expect(protectorNode.querySelector(`#${id}`)).toBeDefined();
+            try {
+                observer.disconnect();
+                expect(elementAddCounter < 60).toBeTruthy();
+                expect(elementAddCounter >= 50).toBeTruthy();
+                expect(protectorNode.querySelector(`#${id}`)).toBeDefined();
+                done();
+            } catch (error) {
+                done(error);
+            }
         }, 9000);
     });
 
-    it('strict style attribute matching', () => {
+    it('strict style attribute matching', (done) => {
         document.body.innerHTML = `
             <div id="case17">
                 <div id="case17-inner" class="test_item" style="padding-bottom: 16px;">
@@ -461,7 +519,12 @@ describe('extended css library', () => {
         expectElementStyle('case17-inner', { 'padding-bottom': '16px', display: 'none' });
 
         rAF(() => {
-            expectElementStyle('case17-inner', { 'padding-bottom': '16px', display: 'none' });
+            try {
+                expectElementStyle('case17-inner', { 'padding-bottom': '16px', display: 'none' });
+                done();
+            } catch (error) {
+                done(error);
+            }
         }, 200);
     });
 
@@ -507,135 +570,118 @@ describe('extended css library', () => {
         expect(targetEl).toBeNull();
     });
 
-    it('matches-property -- regexp value', () => {
+    it('matches-property - regexp value', () => {
         document.body.innerHTML = `
             <div id="case19">
-                <div id="case19-property-match"></div>
-                <div id="case19-property-no-match"></div>
-                <div id="case19-chain-property-match" class="match"></div>
-                <div id="case19-chain-property-no-match"></div>
-                <div id="case19-property-null"></div>
+                <div id="case19-property-match" style="display: block;"></div>
+                <div id="case19-property-no-match" style="display: block;"></div>
             </div>
         `;
 
-        const styleSheet = '#case19 > div:matches-property("id"="/property-match/") { display: none!important; }';
+        const testEl = document.querySelector('#case19-property-match') as TestPropElement;
+        const testPropName = '_testProp';
+        testEl[testPropName] = 'abc';
+
+        const styleSheet = '#case19 > div:matches-property(_testProp=/[\\w]{3}/) { display: none!important; }';
         applyExtCss(styleSheet);
 
-        rAF(() => {
-            expectElementStyle('case19-property-match', { display: 'none' });
-            expectElementStyle('case19-property-no-match', { display: 'block' });
-        }, 100);
+        expectElementStyle('case19-property-match', { display: 'none' });
+        expectElementStyle('case19-property-no-match', { display: 'block' });
     });
 
-    it('matches-property -- chain with regexp', () => {
+    it('matches-property - chain with regexp', () => {
         document.body.innerHTML = `
             <div id="case19">
-                <div id="case19-chain-property-match" class="match"></div>
-                <div id="case19-chain-property-no-match"></div>
+                <div id="case19-chain-property-match" style="display: block;"></div>
+                <div id="case19-chain-property-no-match" style="display: block;"></div>
             </div>
         `;
 
-        const styleSheet = '#case19 > div:matches-property("/class/.value"="match") { display: none!important; }';
+        const testEl = document.querySelector('#case19-chain-property-match') as TestPropElement;
+        const propFirst = '_testProp';
+        const propInner = { inner: null };
+        testEl[propFirst] = propInner;
+
+        const styleSheet = '#case19 > div:matches-property(/_test/.inner=null) { display: none!important; }';
         applyExtCss(styleSheet);
 
-        rAF(() => {
-            expectElementStyle('case19-chain-property-match', { display: 'none' });
-            expectElementStyle('case19-chain-property-no-match', { display: 'block' });
-        }, 100);
+        expectElementStyle('case19-chain-property-match', { display: 'none' });
+        expectElementStyle('case19-chain-property-no-match', { display: 'block' });
     });
 
-    it('matches-property -- access child prop of null prop', () => {
+    it('matches-property - access child prop of null prop - no match and no fail', () => {
         document.body.innerHTML = `
             <div id="case19">
-                <div id="case19-property-match"></div>
-                <div id="case19-property-no-match"></div>
-                <div id="case19-chain-property-match" class="match"></div>
-                <div id="case19-chain-property-no-match"></div>
-                <div id="case19-property-null"></div>
+                <div id="case19-property-null" style="display: block;"></div>
             </div>
         `;
-        const styleSheet = '#case19 > div[class]:matches-property("firstChild.assignedSlot.test") { display: none!important; }';  // eslint-disable-line max-len
+        const styleSheet = '#case19 > div:matches-property("firstChild.assignedSlot.test") { display: none!important; }';  // eslint-disable-line max-len
         applyExtCss(styleSheet);
 
-        rAF(() => {
-            expectElementStyle('case19-property-null', { display: 'none' });
-        }, 100);
+        expectElementStyle('case19-property-null', { display: 'block' });
     });
 
-    /**
-     * TODO: later
-     */
-    // QUnit.test('Test debugging', (assert) => {
-    //     assert.timeout(1000);
-    //     assert.expect(2);
-    //     const done = assert.async();
+    it('debugging - true', (done) => {
+        expect.assertions(3);
+        document.body.innerHTML = '<div id="case13"></div>';
+        const styleSheet = `
+            #case13:not(with-debug) { display:none; debug: true }
+            #case13:not(without-debug) { display:none; }
+        `;
+        const extendedCss = new ExtendedCss({ styleSheet });
 
-    //     const selectors = [
-    //         '#case13:not(with-debug) { display:none; debug:"" }',
-    //         '#case13:not(without-debug) { display:none; }',
-    //     ];
-    //     const extendedCss = new ExtendedCss({ styleSheet: selectors.join('\n') });
+        const utilsLogInfo = utils.logInfo;
+        utils.logInfo = function (...args) {
+            if (args.length === 3
+                    && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
+                const stats = args[2];
+                expect(stats).toBeDefined();
+                expect(stats.length).toEqual(1);
+                expect(stats[0].selector.includes('with-debug')).toBeTruthy();
 
-    //     // Spy on utils.logInfo
-    //     const utilsLogInfo = utils.logInfo;
-    //     utils.logInfo = function () {
-    //         if (arguments.length === 3
-    //                 && typeof arguments[0] === 'string' && arguments[0].indexOf('Timings for') !== -1) {
-    //             const stats = arguments[2];
-    //             assert.ok(stats);
-    //             assert.ok(stats[0].selectorText.indexOf('with-debug') !== -1);
+                // Cleanup
+                utils.logInfo = utilsLogInfo;
+                extendedCss.dispose();
+                done();
+            }
+            return utilsLogInfo.apply(this, args);
+        };
 
-    //             // Cleanup
-    //             utils.logInfo = utilsLogInfo;
-    //             extendedCss.dispose();
-    //             done();
-    //         }
-    //         return utilsLogInfo.apply(this, arguments);
-    //     };
+        extendedCss.apply();
+    });
 
-    //     extendedCss.apply();
-    // });
+    it('debugging - global', (done) => {
+        expect.assertions(5);
+        document.body.innerHTML = '<div id="case14"></div>';
+        const styleSheet = `
+            #case14:not(without-debug-before-global) { display:none; }
+            #case14:not(with-global-debug) { display:none; debug: global }
+            #case14:not(without-debug-after-global) { display:none; }
+        `;
+        const extendedCss = new ExtendedCss({ styleSheet });
 
-    /**
-     * TODO: later
-     */
-    // QUnit.test('Test global debugging', (assert) => {
-    //     assert.timeout(1000);
-    //     assert.expect(5);
-    //     const done = assert.async();
+        // Spy on utils.logInfo
+        const utilsLogInfo = utils.logInfo;
+        utils.logInfo = function (...args) {
+            if (args.length === 3
+                    && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
+                const stats: TestLoggedStats[] = args[2];
 
-    //     const selectors = [
-    //         '#case14:not(without-debug-before-global) { display:none; }',
-    //         '#case14:not(with-global-debug) { display:none; debug: global }',
-    //         '#case14:not(without-debug-after-global) { display:none; }',
-    //     ];
+                expect(stats).toBeDefined();
+                expect(stats.length).toEqual(3);
 
-    //     const extendedCss = new ExtendedCss({ styleSheet: selectors.join('\n') });
+                expect(stats.filter((item) => item.selector.includes('with-global-debug')).length).toEqual(1);
+                expect(stats.filter((item) => item.selector.includes('without-debug-before-global')).length).toEqual(1);
+                expect(stats.filter((item) => item.selector.includes('without-debug-after-global')).length).toEqual(1);
 
-    //     // Spy on utils.logInfo
-    //     const utilsLogInfo = utils.logInfo;
-    //     utils.logInfo = function () {
-    //         if (arguments.length === 3
-    //                 && typeof arguments[0] === 'string' && arguments[0].indexOf('Timings for') !== -1) {
-    //             const stats = arguments[2];
+                // Cleanup
+                utils.logInfo = utilsLogInfo;
+                extendedCss.dispose();
+                done();
+            }
+            return utilsLogInfo.apply(this, args);
+        };
 
-    //             assert.ok(stats);
-    //             assert.ok(stats.length, 3);
-
-    /* eslint-disable max-len */
-    //             assert.equal(stats.filter((item) => item.selectorText.indexOf('with-global-debug') !== -1).length, 1, JSON.stringify(stats));
-    //             assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-before-global') !== -1).length, 1, JSON.stringify(stats));
-    //             assert.equal(stats.filter((item) => item.selectorText.indexOf('without-debug-after-global') !== -1).length, 1, JSON.stringify(stats));
-    /* eslint-enable max-len */
-
-    //             // Cleanup
-    //             utils.logInfo = utilsLogInfo;
-    //             extendedCss.dispose();
-    //             done();
-    //         }
-    //         return utilsLogInfo.apply(this, arguments);
-    //     };
-
-    //     extendedCss.apply();
-    // });
+        extendedCss.apply();
+    });
 });

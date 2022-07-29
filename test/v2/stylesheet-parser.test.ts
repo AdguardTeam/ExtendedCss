@@ -9,8 +9,7 @@ import { STYLESHEET_ERROR_PREFIX } from '../../src/constants';
 interface TestRuleData {
     selector: string,
     style?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    remove?: boolean,
-    debug?: boolean,
+    debug?: string,
 }
 
 interface SingleRuleInput {
@@ -23,6 +22,7 @@ const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     expect(parsed.length).toEqual(1);
     expect(parsed[0].selector).toEqual(expected.selector);
     expect(parsed[0].style).toEqual(expected.style);
+    expect(parsed[0].debug).toEqual(expected.debug);
 };
 
 interface MultipleRuleInput {
@@ -35,6 +35,7 @@ const expectMultipleRulesParsed = (input: MultipleRuleInput): void => {
     parsedRules.forEach((parsed, i) => {
         expect(parsed.selector).toEqual(expected[i].selector);
         expect(parsed.style).toEqual(expected[i].style);
+        expect(parsed.debug).toEqual(expected[i].debug);
     });
 };
 
@@ -474,23 +475,79 @@ describe('stylesheet parser', () => {
 
     describe('debug pseudo-property', () => {
         const testsInputs = [
+            // 'true' value
             {
                 actual: '.banner { debug: true; }',
                 expected: {
                     selector: '.banner',
-                    debug: true,
+                    debug: 'true',
                 },
             },
             {
                 actual: '.banner { display: none; debug: true; }',
                 expected: {
                     selector: '.banner',
-                    debug: true,
+                    debug: 'true',
+                    style: { display: 'none' },
+                },
+            },
+            // 'global' value
+            {
+                actual: '.banner { debug: global; }',
+                expected: {
+                    selector: '.banner',
+                    debug: 'global',
+                },
+            },
+            {
+                actual: '.banner { display: none; debug: global; }',
+                expected: {
+                    selector: '.banner',
+                    debug: 'global',
+                    style: { display: 'none' },
+                },
+            },
+            // invalid value
+            {
+                actual: '.banner { display: none; debug: false; }',
+                expected: {
+                    selector: '.banner',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: '.banner { display: none; debug: "" }',
+                expected: {
+                    selector: '.banner',
                     style: { display: 'none' },
                 },
             },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
+    });
+
+    it('debug global for one rule in list', () => {
+        const actual = `
+            #case14:not(without-debug-before-global) { display:none; }
+            #case14:not(with-global-debug) { display:none; debug: global }
+            #case14:not(without-debug-after-global) { display:none; }
+        `;
+        const expected = [
+            {
+                selector: '#case14:not(without-debug-before-global)',
+                style: { display: 'none' },
+            },
+            {
+                selector: '#case14:not(with-global-debug)',
+                style: { display: 'none' },
+                debug: 'global',
+            },
+            {
+                selector: '#case14:not(without-debug-after-global)',
+                style: { display: 'none' },
+            },
+        ];
+        expectMultipleRulesParsed({ actual, expected });
     });
 
     describe('invalid stylesheets', () => {
@@ -554,7 +611,7 @@ describe('stylesheet parser', () => {
                 expected: {
                     selector: 'div[class]:contains(remove)',
                     style: { remove: 'true' },
-                    debug: true,
+                    debug: 'true',
                 },
             },
         ];
@@ -634,7 +691,15 @@ describe('stylesheet parser', () => {
                     expected: {
                         selector: 'div[attr]',
                         style: { top: '0 !important' },
-                        debug: true,
+                        debug: 'true',
+                    },
+                },
+                {
+                    actual: 'div[attr] { top: 0 !important } div[attr] { debug: global; }',
+                    expected: {
+                        selector: 'div[attr]',
+                        style: { top: '0 !important' },
+                        debug: 'global',
                     },
                 },
             ];

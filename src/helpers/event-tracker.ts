@@ -64,8 +64,4 @@ export class EventTracker {
             && !!sinceLastEventTime
             && sinceLastEventTime < LAST_EVENT_TIMEOUT_MS;
     }
-
-    getLastEvent(): Event | undefined {
-        return this.lastEvent;
-    }
 }

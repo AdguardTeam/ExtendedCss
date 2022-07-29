@@ -53,6 +53,16 @@ const utils = {
         ? console.error.bind(window.console)
         : console.error,
 
+    /**
+     * Safe console.info version
+     */
+    logInfo: (
+        typeof console !== 'undefined'
+        && console.info
+        && console.info.bind)
+        ? console.info.bind(window.console)
+        : console.info,
+
     isSafariBrowser: navigator.vendor === 'Apple Computer, Inc.',
 
     /**

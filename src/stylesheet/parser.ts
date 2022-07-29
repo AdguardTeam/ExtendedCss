@@ -3,10 +3,13 @@ import { normalize } from './normalizer';
 import { parse as parseSelector } from '../selector/parser';
 import { AnySelectorNodeInterface } from '../selector/nodes';
 
+import { TimingStats } from '../helpers/timing-stats';
+
 import utils from '../utils';
 import {
     BRACKETS,
     COLON,
+    DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     DEBUG_PSEUDO_PROPERTY_KEY,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REGEXP_DECLARATION_DIVIDER,
@@ -42,7 +45,8 @@ export interface ExtendedCssRuleData {
     selector: string,
     ast: AnySelectorNodeInterface,
     style?: CssStyleMap,
-    debug?: boolean,
+    debug?: string,
+    timingStats?: TimingStats,
 }
 
 interface SelectorPartData {
@@ -258,14 +262,27 @@ const parseNextStyle = (context: Context): Style[] => {
 };
 
 /**
- * Checks whether the property positively set in styles
+ * Checks whether the 'remove' property positively set in styles
+ * with only one positive value - 'true'
  * @param styles
- * @param pseudoProperty
  */
-const isSetInStyles = (styles: Style[], pseudoProperty: string): boolean => {
+const isRemoveSetInStyles = (styles: Style[]): boolean => {
     return styles.some((s) => {
-        return s.property === pseudoProperty && s.value === PSEUDO_PROPERTY_POSITIVE_VALUE;
+        return s.property === REMOVE_PSEUDO_PROPERTY_KEY
+            && s.value === PSEUDO_PROPERTY_POSITIVE_VALUE;
     });
+};
+
+/**
+ * Gets valid 'debug' property value set in styles
+ * where possible values are 'true' and 'global'
+ * @param styles
+ */
+const getDebugStyleValue = (styles: Style[]): string | undefined => {
+    const debugStyle = styles.find((s) => {
+        return s.property === DEBUG_PSEUDO_PROPERTY_KEY;
+    });
+    return debugStyle?.value;
 };
 
 /**
@@ -280,14 +297,20 @@ export const prepareRuleData = (
 ): ExtendedCssRuleData => {
     const ruleData: ExtendedCssRuleData = { selector, ast };
 
-    const shouldDebug = isSetInStyles(rawStyles, DEBUG_PSEUDO_PROPERTY_KEY);
-    const shouldRemove = isSetInStyles(rawStyles, REMOVE_PSEUDO_PROPERTY_KEY);
+    const debugValue = getDebugStyleValue(rawStyles);
+
+    const shouldRemove = isRemoveSetInStyles(rawStyles);
 
     let styles = rawStyles;
-    if (shouldDebug) {
-        // get rid of 'debug' from styles and set it to separate property
+    if (debugValue) {
+        // get rid of 'debug' from styles
         styles = rawStyles.filter((s) => s.property !== DEBUG_PSEUDO_PROPERTY_KEY);
-        ruleData[DEBUG_PSEUDO_PROPERTY_KEY] = shouldDebug;
+        // and set it as separate property only if its value is valid
+        // which is 'true' or 'global'
+        if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
+            || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
+            ruleData[DEBUG_PSEUDO_PROPERTY_KEY] = debugValue;
+        }
     }
     if (shouldRemove) {
         // no other styles are needed to apply if 'remove' is set

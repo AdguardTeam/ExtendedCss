@@ -6,6 +6,8 @@ const isSupported = (typeof window.requestAnimationFrame !== 'undefined');
 const rAF = isSupported ? requestAnimationFrame : window.setTimeout;
 const perf = isSupported ? performance : Date;
 
+const DEFAULT_THROTTLE_DELAY_MS = 150;
+
 type WrappedCallback = (timestamp: number) => void;
 
 type ApplyRulesCallback = (context: Context) => void;
@@ -13,7 +15,7 @@ type ApplyRulesCallback = (context: Context) => void;
 export class AsyncWrapper {
     private context: Context;
 
-    private callback: ApplyRulesCallback;
+    private callback?: ApplyRulesCallback;
 
     // number, the provided callback should be executed twice in this time frame
     private throttle: number;
@@ -26,10 +28,10 @@ export class AsyncWrapper {
 
     private lastRun?: number;
 
-    constructor(context: Context, callback: ApplyRulesCallback, throttle: number) {
+    constructor(context: Context, callback?: ApplyRulesCallback, throttle?: number) {
         this.context = context;
         this.callback = callback;
-        this.throttle = throttle;
+        this.throttle = throttle || DEFAULT_THROTTLE_DELAY_MS;
         this.wrappedCb = this.wrappedCallback.bind(this);
     }
 
@@ -37,7 +39,9 @@ export class AsyncWrapper {
         this.lastRun = utils.isNumber(timestamp) ? timestamp : perf.now();
         delete this.rAFid;
         delete this.timerId;
-        this.callback(this.context);
+        if (this.callback) {
+            this.callback(this.context);
+        }
     }
 
     /**
@@ -65,8 +69,7 @@ export class AsyncWrapper {
         this.rAFid = rAF(this.wrappedCb);
     }
 
-    // TODO: later
-    // now(): number {
-    //     return perf.now();
-    // };
+    now(): number {
+        return perf.now();
+    }
 }
