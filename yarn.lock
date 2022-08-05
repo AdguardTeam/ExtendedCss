@@ -2461,12 +2461,7 @@ camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.3.0.tgz#5685b95eb209ac9c0c177467778c9c84df58ba9a"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-caniuse-lite@^1.0.30001208, caniuse-lite@^1.0.30001286:
-  version "1.0.30001370"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001370.tgz"
-  integrity sha512-3PDmaP56wz/qz7G508xzjx8C+MC2qEm4SYhSEzC9IBROo+dGXFWRuaXkWti0A9tuI00g+toiriVqxtWMgl350g==
-
-caniuse-lite@^1.0.30001280, caniuse-lite@^1.0.30001282:
+caniuse-lite@^1.0.30001208, caniuse-lite@^1.0.30001280, caniuse-lite@^1.0.30001282, caniuse-lite@^1.0.30001286:
   version "1.0.30001370"
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001370.tgz"
   integrity sha512-3PDmaP56wz/qz7G508xzjx8C+MC2qEm4SYhSEzC9IBROo+dGXFWRuaXkWti0A9tuI00g+toiriVqxtWMgl350g==
@@ -5614,28 +5609,6 @@ pkg-dir@^5.0.0:
   dependencies:
     find-up "^5.0.0"
 
-playwright-core@1.19.2, playwright-core@>=1.2.0:
-  version "1.19.2"
-  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.19.2.tgz#90b9209554f174c649abf495952fcb4335437218"
-  integrity sha512-OsL3sJZIo1UxKNWSP7zW7sk3FyUGG06YRHxHeBw51eIOxTCQRx5t+hXd0cvXashN2CHnd3hIZTs2aKa/im4hZQ==
-  dependencies:
-    commander "8.3.0"
-    debug "4.3.3"
-    extract-zip "2.0.1"
-    https-proxy-agent "5.0.0"
-    jpeg-js "0.4.3"
-    mime "3.0.0"
-    pngjs "6.0.0"
-    progress "2.0.3"
-    proper-lockfile "4.1.2"
-    proxy-from-env "1.1.0"
-    rimraf "3.0.2"
-    socks-proxy-agent "6.1.1"
-    stack-utils "2.0.5"
-    ws "8.4.2"
-    yauzl "2.10.0"
-    yazl "2.5.1"
-
 playwright-core@1.21.1:
   version "1.21.1"
   resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.21.1.tgz#2757be7921576f047c0a622194dc45f4e1962e17"
@@ -5660,12 +5633,39 @@ playwright-core@1.21.1:
     yauzl "2.10.0"
     yazl "2.5.1"
 
-playwright@^1.19.2:
+playwright-core@1.24.2:
+  version "1.24.2"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.24.2.tgz#47bc5adf3dcfcc297a5a7a332449c9009987db26"
+  integrity sha512-zfAoDoPY/0sDLsgSgLZwWmSCevIg1ym7CppBwllguVBNiHeixZkc1AdMuYUPZC6AdEYc4CxWEyLMBTw2YcmRrA==
+
+playwright-core@>=1.2.0:
   version "1.19.2"
-  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.19.2.tgz#d9927ae8512482642356e50a286c5767dfb7a621"
-  integrity sha512-2JmGWr/Iw/Uu27bZULeHgjn8doNrRVxIYdhspMuMlfKNpzwAe/sfm7wH8uey6jiZxnPL4bC5V4ACQcF4dAGWnw==
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.19.2.tgz#90b9209554f174c649abf495952fcb4335437218"
+  integrity sha512-OsL3sJZIo1UxKNWSP7zW7sk3FyUGG06YRHxHeBw51eIOxTCQRx5t+hXd0cvXashN2CHnd3hIZTs2aKa/im4hZQ==
   dependencies:
-    playwright-core "1.19.2"
+    commander "8.3.0"
+    debug "4.3.3"
+    extract-zip "2.0.1"
+    https-proxy-agent "5.0.0"
+    jpeg-js "0.4.3"
+    mime "3.0.0"
+    pngjs "6.0.0"
+    progress "2.0.3"
+    proper-lockfile "4.1.2"
+    proxy-from-env "1.1.0"
+    rimraf "3.0.2"
+    socks-proxy-agent "6.1.1"
+    stack-utils "2.0.5"
+    ws "8.4.2"
+    yauzl "2.10.0"
+    yazl "2.5.1"
+
+playwright@^1.24.2:
+  version "1.24.2"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.24.2.tgz#51e60f128b386023e5ee83deca23453aaf73ba6d"
+  integrity sha512-iMWDLgaFRT+7dXsNeYwgl8nhLHsUrzFyaRVC+ftr++P1dVs70mPrFKBZrGp1fOKigHV9d1syC03IpPbqLKlPsg==
+  dependencies:
+    playwright-core "1.24.2"
 
 please-upgrade-node@^3.2.0:
   version "3.2.0"
