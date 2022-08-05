@@ -3,7 +3,7 @@
     "include": [
       "src/*.ts",
       "src/*/*.ts",
-      "test/v2/*.ts",
+      "test/*.ts",
       ".eslintrc.js",
       "rollup.config.ts",
     ]

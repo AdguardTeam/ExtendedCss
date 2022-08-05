@@ -2,11 +2,11 @@
  * @jest-environment jsdom
  */
 
-import { ExtendedCss } from '../../src';
+import { ExtendedCss } from '../src';
 
-import { TimingStats } from '../../src/helpers/timing-stats';
+import { TimingStats } from '../src/helpers/timing-stats';
 
-import utils from '../../src/utils';
+import utils from '../src/utils';
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -63,6 +63,8 @@ const rAF = (callback: Function, delay: number) => { // eslint-disable-line @typ
         setTimeout(callback, delay);
     }
 };
+
+jest.setTimeout(20 * 1000);
 
 describe('extended css library', () => {
     afterEach(() => {

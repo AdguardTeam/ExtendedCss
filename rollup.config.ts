@@ -9,47 +9,41 @@ import generateHtml from 'rollup-plugin-generate-html';
 
 import * as pkg from './package.json';
 
-const OUTPUT_PATH = 'dist-v2';
+const PROD_OUTPUT_PATH = 'dist';
 const SOURCE_PATH = './src/index.ts';
 const LIBRARY_NAME = 'ExtendedCSS';
 
 const SELECTOR_SOURCE_PATH = './src/selector/index.ts';
-const TEST_TEMP_DIR = 'test/build';
+const TEST_TEMP_DIR = 'test/dist';
 
 const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}
 ${pkg.homepage ? `* ${pkg.homepage}` : ''}
 * Copyright (c) ${new Date().getFullYear()} ${pkg.author}. Licensed ${pkg.license}
 */`;
 
-if (!fs.existsSync(OUTPUT_PATH)) {
-    fs.mkdirSync(OUTPUT_PATH);
-} else {
-    fs.emptyDirSync(OUTPUT_PATH);
-}
-
 const prodConfig = {
     input: SOURCE_PATH,
     output: [
         {
-            file: `${OUTPUT_PATH}/${pkg.name}.js`,
+            file: `${PROD_OUTPUT_PATH}/${pkg.name}.js`,
             format: 'iife',
             name: LIBRARY_NAME,
             banner,
         },
         {
-            file: `${OUTPUT_PATH}/${pkg.name}.esm.js`,
+            file: `${PROD_OUTPUT_PATH}/${pkg.name}.esm.js`,
             format: 'esm',
             name: LIBRARY_NAME,
             banner,
         },
         {
-            file: `${OUTPUT_PATH}/${pkg.name}.cjs.js`,
+            file: `${PROD_OUTPUT_PATH}/${pkg.name}.cjs.js`,
             format: 'cjs',
             name: LIBRARY_NAME,
             banner,
         },
         {
-            file: `${OUTPUT_PATH}/${pkg.name}.min.js`,
+            file: `${PROD_OUTPUT_PATH}/${pkg.name}.min.js`,
             format: 'iife',
             name: LIBRARY_NAME,
             banner,
@@ -68,15 +62,15 @@ const prodConfig = {
         }),
         typescript({
             transpiler: 'babel',
-            browserslist: ['last 1 version', 'ie >= 11'],
+            browserslist: ['last 1 version', '> 1%'],
         }),
         copy({
             targets: [
-                { src: 'types/extended-css.d.ts', dest: OUTPUT_PATH },
+                { src: 'types/extended-css.d.ts', dest: PROD_OUTPUT_PATH },
             ],
         }),
         del({
-            targets: [OUTPUT_PATH],
+            targets: [PROD_OUTPUT_PATH],
             hook: 'buildStart',
         }),
     ],
@@ -88,7 +82,7 @@ const testConfig = {
         {
             file: `${TEST_TEMP_DIR}/selector.js`,
             format: 'iife',
-            name: 'extCSS',
+            name: 'testExtCss',
             banner: '/* querySelectorAll testing */',
         },
     ],
@@ -99,11 +93,11 @@ const testConfig = {
         }),
         typescript({
             transpiler: 'babel',
-            browserslist: ['last 1 version', 'ie >= 11'],
+            browserslist: ['last 1 version', '> 1%'],
         }),
         generateHtml({
             filename: `${TEST_TEMP_DIR}/empty.html`,
-            template: 'test/v2/test-files/empty.html',
+            template: 'test/test-files/empty.html',
             selector: 'body',
             inline: true,
         }),
@@ -116,7 +110,7 @@ const testConfig = {
 
 let resultConfigs = [prodConfig];
 
-const isTest = process.env.TEST_SELECTOR === 'true';
+const isTest = process.env.TEST_SELECTOR_PLAYWRIGHT === 'true';
 if (isTest) {
     if (!fs.existsSync(TEST_TEMP_DIR)) {
         fs.mkdirSync(TEST_TEMP_DIR);
@@ -125,6 +119,12 @@ if (isTest) {
     }
 
     resultConfigs = [testConfig];
+} else {
+    if (!fs.existsSync(PROD_OUTPUT_PATH)) {
+        fs.mkdirSync(PROD_OUTPUT_PATH);
+    } else {
+        fs.emptyDirSync(PROD_OUTPUT_PATH);
+    }
 }
 
 export default resultConfigs;

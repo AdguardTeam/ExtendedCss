@@ -505,8 +505,9 @@ export class ExtendedCss {
         }
     }
 
-    /**
-     * TODO: consider adding a new ExtendedCss method for selectorText validation
-     * as there is such old test "Test using ExtendedCss.query for selectors validation"
-     */
+    // TODO: consider adding a new ExtendedCss method for selector validation
+    // as there is such old test "Test using ExtendedCss.query for selectors validation".
+    // ExtendedCss.query also used in compiler to validate selector:
+    // eslint-disable-next-line max-len
+    // https://bit.adguard.com/projects/ADGUARD-FILTERS/repos/compiler/browse/src/main/utils/extended-css-validator.js#41
 }

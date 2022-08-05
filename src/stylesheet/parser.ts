@@ -88,8 +88,6 @@ interface ParsedSelectorData {
  */
 const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     /**
-     * TODO: mention it in readme later
-     *
      * no error will be thrown on invalid selector as it will be validated later
      * so it's better to explicitly specify 'any' selector for :remove() pseudo-class by '*'
      * e.g. '.banner > *:remove()' instead of '.banner > :remove()'

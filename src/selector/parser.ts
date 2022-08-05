@@ -422,9 +422,6 @@ export const parse = (selector: string) => {
                                 && (nextToNextTokenValue === IS_PSEUDO_CLASS_MARKER
                                     || nextToNextTokenValue === NOT_PSEUDO_CLASS_MARKER)) {
                                 /**
-                                 * TODO: mention this limitation in readme
-                                 */
-                                /**
                                  * limit applying of wildcard :is() and :not() pseudo-class only to html children
                                  * as we check element parent for them and there is no parent for html
                                  * e.g. '*:is(.page, .main) > .banner'
@@ -504,9 +501,6 @@ export const parse = (selector: string) => {
                             } else if (nextTokenValue === IS_PSEUDO_CLASS_MARKER
                                 || nextTokenValue === NOT_PSEUDO_CLASS_MARKER) {
                                 /**
-                                 * TODO: mention this limitation in readme
-                                 */
-                                /**
                                  * parent element checking is used for extended pseudo-class :is() and :not().
                                  * as there is no parentNode for root element (html)
                                  * element selection should be limited to it's children.
@@ -525,10 +519,6 @@ export const parse = (selector: string) => {
                             bufferNode = getBufferNode(context);
                         }
 
-                        /**
-                         * TODO: MIGHT HELP WITH OPTIONAL CHAINING
-                         * BUT BREAKS PARSING
-                         */
                         if (!bufferNode) {
                             throw new Error('bufferNode has to be specified by now');
                         }
@@ -683,9 +673,6 @@ export const parse = (selector: string) => {
                             }
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
-                            /**
-                             * TODO: remake for earlier error throwing
-                             */
                             // save opening bracket for balancing
                             // e.g. 'div:not()'  // position is on `(`
                             context.extendedPseudoBracketsStack.push(tokenValue);
@@ -771,9 +758,6 @@ export const parse = (selector: string) => {
                             upToClosest(context, NodeType.Selector);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
-                            /**
-                             * TODO: remake for earlier error throwing
-                             */
                             // save opening bracket for balancing
                             // e.g. 'div:not()'  // position is on `)`
                             // context.extendedPseudoBracketsStack.push(tokenValue);

@@ -9,30 +9,22 @@
     "test": "test"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=14"
   },
   "scripts": {
-    "test": "node tasks/tests.js",
-    "test-v2": "yarn build-v2:test-selector && jest --testPathPattern=test/v2 --silent",
-    "watch": "",
-    "build": "node tasks/compile.js",
-    "build-v2": "rollup -c rollup.config.ts",
-    "build-v2:test-selector": "rollup -c rollup.config.ts --environment TEST_SELECTOR",
-    "browserstack": "node tasks/tests.js && node tasks/browserstack.js",
+    "build": "rollup -c rollup.config.ts",
+    "build:playwright-selector-test": "rollup -c rollup.config.ts --environment TEST_SELECTOR_PLAYWRIGHT",
+    "test": "yarn build:playwright-selector-test && jest --silent",
     "increment": "yarn version --patch --no-git-tag-version",
     "publish": "",
-    "lint": "eslint 'src/' 'test/v2/*'",
-    "lint-staged": "lint-staged"
+    "lint": "eslint 'src/' 'test/'",
+    "lint-staged": "lint-staged",
+    "prepare": "husky install"
   },
   "lint-staged": {
     "*.ts": [
       "eslint"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint-staged"
-    }
   },
   "author": "AdGuard",
   "license": "GPL-3.0",
@@ -45,37 +37,32 @@
   },
   "homepage": "https://github.com/AdguardTeam/ExtendedCss",
   "devDependencies": {
-    "@babel/core": "^7.7.5",
-    "@babel/plugin-transform-runtime": "^7.9.6",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
-    "@playwright/test": "^1.21.1",
-    "@rollup/plugin-babel": "^5.0.0",
-    "@rollup/plugin-commonjs": "^15.0.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@types/jest": "^27.4.0",
-    "@typescript-eslint/eslint-plugin": "^5.12.0",
-    "@typescript-eslint/parser": "^5.12.0",
-    "browserstack-runner": "^0.9.0",
-    "dotenv": "^8.2.0",
-    "eslint": "^8.3.0",
-    "eslint-config-airbnb-typescript": "^16.0.0",
-    "eslint-plugin-import": "^2.25.3",
-    "fs-extra": "^9.0.1",
-    "husky": "^4.2.5",
-    "jest": "^27.4.7",
-    "jest-playwright-preset": "^1.7.0",
-    "lint-staged": "^12.3.4",
-    "node-qunit-puppeteer": "^2.1.0",
+    "@babel/core": "^7.18.10",
+    "@babel/plugin-transform-runtime": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-typescript": "^7.18.6",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@types/jest": "^28.1.6",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "eslint": "^8.21.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "fs-extra": "^10.1.0",
+    "husky": "^8.0.0",
+    "jest": "^28.1.3",
+    "jest-environment-jsdom": "^28.1.3",
+    "lint-staged": "^13.0.3",
     "playwright": "^1.24.2",
-    "rollup": "^2.8.2",
-    "rollup-plugin-copy": "^3.3.0",
+    "rollup": "^2.77.2",
+    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-generate-html": "^0.2.0",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-ts": "^2.0.5",
-    "ts-jest": "^27.1.3",
-    "typescript": "^4.5.4"
+    "rollup-plugin-ts": "^3.0.2",
+    "typescript": "^4.7.4"
   },
   "dependencies": {}
 }

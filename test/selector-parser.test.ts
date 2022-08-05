@@ -1,6 +1,6 @@
-import { parse } from '../../src/selector/parser';
+import { parse } from '../src/selector/parser';
 
-import { NodeType } from '../../src/selector/nodes';
+import { NodeType } from '../src/selector/nodes';
 
 import {
     getRegularSelector,
@@ -248,6 +248,13 @@ describe('absolute extended selectors', () => {
                 actual: 'div:xpath(//h3[contains(text(),"Share it!")]/..)',
                 expected: [
                     { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, arg: '//h3[contains(text(),"Share it!")]/..' },
+                ],
+            },
+            {
+                actual: '*:xpath(//h3[contains(text(),"Share it!")]/..)',
+                expected: [
+                    { isRegular: true, value: '*' },
                     { isAbsolute: true, name, arg: '//h3[contains(text(),"Share it!")]/..' },
                 ],
             },

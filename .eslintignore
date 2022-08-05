@@ -1,6 +1,3 @@
 node_modules/*
-build/*
 dist/*
-lib/sizzle.patched.js
-test/qunit/*
-test/build/*
+test/dist/*

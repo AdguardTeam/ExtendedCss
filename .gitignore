@@ -2,5 +2,5 @@
 .vscode
 .env
 node_modules
-build
 yarn-error.log
+test/dist

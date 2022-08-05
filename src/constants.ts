@@ -32,10 +32,9 @@ export const COLON = ':';
 export const SINGLE_QUOTE = '\'';
 export const DOUBLE_QUOTE = '"';
 
-// do not consider hyphen as separated mark
+// do not consider hyphen `-` as separated mark
 // to avoid pseudo-class names splitting
-// e.g. matches-css or if-not
-// const HYPHEN = '-';
+// e.g. 'matches-css' or 'if-not'
 
 export const CARET = '^';
 export const DOLLAR_SIGN = '$';
@@ -223,13 +222,6 @@ export const REMOVE_PSEUDO_PROPERTY_KEY = REMOVE_PSEUDO_CLASS_MARKER;
 
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
-
-// may be used while applying rules with no styles
-// const DISPLAY_CSS_PROPERTY_KEY = 'display';
-// const DISPLAY_CSS_PROPERTY_VALUE = 'none !important';
-// export const DEFAULT_STYLE_MAP = {
-//     [DISPLAY_CSS_PROPERTY_KEY]: DISPLAY_CSS_PROPERTY_VALUE,
-// };
 
 export const REGEXP_LINES_DIVIDER = /\r?\n/;
 

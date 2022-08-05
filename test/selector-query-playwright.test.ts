@@ -6,7 +6,7 @@
 
 import { chromium, Browser, Page } from 'playwright';
 
-import server from '../server';
+import server from './helpers/server';
 
 let browser: Browser;
 let page: Page;
@@ -22,7 +22,7 @@ const setBodyInnerHtml = async (htmlContent: string): Promise<void> => {
 };
 
 declare global {
-    const extCSS: {
+    const testExtCss: {
         querySelectorAll(selector: string, document: Document): HTMLElement[];
     };
 }
@@ -33,7 +33,7 @@ declare global {
  */
 const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
     return page.evaluate((selector: string): string[] => {
-        return extCSS.querySelectorAll(selector, document).map((el: Element) => el.id);
+        return testExtCss.querySelectorAll(selector, document).map((el: Element) => el.id);
     }, extCssSelector);
 };
 
@@ -165,6 +165,12 @@ describe('playwright required tests', () => {
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
 
             extCssSelector = 'div:matches-css-after(content: /^Advertisement$/)';
+            expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+
+            extCssSelector = 'div:matches-css-after(content: advertisement)';
+            expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+
+            extCssSelector = 'div:matches-css-after(content: advert*)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
         });
     });

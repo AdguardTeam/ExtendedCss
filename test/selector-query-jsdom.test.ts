@@ -280,11 +280,9 @@ describe('extended pseudo-classes', () => {
             `;
             const actualSelectors = [
                 'span:contains(text)',
-                'span:contains(/\\sexample/)',
                 'span:contains( example)',
                 'span:contains(example (LINK))',
                 'span:contains((LINK))',
-                'span:contains(/(link)/i)',
             ];
             const expected = 'span#target';
             test.each(actualSelectors)('%s', (actual) => expectSuccessInput({ actual, expected }));
@@ -360,6 +358,14 @@ describe('extended pseudo-classes', () => {
             actual = 'div *[-ext-contains="text"]';
             expected = 'span#target';
             expectSuccessInput({ actual, expected });
+        });
+
+        describe('contains - invalid args', () => {
+            const toThrowInputs = [
+                { selector: 'p:contains()', error: 'Missing arg for :contains pseudo-class' },
+                { selector: 'p:contains(/ab.?+)', error: 'Unbalanced brackets for extended pseudo-class' },
+            ];
+            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
     });
 
@@ -481,6 +487,7 @@ describe('extended pseudo-classes', () => {
                     id="target"
                     class="match"
                     data-o="banner_240x400"
+                    quoted='double"quote'
                 ></div>
                 <div id="NOT_A_TARGET"</div>
             `;
@@ -496,10 +503,15 @@ describe('extended pseudo-classes', () => {
                 ':matches-attr(class)',
                 ':matches-attr("data-*")',
                 ':matches-attr("/data-/")',
+                ':matches-attr("*-o"="banner_*")',
+                ':matches-attr(data-*=*240*)',
+                'div:matches-attr("class"="ma*")',
                 'div:matches-attr("class"="match")',
                 'div:matches-attr("class"="/[\\w]{5}/")',
+                'div:matches-attr(class=/[\\w]{5}/)',
                 'div:matches-attr("data-*"="/^banner_.?/")',
                 'div:matches-attr(/data-/=/^banner_.?/)',
+                'div:matches-attr(quoted=/double\\"quote/)',
             ];
             const expected = 'div#target';
             test.each(actualSelectors)('%s', (actual) => expectSuccessInput({ actual, expected }));
@@ -669,6 +681,17 @@ describe('extended pseudo-classes', () => {
             expectSuccessInput({ actual, expected });
         });
 
+        it('matches-property - string chain and true value', () => {
+            const testEl = document.querySelector('#target') as TestPropElement;
+            const propNullAsStr = '_testProp';
+            const propInnerNullStr = { propInner: true };
+            testEl[propNullAsStr] = propInnerNullStr;
+
+            const actual = 'div:matches-property("_testProp.*Inner"=true)';
+            const expected = 'div#target';
+            expectSuccessInput({ actual, expected });
+        });
+
         it('matches-property - string chain and undefined value as string', () => {
             const testEl = document.querySelector('#target') as TestPropElement;
             const propUndefAsStr = '_testProp';
@@ -741,6 +764,7 @@ describe('extended pseudo-classes', () => {
                 { actual: ':xpath(//*[@class="baseInner"])', expected: 'div#inner' },
                 { actual: ':xpath(//*[@class="base"]/..)', expected: 'div#parent' },
                 { actual: ':xpath(//div[contains(text(),"test-xpath-content")])', expected: 'div#inner' },
+                { actual: '*:xpath(//div[contains(text(),"test-xpath-content")])', expected: 'div#inner' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
@@ -1075,6 +1099,8 @@ describe('extended pseudo-classes', () => {
                 '#test-is :is(1) > .test-inner',
                 '#parent > :is(id="123") > .test-inner',
                 '#parent > :is(..banner) > .test-inner',
+                // ':has(..banner)' is invalid but it is wrapped in :is() so no error
+                '#parent > :is(div:has(..banner))',
             ];
             test.each(invalidSelectors)('%s', (selector) => expectNoMatchInput({ selector }));
         });

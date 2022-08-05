@@ -1,6 +1,6 @@
-import { parse } from '../../../src/selector/parser';
+import { parse } from '../../src/selector/parser';
 
-import { NodeType } from '../../../src/selector/nodes';
+import { NodeType } from '../../src/selector/nodes';
 
 interface TestAnySelectorNodeInterface {
     type: string,

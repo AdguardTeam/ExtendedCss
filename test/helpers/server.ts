@@ -10,7 +10,7 @@ import path from 'path';
 
 const QUERY_START_MARKER = '?';
 const DEFAULT_PORT = 8585;
-const TEST_TEMP_DIR = 'build';
+const TEST_TEMP_DIR = '../dist';
 
 const initServer = (): Server => {
     return createServer(async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -68,6 +68,7 @@ const server = (() => {
 
     const start = async (port?: number | undefined): Promise<void> => {
         s = initServer();
+        console.log(' START ');
         await startServer(s, port);
     };
 
