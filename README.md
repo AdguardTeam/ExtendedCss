@@ -20,7 +20,12 @@ AdGuard's ExtendedCss library for applying CSS styles with extended selection pr
 * [How to build](#how-to-build)
 * [How to test](#how-to-test)
 * [Usage](#usage)
-* [Debugging extended selectors](#debugging-extended-selectors)
+  * [API description](#extended-css-api)
+    * [Constructor](#extended-css-constructor)
+    * [apply() and dispose()](#extended-css-apply-dispose)
+    * [query()](#extended-css-query)
+    * [validate()](#extended-css-validate)
+  * [Debugging extended selectors](#debugging-extended-selectors)
 * [Projects using ExtendedCss](#projects-using-extended-css)
 
 
@@ -532,7 +537,7 @@ Sometimes, you might need to check the performance of a given selector or a styl
 .banner { display: none; debug: global; }
 ```
 
-> Global debugging mode also can be enabled by positive `debug` property in `ExtCssConfiguration`:
+> Global debugging mode also can be enabled by positive `debug` property in [`ExtCssConfiguration`](#ext-css-configuration-interface):
 ```js
 const extendedCss = new ExtendedCss({
   styleSheet, // required, rules as string
@@ -620,7 +625,7 @@ div:matches-css-before(content: /block me/)
 ```
 
 
-### How to build
+## How to build
 
 Install dependencies
 ```
@@ -632,7 +637,7 @@ And just run
 yarn build
 ```
 
-### How to test
+## How to test
 
 Install dependencies
 ```
@@ -653,7 +658,7 @@ yarn test --testNamePattern=check valid regular selectors
 yarn test --testPathPattern=stylesheet-parser --testNamePattern=one rule
 ```
 
-### Usage
+## Usage
 
 You can import, require or copy IIFE module with ExtendedCss into your code, e.g.
 ```
@@ -665,9 +670,55 @@ const ExtendedCss = require('extended-css');
 ```
 IIFE module can be found by the following path `./dist/extended-css.js`
 
-After that you can use ExtendedCss as you wish:
+After that you can use ExtendedCss as you wish.
 
-```javascript
+### <a id="extended-css-api"></a> API description
+
+#### <a id="extended-css-constructor"></a> Constructor
+
+```
+/**
+ * Creates an instance of ExtendedCss
+ *
+ * @param configuration — required
+ */
+constructor(configuration: ExtCssConfiguration)
+```
+
+<a id="ext-css-configuration-interface"></a>
+where
+```ts
+interface ExtCssConfiguration {
+  // css stylesheet
+  styleSheet: string;
+
+  // the callback that handles affected elements
+  beforeStyleApplied?: BeforeStyleAppliedCallback;
+
+  // flag for applied selectors logging; equals to `debug: global` in `styleSheet`
+  debug?: boolean;
+}
+```
+
+```ts
+/**
+ * Needed for getting affected node elements and handle style properties before they are applied to them if it is necessary.
+ *
+ * Used by AdGuard Browser extension to display rules in Filtering log and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
+ */
+type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
+
+interface IAffectedElement {
+  rules: { style: { content: string }}[]
+  node: HTMLElement;
+}
+```
+
+<a id="extended-css-apply-dispose"></a>
+
+After instance of ExtendedCss is created, it can be applied on page by `apply()` method. Its applying also can be stopped and styles will be restored by `dispose()` method.
+
+```js
 (function() {
   let styleSheet = 'div.wrapper > div:has(.banner) { display:none!important; }\n';
   styleSheet += 'div.wrapper > div:contains(ads) { background:none!important; }';
@@ -676,23 +727,56 @@ After that you can use ExtendedCss as you wish:
   // apply styleSheet
   extendedCss.apply();
 
-  // stop applying this styleSheet
+  // stop applying of this styleSheet
   setTimeout(function() {
     extendedCss.dispose();
   }, 10 * 1000);
 })();
 ```
 
+#### <a id="extended-css-query"></a> Public method `query()`
+```ts
+/**
+ * Returns a list of the document's elements that match the specified selector
+ *
+ * @param {string} selector — selector text
+ * @param {boolean} [noTiming=true] — optional, if true -- do not print the timing to the console
+ *
+ * @returns a list of elements found
+ * @throws an error if the argument is not a valid selector
+ */
+public static query(selector: string, noTiming = true): HTMLElement[]
+```
+
+#### <a id="extended-css-validate"></a> Public method `validate()`
+
+```ts
+/**
+ * Validates selector
+ * @param selector — selector text
+ */
+public static validate(selector: string): ValidationResult
+```
+
+where
+```ts
+type ValidationResult = {
+    // true for valid selector, false for invalid one
+    ok: boolean,
+    // specified for invalid selector
+    error: string | null,
+};
+```
+
 ### Debugging extended selectors
 
-To load ExtendedCss to a current page, copy and execute the following code in a browser console:
+ExtendedCss can be executed on any page without using any AdGuard product. In order to do that you should copy and execute the following code in a browser console:
 ```
 !function(e,t,d){C=e.createElement(t),C.src=d,C.onload=function(){alert("ExtendedCss loaded successfully")},s=e.getElementsByTagName(t)[0],s?s.parentNode.insertBefore(C,s):(h=e.getElementsByTagName("head")[0],h.appendChild(C))}(document,"script","https://AdguardTeam.github.io/ExtendedCss/extended-css.min.js");
 ```
 
-You can now use the `ExtendedCss` constructor in the global scope, and its method `ExtendedCss.query()` as `Document.querySelectorAll()`.
-<!-- TODO: check ExtendedCss.query later -->
-```javascript
+Now you can now use the `ExtendedCss` from global scope, and run its method [`query()`](#extended-css-query) as `Document.querySelectorAll()`.
+```js
 const selector = 'div.block:has=(.header:matches-css-after(content: Ads))';
 
 // array of HTMLElement matched the `selector` will be returned
@@ -700,7 +784,7 @@ ExtendedCss.query(selector);
 ```
 
 
-### <a id="projects-using-extended-css"></a> Projects using ExtendedCss
+## <a id="projects-using-extended-css"></a> Projects using ExtendedCss
 
 * [CoreLibs](https://github.com/AdguardTeam/CoreLibs) — `Content Script` should be updated
 * [TSUrlFilter](https://github.com/AdguardTeam/tsurlfilter)

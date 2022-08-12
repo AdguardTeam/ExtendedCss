@@ -75,7 +75,7 @@ export class AsyncWrapper {
         this.rAFid = rAF(this.wrappedCb);
     }
 
-    now(): number {
+    public static now(): number {
         return perf.now();
     }
 }

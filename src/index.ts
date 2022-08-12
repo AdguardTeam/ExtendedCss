@@ -28,6 +28,11 @@ const APPLY_RULES_DELAY = 150;
 
 const isEventListenerSupported = typeof window.addEventListener !== 'undefined';
 
+type ValidationResult = {
+    ok: boolean,
+    error: string | null,
+};
+
 export type MainCallback = () => void;
 
 const observeDocument = (context: Context, callback: MainCallback): void => {
@@ -267,7 +272,7 @@ const revertStyle = (affElement: AffectedElement): void => {
  * @param ruleData rule to apply
  * @returns List of elements affected by this rule
  */
-const applyRule = (context: Context, ruleData: ExtendedCssRuleData, asyncWrapper: AsyncWrapper): HTMLElement[] => {
+const applyRule = (context: Context, ruleData: ExtendedCssRuleData): HTMLElement[] => {
     // debugging mode can be enabled in two ways:
     // 1. for separate rules - by `{ debug: true; }`
     // 2. for all rules simultaneously by:
@@ -276,7 +281,7 @@ const applyRule = (context: Context, ruleData: ExtendedCssRuleData, asyncWrapper
     const isDebuggingMode = !!ruleData.debug || context.debug;
     let startTime;
     if (isDebuggingMode) {
-        startTime = asyncWrapper.now();
+        startTime = AsyncWrapper.now();
     }
 
     const { ast } = ruleData;
@@ -303,7 +308,7 @@ const applyRule = (context: Context, ruleData: ExtendedCssRuleData, asyncWrapper
     });
 
     if (isDebuggingMode && startTime) {
-        const elapsed = asyncWrapper.now() - startTime;
+        const elapsed = AsyncWrapper.now() - startTime;
         if (!ruleData.timingStats) {
             ruleData.timingStats = new TimingStats();
         }
@@ -425,7 +430,7 @@ export class ExtendedCss {
         // https://github.com/AdguardTeam/ExtendedCss/issues/81
         mainDisconnect(context, context.mainCallback);
         context.parsedRules.forEach((ruleData) => {
-            const nodes = applyRule(context, ruleData, this.applyRulesScheduler);
+            const nodes = applyRule(context, ruleData);
             Array.prototype.push.apply(newSelectedElements, nodes);
         });
         // Now revert styles for elements which are no more affected
@@ -452,6 +457,9 @@ export class ExtendedCss {
         printTimingInfo(context);
     }
 
+    /**
+     * Applies stylesheet rules on page
+     */
     apply(): void {
         this.applyRules(this.context);
 
@@ -474,40 +482,51 @@ export class ExtendedCss {
         });
     }
 
-    /** Exposed for testing purposes only */
+    /**
+     * Exposed for testing purposes only
+     */
     _getAffectedElements(): AffectedElement[] {
         return this.context.affectedElements;
     }
 
     /**
-     * Expose querySelectorAll for debugging and validating selectors
+     * Returns a list of the document's elements that match the specified selector.
+     * Uses ExtCssDocument.querySelectorAll()
      * @param {string} selector selector text
      * @param {boolean} [noTiming=true] if true -- do not print the timing to the console
-     * @returns {Array<Node>|NodeList} a list of elements found
-     * @throws Will throw an error if the argument is not a valid selector
+     * @returns a list of elements found
+     * @throws an error if the argument is not a valid selector
      */
-    query(selector: string, noTiming = true): HTMLElement[] {
+    public static query(selector: string, noTiming = true): HTMLElement[] {
         if (typeof selector !== 'string') {
             throw new Error('Selector should be defined as a string.');
         }
 
-        const asyncWrapper = new AsyncWrapper(this.context);
-        const start = asyncWrapper.now();
+        const start = AsyncWrapper.now();
 
         try {
             const extCssDoc = new ExtCssDocument();
             return extCssDoc.querySelectorAll(selector);
         } finally {
-            const end = asyncWrapper.now();
+            const end = AsyncWrapper.now();
             if (!noTiming) {
                 utils.logInfo(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
             }
         }
     }
 
-    // TODO: consider adding a new ExtendedCss method for selector validation
-    // as there is such old test "Test using ExtendedCss.query for selectors validation".
-    // ExtendedCss.query also used in compiler to validate selector:
-    // eslint-disable-next-line max-len
-    // https://bit.adguard.com/projects/ADGUARD-FILTERS/repos/compiler/browse/src/main/utils/extended-css-validator.js#41
+    /**
+     * Validates selector
+     * @param {string} selector selector text
+     * @returns `{ ok: boolean, error: string | null }`
+     */
+    public static validate(selector: string): ValidationResult {
+        try {
+            ExtendedCss.query(selector);
+            return { ok: true, error: null };
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            const error = `Error: selector "${selector}" is invalid — ${e.message})`;
+            return { ok: false, error };
+        }
+    }
 }

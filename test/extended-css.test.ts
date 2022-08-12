@@ -352,38 +352,18 @@ describe('extended css library', () => {
             </div>
         `;
 
-        /**
-         * earlier it was possible to do `ExtendedCss.query(selector)`
-         * but now ExtendedCss is class so we need to create an instance of it
-         */
-        const styleSheet = '';
-        const extendedCss = new ExtendedCss({ styleSheet });
         const selector = '#case12>div:contains(Block me)';
-        const elements: HTMLElement[] = extendedCss.query(selector);
+        const elements: HTMLElement[] = ExtendedCss.query(selector);
 
         expect(elements).toBeDefined();
         expect(elements.length).toBe(1);
     });
 
-    it('using ExtendedCss.query for selectors validation', () => {
-        /**
-         * TODO: consider to add method to ExtendedCss for selector validation
-         */
-        const isValid = (selectorText: string): boolean => {
-            const styleSheet = '';
-            const extendedCss = new ExtendedCss({ styleSheet });
-            try {
-                extendedCss.query(selectorText);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        };
-
-        expect(isValid('div')).toBeTruthy();
-        expect(isValid('#banner')).toBeTruthy();
-        expect(isValid('#banner:has(div) > #banner:contains(test)')).toBeTruthy();
-        expect(isValid('#banner:whatisthispseudo(div)')).toBeFalsy();
+    it('test ExtendedCss.validate', () => {
+        expect(ExtendedCss.validate('div').ok).toBeTruthy();
+        expect(ExtendedCss.validate('#banner').ok).toBeTruthy();
+        expect(ExtendedCss.validate('#banner:has(div) > #banner:contains(test)').ok).toBeTruthy();
+        expect(ExtendedCss.validate('#banner:whatisthispseudo(div)').ok).toBeFalsy();
     });
 
     it('style remove pseudo-property', (done) => {
