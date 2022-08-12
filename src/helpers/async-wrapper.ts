@@ -10,8 +10,14 @@ const DEFAULT_THROTTLE_DELAY_MS = 150;
 
 type WrappedCallback = (timestamp: number) => void;
 
+/**
+ * Method for filtering rules applying
+ */
 type ApplyRulesCallback = (context: Context) => void;
 
+/**
+ * A helper class to throttle function calls with setTimeout and requestAnimationFrame
+ */
 export class AsyncWrapper {
     private context: Context;
 

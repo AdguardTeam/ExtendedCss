@@ -2,6 +2,9 @@ import utils from '../utils';
 
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
+/**
+ * A helper class for MutationObserver with extra property `styleProtectionCount`
+ */
 export class ExtMutationObserver {
     private observer: MutationObserver;
 

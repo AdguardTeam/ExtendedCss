@@ -134,6 +134,10 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     return { selector, stylesOfSelector };
 };
 
+/**
+ * Parses cropped selector part found before `{` previously
+ * @param context
+ */
 const parseSelectorPart = (context: Context): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
 
@@ -147,6 +151,7 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
 
     if (context.nextIndex === -1) {
         if (selector === removeSelectorData.selector) {
+            // rule should have style or pseudo-class :remove()
             throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`); // eslint-disable-line max-len
         }
         // stop parsing as there is no style declaration and selector parsed fine
@@ -160,6 +165,8 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
     try {
         selector = removeSelectorData.selector;
         stylesOfSelector = removeSelectorData.stylesOfSelector;
+        // validate found selector by parsing it to ast
+        // so if it is invalid error will be thrown
         ast = parseSelector(selector);
         success = true;
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -167,7 +174,8 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
     }
 
     if (context.nextIndex > 0) {
-        // slice selector off and parse rest of stylesheet later
+        // slice found valid selector part off
+        // and parse rest of stylesheet later
         context.cssToParse = context.cssToParse.slice(context.nextIndex);
     }
 
@@ -175,6 +183,7 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
 };
 
 /**
+ * Recursively parses style declaration string into `Style`s
  * @return a number index of the next `}` in `this.cssToParse`.
  */
 const parseUntilClosingBracket = (context: Context, styles: Style[]): number => {
@@ -240,6 +249,10 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
     return parseUntilClosingBracket(context, styles); // Should be a subject of tail-call optimization.
 };
 
+/**
+ * Parses next style declaration part in stylesheet
+ * @param context
+ */
 const parseNextStyle = (context: Context): Style[] => {
     const styles: Style[] = [];
 
@@ -366,7 +379,9 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
         nextIndex: 0,
         // init value of cssToParse
         cssToParse: stylesheet,
+        // buffer for collecting selector part
         selectorBuffer: '',
+        // accumulator for rules
         rawRuleData: { selector: '' },
     };
 
@@ -377,7 +392,10 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
     // context.cssToParse is going to be cropped while its parsing
     while (context.cssToParse) {
         if (context.isSelector) {
+            // find index of first opening curly bracket
+            // which may mean start of style part and end of selector one
             context.nextIndex = context.cssToParse.indexOf(BRACKETS.CURLY.LEFT);
+            // rule should not start with style, selector required
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
                 throw new Error(`Selector should be defined before style declaration in stylesheet: '${context.cssToParse}'`); // eslint-disable-line max-len
             }
@@ -393,7 +411,7 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
 
             selectorData = parseSelectorPart(context);
             if (selectorData.success) {
-                // selector successfully parser
+                // selector successfully parsed
                 context.rawRuleData.selector = selectorData.selector.trim();
                 context.rawRuleData.ast = selectorData.ast;
                 context.rawRuleData.styles = selectorData.stylesOfSelector;
@@ -404,22 +422,23 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
                     // clean up ruleContext
                     restoreRuleAcc(context);
                 } else {
-                    // skip the opening curly bracket at the start
+                    // skip the opening curly bracket at the start of style declaration part
                     context.nextIndex = 1;
                     context.selectorBuffer = '';
                 }
             } else {
-                // continue selector parsing
-                // but save the found bracket
+                // if selector was not successfully parsed parseSelectorPart(), continue stylesheet parsing:
+                // save the found bracket to buffer and proceed to next loop iteration
                 context.selectorBuffer += BRACKETS.CURLY.LEFT;
-                // delete it from cssToParse
+                // delete `{` from cssToParse
                 context.cssToParse = context.cssToParse.slice(1);
             }
         } else {
-            // style should be parsed
+            // style declaration should be parsed
             const parsedStyles = parseNextStyle(context);
 
             // styles can be parsed from selector part if it has :remove() pseudo-class
+            // e.g. '.banner:remove() { debug: true; }'
             context.rawRuleData.styles?.push(...parsedStyles);
 
             // save rule data to results

@@ -1,3 +1,6 @@
+/**
+ * A helper class for applied rule stats
+ */
 export class TimingStats {
     private array: number[];
 
