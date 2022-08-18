@@ -51,7 +51,14 @@ const getByRegularSelector = (
     const selectorText = specificity
         ? `${specificity}${regularSelectorNode.value}`
         : regularSelectorNode.value;
-    return Array.from(root.querySelectorAll(selectorText));
+
+    let selectedElements: HTMLElement[] = [];
+    try {
+        selectedElements = Array.from(root.querySelectorAll(selectorText));
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        throw new Error(`Error: unable to select by '${selectorText}' — ${e.message}`);
+    }
+    return selectedElements;
 };
 
 /**
@@ -132,6 +139,7 @@ const hasRelativesBySelectorList = (
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
+                utils.logError(e);
                 // fail for invalid selector
                 throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`);
             }
@@ -185,6 +193,7 @@ const isAnyElementBySelectorList = (
             } catch (e) {
                 if (errorOnInvalidSelector) {
                     // fail on invalid selectors for :not()
+                    utils.logError(e);
                     throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
                 } else {
                     // do not fail on invalid selectors for :is()
@@ -406,7 +415,7 @@ export const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = documen
         selectedElements.push(...getElementsForSelectorNode(selectorNode, doc));
     });
     // selectedElements should be flattened as it is array of arrays with elements
-    const uniqueElements = [...new Set(selectedElements.flat(1))];
+    const uniqueElements = [...new Set(utils.flatten(selectedElements))];
     return uniqueElements;
 };
 

@@ -27,6 +27,7 @@ AdGuard's ExtendedCss library for applying CSS styles with extended selection pr
     * [validate()](#extended-css-validate)
   * [Debugging extended selectors](#debugging-extended-selectors)
 * [Projects using ExtendedCss](#projects-using-extended-css)
+* [Browser compatibility](#browser-compatibility)
 
 
 ## Extended capabilities
@@ -792,3 +793,14 @@ ExtendedCss.query(selector);
 * [AdguardBrowserExtension](https://github.com/AdguardTeam/AdguardBrowserExtension) — `TSUrlFilter` should be updated
 * [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari) — `adguard-resources` should be updated
 * [AdguardForiOS](https://github.com/AdguardTeam/AdguardForiOS)  — `TSUrlFilter` should be updated in `advanced-adblocker-web-extension`
+
+
+### <a id="browser-compatibility"></a> Browser compatibility
+
+| Browser               | Version   |
+|-----------------------|:---------:|
+| Chrome                | ✅ 55     |
+| Firefox               | ✅ 52     |
+| Edge                  | ✅ 80     |
+| Safari                | ✅ 10     |
+| Internet Explorer     | ❌        |

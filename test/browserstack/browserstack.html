@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Extended CSS tests in Browserstack</title>
+  <link rel="stylesheet" href="qunit.css">
+</head>
+
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+
+  <style id="extendedCss" type="text/extended-css">
+    #case1>div[-ext-has=".banner"] { display:none !important; }
+    #case3>div[-ext-has=".banner"] { visibility: hidden; }
+    #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }
+    #case5>div[-ext-contains="Block this"] { display: none!important }
+    #case11 { display: none; }
+  </style>
+
+  <style type="text/css">
+    body>.container {
+      display: none!important;
+    }
+  </style>
+
+  <div id="container" class="container">
+    <div id="case1">
+      <div id="case1-blocked">
+        <div class="banner"></div>
+      </div>
+    </div>
+    <div id="case3">
+      <div id="case3-modified" style="display: block;">
+        <div class="banner"></div>
+      </div>
+    </div>
+    <div id="case4">
+      <div id="case4-root">
+        <div id="case4-blocked">
+          <div class="banner">Banner</div>
+        </div>
+        <div id="case4-not-blocked">
+          <div class="banner">Another text</div>
+        </div>
+      </div>
+    </div>
+    <div id="case5">
+      <div id="case5-blocked" class="banner">Block this</div>
+    </div>
+    <div id="case11"></div>
+
+    <script src="qunit.js"></script>
+    <!--    should export extended css from dist    -->
+    <script src="extended-css.js"></script>
+    <script src="browserstack.test.js"></script>
+</body>
+
+</html>

@@ -65,8 +65,8 @@ describe('playwright required tests', () => {
             // browser = await chromium.launch({ headless: false });
         });
         afterAll(async () => {
-            await browser.close();
-            await server.stop();
+            await browser?.close();
+            await server?.stop();
         });
 
         beforeEach(async () => {
@@ -74,7 +74,7 @@ describe('playwright required tests', () => {
             await page.goto('http://localhost:8585/empty.html');
         });
         afterEach(async () => {
-            await page.close();
+            await page?.close();
         });
 
         it('matches-css - simple', async () => {

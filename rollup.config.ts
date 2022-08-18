@@ -15,11 +15,23 @@ const LIBRARY_NAME = 'ExtendedCSS';
 
 const SELECTOR_SOURCE_PATH = './src/selector/query.ts';
 const TEST_TEMP_DIR = 'test/dist';
+const TEST_BROWSERSTACK_DIR = 'test/browserstack';
 
 const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}
 ${pkg.homepage ? `* ${pkg.homepage}` : ''}
 * Copyright (c) ${new Date().getFullYear()} ${pkg.author}. Licensed ${pkg.license}
 */`;
+
+const commonPlugins = [
+    resolve(),
+    commonjs({
+        include: 'node_modules/**',
+    }),
+    typescript({
+        transpiler: 'babel',
+        browserslist: ['last 1 version', '> 1%'],
+    }),
+];
 
 const prodConfig = {
     input: SOURCE_PATH,
@@ -56,14 +68,7 @@ const prodConfig = {
         },
     ],
     plugins: [
-        resolve(),
-        commonjs({
-            include: 'node_modules/**',
-        }),
-        typescript({
-            transpiler: 'babel',
-            browserslist: ['last 1 version', '> 1%'],
-        }),
+        ...commonPlugins,
         copy({
             targets: [
                 { src: 'types/extended-css.d.ts', dest: PROD_OUTPUT_PATH },
@@ -87,14 +92,7 @@ const testConfig = {
         },
     ],
     plugins: [
-        resolve(),
-        commonjs({
-            include: 'node_modules/**',
-        }),
-        typescript({
-            transpiler: 'babel',
-            browserslist: ['last 1 version', '> 1%'],
-        }),
+        ...commonPlugins,
         generateHtml({
             filename: `${TEST_TEMP_DIR}/empty.html`,
             template: 'test/test-files/empty.html',
@@ -108,23 +106,74 @@ const testConfig = {
     ],
 };
 
+// needed for following browserstackConfig
+const singleExtCssJsConfig = {
+    input: SOURCE_PATH,
+    output: [
+        {
+            file: `${TEST_TEMP_DIR}/${pkg.name}.js`,
+            format: 'iife',
+            name: 'BrowserstackTest',
+            banner,
+        },
+    ],
+    plugins: commonPlugins,
+};
+
+const browserstackTestConfig = {
+    input: `${TEST_BROWSERSTACK_DIR}/browserstack.test.ts`,
+    output: [
+        {
+            file: `${TEST_TEMP_DIR}/browserstack.test.js`,
+            format: 'iife',
+            name: 'BrowserstackTest',
+            banner: '/* browserstack qunit testing */',
+        },
+    ],
+    plugins: [
+        ...commonPlugins,
+        copy({
+            verbose: true,
+            targets: [
+                {
+                    src: [
+                        `${TEST_BROWSERSTACK_DIR}/browserstack.html`,
+                        'node_modules/qunit/qunit/**',
+                    ],
+                    dest: TEST_TEMP_DIR,
+                },
+            ],
+        }),
+    ],
+};
+
+/**
+ * Guarantees directory existence
+ * @param {string} dirPath
+ */
+const assureDir = (dirPath) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath);
+    } else {
+        fs.emptyDirSync(dirPath);
+    }
+};
+
 let resultConfigs = [prodConfig];
 
 const isTest = process.env.TEST_SELECTOR_PLAYWRIGHT === 'true';
-if (isTest) {
-    if (!fs.existsSync(TEST_TEMP_DIR)) {
-        fs.mkdirSync(TEST_TEMP_DIR);
-    } else {
-        fs.emptyDirSync(TEST_TEMP_DIR);
-    }
 
+const isBrowserstack = process.env.TEST_BROWSERSTACK === 'true';
+
+if (isTest) {
+    assureDir(TEST_TEMP_DIR);
     resultConfigs = [testConfig];
+} else if (isBrowserstack) {
+    assureDir(TEST_TEMP_DIR);
+    resultConfigs = [singleExtCssJsConfig, browserstackTestConfig];
 } else {
-    if (!fs.existsSync(PROD_OUTPUT_PATH)) {
-        fs.mkdirSync(PROD_OUTPUT_PATH);
-    } else {
-        fs.emptyDirSync(PROD_OUTPUT_PATH);
-    }
+    assureDir(PROD_OUTPUT_PATH);
+    // resultConfigs already contains prodConfig
 }
 
 export default resultConfigs;

@@ -1,11 +1,11 @@
 {
-    "extends": "./tsconfig.json",
-    "include": [
-      "src/*.ts",
-      "src/*/*.ts",
-      "test/*.ts",
-      "test/*/*.ts",
-      ".eslintrc.js",
-      "rollup.config.ts",
-    ]
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/*.ts",
+    "src/*/*.ts",
+    "test/*.ts",
+    "test/*/*.ts",
+    ".eslintrc.js",
+    "rollup.config.ts",
+  ]
 }

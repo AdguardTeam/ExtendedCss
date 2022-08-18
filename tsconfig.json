@@ -3,7 +3,7 @@
     "moduleResolution": "node",
     "target": "es5",
     "downlevelIteration": true,
-    "module":"es2015",
+    "module": "es2015",
     "lib": ["esnext", "dom"],
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -18,5 +18,11 @@
   },
   "include": [
     "src"
-  ]
+  ],
+  "ts-node": {
+      // override these options only for ts-node
+      "compilerOptions": {
+      "module": "commonjs"
+      }
+  },
 }

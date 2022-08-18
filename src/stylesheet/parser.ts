@@ -332,10 +332,11 @@ export const prepareRuleData = (
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object
         if (styles.length > 0) {
-            const preparedStyleData = Object.fromEntries(styles.map((style) => {
+            const stylesAsEntries = styles.map((style) => {
                 const { property, value } = style;
                 return [property, value];
-            }));
+            });
+            const preparedStyleData = utils.getObjectFromEntries(stylesAsEntries);
             ruleData.style = preparedStyleData;
         }
     }

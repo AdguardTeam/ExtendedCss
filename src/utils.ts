@@ -193,6 +193,48 @@ const utils = {
         }
         return path.join(' > ');
     },
+
+    /**
+     * Converts array of pairs to object.
+     * Object.fromEntries() polyfill because it is not supported by old browsers, e.g. Chrome 55
+     * https://caniuse.com/?search=Object.fromEntries
+     * @param entries - array of pairs
+     */
+    getObjectFromEntries: <T extends string>(entries: Array<Array<T>>): { [key: string]: T } => {
+        const initAcc: { [key: string]: T } = {};
+        const object = entries
+            .reduce((acc, el) => {
+                const key = el[0];
+                const value = el[1];
+                acc[key] = value;
+                return acc;
+            }, initAcc);
+        return object;
+    },
+
+    /**
+     * Some browsers do not support Array.prototype.flat()
+     * for example, Opera 42 which is used for browserstack tests
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+     * @param input
+     */
+    flatten: (input: Array<any>): Array<any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const stack: Array<any> = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+        input.forEach((el) => stack.push(el));
+        const res = [];
+        while (stack.length) {
+            // pop value from stack
+            const next = stack.pop();
+            if (Array.isArray(next)) {
+                // push back array items, won't modify the original input
+                next.forEach((el) => stack.push(el));
+            } else {
+                res.push(next);
+            }
+        }
+        // reverse to restore input order
+        return res.reverse();
+    },
 };
 
 export default utils;
