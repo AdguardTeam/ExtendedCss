@@ -7,7 +7,7 @@ import {
     expectNoMatchInput,
     expectToThrowInput,
     TestPropElement,
-} from './helpers/selector-jsdom';
+} from '../helpers/selector-jsdom';
 
 describe('regular selectors', () => {
     afterEach(() => {

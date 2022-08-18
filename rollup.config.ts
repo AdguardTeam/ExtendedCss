@@ -13,7 +13,7 @@ const PROD_OUTPUT_PATH = 'dist';
 const SOURCE_PATH = './src/index.ts';
 const LIBRARY_NAME = 'ExtendedCSS';
 
-const SELECTOR_SOURCE_PATH = './src/selector/index.ts';
+const SELECTOR_SOURCE_PATH = './src/selector/query.ts';
 const TEST_TEMP_DIR = 'test/dist';
 
 const banner = `/*! ${pkg.name} - v${pkg.version} - ${new Date().toDateString()}

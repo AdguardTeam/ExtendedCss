@@ -7,7 +7,7 @@ import {
 import {
     ExtCssDocument,
     selectElementsByAst,
-} from './selector';
+} from './selector/query';
 
 import { AsyncWrapper } from './helpers/async-wrapper';
 import { EventTracker } from './helpers/event-tracker';

@@ -6,7 +6,7 @@
 
 import { chromium, Browser, Page } from 'playwright';
 
-import server from './helpers/server';
+import server from '../helpers/server';
 
 let browser: Browser;
 let page: Page;

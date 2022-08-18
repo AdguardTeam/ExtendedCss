@@ -1,4 +1,4 @@
-import { ExtCssDocument } from '../../src/selector';
+import { ExtCssDocument } from '../../src/selector/query';
 
 /**
  * Checks whether selectedElements and expectedElements are the same

@@ -1,6 +1,6 @@
-import { parse } from '../src/selector/parser';
+import { parse } from '../../src/selector/parser';
 
-import { NodeType } from '../src/selector/nodes';
+import { NodeType } from '../../src/selector/nodes';
 
 import {
     getRegularSelector,
@@ -13,7 +13,7 @@ import {
     expectSelectorListOfRegularSelectors,
     expectSingleSelectorAstWithAnyChildren,
     expectToThrowInput,
-} from './helpers/parser';
+} from '../helpers/parser';
 
 describe('regular selectors', () => {
     it('simple', () => {
