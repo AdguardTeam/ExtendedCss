@@ -1,3 +1,5 @@
 node_modules/*
 dist/*
 test/dist/*
+.eslintrc.js
+babel.config.js

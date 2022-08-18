@@ -18,7 +18,7 @@
     "test": "yarn build:playwright-selector-test && jest --silent",
     "browserstack": "yarn build:browserstack-test && ts-node test/browserstack/index.ts",
     "increment": "yarn version --patch --no-git-tag-version",
-    "lint": "eslint 'src/' 'test/'",
+    "lint": "eslint .",
     "lint-staged": "lint-staged",
     "prepare": "husky install"
   },

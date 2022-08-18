@@ -1,6 +1,6 @@
 declare module 'extended-css' {
     export interface IAffectedElement {
-        rules: { style: { content: string }}[]
+        rules: { style: { content: string } }[]
         node: HTMLElement;
     }
 
@@ -35,5 +35,3 @@ declare module 'extended-css' {
         _getAffectedElements(): IAffectedElement[];
     }
 }
-
-

@@ -5,6 +5,10 @@ import typescript from 'rollup-plugin-ts';
 import { terser } from 'rollup-plugin-terser';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
+
+// TODO: ditch while remaking build process: AG-16034
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import generateHtml from 'rollup-plugin-generate-html';
 
 import * as pkg from './package.json';
@@ -69,6 +73,7 @@ const prodConfig = {
     ],
     plugins: [
         ...commonPlugins,
+        // TODO: ditch while building types: AG-15672
         copy({
             targets: [
                 { src: 'types/extended-css.d.ts', dest: PROD_OUTPUT_PATH },
@@ -149,8 +154,11 @@ const browserstackTestConfig = {
 
 /**
  * Guarantees directory existence
- * @param {string} dirPath
+ * @param {string} dirPath path to directory
  */
+// TODO: ditch while remaking build process: AG-16034
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const assureDir = (dirPath) => {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath);

@@ -7,7 +7,7 @@ module.exports = (api) => {
                 {
                     // we do not support ie 11,
                     // because it requires polyfills, which are modifying global scope
-                    targets: '>= 0.5%',
+                    targets: '> 1%',
                 },
             ],
             [
