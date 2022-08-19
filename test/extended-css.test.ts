@@ -6,7 +6,7 @@ import { ExtendedCss } from '../src';
 
 import { TimingStats } from '../src/helpers/timing-stats';
 
-import utils from '../src/utils';
+import { logger } from '../src/utils/logger';
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -612,8 +612,8 @@ describe('extended css library', () => {
         `;
         const extendedCss = new ExtendedCss({ styleSheet });
 
-        const utilsLogInfo = utils.logInfo;
-        utils.logInfo = function (...args) {
+        const loggerInfo = logger.info;
+        logger.info = function (...args) {
             if (args.length === 3
                     && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
                 const stats = args[2];
@@ -622,11 +622,11 @@ describe('extended css library', () => {
                 expect(stats[0].selector.includes('with-debug')).toBeTruthy();
 
                 // Cleanup
-                utils.logInfo = utilsLogInfo;
+                logger.info = loggerInfo;
                 extendedCss.dispose();
                 done();
             }
-            return utilsLogInfo.apply(this, args);
+            return loggerInfo.apply(this, args);
         };
 
         extendedCss.apply();
@@ -643,8 +643,8 @@ describe('extended css library', () => {
         const extendedCss = new ExtendedCss({ styleSheet });
 
         // Spy on utils.logInfo
-        const utilsLogInfo = utils.logInfo;
-        utils.logInfo = function (...args) {
+        const loggerInfo = logger.info;
+        logger.info = function (...args) {
             if (args.length === 3
                     && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
                 const stats: TestLoggedStats[] = args[2];
@@ -657,11 +657,11 @@ describe('extended css library', () => {
                 expect(stats.filter((item) => item.selector.includes('without-debug-after-global')).length).toEqual(1);
 
                 // Cleanup
-                utils.logInfo = utilsLogInfo;
+                logger.info = loggerInfo;
                 extendedCss.dispose();
                 done();
             }
-            return utilsLogInfo.apply(this, args);
+            return loggerInfo.apply(this, args);
         };
 
         extendedCss.apply();

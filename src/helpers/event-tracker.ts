@@ -1,4 +1,4 @@
-import utils from '../utils';
+import { isSafariBrowser } from '../utils/user-agents';
 
 const LAST_EVENT_TIMEOUT_MS = 10;
 
@@ -32,7 +32,7 @@ export class EventTracker {
     private lastEventTime?: number;
 
     constructor() {
-        this.trackedEvents = utils.isSafariBrowser
+        this.trackedEvents = isSafariBrowser
             ? SUPPORTED_EVENTS.filter((event) => !SAFARI_PROBLEMATIC_EVENTS.includes(event))
             : SUPPORTED_EVENTS;
 

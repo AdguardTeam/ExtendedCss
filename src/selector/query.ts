@@ -10,7 +10,9 @@ import {
     AnySelectorNodeInterface,
 } from './nodes';
 
-import utils from '../utils';
+import { flatten } from '../utils/arrays';
+import { logger } from '../utils/logger';
+import { getElementSelectorDesc } from '../utils/nodes';
 
 import {
     CONTAINS_PSEUDO_CLASS_MARKERS,
@@ -139,7 +141,7 @@ const hasRelativesBySelectorList = (
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 relativeElements = getElementsForSelectorNode(selector, rootElement, specificity);
             } catch (e) {
-                utils.logError(e);
+                logger.error(e);
                 // fail for invalid selector
                 throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`);
             }
@@ -183,7 +185,7 @@ const isAnyElementBySelectorList = (
              * and use it to specify the selection
              * e.g. 'div:is(.banner)' -> `divNode.parentElement.querySelectorAll(':scope > div[class="banner"]')`
              */
-            const elementSelectorText = utils.getElementSelectorText(element);
+            const elementSelectorText = getElementSelectorDesc(element);
             const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
 
             let anyElements;
@@ -193,7 +195,7 @@ const isAnyElementBySelectorList = (
             } catch (e) {
                 if (errorOnInvalidSelector) {
                     // fail on invalid selectors for :not()
-                    utils.logError(e);
+                    logger.error(e);
                     throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
                 } else {
                     // do not fail on invalid selectors for :is()
@@ -344,7 +346,7 @@ const getByFollowingRegularSelector = (
                 if (!rootElement) {
                     throw new Error(`Selection by '${value}' part of selector is not possible.`);
                 }
-                const elementSelectorText = utils.getElementSelectorText(element);
+                const elementSelectorText = getElementSelectorDesc(element);
                 const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
                 const selected = getByRegularSelector(regularSelectorNode, rootElement, specificity);
                 return selected;
@@ -415,7 +417,7 @@ export const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = documen
         selectedElements.push(...getElementsForSelectorNode(selectorNode, doc));
     });
     // selectedElements should be flattened as it is array of arrays with elements
-    const uniqueElements = [...new Set(utils.flatten(selectedElements))];
+    const uniqueElements = [...new Set(flatten(selectedElements))];
     return uniqueElements;
 };
 

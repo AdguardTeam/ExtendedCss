@@ -17,7 +17,11 @@ import {
 } from './helpers/mutation-observer';
 import { TimingStats } from './helpers/timing-stats';
 
-import utils from './utils';
+import { natives } from './utils/natives';
+import { logger } from './utils/logger';
+import { removeSuffix } from './utils/strings';
+import { getElementSelectorPath } from './utils/nodes';
+
 import {
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
@@ -44,8 +48,8 @@ const observeDocument = (context: Context, callback: MainCallback): void => {
         return mutations.every((m) => m.type === 'attributes');
     };
 
-    if (utils.MutationObserver) {
-        context.domMutationObserver = new utils.MutationObserver(((mutations) => {
+    if (natives.MutationObserver) {
+        context.domMutationObserver = new natives.MutationObserver(((mutations) => {
             if (!mutations || mutations.length === 0) {
                 return;
             }
@@ -93,7 +97,7 @@ const setStyleToElement = (node: Node, style: CssStyleMap): void => {
         if (typeof node.style.getPropertyValue(prop) !== 'undefined') {
             let value = style[prop];
             // First we should remove !important attribute (or it won't be applied')
-            value = utils.removeSuffix(value.trim(), '!important').trim();
+            value = removeSuffix(value.trim(), '!important').trim();
             node.style.setProperty(prop, value, 'important');
         }
     });
@@ -130,7 +134,7 @@ const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => 
         if (observer.styleProtectionCount < MAX_STYLE_PROTECTION_COUNT) {
             observer.observe(target, protectionObserverOption);
         } else {
-            utils.logError('ExtendedCss: infinite loop protection for style');
+            logger.error('ExtendedCss: infinite loop protection for style');
         }
     };
 
@@ -147,7 +151,7 @@ const protectStyleAttribute = (
     node: HTMLElement,
     rules: ExtendedCssRuleData[],
 ): ExtMutationObserver | null => {
-    if (!utils.MutationObserver) {
+    if (!natives.MutationObserver) {
         return null;
     }
     const styles: CssStyleMap[] = [];
@@ -186,14 +190,14 @@ const removeElement = (context: Context, affectedElement: AffectedElement): void
 
     affectedElement.removed = true;
 
-    const elementSelector = utils.getNodeSelector(node);
+    const elementSelector = getElementSelectorPath(node);
 
     // check if the element has been already removed earlier
     const elementRemovalsCounter = context.removalsStatistic[elementSelector] || 0;
 
     // if removals attempts happened more than specified we do not try to remove node again
     if (elementRemovalsCounter > MAX_STYLE_PROTECTION_COUNT) {
-        utils.logError(`ExtendedCss: infinite loop protection for selector: '${elementSelector}'`);
+        logger.error(`ExtendedCss: infinite loop protection for selector: '${elementSelector}'`);
         return;
     }
 
@@ -348,7 +352,7 @@ const printTimingInfo = (context: Context): void => {
         return;
     }
     // add location.href to the message to distinguish frames
-    utils.logInfo('[ExtendedCss] Timings in milliseconds for %o:\n%o', window.location.href, timingsToLog);
+    logger.info('[ExtendedCss] Timings in milliseconds for %o:\n%o', window.location.href, timingsToLog);
 };
 
 export interface Context {
@@ -510,7 +514,7 @@ export class ExtendedCss {
         } finally {
             const end = AsyncWrapper.now();
             if (!noTiming) {
-                utils.logInfo(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
+                logger.info(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
             }
         }
     }

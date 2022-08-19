@@ -1,6 +1,6 @@
 import { Context } from '..';
 
-import utils from '../utils';
+import { isNumber } from '../utils/numbers';
 
 const isSupported = (typeof window.requestAnimationFrame !== 'undefined');
 const rAF = isSupported ? requestAnimationFrame : window.setTimeout;
@@ -42,7 +42,9 @@ export class AsyncWrapper {
     }
 
     private wrappedCallback(timestamp?: number): void {
-        this.lastRun = utils.isNumber(timestamp) ? timestamp : perf.now();
+        this.lastRun = isNumber(timestamp)
+            ? timestamp
+            : perf.now();
         delete this.rAFid;
         delete this.timerId;
         if (this.callback) {
@@ -54,7 +56,7 @@ export class AsyncWrapper {
      * Indicates whether there is a scheduled callback.
      */
     private hasPendingCallback(): boolean {
-        return utils.isNumber(this.rAFid) || utils.isNumber(this.timerId);
+        return isNumber(this.rAFid) || isNumber(this.timerId);
     }
 
     /**

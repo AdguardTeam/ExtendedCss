@@ -5,7 +5,9 @@ import { AnySelectorNodeInterface } from '../selector/nodes';
 
 import { TimingStats } from '../helpers/timing-stats';
 
-import utils from '../utils';
+import { logger } from '../utils/logger';
+import { getObjectFromEntries } from '../utils/objects';
+
 import {
     BRACKETS,
     COLON,
@@ -145,7 +147,7 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
     try {
         removeSelectorData = parseRemoveSelector(selector);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        utils.logError(e.message);
+        logger.error(e.message);
         throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
     }
 
@@ -336,7 +338,7 @@ export const prepareRuleData = (
                 const { property, value } = style;
                 return [property, value];
             });
-            const preparedStyleData = utils.getObjectFromEntries(stylesAsEntries);
+            const preparedStyleData = getObjectFromEntries(stylesAsEntries);
             ruleData.style = preparedStyleData;
         }
     }

@@ -1,4 +1,13 @@
 import {
+    convertTypeFromString,
+    convertTypeIntoString,
+    replaceAll,
+    toRegExp,
+} from '../utils/strings';
+import { logger } from '../utils/logger';
+import { isSafariBrowser } from '../utils/user-agents';
+
+import {
     ASTERISK,
     DOT,
     COLON,
@@ -8,8 +17,6 @@ import {
     REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
 } from '../constants';
-
-import utils from '../utils';
 
 /**
  * Removes quotes for specified content value.
@@ -83,7 +90,7 @@ const matchingStyleValueToRegexp = (rawArg: string): RegExp => {
         arg = arg.replace(/\\([\\()[\]"])/g, '$1');
         arg = escapeRegExp(arg);
         // e.g. div:matches-css(background-image: url(data:*))
-        arg = utils.replaceAll(arg, ASTERISK, REGEXP_ANY_SYMBOL);
+        arg = replaceAll(arg, ASTERISK, REGEXP_ANY_SYMBOL);
     }
 
     return new RegExp(arg, 'i');
@@ -101,7 +108,7 @@ const getComputedStylePropertyValue = (domElement: Element, regularPseudo: strin
     if (style) {
         value = style.getPropertyValue(propertyName);
         // https://bugs.webkit.org/show_bug.cgi?id=93445
-        if (propertyName === 'opacity' && utils.isSafariBrowser) {
+        if (propertyName === 'opacity' && isSafariBrowser) {
             value = (Math.round(parseFloat(value) * 100) / 100).toString();
         }
     }
@@ -169,7 +176,7 @@ export const matchingStyle = (
     try {
         valueRegexp = matchingStyleValueToRegexp(matchValue);
     } catch (e) {
-        utils.logError(e);
+        logger.error(e);
         throw new Error(`Invalid argument of :${pseudoName} pseudo-class: ${pseudoArg}`);
     }
 
@@ -214,7 +221,7 @@ export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): s
     if (rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH)) {
         // e.g. :matches-property("//")
         if (rawArg.length > 2) {
-            arg = utils.toRegExp(rawArg);
+            arg = toRegExp(rawArg);
         } else {
             throw new Error(`Invalid regexp: '${rawArg}'`);
         }
@@ -223,7 +230,7 @@ export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): s
             // e.g. :matches-attr(*)
             throw new Error(`Argument should be more specific than ${rawArg}`);
         }
-        arg = utils.replaceAll(rawArg, ASTERISK, REGEXP_ANY_SYMBOL);
+        arg = replaceAll(rawArg, ASTERISK, REGEXP_ANY_SYMBOL);
         arg = new RegExp(arg);
     } else {
         if (!validateStrMatcherArg(rawArg)) {
@@ -271,7 +278,7 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
     try {
         attrNameMatch = getValidMatcherArg(rawAttrName);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        utils.logError(e);
+        logger.error(e);
         throw new SyntaxError(e.message);
     }
 
@@ -293,7 +300,7 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
             try {
                 attrValueMatch = getValidMatcherArg(rawAttrValue);
             } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-                utils.logError(e);
+                logger.error(e);
                 throw new SyntaxError(e.message);
             }
             const isValueMatching = attrValueMatch instanceof RegExp
@@ -366,7 +373,7 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
             try {
                 validPattern = getValidMatcherArg(pattern, true);
             } catch (e) {
-                utils.logError(e);
+                logger.error(e);
                 throw new Error(`Invalid property pattern '${pattern}' in property chain '${input}'`);
             }
             return validPattern;
@@ -459,7 +466,7 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
     try {
         propChainMatches = parseRawPropChain(rawPropertyName);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        utils.logError(e);
+        logger.error(e);
         throw new SyntaxError(e.message);
     }
 
@@ -475,7 +482,7 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
         try {
             propValueMatch = getValidMatcherArg(rawPropertyValue);
         } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            utils.logError(e);
+            logger.error(e);
             throw new SyntaxError(e.message);
         }
 
@@ -484,14 +491,14 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
                 const realValue = ownerObjArr[i].value;
 
                 if (propValueMatch instanceof RegExp) {
-                    isMatching = propValueMatch.test(utils.convertTypeIntoStr(realValue));
+                    isMatching = propValueMatch.test(convertTypeIntoString(realValue));
                 } else {
                     // handle 'null' and 'undefined' property values set as string
                     if (realValue === 'null' || realValue === 'undefined') {
                         isMatching = propValueMatch === realValue;
                         break;
                     }
-                    isMatching = utils.convertTypeFromStr(propValueMatch) === realValue;
+                    isMatching = convertTypeFromString(propValueMatch) === realValue;
                 }
 
                 if (isMatching) {

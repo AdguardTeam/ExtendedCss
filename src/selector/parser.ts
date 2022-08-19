@@ -12,6 +12,8 @@ import {
     RelativePseudoClassNode,
 } from './nodes';
 
+import { getLast } from '../utils/arrays';
+
 import {
     BRACKETS,
     COLON,
@@ -119,14 +121,6 @@ interface Context {
      */
     isRegexpOpen: boolean,
 }
-
-/**
- * Returns last item from array
- * @param array
- */
-const getLast = (array: Array<any>): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    return array[array.length - 1];
-};
 
 /**
  * Gets the node which is being collected

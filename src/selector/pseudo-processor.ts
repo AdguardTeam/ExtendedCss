@@ -1,4 +1,5 @@
-import utils from '../utils';
+import { getNodeTextContent } from '../utils/nodes';
+import { logger } from '../utils/logger';
 
 import {
     matchingText,
@@ -28,12 +29,12 @@ export const matchPseudo = {
      * @param rawPseudoArg contains pseudo-class arg
      */
     contains: (domElement: Element, rawPseudoArg: string): boolean => {
-        const elemTextContent = utils.getNodeTextContent(domElement);
+        const elemTextContent = getNodeTextContent(domElement);
         let isTextContentMatching;
         try {
             isTextContentMatching = matchingText(elemTextContent, rawPseudoArg);
         } catch (e) {
-            utils.logError(e);
+            logger.error(e);
             throw new Error(`Error while matching text: "${elemTextContent}" by arg ${rawPseudoArg}.`);
         }
         return isTextContentMatching;
@@ -52,7 +53,7 @@ export const matchPseudo = {
         try {
             isMatchingCss = matchingStyle(domElement, pseudoName, rawPseudoArg, regularPseudo);
         } catch (e) {
-            utils.logError(e);
+            logger.error(e);
             throw new Error(`Error while matching css by arg ${rawPseudoArg}.`);
         }
         return isMatchingCss;
@@ -63,7 +64,7 @@ export const matchPseudo = {
         try {
             isMatchingAttr = matchingAttr(domElement, pseudoName, rawPseudoArg);
         } catch (e) {
-            utils.logError(e);
+            logger.error(e);
             throw new Error(`Error while matching attributes by arg ${rawPseudoArg}.`);
         }
         return isMatchingAttr;
@@ -74,7 +75,7 @@ export const matchPseudo = {
         try {
             isMatchingAttr = matchingProperty(domElement, pseudoName, rawPseudoArg);
         } catch (e) {
-            utils.logError(e);
+            logger.error(e);
             throw new Error(`Error while matching properties by arg ${rawPseudoArg}.`);
         }
         return isMatchingAttr;
@@ -96,7 +97,7 @@ export const findPseudo = {
                 try {
                     ancestor = getNthAncestor(domElement, deep, pseudoName);
                 } catch (e) {
-                    utils.logError(e);
+                    logger.error(e);
                 }
                 return ancestor;
             })
@@ -122,7 +123,7 @@ export const findPseudo = {
                         null,
                     );
                 } catch (e) {
-                    utils.logError(e);
+                    logger.error(e);
                     throw new Error(`Invalid argument of :xpath pseudo-class: '${rawPseudoArg}'`);
                 }
                 let node = xpathResult.iterateNext();

@@ -1,4 +1,4 @@
-import utils from '../utils';
+import { natives } from '../utils/natives';
 
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
@@ -15,7 +15,7 @@ export class ExtMutationObserver {
 
     constructor(callback: ProtectionCallback) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.observer = new (utils.MutationObserver as any)(callback);
+        this.observer = new (natives.MutationObserver as any)(callback);
         this.isActive = false;
         this.styleProtectionCount = 0;
     }
