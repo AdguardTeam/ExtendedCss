@@ -16,6 +16,7 @@
 
   <style id="extendedCss" type="text/extended-css">
     #case1>div[-ext-has=".banner"] { display:none !important; }
+    #case2>div[-ext-has=">.banner"]>h3 { display:none !important; }
     #case3>div[-ext-has=".banner"] { visibility: hidden; }
     #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }
     #case5>div[-ext-contains="Block this"] { display: none!important }
@@ -33,6 +34,14 @@
       <div id="case1-blocked">
         <div class="banner"></div>
       </div>
+    </div>
+    <div id="case2">
+      <h3 class="not-blocked"></h3>
+      <div>
+        <h3 id="case2-blocked"></h3>
+        <div class="banner"></div>
+      </div>
+      <h3 class="not-blocked"></h3>
     </div>
     <div id="case3">
       <div id="case3-modified" style="display: block;">

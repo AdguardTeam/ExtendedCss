@@ -77,6 +77,10 @@ QUnit.test('Modifier -ext-has', (assert) => {
     assertElementStyle('case1-blocked', { display: 'none' }, assert);
 });
 
+QUnit.test('Modifier -ext-has + >h3', (assert) => {
+    assertElementStyle('case2-blocked', { display: 'none' }, assert);
+});
+
 QUnit.test('Append our style', (assert) => {
     assertElementStyle('case3-modified', { 'display': 'block', 'visibility': 'hidden' }, assert);
 });
