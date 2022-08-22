@@ -116,7 +116,7 @@ const protectionObserverOption = {
  * @param styles
  */
 const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => {
-    const protectionCallback = (mutations: MutationRecord[], observer: ExtMutationObserver) => {
+    const protectionCallback = (mutations: MutationRecord[], observer: ExtMutationObserver): void => {
         if (!mutations.length) {
             return;
         }
@@ -144,7 +144,7 @@ const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => 
 /**
  * Sets up a MutationObserver which protects style attributes from changes
  * @param node DOM node
- * @param rules rules
+ * @param rules rule data objects
  * @returns Mutation observer used to protect attribute or null if there's nothing to protect
  */
 const protectStyleAttribute = (
@@ -185,6 +185,11 @@ const findAffectedElement = (affElements: AffectedElement[], domNode: Element): 
     return affElements.find((affEl) => affEl.node === domNode);
 };
 
+/**
+ * Removes affectedElement.node from DOM
+ * @param context
+ * @param affectedElement
+ */
 const removeElement = (context: Context, affectedElement: AffectedElement): void => {
     const { node } = affectedElement;
 
@@ -274,7 +279,7 @@ const revertStyle = (affElement: AffectedElement): void => {
 /**
  * Applies specified rule and returns list of elements affected
  * @param ruleData rule to apply
- * @returns List of elements affected by this rule
+ * @returns list of elements affected by the rule
  */
 const applyRule = (context: Context, ruleData: ExtendedCssRuleData): HTMLElement[] => {
     // debugging mode can be enabled in two ways:
@@ -283,7 +288,7 @@ const applyRule = (context: Context, ruleData: ExtendedCssRuleData): HTMLElement
     //   - `{ debug: global; }` in any rule
     //   - positive `debug` property in ExtCssConfiguration
     const isDebuggingMode = !!ruleData.debug || context.debug;
-    let startTime;
+    let startTime: number | undefined;
     if (isDebuggingMode) {
         startTime = AsyncWrapper.now();
     }
@@ -385,7 +390,7 @@ const mainDisconnect = (context: Context, mainCallback: MainCallback): void => {
 };
 
 /**
- * Extended css class
+ * Main Extended css class
  */
 export class ExtendedCss {
     private context: Context;
@@ -438,14 +443,14 @@ export class ExtendedCss {
             Array.prototype.push.apply(newSelectedElements, nodes);
         });
         // Now revert styles for elements which are no more affected
-        let l = context.affectedElements.length;
+        let affLength = context.affectedElements.length;
         // do nothing if there is no elements to process
-        while (l) {
-            const affectedEl = context.affectedElements[l - 1];
+        while (affLength) {
+            const affectedEl = context.affectedElements[affLength - 1];
             if (!newSelectedElements.includes(affectedEl.node)) {
                 // Time to revert style
                 revertStyle(affectedEl);
-                context.affectedElements.splice(l - 1, 1);
+                context.affectedElements.splice(affLength - 1, 1);
             } else if (!affectedEl.removed) {
                 // Add style protection observer
                 // Protect "style" attribute from changes
@@ -453,7 +458,7 @@ export class ExtendedCss {
                     affectedEl.protectionObserver = protectStyleAttribute(affectedEl.node, affectedEl.rules);
                 }
             }
-            l -= 1;
+            affLength -= 1;
         }
         // After styles are applied we can start observe again
         mainObserve(context, context.mainCallback);
@@ -496,10 +501,10 @@ export class ExtendedCss {
     /**
      * Returns a list of the document's elements that match the specified selector.
      * Uses ExtCssDocument.querySelectorAll()
-     * @param {string} selector selector text
-     * @param {boolean} [noTiming=true] if true -- do not print the timing to the console
-     * @returns a list of elements found
-     * @throws an error if the argument is not a valid selector
+     * @param selector selector text
+     * @param [noTiming=true] if true -- do not print the timing to the console
+     * @returns a list of elements that match the selector
+     * @throws an error if selector is not valid
      */
     public static query(selector: string, noTiming = true): HTMLElement[] {
         if (typeof selector !== 'string') {
@@ -521,8 +526,7 @@ export class ExtendedCss {
 
     /**
      * Validates selector
-     * @param {string} selector selector text
-     * @returns `{ ok: boolean, error: string | null }`
+     * @param selector selector text
      */
     public static validate(selector: string): ValidationResult {
         try {

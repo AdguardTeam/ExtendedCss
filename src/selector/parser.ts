@@ -125,7 +125,7 @@ interface Context {
 /**
  * Gets the node which is being collected
  * or null if there is no such one
- * @param context {@link Context|parser context}
+ * @param context parser context
  */
 const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
     if (context.pathToBufferNode.length === 0) {
@@ -137,7 +137,7 @@ const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
 
 /**
  * Updates needed buffer node value while tokens iterating
- * @param context {@link Context|parser context}
+ * @param context parser context
  * @param tokenValue
  */
 const updateBufferNode = (context: Context, tokenValue: string): void => {
@@ -149,12 +149,14 @@ const updateBufferNode = (context: Context, tokenValue: string): void => {
         bufferNode.value += tokenValue;
     } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
         bufferNode.arg += tokenValue;
+    } else {
+        throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported.`); // eslint-disable-line max-len
     }
 };
 
 /**
  * Adds SelectorList node to context.ast at the start of ast collecting
- * @param context {@link Context|parser context}
+ * @param context parser context
  */
 const addSelectorListNode = (context: Context): void => {
     const selectorListNode = new AnySelectorNode(NodeType.SelectorList);
@@ -165,17 +167,17 @@ const addSelectorListNode = (context: Context): void => {
 /**
  * Adds new node to buffer node children.
  * New added node will be considered as buffer node after it
- * @param context {@link Context|parser context}
+ * @param context parser context
  * @param type type of node to add
  * @param tokenValue optional, value of processing token
  */
-const addAnySelectorNode = (context: Context, type: NodeType, tokenValue = ''): void => {
+const addAstNodeByType = (context: Context, type: NodeType, tokenValue = ''): void => {
     const bufferNode = getBufferNode(context);
     if (bufferNode === null) {
         throw new Error('No buffer node');
     }
 
-    let node;
+    let node: AnySelectorNodeInterface;
     if (type === NodeType.RegularSelector) {
         node = new RegularSelectorNode(tokenValue);
     } else if (type === NodeType.AbsolutePseudoClass) {
@@ -193,31 +195,31 @@ const addAnySelectorNode = (context: Context, type: NodeType, tokenValue = ''): 
 
 /**
  * The very beginning of ast collecting
- * @param context {@link Context|parser context}
+ * @param context parser context
  * @param tokenValue value of regular selector
  */
 const initAst = (context: Context, tokenValue: string): void => {
     addSelectorListNode(context);
-    addAnySelectorNode(context, NodeType.Selector);
+    addAstNodeByType(context, NodeType.Selector);
     // RegularSelector node is always the first child of Selector node
-    addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
 };
 
 /**
  * Inits selector list subtree for relative extended pseudo-classes, e.g. :has(), :not()
- * @param context {@link Context|parser context}
+ * @param context parser context
  * @param tokenValue optional, value of inner regular selector
  */
-const initRelativeSubtree = (context: Context, tokenValue = '') => {
-    addAnySelectorNode(context, NodeType.SelectorList);
-    addAnySelectorNode(context, NodeType.Selector);
-    addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+const initRelativeSubtree = (context: Context, tokenValue = ''): void => {
+    addAstNodeByType(context, NodeType.SelectorList);
+    addAstNodeByType(context, NodeType.Selector);
+    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
 };
 
 /**
  * Goes to closest parent specified by type.
  * Actually updates path to buffer node for proper ast collecting of selectors while parsing
- * @param context {@link Context|parser context}
+ * @param context parser context
  * @param parentType type of needed parent node in ast
  */
 const upToClosest = (context: Context, parentType: NodeType): void => {
@@ -233,7 +235,7 @@ const upToClosest = (context: Context, parentType: NodeType): void => {
  * Parses selector into ast for following element selection
  * @param selector
  */
-export const parse = (selector: string) => {
+export const parse = (selector: string): AnySelectorNodeInterface => {
     const tokens = tokenize(selector);
 
     const context: Context = {
@@ -280,8 +282,8 @@ export const parse = (selector: string) => {
                     initAst(context, tokenValue);
                 } else if (bufferNode.type === NodeType.SelectorList) {
                     // add new selector to selector list
-                    addAnySelectorNode(context, NodeType.Selector);
-                    addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+                    addAstNodeByType(context, NodeType.Selector);
+                    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
                 } else if (bufferNode.type === NodeType.RegularSelector) {
                     updateBufferNode(context, tokenValue);
                 } else if (bufferNode.type === NodeType.ExtendedSelector) {
@@ -299,11 +301,11 @@ export const parse = (selector: string) => {
                     // as they should be case-insensitive
                     // https://www.w3.org/TR/selectors-4/#pseudo-classes
                     if (ABSOLUTE_PSEUDO_CLASSES.includes(tokenValue.toLowerCase())) {
-                        addAnySelectorNode(context, NodeType.AbsolutePseudoClass, tokenValue.toLowerCase());
+                        addAstNodeByType(context, NodeType.AbsolutePseudoClass, tokenValue.toLowerCase());
                     } else {
                         // if it is not absolute pseudo-class, it must be relative one
                         // add RelativePseudoClass with tokenValue as pseudo-class name to ExtendedSelector children
-                        addAnySelectorNode(context, NodeType.RelativePseudoClass, tokenValue.toLowerCase());
+                        addAstNodeByType(context, NodeType.RelativePseudoClass, tokenValue.toLowerCase());
                     }
                 } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
                     // collect absolute pseudo-class arg
@@ -388,7 +390,7 @@ export const parse = (selector: string) => {
                                  *      '.banner:upward(2) > .block'
                                  * so no tokenValue passed to addAnySelectorNode()
                                  */
-                                addAnySelectorNode(context, NodeType.RegularSelector);
+                                addAstNodeByType(context, NodeType.RegularSelector);
                             }
                         }
                         break;
@@ -454,13 +456,13 @@ export const parse = (selector: string) => {
                             // e.g. '.banner:upward(2)> .block'
                             // or   '.inner:nth-ancestor(1)~ .banner'
                             if (COMBINATORS.includes(tokenValue)) {
-                                addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+                                addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
                             }
                         } else if (bufferNode.type === NodeType.SelectorList) {
                             // add Selector to SelectorList
-                            addAnySelectorNode(context, NodeType.Selector);
+                            addAstNodeByType(context, NodeType.Selector);
                             // and RegularSelector as it is always the first child of Selector
-                            addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+                            addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
                         }
                         break;
                     case BRACKETS.SQUARE.RIGHT:
@@ -521,10 +523,10 @@ export const parse = (selector: string) => {
                             // bufferNode is SelectorList after comma has been parsed.
                             // parser position is on colon now:
                             // e.g. 'img,:not(.content)'
-                            addAnySelectorNode(context, NodeType.Selector);
+                            addAstNodeByType(context, NodeType.Selector);
                             // add empty value RegularSelector anyway as any selector should start with it
                             // and check previous token on the next step
-                            addAnySelectorNode(context, NodeType.RegularSelector);
+                            addAstNodeByType(context, NodeType.RegularSelector);
                             // bufferNode should be updated for following checking
                             bufferNode = getBufferNode(context);
                         }
@@ -583,7 +585,7 @@ export const parse = (selector: string) => {
                                     // stop RegularSelector value collecting
                                     upToClosest(context, NodeType.Selector);
                                     // add ExtendedSelector to Selector children
-                                    addAnySelectorNode(context, NodeType.ExtendedSelector);
+                                    addAstNodeByType(context, NodeType.ExtendedSelector);
                                 }
                             }
                         }
@@ -596,7 +598,7 @@ export const parse = (selector: string) => {
                             if (isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
                                 // if supported extended pseudo-class is next to colon
                                 // add ExtendedSelector to Selector children
-                                addAnySelectorNode(context, NodeType.ExtendedSelector);
+                                addAstNodeByType(context, NodeType.ExtendedSelector);
                             } else if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_CLASS_MARKER) {
                                 // :remove() pseudo-class should be handled before
                                 // as it is not about element selecting but actions with elements
@@ -606,7 +608,7 @@ export const parse = (selector: string) => {
                                 // otherwise it is standard pseudo after extended pseudo-class
                                 // and colon should be collected to value of RegularSelector
                                 // e.g. 'body *:not(input)::selection'
-                                addAnySelectorNode(context, NodeType.RegularSelector, tokenValue);
+                                addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
                             }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
@@ -633,7 +635,7 @@ export const parse = (selector: string) => {
                                 // add ExtendedSelector to Selector children
                                 // e.g. 'div:has(:contains(text))'
                                 upToClosest(context, NodeType.Selector);
-                                addAnySelectorNode(context, NodeType.ExtendedSelector);
+                                addAstNodeByType(context, NodeType.ExtendedSelector);
                             }
                         }
                         break;

@@ -3,7 +3,6 @@ import {
     INVALID_OLD_SYNTAX_MARKER,
 } from '../constants';
 
-
 /**
  * Complex replacement function.
  * Undo quote escaping inside of an extended selector.
@@ -13,7 +12,7 @@ import {
  * @param quoteChar Group 2
  * @param rawValue  Group 3
  */
-const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue: string) => {
+const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue: string): string => {
     // Unescape quotes
     const re = new RegExp(`([^\\\\]|^)\\\\${quoteChar}`, 'g');
     const value = rawValue.replace(re, `$1${quoteChar}`);

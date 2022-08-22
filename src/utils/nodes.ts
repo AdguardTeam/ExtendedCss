@@ -61,3 +61,11 @@ export const getElementSelectorPath = (inputEl: Element): string => {
     }
     return path.join(' > ');
 };
+
+/**
+ * Checks whether the element is instance of HTMLElement
+ * @param element
+ */
+export const isHtmlElement = (element: HTMLElement | Node | null): element is HTMLElement => {
+    return element instanceof HTMLElement;
+};

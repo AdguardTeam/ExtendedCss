@@ -20,6 +20,10 @@ export interface AnySelectorNodeInterface {
     addChild(child: AnySelectorNodeInterface): void;
 }
 
+/**
+ * Class needed for creating ast nodes while selector parsing.
+ * Used for SelectorList, Selector, ExtendedSelector
+ */
 export class AnySelectorNode implements AnySelectorNodeInterface {
     type: string;
 
@@ -29,11 +33,17 @@ export class AnySelectorNode implements AnySelectorNodeInterface {
         this.type = type;
     }
 
+    /**
+     * Adds child node to children array
+     */
     public addChild(child: AnySelectorNodeInterface): void {
         this.children.push(child);
     }
 }
 
+/**
+ * Class needed for creating ast RegularSelector node while selector parsing
+ */
 export class RegularSelectorNode extends AnySelectorNode {
     value: string;
 
@@ -43,6 +53,9 @@ export class RegularSelectorNode extends AnySelectorNode {
     }
 }
 
+/**
+ * Class needed for creating ast RelativePseudoClass node while selector parsing
+ */
 export class RelativePseudoClassNode extends AnySelectorNode {
     name: string;
 
@@ -52,6 +65,9 @@ export class RelativePseudoClassNode extends AnySelectorNode {
     }
 }
 
+/**
+ * Class needed for creating ast AbsolutePseudoClass node while selector parsing
+ */
 export class AbsolutePseudoClassNode extends AnySelectorNode {
     name: string;
 

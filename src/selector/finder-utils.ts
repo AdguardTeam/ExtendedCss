@@ -17,13 +17,13 @@ export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): n
  * @param deep
  * @param pseudoName
  */
-export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName: string): HTMLElement | undefined => {
-    let ancestor;
+export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName: string): HTMLElement | null => {
+    let ancestor: HTMLElement | null = null;
     let i = 0;
     while (i < deep) {
         ancestor = domElement.parentElement;
         if (!ancestor) {
-            throw new Error(`Too big :${pseudoName} arg '${deep}', out of DOM elements root.`);
+            throw new Error(`Argument of :${pseudoName}() pseudo-class is too big — '${deep}', out of DOM elements root.`); // eslint-disable-line max-len
         }
         domElement = ancestor;
         i += 1;
@@ -32,19 +32,11 @@ export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName
 };
 
 /**
- * Checks whether the element is instance of HTMLElement
- * @param element
- */
-export const isHtmlElement = (element: HTMLElement | Node | null | undefined): element is HTMLElement => {
-    return element instanceof HTMLElement;
-};
-
-/**
  * Validates standard CSS selector
  * @param selector
  */
 export const validateStandardSelector = (selector: string): boolean => {
-    let isValid;
+    let isValid: boolean;
     try {
         document.querySelectorAll(selector);
         isValid = true;

@@ -1,4 +1,4 @@
-# ExtendedCss
+# <a id="homepage"> ExtendedCss
 
 AdGuard's ExtendedCss library for applying CSS styles with extended selection properties.
 
@@ -772,7 +772,7 @@ type ValidationResult = {
 ### Debugging extended selectors
 
 ExtendedCss can be executed on any page without using any AdGuard product. In order to do that you should copy and execute the following code in a browser console:
-```
+```js
 !function(e,t,d){C=e.createElement(t),C.src=d,C.onload=function(){alert("ExtendedCss loaded successfully")},s=e.getElementsByTagName(t)[0],s?s.parentNode.insertBefore(C,s):(h=e.getElementsByTagName("head")[0],h.appendChild(C))}(document,"script","https://AdguardTeam.github.io/ExtendedCss/extended-css.min.js");
 ```
 

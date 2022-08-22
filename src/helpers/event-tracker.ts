@@ -41,15 +41,15 @@ export class EventTracker {
         });
     }
 
-    private trackEvent(e: Event): void {
-        this.lastEvent = e;
-        this.lastEventType = e.type;
+    private trackEvent(event: Event): void {
+        this.lastEvent = event;
+        this.lastEventType = event.type;
         this.lastEventTime = Date.now();
     }
 
-    private getLastEventType = () => this.lastEventType;
+    private getLastEventType = (): string | undefined => this.lastEventType;
 
-    private getTimeSinceLastEvent = () => {
+    private getTimeSinceLastEvent = (): number | null => {
         if (!this.lastEventTime) {
             return null;
         }

@@ -204,6 +204,13 @@ export const REGULAR_PSEUDO_ELEMENTS = {
     TARGET_TEXT: 'target-text',
 };
 
+export const CSS_PROPERTIES = {
+    BACKGROUND: 'background',
+    BACKGROUND_IMAGE: 'background-image',
+    CONTENT: 'content',
+    OPACITY: 'opacity',
+};
+
 // limit applying of wildcard :is and :not pseudo-class only to html children
 // e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
 export const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;

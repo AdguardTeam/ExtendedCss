@@ -1,17 +1,20 @@
-import { getNodeTextContent } from '../utils/nodes';
+import {
+    getNodeTextContent,
+    isHtmlElement,
+} from '../utils/nodes';
+import { flatten } from '../utils/arrays';
 import { logger } from '../utils/logger';
 
 import {
-    matchingText,
-    matchingStyle,
-    matchingAttr,
-    matchingProperty,
+    isTextMatched,
+    isStyleMatched,
+    isAttributeMatched,
+    isPropertyMatched,
 } from './matcher-utils';
 
 import {
     getNthAncestor,
     getValidNumberAncestorArg,
-    isHtmlElement,
     validateStandardSelector,
 } from './finder-utils';
 
@@ -30,55 +33,47 @@ export const matchPseudo = {
      */
     contains: (domElement: Element, rawPseudoArg: string): boolean => {
         const elemTextContent = getNodeTextContent(domElement);
-        let isTextContentMatching;
         try {
-            isTextContentMatching = matchingText(elemTextContent, rawPseudoArg);
+            return isTextMatched(elemTextContent, rawPseudoArg);
         } catch (e) {
             logger.error(e);
             throw new Error(`Error while matching text: "${elemTextContent}" by arg ${rawPseudoArg}.`);
         }
-        return isTextContentMatching;
     },
 
     matchesCss: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
         // no standard pseudo-element for :matched-css
-        let regularPseudo = '';
+        let regularPseudoElement = '';
         if (pseudoName === MATCHES_CSS_BEFORE_PSEUDO) {
-            regularPseudo = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
+            regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
         } else if (pseudoName === MATCHES_CSS_AFTER_PSEUDO) {
-            regularPseudo = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
+            regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
         }
 
-        let isMatchingCss;
         try {
-            isMatchingCss = matchingStyle(domElement, pseudoName, rawPseudoArg, regularPseudo);
+            return isStyleMatched(domElement, pseudoName, rawPseudoArg, regularPseudoElement);
         } catch (e) {
             logger.error(e);
             throw new Error(`Error while matching css by arg ${rawPseudoArg}.`);
         }
-        return isMatchingCss;
     },
 
     matchesAttr: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        let isMatchingAttr;
         try {
-            isMatchingAttr = matchingAttr(domElement, pseudoName, rawPseudoArg);
+            return isAttributeMatched(domElement, pseudoName, rawPseudoArg);
         } catch (e) {
             logger.error(e);
             throw new Error(`Error while matching attributes by arg ${rawPseudoArg}.`);
         }
-        return isMatchingAttr;
     },
 
     matchesProperty: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        let isMatchingAttr;
         try {
-            isMatchingAttr = matchingProperty(domElement, pseudoName, rawPseudoArg);
+            return isPropertyMatched(domElement, pseudoName, rawPseudoArg);
         } catch (e) {
             logger.error(e);
             throw new Error(`Error while matching properties by arg ${rawPseudoArg}.`);
         }
-        return isMatchingAttr;
     },
 };
 
@@ -93,7 +88,7 @@ export const findPseudo = {
         const deep = getValidNumberAncestorArg(rawPseudoArg, pseudoName);
         const ancestors = domElements
             .map((domElement) => {
-                let ancestor;
+                let ancestor: HTMLElement | null = null;
                 try {
                     ancestor = getNthAncestor(domElement, deep, pseudoName);
                 } catch (e) {
@@ -104,6 +99,7 @@ export const findPseudo = {
             .filter(isHtmlElement);
         return ancestors;
     },
+
     /**
      * Gets list of elements by xpath expression, evaluated on every dom node from domElements list
      * @param domElements dom nodes
@@ -113,7 +109,7 @@ export const findPseudo = {
         const foundElements = domElements
             .map((domElement) => {
                 const result = [];
-                let xpathResult;
+                let xpathResult: XPathResult;
                 try {
                     xpathResult = document.evaluate(
                         rawPseudoArg,
@@ -134,11 +130,11 @@ export const findPseudo = {
                     node = xpathResult.iterateNext();
                 }
                 return result;
-            })
-            .flat(1);
+            });
 
-        return foundElements;
+        return flatten(foundElements);
     },
+
     /**
      * Gets list of closest ancestors relative to every dom node from domElements list
      * @param domElements dom nodes

@@ -16,13 +16,17 @@ import {
     REGEXP_ANY_SYMBOL,
     REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
+    CSS_PROPERTIES,
 } from '../constants';
 
 /**
  * Removes quotes for specified content value.
  *
- * getPropertyValue('content') returns value wrapped into quotes e.g. '"Chapter "',
- * but filters maintainers does not use any quotes in real rules
+ * For example, content style declaration with ::before can be set as '-' (e.g. unordered list)
+ * which displayed as simple dash `-` with no quotes,
+ * but CSSStyleDeclaration.getPropertyValue('content') will return value
+ * wrapped into quotes, e.g. '"-"', which should be removed
+ * because filters maintainers does not use any quotes in real rules
  * @param str
  */
 const removeContentQuotes = (str: string): string => {
@@ -30,12 +34,15 @@ const removeContentQuotes = (str: string): string => {
 };
 
 /**
- * Adds quotes for specified background url value
+ * Adds quotes for specified background url value.
  *
- * e.g. if background-image is specified as 'background: url(data:image/gif;base64,R0lGODlhAQA7)',
- * getPropertyValue('background-image') may return value with quotes:
- * 'background: url("data:image/gif;base64,R0lGODlhAQA7")'.
- * So we add quotes for better matching since filters maintainers might use quotes in real rules
+ * If background-image is specified **without** quotes:
+ * e.g. 'background: url(data:image/gif;base64,R0lGODlhAQA7)'
+ *
+ * CSSStyleDeclaration.getPropertyValue('background-image') may return value **with** quotes:
+ * e.g. 'background: url("data:image/gif;base64,R0lGODlhAQA7")'
+ *
+ * So we add quotes for compatibility since filters maintainers might use quotes in real rules
  * @param str
  */
 const addUrlPropertyQuotes = (str: string): string => {
@@ -63,13 +70,12 @@ const addUrlQuotesTo = {
  * Escapes regular expression string
  * @param str
  */
-const escapeRegExp = function (str: string): string {
+const escapeRegExp = (str: string): string => {
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
     // should be escaped . * + ? ^ $ { } ( ) | [ ] / \
     // except of * | ^
     const specials = ['.', '+', '?', '$', '{', '}', '(', ')', '[', ']', '\\', '/'];
     const specialsRegex = new RegExp(`[${specials.join('\\')}]`, 'g');
-
     return str.replace(specialsRegex, '\\$&');
 };
 
@@ -77,8 +83,8 @@ const escapeRegExp = function (str: string): string {
  * Converts :matches-css arg property value match to regexp
  * @param rawArg
  */
-const matchingStyleValueToRegexp = (rawArg: string): RegExp => {
-    let arg;
+const convertStyleMatchValueToRegexp = (rawArg: string): RegExp => {
+    let arg: string;
     if (rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH)) {
         // For regex patterns double quotes `"` and backslashes `\` should be escaped
         arg = addUrlQuotesTo.regexpArg(rawArg);
@@ -92,37 +98,53 @@ const matchingStyleValueToRegexp = (rawArg: string): RegExp => {
         // e.g. div:matches-css(background-image: url(data:*))
         arg = replaceAll(arg, ASTERISK, REGEXP_ANY_SYMBOL);
     }
-
     return new RegExp(arg, 'i');
 };
 
 /**
- * Gets css property value by property name
+ * Makes some properties values compatible
+ * @param propertyName
+ * @param propertyValue
+ */
+const normalizePropertyValue = (propertyName: string, propertyValue: string): string => {
+    let normalized = '';
+    switch (propertyName) {
+        case CSS_PROPERTIES.BACKGROUND:
+        case CSS_PROPERTIES.BACKGROUND_IMAGE:
+            // sometimes url property does not have quotes
+            // so we add them for consistent matching
+            normalized = addUrlPropertyQuotes(propertyValue);
+            break;
+        case CSS_PROPERTIES.CONTENT:
+            normalized = removeContentQuotes(propertyValue);
+            break;
+        case CSS_PROPERTIES.OPACITY:
+            // https://bugs.webkit.org/show_bug.cgi?id=93445
+            if (isSafariBrowser) {
+                normalized = (Math.round(parseFloat(propertyValue) * 100) / 100).toString();
+            }
+            break;
+        default:
+            normalized = propertyValue;
+    }
+    return normalized;
+};
+
+/**
+ * Gets domElement style property value
+ * by css property name and standard pseudo-element
  * @param domElement dom node
- * @param regularPseudo standard pseudo-class name — :before or :after
+ * @param regularPseudoElement standard pseudo-element — :before or :after
  * @param propertyName css property name
  */
-const getComputedStylePropertyValue = (domElement: Element, regularPseudo: string, propertyName: string) => {
-    let value = '';
-    const style = getComputedStyle(domElement, regularPseudo);
-    if (style) {
-        value = style.getPropertyValue(propertyName);
-        // https://bugs.webkit.org/show_bug.cgi?id=93445
-        if (propertyName === 'opacity' && isSafariBrowser) {
-            value = (Math.round(parseFloat(value) * 100) / 100).toString();
-        }
-    }
-
-    if (propertyName === 'content') {
-        value = removeContentQuotes(value);
-    }
-    if (propertyName === 'background' || propertyName === 'background-image') {
-        // sometimes url property does not have quotes
-        // so we add them for consistent matching
-        value = addUrlPropertyQuotes(value);
-    }
-
-    return value;
+const getComputedStylePropertyValue = (
+    domElement: Element,
+    regularPseudoElement: string,
+    propertyName: string,
+): string => {
+    const style = getComputedStyle(domElement, regularPseudoElement);
+    const propertyValue = style.getPropertyValue(propertyName);
+    return normalizePropertyValue(propertyName, propertyValue);
 };
 
 interface PseudoArgData {
@@ -141,8 +163,8 @@ interface PseudoArgData {
  */
 const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData => {
     const index = pseudoArg.indexOf(separator);
-    let name;
-    let value;
+    let name: string;
+    let value: string | undefined;
 
     if (index > -1) {
         name = pseudoArg.substring(0, index).trim();
@@ -159,34 +181,34 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
  * @param domElement
  * @param pseudoName
  * @param pseudoArg
- * @param regularPseudo
+ * @param regularPseudoElement
  */
-export const matchingStyle = (
+export const isStyleMatched = (
     domElement: Element,
     pseudoName: string,
     pseudoArg: string,
-    regularPseudo: string,
+    regularPseudoElement: string,
 ): boolean => {
     const { name: matchName, value: matchValue } = getPseudoArgData(pseudoArg, COLON);
     if (!matchName || !matchValue) {
-        throw new Error(`Required property name or value is missing in :${pseudoName} arg: ${pseudoArg}`);
+        throw new Error(`Both property name and value are required for :${pseudoName}() pseudo-class in arg: ${pseudoArg}`); // eslint-disable-line max-len
     }
 
-    let valueRegexp;
+    let valueRegexp: RegExp;
     try {
-        valueRegexp = matchingStyleValueToRegexp(matchValue);
+        valueRegexp = convertStyleMatchValueToRegexp(matchValue);
     } catch (e) {
         logger.error(e);
-        throw new Error(`Invalid argument of :${pseudoName} pseudo-class: ${pseudoArg}`);
+        throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: ${pseudoArg}`);
     }
 
-    const value = getComputedStylePropertyValue(domElement, regularPseudo, matchName);
+    const value = getComputedStylePropertyValue(domElement, regularPseudoElement, matchName);
 
     return valueRegexp && valueRegexp.test(value);
 };
 
 /**
- * Validates string arg for :matches-attr and :matches-property
+ * Validates string arg for :matches-attr() and :matches-property()
  * @param arg
  */
 const validateStrMatcherArg = (arg: string): boolean => {
@@ -202,15 +224,15 @@ const validateStrMatcherArg = (arg: string): boolean => {
 /**
  * Returns valid arg for :matches-attr and :matcher-property
  * @param rawArg arg pattern
- * @param isWildcardAllowed flag for allowing of usage of '*' as pseudo-class arg
+ * @param [isWildcardAllowed=false] flag for wildcard (`*`) using as pseudo-class arg
  */
 export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): string | RegExp => {
     // if rawArg is missing for pseudo-class
     // e.g. :matches-attr()
-    // isAbsoluteMatching will throw error before getValidMatcherArg is called:
+    // error will be thrown before getValidMatcherArg() is called:
     // name or arg is missing in AbsolutePseudoClass
 
-    let arg;
+    let arg: string | RegExp;
     if (rawArg.length > 1 && rawArg.startsWith(DOUBLE_QUOTE) && rawArg.endsWith(DOUBLE_QUOTE)) {
         rawArg = rawArg.slice(1, -1);
     }
@@ -265,7 +287,7 @@ export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMa
  * @param pseudoName name of pseudo-class
  * @param pseudoArg arg of pseudo-class
  */
-export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+export const isAttributeMatched = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     const elementAttributes = domElement.attributes;
     // no match if dom element has no attributes
     if (elementAttributes.length === 0) {
@@ -274,7 +296,7 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
 
     const { rawName: rawAttrName, rawValue: rawAttrValue } = getRawMatchingData(pseudoName, pseudoArg);
 
-    let attrNameMatch;
+    let attrNameMatch: string | RegExp;
     try {
         attrNameMatch = getValidMatcherArg(rawAttrName);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -282,37 +304,37 @@ export const matchingAttr = (domElement: Element, pseudoName: string, pseudoArg:
         throw new SyntaxError(e.message);
     }
 
-    let isMatching = false;
+    let isMatched = false;
     let i = 0;
-    while (i < elementAttributes.length && !isMatching) {
+    while (i < elementAttributes.length && !isMatched) {
         const attr = elementAttributes[i];
 
-        const isNameMatching = attrNameMatch instanceof RegExp
+        const isNameMatched = attrNameMatch instanceof RegExp
             ? attrNameMatch.test(attr.name)
             : attrNameMatch === attr.name;
 
         if (!rawAttrValue) {
             // for rules with no attribute value specified
             // e.g. :matches-attr("/regex/") or :matches-attr("attr-name")
-            isMatching = isNameMatching;
+            isMatched = isNameMatched;
         } else {
-            let attrValueMatch;
+            let attrValueMatch: string | RegExp;
             try {
                 attrValueMatch = getValidMatcherArg(rawAttrValue);
             } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
                 logger.error(e);
                 throw new SyntaxError(e.message);
             }
-            const isValueMatching = attrValueMatch instanceof RegExp
+            const isValueMatched = attrValueMatch instanceof RegExp
                 ? attrValueMatch.test(attr.value)
                 : attrValueMatch === attr.value;
-            isMatching = isNameMatching && isValueMatching;
+            isMatched = isNameMatched && isValueMatched;
         }
 
         i += 1;
     }
 
-    return isMatching;
+    return isMatched;
 };
 
 /**
@@ -326,9 +348,9 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
 
     const chainChunks = input.split(DOT);
 
-    const chainPatterns = [];
+    const chainPatterns: string[] = [];
     let patternBuffer = '';
-    let isRegexpPattern;
+    let isRegexpPattern = false;
     let i = 0;
     while (i < chainChunks.length) {
         const chunk = chainChunks[i];
@@ -369,7 +391,7 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
                 // e.g. '.prop.id' or 'nested..test'
                 throw new Error(`Empty pattern '${pattern}' is invalid in chain '${input}'`);
             }
-            let validPattern;
+            let validPattern: string | RegExp;
             try {
                 validPattern = getValidMatcherArg(pattern, true);
             } catch (e) {
@@ -392,9 +414,9 @@ interface Chain {
  * Checks if the property exists in the base object (recursively).
  * @param base
  * @param chain array of objects - parsed string property chain
- * @param output result acc
+ * @param [output=[]] result acc
  */
-const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], output: Chain[] = []) => {
+const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], output: Chain[] = []): Chain[] => {
     const tempProp = chain[0];
 
     if (chain.length === 1) {
@@ -452,7 +474,7 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
  * @param pseudoName name of pseudo-class
  * @param pseudoArg arg of pseudo-class
  */
-export const matchingProperty = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+export const isPropertyMatched = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
 
     // chained property name can not include '/' or '.'
@@ -462,7 +484,7 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
         throw new Error(`Invalid :${pseudoName} name pattern: ${rawPropertyName}`);
     }
 
-    let propChainMatches;
+    let propChainMatches: (string | RegExp)[];
     try {
         propChainMatches = parseRawPropChain(rawPropertyName);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -475,10 +497,10 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
         return false;
     }
 
-    let isMatching = true;
+    let isMatched = true;
 
     if (rawPropertyValue) {
-        let propValueMatch;
+        let propValueMatch: string | RegExp;
         try {
             propValueMatch = getValidMatcherArg(rawPropertyValue);
         } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -491,24 +513,24 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
                 const realValue = ownerObjArr[i].value;
 
                 if (propValueMatch instanceof RegExp) {
-                    isMatching = propValueMatch.test(convertTypeIntoString(realValue));
+                    isMatched = propValueMatch.test(convertTypeIntoString(realValue));
                 } else {
                     // handle 'null' and 'undefined' property values set as string
                     if (realValue === 'null' || realValue === 'undefined') {
-                        isMatching = propValueMatch === realValue;
+                        isMatched = propValueMatch === realValue;
                         break;
                     }
-                    isMatching = convertTypeFromString(propValueMatch) === realValue;
+                    isMatched = convertTypeFromString(propValueMatch) === realValue;
                 }
 
-                if (isMatching) {
+                if (isMatched) {
                     break;
                 }
             }
         }
     }
 
-    return isMatching;
+    return isMatched;
 };
 
 /**
@@ -516,8 +538,8 @@ export const matchingProperty = (domElement: Element, pseudoName: string, pseudo
  * @param textContent dom element textContent
  * @param rawPseudoArg argument of :contains pseudo-class
  */
-export const matchingText = (textContent: string, rawPseudoArg: string): boolean => {
-    let isTextContentMatched;
+export const isTextMatched = (textContent: string, rawPseudoArg: string): boolean => {
+    let isTextContentMatched = false;
 
     /**
      * TODO: add helper for parsing rawPseudoArg (string or regexp) later,
@@ -534,7 +556,7 @@ export const matchingText = (textContent: string, rawPseudoArg: string): boolean
             .substring(0, flagsIndex + 1)
             .slice(1, -1)
             .replace(/\\([\\"])/g, '$1');
-        let regex;
+        let regex: RegExp;
         try {
             regex = new RegExp(pseudoArg, flagsStr);
         } catch (e) {

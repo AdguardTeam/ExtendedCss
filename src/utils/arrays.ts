@@ -4,8 +4,8 @@
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
  * @param input
  */
-export const flatten = <T>(input: Array<T>): Array<T> => {
-    const stack: Array<T> = [];
+export const flatten = <T>(input: Array<T | T[]>): Array<T> => {
+    const stack: Array<T | T[]> = [];
     input.forEach((el) => stack.push(el));
     const res: Array<T> = [];
     while (stack.length) {

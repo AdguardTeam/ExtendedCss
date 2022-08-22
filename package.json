@@ -31,12 +31,12 @@
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AdguardTeam/ExtendedCss.git"
+    "url": "git+https://github.com/AdguardTeam/ExtendedCss.git"
   },
   "bugs": {
     "url": "https://github.com/AdguardTeam/ExtendedCss/issues"
   },
-  "homepage": "https://github.com/AdguardTeam/ExtendedCss",
+  "homepage": "https://github.com/AdguardTeam/ExtendedCss#homepage",
   "devDependencies": {
     "@babel/core": "^7.18.10",
     "@babel/plugin-transform-runtime": "^7.18.10",

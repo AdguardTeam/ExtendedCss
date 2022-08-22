@@ -60,22 +60,43 @@ interface SelectorPartData {
 }
 
 interface Context {
-    // flag for parsing rules parts
+    /**
+     * Flag for parsing rules parts
+     */
     isSelector: boolean,
-    // parser position
+
+    /**
+     * Parser position
+     */
     nextIndex: number,
-    // stylesheet left to parse
+
+    /**
+     * Stylesheet left to parse
+     */
     cssToParse: string,
-    // buffer for selector text collecting
+
+    /**
+     * Buffer for selector text collecting
+     */
     selectorBuffer: string,
-    // buffer for rule data collecting
+
+    /**
+     * Buffer for rule data collecting
+     */
     rawRuleData: RawCssRuleData,
 }
 
+/**
+ * Init value for rawRuleData
+ */
+const initRawRuleData = { selector: '' };
+
+/**
+ * Resets rule data buffer to init value after rule successfully collected
+ * @param context
+ */
 const restoreRuleAcc = (context: Context): void => {
-    context.rawRuleData = {
-        selector: '',
-    };
+    context.rawRuleData = initRawRuleData;
 };
 
 interface ParsedSelectorData {
@@ -86,7 +107,6 @@ interface ParsedSelectorData {
 /**
  * Checks the presence of :remove() pseudo-class and validates it while parsing the selector part of css rule
  * @param rawSelector
- * @return `{ selector, stylesOfSelector }`
  */
 const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     /**
@@ -100,7 +120,7 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     // ':remove(' - needed for validation rules like 'div:remove(2)'
     const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_CLASS_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
 
-    let selector;
+    let selector: string;
     let shouldRemove = false;
     const firstIndex = rawSelector.indexOf(VALID_REMOVE_MARKER);
     if (firstIndex === 0) {
@@ -143,7 +163,7 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
 const parseSelectorPart = (context: Context): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
 
-    let removeSelectorData;
+    let removeSelectorData: ParsedSelectorData;
     try {
         removeSelectorData = parseRemoveSelector(selector);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -162,7 +182,7 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
 
     let stylesOfSelector: Style[] = [];
     let success = false;
-    let ast;
+    let ast: AnySelectorNodeInterface | undefined;
 
     try {
         selector = removeSelectorData.selector;
@@ -197,10 +217,9 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
     }
     let matchPos = match.index;
     let matched = match[0];
+
     if (matched === BRACKETS.CURLY.RIGHT) {
         const declarationChunk = context.cssToParse.slice(context.nextIndex, matchPos);
-
-
         if (declarationChunk.trim().length === 0) {
             // empty style declaration
             // e.g. 'div { }'
@@ -215,9 +234,9 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
             // e.g. 'visible }' in style '{ display: none; visible }' after part before ';' is parsed
             throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_STYLE}: '${context.cssToParse}'`);
         }
-
         return matchPos;
     }
+
     if (matched === COLON) {
         const colonIndex = matchPos;
         // Expects ";" and "}".
@@ -301,6 +320,7 @@ const getDebugStyleValue = (styles: Style[]): string | undefined => {
 /**
  * Prepares final RuleData
  * @param selector
+ * @param ast
  * @param rawStyles array of previously collected styles which may contain 'remove' and 'debug'
  */
 export const prepareRuleData = (
@@ -385,12 +405,12 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
         // buffer for collecting selector part
         selectorBuffer: '',
         // accumulator for rules
-        rawRuleData: { selector: '' },
+        rawRuleData: initRawRuleData,
     };
 
     const rawResults: RawResults = new Map<string, RawResultValue>();
 
-    let selectorData;
+    let selectorData: SelectorPartData;
 
     // context.cssToParse is going to be cropped while its parsing
     while (context.cssToParse) {

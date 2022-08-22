@@ -29,7 +29,7 @@ export const replaceAll = (input: string, pattern: string, replacement: string):
 };
 
 /**
- * Converts string to regular expression
+ * Converts string pattern to regular expression
  * @param str
  */
 export const toRegExp = (str: string): RegExp => {
