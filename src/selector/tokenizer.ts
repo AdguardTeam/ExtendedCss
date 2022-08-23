@@ -1,6 +1,6 @@
 import { convert } from './converter';
 
-import { SUPPORTED_SELECTOR_MARKS } from '../constants';
+import { SUPPORTED_SELECTOR_MARKS } from '../common/constants';
 
 export enum TokenType {
     Mark = 'mark',

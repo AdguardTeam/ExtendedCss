@@ -1,6 +1,6 @@
 import { Context } from '..';
 
-import { isNumber } from '../utils/numbers';
+import { isNumber } from '../common/utils/numbers';
 
 const isSupported = (typeof window.requestAnimationFrame !== 'undefined');
 const rAF = isSupported ? requestAnimationFrame : window.setTimeout;

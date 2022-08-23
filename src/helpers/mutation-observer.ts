@@ -1,4 +1,4 @@
-import { natives } from '../utils/natives';
+import { natives } from '../common/utils/natives';
 
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 

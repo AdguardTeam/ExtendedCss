@@ -1,83 +1,105 @@
-import {
-    getNodeTextContent,
-    isHtmlElement,
-} from '../utils/nodes';
-import { flatten } from '../utils/arrays';
-import { logger } from '../utils/logger';
+import { isHtmlElement } from '../../common/utils/nodes';
+import { flatten } from '../../common/utils/arrays';
+import { logger } from '../../common/utils/logger';
 
 import {
     isTextMatched,
     isStyleMatched,
     isAttributeMatched,
     isPropertyMatched,
-} from './matcher-utils';
+    MatcherArgsInterface,
+} from './absolute-matcher';
 
 import {
     getNthAncestor,
     getValidNumberAncestorArg,
     validateStandardSelector,
-} from './finder-utils';
+} from './absolute-finder';
 
 import {
     COLON,
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
     REGULAR_PSEUDO_ELEMENTS,
-} from '../constants';
+    CONTAINS_PSEUDO,
+    HAS_TEXT_PSEUDO,
+    ABP_CONTAINS_PSEUDO,
+    MATCHES_CSS_PSEUDO,
+    MATCHES_ATTR_PSEUDO_CLASS_MARKER,
+    MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
+} from '../../common/constants';
 
-export const matchPseudo = {
-    /**
-     * Checks whether the element satisfies condition of contains pseudo-class
-     * @param domElement dom node
-     * @param rawPseudoArg contains pseudo-class arg
-     */
-    contains: (domElement: Element, rawPseudoArg: string): boolean => {
-        const elemTextContent = getNodeTextContent(domElement);
-        try {
-            return isTextMatched(elemTextContent, rawPseudoArg);
-        } catch (e) {
-            logger.error(e);
-            throw new Error(`Error while matching text: "${elemTextContent}" by arg ${rawPseudoArg}.`);
-        }
-    },
+type MatcherCallback = (a: MatcherArgsInterface) => boolean;
 
-    matchesCss: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        // no standard pseudo-element for :matched-css
-        let regularPseudoElement = '';
-        if (pseudoName === MATCHES_CSS_BEFORE_PSEUDO) {
-            regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
-        } else if (pseudoName === MATCHES_CSS_AFTER_PSEUDO) {
-            regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
-        }
-
-        try {
-            return isStyleMatched(domElement, pseudoName, rawPseudoArg, regularPseudoElement);
-        } catch (e) {
-            logger.error(e);
-            throw new Error(`Error while matching css by arg ${rawPseudoArg}.`);
-        }
-    },
-
-    matchesAttr: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        try {
-            return isAttributeMatched(domElement, pseudoName, rawPseudoArg);
-        } catch (e) {
-            logger.error(e);
-            throw new Error(`Error while matching attributes by arg ${rawPseudoArg}.`);
-        }
-    },
-
-    matchesProperty: (domElement: Element, pseudoName: string, rawPseudoArg: string): boolean => {
-        try {
-            return isPropertyMatched(domElement, pseudoName, rawPseudoArg);
-        } catch (e) {
-            logger.error(e);
-            throw new Error(`Error while matching properties by arg ${rawPseudoArg}.`);
-        }
-    },
+/**
+ * Wrapper to run matcher `callback` with `args`
+ * and throw error with `errorMessage` if `callback` run fails
+ * @param callback
+ * @param argsData
+ * @param errorMessage
+ */
+const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterface, errorMessage: string): boolean => {
+    let isMatched: boolean;
+    try {
+        isMatched = callback(argsData);
+    } catch (e) {
+        logger.error(e);
+        throw new Error(errorMessage);
+    }
+    return isMatched;
 };
 
-export const findPseudo = {
+/**
+ * Checks whether the domElement is matched by absolute extended pseudo-class argument
+ * @param domElement
+ * @param pseudoName
+ * @param pseudoArg
+ */
+export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+    let argsData: MatcherArgsInterface;
+    let errorMessage: string;
+    let callback: MatcherCallback;
+    // no standard pseudo-element is needed for :matched-css
+    let regularPseudoElement = '';
+
+    switch (pseudoName) {
+        case CONTAINS_PSEUDO:
+        case HAS_TEXT_PSEUDO:
+        case ABP_CONTAINS_PSEUDO:
+            callback = isTextMatched;
+            argsData = { pseudoName, pseudoArg, domElement };
+            errorMessage = `Error while matching element text content by arg '${pseudoArg}'.`;
+            break;
+        case MATCHES_CSS_PSEUDO:
+        case MATCHES_CSS_AFTER_PSEUDO:
+        case MATCHES_CSS_BEFORE_PSEUDO:
+            if (pseudoName === MATCHES_CSS_BEFORE_PSEUDO) {
+                regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
+            } else if (pseudoName === MATCHES_CSS_AFTER_PSEUDO) {
+                regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
+            }
+            callback = isStyleMatched;
+            argsData = { pseudoName, pseudoArg, domElement, regularPseudoElement };
+            errorMessage = `Error while matching element style by arg '${pseudoArg}'.`;
+            break;
+        case MATCHES_ATTR_PSEUDO_CLASS_MARKER:
+            callback = isAttributeMatched;
+            argsData = { domElement, pseudoName, pseudoArg };
+            errorMessage = `Error while matching element attributes by arg '${pseudoArg}'.`;
+            break;
+        case MATCHES_PROPERTY_PSEUDO_CLASS_MARKER:
+            callback = isPropertyMatched;
+            argsData = { domElement, pseudoName, pseudoArg };
+            errorMessage = `Error while matching element properties by arg '${pseudoArg}'.`;
+            break;
+        default:
+            throw new Error(`Unknown absolute pseudo-class :${pseudoName}()`);
+    }
+
+    return matcherWrapper(callback, argsData, errorMessage);
+};
+
+export const findByAbsolutePseudoPseudo = {
     /**
      * Gets list of nth ancestors relative to every dom node from domElements list
      * @param domElements dom nodes

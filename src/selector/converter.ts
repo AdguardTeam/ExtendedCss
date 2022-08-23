@@ -1,7 +1,7 @@
 import {
     REGEXP_VALID_OLD_SYNTAX,
     INVALID_OLD_SYNTAX_MARKER,
-} from '../constants';
+} from '../common/constants';
 
 /**
  * Complex replacement function.

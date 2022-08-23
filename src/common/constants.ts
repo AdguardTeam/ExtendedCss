@@ -101,19 +101,12 @@ export const SUPPORTED_SELECTOR_MARKS = [
 ];
 
 // absolute:
-export const CONTAINS_PSEUDO_CLASS_MARKERS = [
-    'contains',
-    'has-text',
-    '-abp-contains',
-];
-const MATCHES_CSS_PSEUDO = 'matches-css';
+export const CONTAINS_PSEUDO = 'contains';
+export const HAS_TEXT_PSEUDO = 'has-text';
+export const ABP_CONTAINS_PSEUDO = '-abp-contains';
+export const MATCHES_CSS_PSEUDO = 'matches-css';
 export const MATCHES_CSS_BEFORE_PSEUDO = 'matches-css-before';
 export const MATCHES_CSS_AFTER_PSEUDO = 'matches-css-after';
-export const MATCHES_CSS_PSEUDO_CLASS_MARKERS = [
-    MATCHES_CSS_PSEUDO,
-    MATCHES_CSS_BEFORE_PSEUDO,
-    MATCHES_CSS_AFTER_PSEUDO,
-];
 export const MATCHES_ATTR_PSEUDO_CLASS_MARKER = 'matches-attr';
 export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
 export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
@@ -134,18 +127,25 @@ export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 export const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
 
 // relative:
+export const HAS_PSEUDO_CLASS_MARKER = 'has';
+export const IF_PSEUDO_CLASS_MARKER = 'if';
+export const ABP_HAS_PSEUDO_CLASS_MARKER = '-abp-has';
 export const HAS_PSEUDO_CLASS_MARKERS = [
-    'has',
-    'if',
-    '-abp-has',
+    HAS_PSEUDO_CLASS_MARKER,
+    IF_PSEUDO_CLASS_MARKER,
+    ABP_HAS_PSEUDO_CLASS_MARKER,
 ];
 export const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
 export const IS_PSEUDO_CLASS_MARKER = 'is';
 export const NOT_PSEUDO_CLASS_MARKER = 'not';
 
 export const ABSOLUTE_PSEUDO_CLASSES = [
-    ...CONTAINS_PSEUDO_CLASS_MARKERS,
-    ...MATCHES_CSS_PSEUDO_CLASS_MARKERS,
+    CONTAINS_PSEUDO,
+    HAS_TEXT_PSEUDO,
+    ABP_CONTAINS_PSEUDO,
+    MATCHES_CSS_PSEUDO,
+    MATCHES_CSS_BEFORE_PSEUDO,
+    MATCHES_CSS_AFTER_PSEUDO,
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
     XPATH_PSEUDO_CLASS_MARKER,

@@ -17,16 +17,16 @@ import {
 } from './helpers/mutation-observer';
 import { TimingStats } from './helpers/timing-stats';
 
-import { natives } from './utils/natives';
-import { logger } from './utils/logger';
-import { removeSuffix } from './utils/strings';
-import { getElementSelectorPath } from './utils/nodes';
+import { natives } from './common/utils/natives';
+import { logger } from './common/utils/logger';
+import { removeSuffix } from './common/utils/strings';
+import { getElementSelectorPath } from './common/utils/nodes';
 
 import {
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REMOVE_PSEUDO_PROPERTY_KEY,
-} from './constants';
+} from './common/constants';
 
 const APPLY_RULES_DELAY = 150;
 

@@ -528,7 +528,7 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('matches-attr - invalid args', () => {
-            const matchAttrErrorText = 'Error while matching attributes by arg';
+            const matchAttrErrorText = 'Error while matching element attributes by arg';
             const toThrowInputs = [
                 { selector: 'div:matches-attr()', error: 'Missing arg for :matches-attr pseudo-class' },
                 { selector: 'div:matches-attr("//")', error: matchAttrErrorText },
@@ -723,7 +723,7 @@ describe('extended pseudo-classes', () => {
 
         describe('matches-property - invalid args', () => {
             const missingArgErrorText = 'Missing arg for :matches-property pseudo-class';
-            const matchPropErrorText = 'Error while matching properties by arg';
+            const matchPropErrorText = 'Error while matching element properties by arg';
             const unbalancedBracketsErrorText = 'Unbalanced brackets for extended pseudo-class';
             const toThrowInputs = [
                 { selector: 'div:matches-property()', error: missingArgErrorText },

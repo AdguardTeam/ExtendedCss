@@ -6,7 +6,7 @@ import { ExtendedCss } from '../src';
 
 import { TimingStats } from '../src/helpers/timing-stats';
 
-import { logger } from '../src/utils/logger';
+import { logger } from '../src/common/utils/logger';
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types

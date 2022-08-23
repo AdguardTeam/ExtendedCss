@@ -4,7 +4,7 @@
 
 import { parse } from '../../src/stylesheet/parser';
 
-import { STYLESHEET_ERROR_PREFIX } from '../../src/constants';
+import { STYLESHEET_ERROR_PREFIX } from '../../src/common/constants';
 
 interface TestRuleData {
     selector: string,

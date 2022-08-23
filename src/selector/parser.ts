@@ -12,7 +12,7 @@ import {
     RelativePseudoClassNode,
 } from './nodes';
 
-import { getLast } from '../utils/arrays';
+import { getLast } from '../common/utils/arrays';
 
 import {
     BRACKETS,
@@ -50,7 +50,7 @@ import {
     REGULAR_PSEUDO_ELEMENTS,
     IS_OR_NOT_PSEUDO_SELECTING_ROOT,
     XPATH_PSEUDO_SELECTING_ROOT,
-} from '../constants';
+} from '../common/constants';
 
 /**
  * Checks whether the passed token is supported extended pseudo-class

@@ -3,9 +3,10 @@ import {
     convertTypeIntoString,
     replaceAll,
     toRegExp,
-} from '../utils/strings';
-import { logger } from '../utils/logger';
-import { isSafariBrowser } from '../utils/user-agents';
+} from '../../common/utils/strings';
+import { logger } from '../../common/utils/logger';
+import { isSafariBrowser } from '../../common/utils/user-agents';
+import { getNodeTextContent } from '../../common/utils/nodes';
 
 import {
     ASTERISK,
@@ -17,7 +18,18 @@ import {
     REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
     CSS_PROPERTIES,
-} from '../constants';
+} from '../../common/constants';
+
+export interface MatcherArgsInterface {
+    // extended pseudo-class name
+    pseudoName: string,
+    // extended pseudo-class arg
+    pseudoArg: string,
+    // dom element to check
+    domElement: Element,
+    // standard pseudo-element, needed only for :matches-css()
+    regularPseudoElement?: string,
+}
 
 /**
  * Removes quotes for specified content value.
@@ -139,8 +151,8 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
  */
 const getComputedStylePropertyValue = (
     domElement: Element,
-    regularPseudoElement: string,
     propertyName: string,
+    regularPseudoElement?: string,
 ): string => {
     const style = getComputedStyle(domElement, regularPseudoElement);
     const propertyValue = style.getPropertyValue(propertyName);
@@ -178,20 +190,14 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
 
 /**
  * Checks whether the domElement is matched by :matches-css() arg
- * @param domElement
- * @param pseudoName
- * @param pseudoArg
- * @param regularPseudoElement
+ * @param argsData
  */
-export const isStyleMatched = (
-    domElement: Element,
-    pseudoName: string,
-    pseudoArg: string,
-    regularPseudoElement: string,
-): boolean => {
+export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
+    const { pseudoName, pseudoArg, domElement, regularPseudoElement } = argsData;
+
     const { name: matchName, value: matchValue } = getPseudoArgData(pseudoArg, COLON);
     if (!matchName || !matchValue) {
-        throw new Error(`Both property name and value are required for :${pseudoName}() pseudo-class in arg: ${pseudoArg}`); // eslint-disable-line max-len
+        throw new Error(`Required property name or value is missing in :${pseudoName}() arg: '${pseudoArg}'`);
     }
 
     let valueRegexp: RegExp;
@@ -199,10 +205,10 @@ export const isStyleMatched = (
         valueRegexp = convertStyleMatchValueToRegexp(matchValue);
     } catch (e) {
         logger.error(e);
-        throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: ${pseudoArg}`);
+        throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${pseudoArg}'`);
     }
 
-    const value = getComputedStylePropertyValue(domElement, regularPseudoElement, matchName);
+    const value = getComputedStylePropertyValue(domElement, matchName, regularPseudoElement);
 
     return valueRegexp && valueRegexp.test(value);
 };
@@ -283,11 +289,10 @@ export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMa
 
 /**
  * Checks whether the domElement is matched by :matches-attr() arg
- * @param domElement element to check
- * @param pseudoName name of pseudo-class
- * @param pseudoArg arg of pseudo-class
+ * @param argsData
  */
-export const isAttributeMatched = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
+    const { pseudoName, pseudoArg, domElement } = argsData;
     const elementAttributes = domElement.attributes;
     // no match if dom element has no attributes
     if (elementAttributes.length === 0) {
@@ -470,11 +475,10 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
 
 /**
  * Checks whether the domElement is matched by :matches-property() arg
- * @param domElement element to check
- * @param pseudoName name of pseudo-class
- * @param pseudoArg arg of pseudo-class
+ * @param argsData
  */
-export const isPropertyMatched = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
+export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
+    const { pseudoName, pseudoArg, domElement } = argsData;
     const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
 
     // chained property name can not include '/' or '.'
@@ -535,38 +539,39 @@ export const isPropertyMatched = (domElement: Element, pseudoName: string, pseud
 
 /**
  * Checks whether the textContent is matched by :contains arg
- * @param textContent dom element textContent
- * @param rawPseudoArg argument of :contains pseudo-class
+ * @param argsData
  */
-export const isTextMatched = (textContent: string, rawPseudoArg: string): boolean => {
-    let isTextContentMatched = false;
+export const isTextMatched = (argsData: MatcherArgsInterface): boolean => {
+    const { pseudoName, pseudoArg, domElement } = argsData;
+    const textContent = getNodeTextContent(domElement);
+    let isTextContentMatched;
 
     /**
-     * TODO: add helper for parsing rawPseudoArg (string or regexp) later,
+     * TODO: consider adding helper for parsing pseudoArg (string or regexp) later,
      * seems to be similar for few extended pseudo-classes
      */
-    let pseudoArg = rawPseudoArg;
+    let pseudoArgToMatch = pseudoArg;
 
-    if (pseudoArg.startsWith(SLASH)
-        && REGEXP_WITH_FLAGS_REGEXP.test(pseudoArg)) {
+    if (pseudoArgToMatch.startsWith(SLASH)
+        && REGEXP_WITH_FLAGS_REGEXP.test(pseudoArgToMatch)) {
         // regexp arg
-        const flagsIndex = pseudoArg.lastIndexOf('/');
-        const flagsStr = pseudoArg.substring(flagsIndex + 1);
-        pseudoArg = pseudoArg
+        const flagsIndex = pseudoArgToMatch.lastIndexOf('/');
+        const flagsStr = pseudoArgToMatch.substring(flagsIndex + 1);
+        pseudoArgToMatch = pseudoArgToMatch
             .substring(0, flagsIndex + 1)
             .slice(1, -1)
             .replace(/\\([\\"])/g, '$1');
         let regex: RegExp;
         try {
-            regex = new RegExp(pseudoArg, flagsStr);
+            regex = new RegExp(pseudoArgToMatch, flagsStr);
         } catch (e) {
-            throw new Error(`Invalid argument of :contains pseudo-class: ${rawPseudoArg}`);
+            throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: ${pseudoArg}`);
         }
         isTextContentMatched = regex.test(textContent);
     } else {
         // none-regexp arg
-        pseudoArg = pseudoArg.replace(/\\([\\()[\]"])/g, '$1');
-        isTextContentMatched = textContent.includes(pseudoArg);
+        pseudoArgToMatch = pseudoArgToMatch.replace(/\\([\\()[\]"])/g, '$1');
+        isTextContentMatched = textContent.includes(pseudoArgToMatch);
     }
 
     return isTextContentMatched;

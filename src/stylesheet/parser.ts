@@ -5,8 +5,8 @@ import { AnySelectorNodeInterface } from '../selector/nodes';
 
 import { TimingStats } from '../helpers/timing-stats';
 
-import { logger } from '../utils/logger';
-import { getObjectFromEntries } from '../utils/objects';
+import { logger } from '../common/utils/logger';
+import { getObjectFromEntries } from '../common/utils/objects';
 
 import {
     BRACKETS,
@@ -20,7 +20,7 @@ import {
     REMOVE_PSEUDO_CLASS_MARKER,
     REMOVE_PSEUDO_PROPERTY_KEY,
     STYLESHEET_ERROR_PREFIX,
-} from '../constants';
+} from '../common/constants';
 
 interface Style {
     property: string,
