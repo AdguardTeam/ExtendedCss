@@ -23,10 +23,11 @@ const config: BrowserstackConfig = {
     timeout: 60,
 };
 
-browserstackRunner.run(config, (error: any): void => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (error) {
-        throw error;
-    }
-
-    console.log('Test Finished');
-});
+export const runBrowserstack = async () => {
+    browserstackRunner.run(config, (error: any): void => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (error) {
+            throw error;
+        }
+        console.log('Test Finished');
+    });
+};

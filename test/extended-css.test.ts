@@ -8,6 +8,8 @@ import { TimingStats } from '../src/helpers/timing-stats';
 
 import { logger } from '../src/common/utils/logger';
 
+const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
+
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
     _testProp: string | Object,
@@ -64,7 +66,7 @@ const rAF = (callback: Function, delay: number) => { // eslint-disable-line @typ
     }
 };
 
-jest.setTimeout(20 * 1000);
+jest.setTimeout(TESTS_RUN_TIMEOUT_MS);
 
 describe('extended css library', () => {
     afterEach(() => {

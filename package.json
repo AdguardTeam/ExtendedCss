@@ -12,11 +12,8 @@
     "node": ">=14"
   },
   "scripts": {
-    "build": "rollup -c rollup.config.ts",
-    "build:playwright-selector-test": "rollup -c rollup.config.ts --environment TEST_SELECTOR_PLAYWRIGHT",
-    "build:browserstack-test": "rollup -c rollup.config.ts --environment TEST_BROWSERSTACK",
-    "test": "yarn build:playwright-selector-test && jest --silent",
-    "browserstack": "yarn build:browserstack-test && ts-node test/browserstack/index.ts",
+    "build": "ts-node tools/build",
+    "test": "ts-node tools/test",
     "increment": "yarn version --patch --no-git-tag-version",
     "lint": "eslint .",
     "lint-staged": "lint-staged",
@@ -45,11 +42,15 @@
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.1",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@types/jest": "^28.1.6",
+    "@types/html-minifier": "^4.0.2",
+    "@types/jest": "^28.1.8",
+    "@types/node": "^18.7.11",
     "@types/qunit": "^2.19.2",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "@typescript-eslint/parser": "^5.32.0",
     "browserstack-runner": "^0.9.4",
+    "chalk": "^4.1.2",
+    "commander": "^9.4.0",
     "dotenv": "^16.0.1",
     "eslint": "^8.21.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
@@ -64,11 +65,10 @@
     "rollup": "^2.77.2",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-delete": "^2.0.0",
-    "rollup-plugin-generate-html": "^0.2.0",
+    "rollup-plugin-html2": "^3.1.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-ts": "^3.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
-  },
-  "dependencies": {}
+  }
 }

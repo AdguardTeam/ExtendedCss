@@ -1,7 +1,11 @@
 import type { Config } from '@jest/types';
 
 const config: Config.InitialOptions = {
-    testPathIgnorePatterns: ['./test/browserstack'],
+    silent: true,
+    testPathIgnorePatterns: [
+        './test/browserstack',
+        './tools/test',
+    ],
 };
 
 export default config;

@@ -645,18 +645,9 @@ Install dependencies
 yarn install
 ```
 
-Run node testing
+Run local node testing
 ```
-yarn test
-```
-
-Testing can be limited be Jest options [--testPathPattern](https://jestjs.io/docs/cli#--testpathpatternregex) and [--testNamePattern](https://jestjs.io/docs/cli#--testnamepatternregex)
-```
-yarn test --testPathPattern=selector-tokenizer
-
-yarn test --testNamePattern=check valid regular selectors
-
-yarn test --testPathPattern=stylesheet-parser --testNamePattern=one rule
+yarn test local
 ```
 
 ## Usage

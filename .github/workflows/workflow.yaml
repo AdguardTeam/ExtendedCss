@@ -29,8 +29,8 @@ jobs:
       - name: yarn build
         run: yarn build
 
-      - name: yarn test
-        run: yarn test
+      - name: yarn test local
+        run: yarn test local
 
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3

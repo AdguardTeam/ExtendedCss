@@ -11,6 +11,9 @@ import server from '../helpers/server';
 let browser: Browser;
 let page: Page;
 
+// sometimes default 5 seconds are not enough
+const TESTS_RUN_TIMEOUT_MS = 10 * 1000;
+
 /**
  * Sets document.body.innerHTML with passed htmlContent
  * @param htmlContent
@@ -55,6 +58,8 @@ const expectNoMatch = async (extCssSelector: string): Promise<void> => {
     const selectedIds = await getIdsByExtended(extCssSelector);
     expect(selectedIds.length).toEqual(0);
 };
+
+jest.setTimeout(TESTS_RUN_TIMEOUT_MS);
 
 describe('playwright required tests', () => {
     describe('matches-css pseudos', () => {
