@@ -700,6 +700,10 @@ interface ExtCssConfiguration {
  */
 type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
 
+/**
+ * Simplified just for representation
+ * there is a required property 'content' is an applied rule text
+ */
 interface IAffectedElement {
   rules: { style: { content: string }}[]
   node: HTMLElement;

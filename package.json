@@ -4,7 +4,7 @@
   "description": "Module for applying CSS styles with extended selection properties.",
   "main": "dist/extended-css.cjs.js",
   "module": "dist/extended-css.esm.js",
-  "types": "dist/extended-css.d.ts",
+  "typings": "dist/types",
   "directories": {
     "test": "test"
   },
@@ -14,8 +14,10 @@
   "scripts": {
     "build": "ts-node tools/build",
     "test": "ts-node tools/test",
+    "prebuild": "rimraf dist/types && yarn build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outdir dist/types",
     "increment": "yarn version --patch --no-git-tag-version",
-    "lint": "eslint .",
+    "lint": "eslint . && tsc --noEmit",
     "lint-staged": "lint-staged",
     "prepare": "husky install"
   },
@@ -62,6 +64,7 @@
     "lint-staged": "^13.0.3",
     "playwright": "1.24.2",
     "qunit": "2.10.0",
+    "rimraf": "^3.0.2",
     "rollup": "^2.77.2",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-delete": "^2.0.0",

@@ -43,12 +43,27 @@ export interface CssStyleMap {
     [key: string]: string;
 }
 
-export interface ExtendedCssRuleData {
+export interface ExtCssRuleData {
     selector: string,
     ast: AnySelectorNodeInterface,
     style?: CssStyleMap,
     debug?: string,
     timingStats?: TimingStats,
+}
+
+/**
+ * Needed for ExtCssConfiguration.beforeStyleApplied();
+ * value of 'content' property is applied rule text
+ */
+export interface CssStyleMapWithContent extends CssStyleMap {
+    content: string,
+}
+
+/**
+ * Rule data interface with required 'style' property defined with required 'content' property
+ */
+export interface ExtCssRuleDataWithContentStyle extends ExtCssRuleData {
+    style: CssStyleMapWithContent,
 }
 
 interface SelectorPartData {
@@ -327,8 +342,8 @@ export const prepareRuleData = (
     selector: string,
     ast: AnySelectorNodeInterface,
     rawStyles: Style[],
-): ExtendedCssRuleData => {
-    const ruleData: ExtendedCssRuleData = { selector, ast };
+): ExtCssRuleData => {
+    const ruleData: ExtCssRuleData = { selector, ast };
 
     const debugValue = getDebugStyleValue(rawStyles);
 
@@ -393,7 +408,7 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  * Parses stylesheet into rules data objects
  * @param stylesheet
  */
-export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
+export const parse = (rawStylesheet: string): ExtCssRuleData[] => {
     const stylesheet = normalize(rawStylesheet);
     const context: Context = {
         // any stylesheet should start with selector
@@ -477,7 +492,7 @@ export const parse = (rawStylesheet: string): ExtendedCssRuleData[] => {
         }
     }
 
-    const results: ExtendedCssRuleData[] = [];
+    const results: ExtCssRuleData[] = [];
     rawResults.forEach((value, key) => {
         const selector = key;
         const { ast, styles: rawStyles } = value;

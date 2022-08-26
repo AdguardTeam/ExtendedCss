@@ -6,6 +6,7 @@
     "module": "es2015",
     "lib": ["esnext", "dom"],
     "strict": true,
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -22,4 +23,7 @@
       "module": "commonjs"
       }
   },
+  "include": [
+    "src"
+  ]
 }

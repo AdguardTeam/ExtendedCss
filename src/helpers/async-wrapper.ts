@@ -1,4 +1,4 @@
-import { Context } from '..';
+import { Context } from '../extended-css';
 
 import { isNumber } from '../common/utils/numbers';
 
