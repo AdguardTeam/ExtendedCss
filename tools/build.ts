@@ -3,8 +3,6 @@ import { writeFile } from './utils';
 import { program } from 'commander';
 
 import { terser } from 'rollup-plugin-terser';
-import copy from 'rollup-plugin-copy';
-import del from 'rollup-plugin-delete';
 
 import { commonPlugins, libOutputBanner } from './rollup-commons';
 import { rollupRunner } from './rollup-runner';
@@ -58,19 +56,7 @@ const prodConfig = {
             })],
         },
     ],
-    plugins: [
-        ...commonPlugins,
-        // TODO: ditch while building types: AG-15672
-        copy({
-            targets: [
-                { src: 'types/extended-css.d.ts', dest: prodOutputDir },
-            ],
-        }),
-        del({
-            targets: [prodOutputDir],
-            hook: 'buildStart',
-        }),
-    ],
+    plugins: commonPlugins,
 };
 
 const buildLib = async (): Promise<void> => {

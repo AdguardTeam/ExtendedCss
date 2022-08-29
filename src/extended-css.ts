@@ -18,6 +18,7 @@ import {
 } from './helpers/mutation-observer';
 import { TimingStats } from './helpers/timing-stats';
 
+import { isBrowserSupported } from './common/utils/user-agents';
 import { natives } from './common/utils/natives';
 import { logger } from './common/utils/logger';
 import { removeSuffix } from './common/utils/strings';
@@ -408,6 +409,10 @@ export class ExtendedCss {
     private mainCallback: MainCallback;
 
     constructor(configuration: ExtCssConfiguration) {
+        if (!isBrowserSupported()) {
+            throw new Error('Browser is not supported by ExtendedCss.');
+        }
+
         if (!configuration) {
             throw new Error('ExtendedCss configuration should be provided.');
         }

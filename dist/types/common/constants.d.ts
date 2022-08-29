@@ -133,3 +133,12 @@ export declare const STYLESHEET_ERROR_PREFIX: {
     INVALID_REMOVE: string;
     NO_STYLE_OR_REMOVE: string;
 };
+export declare enum BrowserName {
+    Chrome = "Chrome",
+    Firefox = "Firefox",
+    Edge = "Edg",
+    Opera = "Opera",
+    Safari = "Safari"
+}
+export declare const CHROMIUM_BRAND_NAME = "Chromium";
+export declare const GOOGLE_CHROME_BRAND_NAME = "Google Chrome";

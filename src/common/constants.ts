@@ -257,3 +257,14 @@ export const STYLESHEET_ERROR_PREFIX = {
     INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
     NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
 };
+
+export enum BrowserName {
+    Chrome = 'Chrome',
+    Firefox = 'Firefox',
+    Edge = 'Edg',
+    Opera = 'Opera',
+    Safari = 'Safari',
+}
+
+export const CHROMIUM_BRAND_NAME = 'Chromium';
+export const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';

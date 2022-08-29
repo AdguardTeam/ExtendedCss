@@ -4834,14 +4834,14 @@ rollup-plugin-copy@^3.4.0:
 
 rollup-plugin-delete@^2.0.0:
   version "2.0.0"
-  resolved "https://registry.npmjs.org/rollup-plugin-delete/-/rollup-plugin-delete-2.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-delete/-/rollup-plugin-delete-2.0.0.tgz#262acf80660d48c3b167fb0baabd0c3ab985c153"
   integrity sha512-/VpLMtDy+8wwRlDANuYmDa9ss/knGsAgrDhM+tEwB1npHwNu4DYNmDfUL55csse/GHs9Q+SMT/rw9uiaZ3pnzA==
   dependencies:
     del "^5.1.0"
 
 rollup-plugin-html2@^3.1.0:
   version "3.1.0"
-  resolved "https://registry.npmjs.org/rollup-plugin-html2/-/rollup-plugin-html2-3.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-html2/-/rollup-plugin-html2-3.1.0.tgz#01146d744e7571eefe90665d90f7f8d6e8d9e15f"
   integrity sha512-j9Gr4diZRVVj+A8Msi6HoPEY29m6z13PMkPI9pWhHn1FBZeimGmKcI/qQVyswyYsSvVvUUh9Cy/HJwUiykf12Q==
   dependencies:
     html-minifier "^4.0.0"
@@ -4849,7 +4849,7 @@ rollup-plugin-html2@^3.1.0:
 
 rollup-plugin-terser@^7.0.2:
   version "7.0.2"
-  resolved "https://registry.npmjs.org/rollup-plugin-terser/-/rollup-plugin-terser-7.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-terser/-/rollup-plugin-terser-7.0.2.tgz#e8fbba4869981b2dc35ae7e8a502d5c6c04d324d"
   integrity sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==
   dependencies:
     "@babel/code-frame" "^7.10.4"
@@ -4859,7 +4859,7 @@ rollup-plugin-terser@^7.0.2:
 
 rollup-plugin-ts@^3.0.2:
   version "3.0.2"
-  resolved "https://registry.npmjs.org/rollup-plugin-ts/-/rollup-plugin-ts-3.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-ts/-/rollup-plugin-ts-3.0.2.tgz#ee1a3f9ffe202ceff0b4d2f725fa268fa0c921bf"
   integrity sha512-67qi2QTHewhLyKDG6fX3jpohWpmUPPIT/xJ7rsYK46X6MqmoWy64Ti0y8ygPfLv8mXDCdRZUofM3mTxDfCswRA==
   dependencies:
     "@rollup/pluginutils" "^4.2.1"
@@ -5445,6 +5445,11 @@ uri-js@^4.2.2:
   integrity sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==
   dependencies:
     punycode "^2.1.0"
+
+user-agent-data-types@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/user-agent-data-types/-/user-agent-data-types-0.3.0.tgz#6a3ad1eabce306af62ab82ffbcd1ab747857f1b3"
+  integrity sha512-AI3vPwmafXd4r/mSbubOu6S1ngO4vdvJFAJdP0MUc9Y4SwXm/Pqpno0R/O4Zt26vZYzWorV+4BgVcntxhJlMPw==
 
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"
