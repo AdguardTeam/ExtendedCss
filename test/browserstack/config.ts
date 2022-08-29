@@ -28,6 +28,13 @@ export const rawConfig = {
             os_version: '10',
         },
         {
+            browser: 'Opera',
+            browser_version: '80',
+            device: null,
+            os: 'Windows',
+            os_version: '10',
+        },
+        {
             browser: 'Safari',
             browser_version: '10',
             device: null,
