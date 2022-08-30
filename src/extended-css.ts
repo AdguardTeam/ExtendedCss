@@ -169,12 +169,18 @@ const protectStyleAttribute = (
     return protectionObserver;
 };
 
-export interface AffectedElement {
+interface AffectedElementProto {
     node: HTMLElement;
-    rules: ExtCssRuleData[],
     originalStyle: string,
     protectionObserver?: ExtMutationObserver | null,
     removed?: boolean,
+}
+
+/**
+ * Interface for internal lib usage
+ */
+export interface AffectedElement extends AffectedElementProto {
+    rules: ExtCssRuleData[],
 }
 
 /**
@@ -217,7 +223,8 @@ const removeElement = (context: Context, affectedElement: AffectedElement): void
 /**
  * Api interface with required 'content' style property in rules
  */
-export interface IAffectedElement extends AffectedElement {
+export interface IAffectedElement extends Partial<AffectedElementProto> {
+    node: HTMLElement;
     rules: ExtCssRuleDataWithContentStyle[],
 }
 
@@ -228,7 +235,7 @@ export interface IAffectedElement extends AffectedElement {
  * Used by AdGuard Browser extension to display rules in Filtering log
  * and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
  */
-type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
+type BeforeStyleAppliedCallback = (x:IAffectedElement) => AffectedElement;
 
 export interface ExtCssConfiguration {
     // css stylesheet
@@ -255,7 +262,7 @@ const applyStyle = (context: Context, affectedElement: AffectedElement): void =>
     }
 
     if (context.beforeStyleApplied) {
-        affectedElement = context.beforeStyleApplied(affectedElement);
+        affectedElement = context.beforeStyleApplied(affectedElement as IAffectedElement);
         if (!affectedElement) {
             return;
         }
@@ -370,7 +377,7 @@ const printTimingInfo = (context: Context): void => {
 };
 
 export interface Context {
-    beforeStyleApplied?(x: AffectedElement): AffectedElement;
+    beforeStyleApplied?(x: IAffectedElement): AffectedElement;
     affectedElements: AffectedElement[],
     isDomObserved: boolean,
     domMutationObserver?: MutationObserver,

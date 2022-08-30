@@ -62,7 +62,7 @@ export interface CssStyleMapWithContent extends CssStyleMap {
 /**
  * Rule data interface with required 'style' property defined with required 'content' property
  */
-export interface ExtCssRuleDataWithContentStyle extends ExtCssRuleData {
+export interface ExtCssRuleDataWithContentStyle extends Partial<ExtCssRuleData> {
     style: CssStyleMapWithContent,
 }
 

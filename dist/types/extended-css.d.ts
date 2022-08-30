@@ -5,17 +5,23 @@ declare type ValidationResult = {
     error: string | null;
 };
 export declare type MainCallback = () => void;
-export interface AffectedElement {
+interface AffectedElementProto {
     node: HTMLElement;
-    rules: ExtCssRuleData[];
     originalStyle: string;
     protectionObserver?: ExtMutationObserver | null;
     removed?: boolean;
 }
 /**
+ * Interface for internal lib usage
+ */
+export interface AffectedElement extends AffectedElementProto {
+    rules: ExtCssRuleData[];
+}
+/**
  * Api interface with required 'content' style property in rules
  */
-export interface IAffectedElement extends AffectedElement {
+export interface IAffectedElement extends Partial<AffectedElementProto> {
+    node: HTMLElement;
     rules: ExtCssRuleDataWithContentStyle[];
 }
 /**
@@ -25,7 +31,7 @@ export interface IAffectedElement extends AffectedElement {
  * Used by AdGuard Browser extension to display rules in Filtering log
  * and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
  */
-declare type BeforeStyleAppliedCallback = (x: IAffectedElement) => IAffectedElement;
+declare type BeforeStyleAppliedCallback = (x: IAffectedElement) => AffectedElement;
 export interface ExtCssConfiguration {
     styleSheet: string;
     beforeStyleApplied?: BeforeStyleAppliedCallback;
@@ -35,7 +41,7 @@ interface RemovalsStatistic {
     [key: string]: number;
 }
 export interface Context {
-    beforeStyleApplied?(x: AffectedElement): AffectedElement;
+    beforeStyleApplied?(x: IAffectedElement): AffectedElement;
     affectedElements: AffectedElement[];
     isDomObserved: boolean;
     domMutationObserver?: MutationObserver;
