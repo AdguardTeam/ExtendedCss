@@ -15,7 +15,6 @@ export interface AnySelectorNodeInterface {
     children: AnySelectorNodeInterface[],
     value?: string,
     name?: string,
-    arg?: string,
 
     addChild(child: AnySelectorNodeInterface): void;
 }
@@ -71,7 +70,7 @@ export class RelativePseudoClassNode extends AnySelectorNode {
 export class AbsolutePseudoClassNode extends AnySelectorNode {
     name: string;
 
-    arg = '';
+    value = '';
 
     constructor(name: string) {
         super(NodeType.AbsolutePseudoClass);
@@ -124,7 +123,7 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
  * AbsolutePseudoClass
  *   : type
  *   : name
- *   : arg
+ *   : value
  *   ;
  */
 

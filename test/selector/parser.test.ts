@@ -13,7 +13,7 @@ import {
     expectSelectorListOfRegularSelectors,
     expectSingleSelectorAstWithAnyChildren,
     expectToThrowInput,
-} from '../helpers/parser';
+} from '../helpers/selector-parser';
 
 describe('regular selectors', () => {
     it('simple', () => {
@@ -127,49 +127,49 @@ describe('absolute extended selectors', () => {
                 actual: 'span:contains(text)',
                 expected: [
                     { isRegular: true, value: 'span' },
-                    { isAbsolute: true, name, arg: 'text' },
+                    { isAbsolute: true, name, value: 'text' },
                 ],
             },
             {
                 actual: 'span:contains("some text")',
                 expected: [
                     { isRegular: true, value: 'span' },
-                    { isAbsolute: true, name, arg: '"some text"' },
+                    { isAbsolute: true, name, value: '"some text"' },
                 ],
             },
             {
                 actual: 'div[id] > .row > span:contains(/^Advertising$/)',
                 expected: [
                     { isRegular: true, value: 'div[id] > .row > span' },
-                    { isAbsolute: true, name, arg: '/^Advertising$/' },
+                    { isAbsolute: true, name, value: '/^Advertising$/' },
                 ],
             },
             {
                 actual: 'div > :contains(test)',
                 expected: [
                     { isRegular: true, value: 'div > *' },
-                    { isAbsolute: true, name, arg: 'test' },
+                    { isAbsolute: true, name, value: 'test' },
                 ],
             },
             {
                 actual: ':contains((test))',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: '(test)' },
+                    { isAbsolute: true, name, value: '(test)' },
                 ],
             },
             {
                 actual: 'a[class*=blog]:contains(!)',
                 expected: [
                     { isRegular: true, value: 'a[class*=blog]' },
-                    { isAbsolute: true, name, arg: '!' },
+                    { isAbsolute: true, name, value: '!' },
                 ],
             },
             {
                 actual: ':contains(/[\\w]{9,}/)',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: '/[\\w]{9,}/' },
+                    { isAbsolute: true, name, value: '/[\\w]{9,}/' },
                 ],
             },
         ];
@@ -183,35 +183,35 @@ describe('absolute extended selectors', () => {
                 actual: '*:matches-css(width:400px)',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: 'width:400px' },
+                    { isAbsolute: true, name, value: 'width:400px' },
                 ],
             },
             {
                 actual: 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)',
                 expected: [
                     { isRegular: true, value: 'div' },
-                    { isAbsolute: true, name, arg: 'background-image: /^url\\("data:image\\/gif;base64.+/' },
+                    { isAbsolute: true, name, value: 'background-image: /^url\\("data:image\\/gif;base64.+/' },
                 ],
             },
             {
                 actual: 'div:matches-css(background-image: /^url\\([a-z]{4}:[a-z]{5}/)',
                 expected: [
                     { isRegular: true, value: 'div' },
-                    { isAbsolute: true, name, arg: 'background-image: /^url\\([a-z]{4}:[a-z]{5}/' },
+                    { isAbsolute: true, name, value: 'background-image: /^url\\([a-z]{4}:[a-z]{5}/' },
                 ],
             },
             {
                 actual: ':matches-css(   background-image: /v\\.ping\\.pl\\/MjAxOTA/   )',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: '   background-image: /v\\.ping\\.pl\\/MjAxOTA/   ' },
+                    { isAbsolute: true, name, value: '   background-image: /v\\.ping\\.pl\\/MjAxOTA/   ' },
                 ],
             },
             {
                 actual: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    )',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' },
+                    { isAbsolute: true, name, value: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' }, // eslint-disable-line max-len
                 ],
             },
         ];
@@ -224,7 +224,7 @@ describe('absolute extended selectors', () => {
             actual,
             expected: [
                 { isRegular: true, value: 'div' },
-                { isAbsolute: true, name: 'matches-attr', arg: '"/data-v-/"' },
+                { isAbsolute: true, name: 'matches-attr', value: '"/data-v-/"' },
             ],
         });
     });
@@ -235,7 +235,7 @@ describe('absolute extended selectors', () => {
             actual,
             expected: [
                 { isRegular: true, value: 'a' },
-                { isAbsolute: true, name: 'nth-ancestor', arg: '2' },
+                { isAbsolute: true, name: 'nth-ancestor', value: '2' },
             ],
         });
     });
@@ -248,70 +248,70 @@ describe('absolute extended selectors', () => {
                 actual: 'div:xpath(//h3[contains(text(),"Share it!")]/..)',
                 expected: [
                     { isRegular: true, value: 'div' },
-                    { isAbsolute: true, name, arg: '//h3[contains(text(),"Share it!")]/..' },
+                    { isAbsolute: true, name, value: '//h3[contains(text(),"Share it!")]/..' },
                 ],
             },
             {
                 actual: '*:xpath(//h3[contains(text(),"Share it!")]/..)',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, arg: '//h3[contains(text(),"Share it!")]/..' },
+                    { isAbsolute: true, name, value: '//h3[contains(text(),"Share it!")]/..' },
                 ],
             },
             {
                 actual: '[data-src^="https://example.org/"]:xpath(..)',
                 expected: [
                     { isRegular: true, value: '[data-src^="https://example.org/"]' },
-                    { isAbsolute: true, name, arg: '..' },
+                    { isAbsolute: true, name, value: '..' },
                 ],
             },
             {
                 actual: ':xpath(//div[@data-st-area=\'Advert\'][count(*)=2][not(header)])',
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: '//div[@data-st-area=\'Advert\'][count(*)=2][not(header)]' },
+                    { isAbsolute: true, name, value: '//div[@data-st-area=\'Advert\'][count(*)=2][not(header)]' },
                 ],
             },
             {
                 actual: ":xpath(//article//div[count(div[*[*[*]]])=2][count(div[*[*[*]]][1]//img[starts-with(@src,'data:image/png;base64,')])>2][div[*[*[*]]][2][count(div[@class]/div[last()][count(div)=3])>=2]])",
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: "//article//div[count(div[*[*[*]]])=2][count(div[*[*[*]]][1]//img[starts-with(@src,'data:image/png;base64,')])>2][div[*[*[*]]][2][count(div[@class]/div[last()][count(div)=3])>=2]]" },
+                    { isAbsolute: true, name, value: "//article//div[count(div[*[*[*]]])=2][count(div[*[*[*]]][1]//img[starts-with(@src,'data:image/png;base64,')])>2][div[*[*[*]]][2][count(div[@class]/div[last()][count(div)=3])>=2]]" },
                 ],
             },
             {
                 actual: ':xpath(//article/h1/following-sibling::p[1]/following-sibling::div[1]//div[1][@class][@id][not(ancestor::div[@id]/ancestor::article)])',
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: '//article/h1/following-sibling::p[1]/following-sibling::div[1]//div[1][@class][@id][not(ancestor::div[@id]/ancestor::article)]' },
+                    { isAbsolute: true, name, value: '//article/h1/following-sibling::p[1]/following-sibling::div[1]//div[1][@class][@id][not(ancestor::div[@id]/ancestor::article)]' },
                 ],
             },
             {
                 actual: ':xpath(//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::article)]/div[1])',
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: '//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::article)]/div[1]' },
+                    { isAbsolute: true, name, value: '//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::article)]/div[1]' },
                 ],
             },
             {
                 actual: ":xpath(//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1]//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::div[count(*)>1]/ancestor::article)]/div[.//ul/li|.//a[contains(@href,'/w/%EB%B6%84%EB%A5%98:')]]/following-sibling::div[.//div[contains(concat(' ',normalize-space(@class),' '),' example-toc-ad ')]|.//div[contains(concat(' ',normalize-space(@class),' '),' wiki-paragraph ')]]/following-sibling::div[count(.//*[count(img[starts-with(@src,'//w.example.la/s/')]|img[starts-with(@src,'//ww.example.la/s/')]|img[starts-with(@src,'data:image/png;base64,')])>1])>1])",
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: "//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1]//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::div[count(*)>1]/ancestor::article)]/div[.//ul/li|.//a[contains(@href,'/w/%EB%B6%84%EB%A5%98:')]]/following-sibling::div[.//div[contains(concat(' ',normalize-space(@class),' '),' example-toc-ad ')]|.//div[contains(concat(' ',normalize-space(@class),' '),' wiki-paragraph ')]]/following-sibling::div[count(.//*[count(img[starts-with(@src,'//w.example.la/s/')]|img[starts-with(@src,'//ww.example.la/s/')]|img[starts-with(@src,'data:image/png;base64,')])>1])>1]" },
+                    { isAbsolute: true, name, value: "//article/h1/following-sibling::div[1]/following-sibling::div//div[count(*)>1]//div[count(*)>1][not(ancestor::div[count(*)>1]/ancestor::div[count(*)>1]/ancestor::article)]/div[.//ul/li|.//a[contains(@href,'/w/%EB%B6%84%EB%A5%98:')]]/following-sibling::div[.//div[contains(concat(' ',normalize-space(@class),' '),' example-toc-ad ')]|.//div[contains(concat(' ',normalize-space(@class),' '),' wiki-paragraph ')]]/following-sibling::div[count(.//*[count(img[starts-with(@src,'//w.example.la/s/')]|img[starts-with(@src,'//ww.example.la/s/')]|img[starts-with(@src,'data:image/png;base64,')])>1])>1]" },
                 ],
             },
             {
                 actual: ":xpath(//div[@class='ytp-button ytp-paid-content-overlay-text'])",
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: "//div[@class='ytp-button ytp-paid-content-overlay-text']" },
+                    { isAbsolute: true, name, value: "//div[@class='ytp-button ytp-paid-content-overlay-text']" },
                 ],
             },
             {
                 actual: ':xpath(//div[@class="user-content"]/div[@class="snippet-clear"]/following-sibling::text()[contains(.,"Advertisement")])',
                 expected: [
                     { isRegular: true, value: 'body' },
-                    { isAbsolute: true, name, arg: '//div[@class="user-content"]/div[@class="snippet-clear"]/following-sibling::text()[contains(.,"Advertisement")]' },
+                    { isAbsolute: true, name, value: '//div[@class="user-content"]/div[@class="snippet-clear"]/following-sibling::text()[contains(.,"Advertisement")]' },
                 ],
             },
         ];
@@ -326,28 +326,28 @@ describe('absolute extended selectors', () => {
                 actual: 'a[class][redirect]:upward(3)',
                 expected: [
                     { isRegular: true, value: 'a[class][redirect]' },
-                    { isAbsolute: true, name, arg: '3' },
+                    { isAbsolute: true, name, value: '3' },
                 ],
             },
             {
                 actual: 'div.advert:upward(.info)',
                 expected: [
                     { isRegular: true, value: 'div.advert' },
-                    { isAbsolute: true, name, arg: '.info' },
+                    { isAbsolute: true, name, value: '.info' },
                 ],
             },
             {
                 actual: 'img:upward(header ~ div[class])',
                 expected: [
                     { isRegular: true, value: 'img' },
-                    { isAbsolute: true, name, arg: 'header ~ div[class]' },
+                    { isAbsolute: true, name, value: 'header ~ div[class]' },
                 ],
             },
             {
                 actual: '.ad-title + .banner:upward([id][class])',
                 expected: [
                     { isRegular: true, value: '.ad-title + .banner' },
-                    { isAbsolute: true, name, arg: '[id][class]' },
+                    { isAbsolute: true, name, value: '[id][class]' },
                 ],
             },
         ];
@@ -636,42 +636,42 @@ describe('old syntax', () => {
             actual: 'div a[-ext-contains="text"]',
             expected: [
                 { isRegular: true, value: 'div a' },
-                { isAbsolute: true, name: 'contains', arg: 'text' },
+                { isAbsolute: true, name: 'contains', value: 'text' },
             ],
         },
         {
             actual: 'a[-ext-contains=""extra-quotes""]',
             expected: [
                 { isRegular: true, value: 'a' },
-                { isAbsolute: true, name: 'contains', arg: '"extra-quotes"' },
+                { isAbsolute: true, name: 'contains', value: '"extra-quotes"' },
             ],
         },
         {
             actual: '#test-matches-css div[-ext-matches-css="background-image: url(data:*)"]',
             expected: [
                 { isRegular: true, value: '#test-matches-css div' },
-                { isAbsolute: true, name: 'matches-css', arg: 'background-image: url(data:*)' },
+                { isAbsolute: true, name: 'matches-css', value: 'background-image: url(data:*)' },
             ],
         },
         {
             actual: '#test-matches-css div[-ext-matches-css-before="content: *find me*"]',
             expected: [
                 { isRegular: true, value: '#test-matches-css div' },
-                { isAbsolute: true, name: 'matches-css-before', arg: 'content: *find me*' },
+                { isAbsolute: true, name: 'matches-css-before', value: 'content: *find me*' },
             ],
         },
         {
             actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
             expected: [
                 { isRegular: true, value: '*' },
-                { isAbsolute: true, name: 'matches-css-before', arg: 'content:  /^[A-Z][a-z]{2}\\s/  ' },
+                { isAbsolute: true, name: 'matches-css-before', value: 'content:  /^[A-Z][a-z]{2}\\s/  ' },
             ],
         },
         {
             actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
             expected: [
                 { isRegular: true, value: 'div[style="text-align: center"] > b' },
-                { isAbsolute: true, name: 'contains', arg: 'Ads:' },
+                { isAbsolute: true, name: 'contains', value: 'Ads:' },
                 { isRegular: true, value: '+a[href^="http://example.com/test.html?id="]+br' },
             ],
         },
@@ -679,7 +679,7 @@ describe('old syntax', () => {
             actual: 'div[-ext-contains="test"][-ext-has="div.test-class-two"]',
             expected: [
                 { isRegular: true, value: 'div' },
-                { isAbsolute: true, name: 'contains', arg: 'test' },
+                { isAbsolute: true, name: 'contains', value: 'test' },
                 { isRelative: true, name: 'has', value: 'div.test-class-two' },
             ],
         },
@@ -687,7 +687,7 @@ describe('old syntax', () => {
             actual: 'div[i18n][-ext-contains="test"][-ext-has="div.test-class-two"]',
             expected: [
                 { isRegular: true, value: 'div[i18n]' },
-                { isAbsolute: true, name: 'contains', arg: 'test' },
+                { isAbsolute: true, name: 'contains', value: 'test' },
                 { isRelative: true, name: 'has', value: 'div.test-class-two' },
             ],
         },
@@ -697,16 +697,16 @@ describe('old syntax', () => {
                 { isRegular: true, value: 'div' },
                 { isRelative: true, name: 'has', value: 'div.test-class-two' },
                 { isRegular: true, value: '> .test-class' },
-                { isAbsolute: true, name: 'contains', arg: 'test' },
+                { isAbsolute: true, name: 'contains', value: 'test' },
             ],
         },
         {
             actual: '*[-ext-contains=\'/\\s[a-t]{8}$/\'] + *:contains(/^[^\\"\\\'"]{30}quickly/)',
             expected: [
                 { isRegular: true, value: '*' },
-                { isAbsolute: true, name: 'contains', arg: '/\\s[a-t]{8}$/' },
+                { isAbsolute: true, name: 'contains', value: '/\\s[a-t]{8}$/' },
                 { isRegular: true, value: '+ *' },
-                { isAbsolute: true, name: 'contains', arg: '/^[^\\"\\\'"]{30}quickly/' },
+                { isAbsolute: true, name: 'contains', value: '/^[^\\"\\\'"]{30}quickly/' },
             ],
         },
     ];
@@ -733,7 +733,7 @@ describe('old syntax', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: 'a' },
-                                            { isAbsolute: true, name: 'contains', arg: 'Recommended' },
+                                            { isAbsolute: true, name: 'contains', value: 'Recommended' },
                                         ]),
                                     ],
                                 },
@@ -762,7 +762,7 @@ describe('old syntax', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '>.box-inner>h2' },
-                                            { isAbsolute: true, name: 'contains', arg: 'ads' },
+                                            { isAbsolute: true, name: 'contains', value: 'ads' },
                                         ]),
                                     ],
                                 },
@@ -797,8 +797,8 @@ describe('old syntax', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '+*' },
-                                            { isAbsolute: true, name: 'matches-css-after', arg: ' content  :   /(\\d+\\s)*me/  ' },
-                                            { isAbsolute: true, name: 'contains', arg: '/^(?![\\s\\S])/' },
+                                            { isAbsolute: true, name: 'matches-css-after', value: ' content  :   /(\\d+\\s)*me/  ' },
+                                            { isAbsolute: true, name: 'contains', value: '/^(?![\\s\\S])/' },
                                         ]),
                                     ],
                                 },
@@ -819,7 +819,7 @@ describe('combined extended selectors', () => {
         const expected = [
             { isRegular: true, value: 'div' },
             { isRelative: true, name: 'has', value: 'span' },
-            { isAbsolute: true, name: 'contains', arg: 'something' },
+            { isAbsolute: true, name: 'contains', value: 'something' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -842,7 +842,7 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '> p' },
-                                            { isAbsolute: true, name: 'contains', arg: 'test' },
+                                            { isAbsolute: true, name: 'contains', value: 'test' },
                                         ]),
                                     ],
                                 },
@@ -873,7 +873,7 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '*' },
-                                            { isAbsolute: true, name: 'contains', arg: 'text' },
+                                            { isAbsolute: true, name: 'contains', value: 'text' },
                                         ]),
                                     ],
                                 },
@@ -996,7 +996,7 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '> div > div > div[class*="__label"] > span' },
-                                            { isAbsolute: true, name: 'matches-css-before', arg: 'content:*Яндекс.Директ' }, // eslint-disable-line max-len
+                                            { isAbsolute: true, name: 'matches-css-before', value: 'content:*Яндекс.Директ' }, // eslint-disable-line max-len
                                         ],
                                         )],
                                 },
@@ -1013,7 +1013,7 @@ describe('combined extended selectors', () => {
         const actual = 'div[style="width:640px;height:360px"][id="video-player"]:upward(div):not([class])';
         const expected = [
             { isRegular: true, value: 'div[style="width:640px;height:360px"][id="video-player"]' },
-            { isAbsolute: true, name: 'upward', arg: 'div' },
+            { isAbsolute: true, name: 'upward', value: 'div' },
             { isRelative: true, name: 'not', value: '[class]' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
@@ -1023,7 +1023,7 @@ describe('combined extended selectors', () => {
         const actual = 'a[href^="https://example."]:upward(1):not(section):not(div[class^="article"])';
         const expected = [
             { isRegular: true, value: 'a[href^="https://example."]' },
-            { isAbsolute: true, name: 'upward', arg: '1' },
+            { isAbsolute: true, name: 'upward', value: '1' },
             { isRelative: true, name: 'not', value: 'section' },
             { isRelative: true, name: 'not', value: 'div[class^="article"]' },
         ];
@@ -1034,8 +1034,8 @@ describe('combined extended selectors', () => {
         const actual = 'div > p:contains(PR):upward(2)';
         const expected = [
             { isRegular: true, value: 'div > p' },
-            { isAbsolute: true, name: 'contains', arg: 'PR' },
-            { isAbsolute: true, name: 'upward', arg: '2' },
+            { isAbsolute: true, name: 'contains', value: 'PR' },
+            { isAbsolute: true, name: 'upward', value: '2' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -1044,8 +1044,8 @@ describe('combined extended selectors', () => {
         const actual = '[data-ad-subtype]:upward(1):matches-css(min-height:/[0-9]+/)';
         const expected = [
             { isRegular: true, value: '[data-ad-subtype]' },
-            { isAbsolute: true, name: 'upward', arg: '1' },
-            { isAbsolute: true, name: 'matches-css', arg: 'min-height:/[0-9]+/' },
+            { isAbsolute: true, name: 'upward', value: '1' },
+            { isAbsolute: true, name: 'matches-css', value: 'min-height:/[0-9]+/' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -1099,7 +1099,7 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '*' },
-                                            { isAbsolute: true, name: 'contains', arg: 'text' },
+                                            { isAbsolute: true, name: 'contains', value: 'text' },
                                         ]),
                                     ],
                                 },
@@ -1266,7 +1266,7 @@ describe('combined selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '+*' },
-                                            { isAbsolute: true, name: 'matches-css-after', arg: ' content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
+                                            { isAbsolute: true, name: 'matches-css-after', value: ' content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
                                         ]),
                                     ],
                                 },
@@ -1555,7 +1555,7 @@ describe('combined selectors', () => {
                 actual: '.test:upward(3) .banner',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'upward', arg: '3' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
                     { isRegular: true, value: '.banner' },
                 ],
             },
@@ -1563,7 +1563,7 @@ describe('combined selectors', () => {
                 actual: '.test:nth-ancestor(1) > .banner',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'nth-ancestor', arg: '1' },
+                    { isAbsolute: true, name: 'nth-ancestor', value: '1' },
                     { isRegular: true, value: '> .banner' },
                 ],
             },
@@ -1571,7 +1571,7 @@ describe('combined selectors', () => {
                 actual: '.test:upward(3) > .banner > *',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'upward', arg: '3' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
                     { isRegular: true, value: '> .banner > *' },
                 ],
             },
@@ -1579,7 +1579,7 @@ describe('combined selectors', () => {
                 actual: '.test:upward(#top .block) .banner',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'upward', arg: '#top .block' },
+                    { isAbsolute: true, name: 'upward', value: '#top .block' },
                     { isRegular: true, value: '.banner' },
                 ],
             },
@@ -1587,7 +1587,7 @@ describe('combined selectors', () => {
                 actual: '.test:upward(#top > .block) .banner',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'upward', arg: '#top > .block' },
+                    { isAbsolute: true, name: 'upward', value: '#top > .block' },
                     { isRegular: true, value: '.banner' },
                 ],
             },
@@ -1595,7 +1595,7 @@ describe('combined selectors', () => {
                 actual: '.test:nth-ancestor(1)> .banner',
                 expected: [
                     { isRegular: true, value: '.test' },
-                    { isAbsolute: true, name: 'nth-ancestor', arg: '1' },
+                    { isAbsolute: true, name: 'nth-ancestor', value: '1' },
                     { isRegular: true, value: '> .banner' },
                 ],
             },
@@ -1603,7 +1603,7 @@ describe('combined selectors', () => {
                 actual: '#main .target:nth-ancestor(2)+ .banner',
                 expected: [
                     { isRegular: true, value: '#main .target' },
-                    { isAbsolute: true, name: 'nth-ancestor', arg: '2' },
+                    { isAbsolute: true, name: 'nth-ancestor', value: '2' },
                     { isRegular: true, value: '+ .banner' },
                 ],
             },
@@ -1679,9 +1679,9 @@ describe('combined selectors', () => {
                 actual: 'div:contains(base) + .paragraph:contains(text)',
                 expected: [
                     { isRegular: true, value: 'div' },
-                    { isAbsolute: true, name: 'contains', arg: 'base' },
+                    { isAbsolute: true, name: 'contains', value: 'base' },
                     { isRegular: true, value: '+ .paragraph' },
-                    { isAbsolute: true, name: 'contains', arg: 'text' },
+                    { isAbsolute: true, name: 'contains', value: 'text' },
                 ],
             },
             {
@@ -1690,7 +1690,7 @@ describe('combined selectors', () => {
                     { isRegular: true, value: '#root > div' },
                     { isRelative: true, name: 'not', value: '[class]' },
                     { isRegular: true, value: '> div' },
-                    { isAbsolute: true, name: 'contains', arg: 'PRIVACY' },
+                    { isAbsolute: true, name: 'contains', value: 'PRIVACY' },
                 ],
             },
             {
@@ -1698,7 +1698,7 @@ describe('combined selectors', () => {
                 actual: '#app > div[class]:matches-attr("/data-v-/") > div > div:has(> a[href="https://example.com"])',
                 expected: [
                     { isRegular: true, value: '#app > div[class]' },
-                    { isAbsolute: true, name: 'matches-attr', arg: '"/data-v-/"' },
+                    { isAbsolute: true, name: 'matches-attr', value: '"/data-v-/"' },
                     { isRegular: true, value: '> div > div' },
                     { isRelative: true, name: 'has', value: '> a[href="https://example.com"]' },
                 ],
@@ -1733,7 +1733,7 @@ describe('combined selectors', () => {
                     { isRegular: true, value: '#root > div' },
                     { isRelative: true, name: 'not', value: '[class]' },
                     { isRegular: true, value: '> div[class] > div[class] > span[class] + a[href="https://example.org/test"]' }, // eslint-disable-line max-len
-                    { isAbsolute: true, name: 'upward', arg: '2' },
+                    { isAbsolute: true, name: 'upward', value: '2' },
                 ],
             },
             {
@@ -1763,10 +1763,10 @@ describe('combined selectors', () => {
                 actual: '#content-container > div[class] > div[class]:matches-css(z-index: 10) > div[class] > div[class] > h4:contains(cookies):upward(4)',
                 expected: [
                     { isRegular: true, value: '#content-container > div[class] > div[class]' },
-                    { isAbsolute: true, name: 'matches-css', arg: 'z-index: 10' },
+                    { isAbsolute: true, name: 'matches-css', value: 'z-index: 10' },
                     { isRegular: true, value: '> div[class] > div[class] > h4' },
-                    { isAbsolute: true, name: 'contains', arg: 'cookies' },
-                    { isAbsolute: true, name: 'upward', arg: '4' },
+                    { isAbsolute: true, name: 'contains', value: 'cookies' },
+                    { isAbsolute: true, name: 'upward', value: '4' },
                 ],
             },
             {
@@ -1776,8 +1776,8 @@ describe('combined selectors', () => {
                     { isRegular: true, value: '.content > .block.rel ~ div[class*=" "]' },
                     { isRelative: true, name: 'not', value: '.clear' },
                     { isRegular: true, value: '> a[href="javascript:void(0)"]:only-child' },
-                    { isAbsolute: true, name: 'contains', arg: '/^Open app$/' },
-                    { isAbsolute: true, name: 'upward', arg: '1' },
+                    { isAbsolute: true, name: 'contains', value: '/^Open app$/' },
+                    { isAbsolute: true, name: 'upward', value: '1' },
                 ],
             },
             {
@@ -1964,7 +1964,7 @@ describe('check case-insensitive attributes parsing', () => {
                 actual: 'div > .fb-page[data-href$="/link/" i]:upward(2)',
                 expected: [
                     { isRegular: true, value: 'div > .fb-page[data-href$="/link/" i]' },
-                    { isAbsolute: true, name: 'upward', arg: '2' },
+                    { isAbsolute: true, name: 'upward', value: '2' },
                 ],
             },
         ];
@@ -1978,21 +1978,21 @@ describe('check pseudo-class names case-insensitivity', () => {
             actual: 'div.base[level="3"]:UPWARD([level="0"])',
             expected: [
                 { isRegular: true, value: 'div.base[level="3"]' },
-                { isAbsolute: true, name: 'upward', arg: '[level="0"]' },
+                { isAbsolute: true, name: 'upward', value: '[level="0"]' },
             ],
         },
         {
             actual: 'div.base[LEVEL="3"]:UPWARD([level="0"])',
             expected: [
                 { isRegular: true, value: 'div.base[LEVEL="3"]' },
-                { isAbsolute: true, name: 'upward', arg: '[level="0"]' },
+                { isAbsolute: true, name: 'upward', value: '[level="0"]' },
             ],
         },
         {
             actual: 'div.base[LEVEL="3"]:UPWARD([LEVEL="0"])',
             expected: [
                 { isRegular: true, value: 'div.base[LEVEL="3"]' },
-                { isAbsolute: true, name: 'upward', arg: '[LEVEL="0"]' },
+                { isAbsolute: true, name: 'upward', value: '[LEVEL="0"]' },
             ],
         },
         {
@@ -2006,14 +2006,14 @@ describe('check pseudo-class names case-insensitivity', () => {
             actual: '#root p:CONTAINS(text)',
             expected: [
                 { isRegular: true, value: '#root p' },
-                { isAbsolute: true, name: 'contains', arg: 'text' },
+                { isAbsolute: true, name: 'contains', value: 'text' },
             ],
         },
         {
             actual: '#root p:CONTAINS(UPPER)',
             expected: [
                 { isRegular: true, value: '#root p' },
-                { isAbsolute: true, name: 'contains', arg: 'UPPER' },
+                { isAbsolute: true, name: 'contains', value: 'UPPER' },
             ],
         },
         {
@@ -2028,7 +2028,7 @@ describe('check pseudo-class names case-insensitivity', () => {
             expected: [
                 { isRegular: true, value: '#parent *' },
                 { isRelative: true, name: 'not', value: '[CLASS]' },
-                { isAbsolute: true, name: 'contains', arg: 'text' },
+                { isAbsolute: true, name: 'contains', value: 'text' },
             ],
         },
     ];

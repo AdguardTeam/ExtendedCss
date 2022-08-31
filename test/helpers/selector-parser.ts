@@ -7,7 +7,6 @@ interface TestAnySelectorNodeInterface {
     children: TestAnySelectorNodeInterface[],
     value?: string,
     name?: string,
-    arg?: string,
 }
 
 /**
@@ -27,14 +26,14 @@ export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInt
  * @param name extended pseudo-class name
  * @param arg arg of pseudo-class
  */
-export const getAbsoluteExtendedSelector = (name: string, arg: string): TestAnySelectorNodeInterface => {
+export const getAbsoluteExtendedSelector = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
         type: NodeType.ExtendedSelector,
         children: [
             {
                 type: NodeType.AbsolutePseudoClass,
                 name,
-                arg,
+                value,
                 children: [],
             },
         ],
@@ -140,7 +139,6 @@ export const getSingleSelectorAstWithAnyChildren = (
             isRelative,
             value,
             name,
-            arg,
         } = raw;
 
         if (isRegular && isAbsolute && isRelative) {
@@ -150,8 +148,8 @@ export const getSingleSelectorAstWithAnyChildren = (
         let childNode;
         if (isRegular && value) {
             childNode = getRegularSelector(value);
-        } else if (isAbsolute && name && arg) {
-            childNode = getAbsoluteExtendedSelector(name, arg);
+        } else if (isAbsolute && name && value) {
+            childNode = getAbsoluteExtendedSelector(name, value);
         } else if (isRelative && name && value) {
             childNode = getRelativeExtendedWithSingleRegular(name, value);
         }

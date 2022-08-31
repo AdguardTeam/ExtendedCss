@@ -82,7 +82,7 @@ export const getByExtendedSelector = (
     }
 
     if (ABSOLUTE_PSEUDO_CLASSES.includes(pseudoName)) {
-        const absolutePseudoArg = extendedSelectorNode.children[0].arg;
+        const absolutePseudoArg = extendedSelectorNode.children[0].value;
         if (!absolutePseudoArg) {
             // absolute extended pseudo-classes should have an argument
             throw new Error(`Missing arg for :${pseudoName} pseudo-class`);

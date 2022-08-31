@@ -145,10 +145,10 @@ const updateBufferNode = (context: Context, tokenValue: string): void => {
     if (bufferNode === null) {
         throw new Error('No bufferNode to update');
     }
-    if (bufferNode.type === NodeType.RegularSelector) {
+    const { type } = bufferNode;
+    if (type === NodeType.RegularSelector
+        || type === NodeType.AbsolutePseudoClass) {
         bufferNode.value += tokenValue;
-    } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
-        bufferNode.arg += tokenValue;
     } else {
         throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported.`); // eslint-disable-line max-len
     }
