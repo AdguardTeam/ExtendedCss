@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 
+
 import { ExtendedCss } from '../src';
 
 import { TimingStats } from '../src/helpers/timing-stats';
@@ -38,7 +39,7 @@ interface TestLoggedStats {
  * @param actualId actual element id
  * @param expectedStyle expected style of element
  */
-const expectElementStyle = (actualId: string, expectedStyle: TestStyleMap) => {
+export const expectElementStyle = (actualId: string, expectedStyle: TestStyleMap) => {
     const element = document.getElementById(actualId);
     expect(element).toBeDefined();
     Object.keys(expectedStyle)
