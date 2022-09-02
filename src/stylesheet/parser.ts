@@ -1,5 +1,3 @@
-import { normalize } from './normalizer';
-
 import { parse as parseSelector } from '../selector/parser';
 import { AnySelectorNodeInterface } from '../selector/nodes';
 
@@ -409,7 +407,7 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  * @param stylesheet
  */
 export const parse = (rawStylesheet: string): ExtCssRuleData[] => {
-    const stylesheet = normalize(rawStylesheet);
+    const stylesheet = rawStylesheet.trim();
     const context: Context = {
         // any stylesheet should start with selector
         isSelector: true,
