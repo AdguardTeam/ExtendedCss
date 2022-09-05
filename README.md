@@ -782,12 +782,12 @@ ExtendedCss.query(selector);
 
 ## <a id="projects-using-extended-css"></a> Projects using ExtendedCss
 
-* [CoreLibs](https://github.com/AdguardTeam/CoreLibs) — `Content Script` should be updated
+* [CoreLibs](https://github.com/AdguardTeam/CoreLibs) — `Content Script` dist should be updated
 * [TSUrlFilter](https://github.com/AdguardTeam/tsurlfilter)
 * [FiltersCompiler](https://github.com/AdguardTeam/FiltersCompiler)
 * [AdguardBrowserExtension](https://github.com/AdguardTeam/AdguardBrowserExtension) — `TSUrlFilter` should be updated
 * [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari) — `adguard-resources` should be updated
-* [AdguardForiOS](https://github.com/AdguardTeam/AdguardForiOS)  — `TSUrlFilter` should be updated in `advanced-adblocker-web-extension`
+* [AdguardForiOS](https://github.com/AdguardTeam/AdguardForiOS)  — both `ExtendedCss` and `TSUrlFilter` should be updated in `advanced-adblocker-web-extension`
 
 
 ### <a id="browser-compatibility"></a> Browser compatibility

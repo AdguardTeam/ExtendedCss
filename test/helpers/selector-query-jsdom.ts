@@ -56,5 +56,5 @@ export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
 
 export interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    _testProp: string | Object,
+    testProp: string | Object,
 }

@@ -13,7 +13,7 @@ const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    _testProp: string | Object,
+    testProp: string | Object,
 }
 
 /**
@@ -176,7 +176,7 @@ describe('extended css library', () => {
         extendedCss.apply();
 
         let affectedLength: number;
-        const startLength = extendedCss._getAffectedElements().length;
+        const startLength = extendedCss.getAffectedElements().length;
         // no element with 'banner' class at start
         expect(startLength).toBe(0);
         const toBeBlocked = document.getElementById('case6-blocked');
@@ -189,7 +189,7 @@ describe('extended css library', () => {
         rAF(() => {
             try {
                 expectElementStyle('case6-blocked', { display: 'none' });
-                affectedLength = extendedCss._getAffectedElements().length;
+                affectedLength = extendedCss.getAffectedElements().length;
                 expect(affectedLength).toBe(startLength + 1);
             } catch (error) {
                 done(error);
@@ -200,7 +200,7 @@ describe('extended css library', () => {
             rAF(() => {
                 try {
                     expectElementStyle('case6-blocked', { display: '' });
-                    affectedLength = extendedCss._getAffectedElements().length;
+                    affectedLength = extendedCss.getAffectedElements().length;
                     expect(affectedLength).toBe(startLength);
                     done();
                 } catch (error) {
@@ -221,7 +221,7 @@ describe('extended css library', () => {
         extendedCss.apply();
 
         let affectedLength: number;
-        const startLength = extendedCss._getAffectedElements().length;
+        const startLength = extendedCss.getAffectedElements().length;
         expect(startLength).toBe(1);
         // one element at start
         expectElementStyle('case7-blocked', { display: 'none' });
@@ -231,7 +231,7 @@ describe('extended css library', () => {
 
         rAF(() => {
             try {
-                affectedLength = extendedCss._getAffectedElements().length;
+                affectedLength = extendedCss.getAffectedElements().length;
                 // no element after root removing
                 expect(affectedLength).toBe(startLength - 1);
                 done();

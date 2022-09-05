@@ -1,5 +1,4 @@
-node_modules/*
-dist/*
-test/dist/*
+node_modules
+dist
 .eslintrc.js
 babel.config.js

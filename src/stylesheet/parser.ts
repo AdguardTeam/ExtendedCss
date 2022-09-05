@@ -49,21 +49,6 @@ export interface ExtCssRuleData {
     timingStats?: TimingStats,
 }
 
-/**
- * Needed for ExtCssConfiguration.beforeStyleApplied();
- * value of 'content' property is applied rule text
- */
-export interface CssStyleMapWithContent extends CssStyleMap {
-    content: string,
-}
-
-/**
- * Rule data interface with required 'style' property defined with required 'content' property
- */
-export interface ExtCssRuleDataWithContentStyle extends Partial<ExtCssRuleData> {
-    style: CssStyleMapWithContent,
-}
-
 interface SelectorPartData {
     success: boolean,
     selector: string,
@@ -355,7 +340,7 @@ export const prepareRuleData = (
         // which is 'true' or 'global'
         if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
             || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
-            ruleData[DEBUG_PSEUDO_PROPERTY_KEY] = debugValue;
+            ruleData.debug = debugValue;
         }
     }
     if (shouldRemove) {
@@ -403,8 +388,19 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
 };
 
 /**
- * Parses stylesheet into rules data objects
- * @param stylesheet
+ * Parses stylesheet of rules into rules data objects (non-recursively):
+ * 1. Iterates through stylesheet string
+ * 2. Finds first `{` which can be style declaration start or part of selector
+ * 3. Validates found string part via selector parser; and if
+ *  - it throws error — saves string part to buffer as part of selector,
+ *    slice next stylesheet part to `{` [2] and validates again [3]
+ *  - no error — saves found string part as selector and starts to parse styles (recursively)
+ * @param rawStylesheet as string
+ * @returns array of rules data which contains:
+ * - selector as string
+ * - ast to query elements by
+ * - map of styles to apply
+ *
  */
 export const parse = (rawStylesheet: string): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();

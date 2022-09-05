@@ -16,7 +16,11 @@ type WrappedCallback = (timestamp: number) => void;
 type ApplyRulesCallback = (context: Context) => void;
 
 /**
- * A helper class to throttle function calls with setTimeout and requestAnimationFrame
+ * The purpose of AsyncWrapper is to debounce calls of the function
+ * that applies ExtendedCss rules. The reasoning here is that the function calls
+ * are triggered by MutationObserver and there may be many mutations in a short period of time.
+ * We do not want to apply rules on every mutation so we use this helper to make sure
+ * that there is only one call in the given amount of time.
  */
 export class AsyncWrapper {
     private context: Context;
@@ -24,7 +28,7 @@ export class AsyncWrapper {
     private callback?: ApplyRulesCallback;
 
     // number, the provided callback should be executed twice in this time frame
-    private throttle: number;
+    private throttleDelayMs: number;
 
     private wrappedCb: WrappedCallback;
 
@@ -32,17 +36,17 @@ export class AsyncWrapper {
 
     private timerId?: number;
 
-    private lastRun?: number;
+    private lastRunTime?: number;
 
-    constructor(context: Context, callback?: ApplyRulesCallback, throttle?: number) {
+    constructor(context: Context, callback?: ApplyRulesCallback, throttleMs?: number) {
         this.context = context;
         this.callback = callback;
-        this.throttle = throttle || DEFAULT_THROTTLE_DELAY_MS;
+        this.throttleDelayMs = throttleMs || DEFAULT_THROTTLE_DELAY_MS;
         this.wrappedCb = this.wrappedCallback.bind(this);
     }
 
     private wrappedCallback(timestamp?: number): void {
-        this.lastRun = isNumber(timestamp)
+        this.lastRunTime = isNumber(timestamp)
             ? timestamp
             : perf.now();
         delete this.rAFid;
@@ -67,10 +71,10 @@ export class AsyncWrapper {
             // there is a pending execution scheduled
             return;
         }
-        if (typeof this.lastRun !== 'undefined') {
-            const elapsed = perf.now() - this.lastRun;
-            if (elapsed < this.throttle) {
-                this.timerId = window.setTimeout(this.wrappedCb, this.throttle - elapsed);
+        if (typeof this.lastRunTime !== 'undefined') {
+            const elapsedTime = perf.now() - this.lastRunTime;
+            if (elapsedTime < this.throttleDelayMs) {
+                this.timerId = window.setTimeout(this.wrappedCb, this.throttleDelayMs - elapsedTime);
                 return;
             }
         }

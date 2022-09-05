@@ -3,7 +3,13 @@ import { natives } from '../common/utils/natives';
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
 /**
- * A helper class for MutationObserver with extra property `styleProtectionCount`
+ * ExtMutationObserver is a wrapper over regular MutationObserver with one additional function:
+ * it keeps track of the number of times we called the "ProtectionCallback".
+ * We use an instance of this to monitor styles added by ExtendedCss
+ * and to make sure these styles are recovered if the page script attempts to modify them.
+ * However, we want to avoid endless loops of modification if the page script repeatedly modifies the styles.
+ * So we keep track of the number of calls and expose it via public property "styleProtectionCount"
+ * so that the caller could make a decision whether to continue recovering the styles or not.
  */
 export class ExtMutationObserver {
     private observer: MutationObserver;

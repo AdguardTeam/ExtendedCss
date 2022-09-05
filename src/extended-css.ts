@@ -2,7 +2,6 @@ import {
     parse as parseStylesheet,
     CssStyleMap,
     ExtCssRuleData,
-    ExtCssRuleDataWithContentStyle,
 } from './stylesheet/parser';
 
 import {
@@ -34,6 +33,24 @@ const APPLY_RULES_DELAY = 150;
 
 const isEventListenerSupported = typeof window.addEventListener !== 'undefined';
 
+/**
+ * Needed for ExtCssConfiguration.beforeStyleApplied();
+ * value of 'content' property is applied rule text
+ */
+interface CssStyleMapWithContent extends CssStyleMap {
+    content: string,
+}
+
+/**
+ * Rule data interface with required 'style' property defined with required 'content' property
+ */
+interface ExtCssRuleDataWithContentStyle extends Partial<ExtCssRuleData> {
+    style: CssStyleMapWithContent,
+}
+
+/**
+ * Result of selector validation
+ */
 type ValidationResult = {
     ok: boolean,
     error: string | null,
@@ -514,7 +531,7 @@ export class ExtendedCss {
     /**
      * Exposed for testing purposes only
      */
-    _getAffectedElements(): AffectedElement[] {
+    getAffectedElements(): AffectedElement[] {
         return this.context.affectedElements;
     }
 
