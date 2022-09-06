@@ -64,7 +64,14 @@ export class AsyncWrapper {
     }
 
     /**
-     * Schedules a function call before the next animation frame.
+     * Schedules the function which applies ExtendedCss rules before the next animation frame.
+     *
+     * Wraps function execution into requestAnimationFrame or setTimeout.
+     * For the first time runs the function without any condition.
+     * As it may be triggered by any mutation which may occur too ofter, we limit the function execution:
+     * 1. If `elapsedTime` since last function execution is less then set `throttleDelayMs`,
+     * next function call is hold till the end of throttle interval (subtracting `elapsed` from `throttleDelayMs`);
+     * 2. Do nothing if triggered again but function call which is on hold has not yet started its execution.
      */
     run(): void {
         if (this.hasPendingCallback()) {

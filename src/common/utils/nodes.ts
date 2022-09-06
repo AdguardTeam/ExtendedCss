@@ -23,7 +23,7 @@ export const getElementSelectorDesc = (element: Element): string => {
 };
 
 /**
- * Returns path of a DOM element as string selector
+ * Returns path to a DOM element as a selector string.
  * @param inputEl input element
  */
 export const getElementSelectorPath = (inputEl: Element): string => {
@@ -38,7 +38,7 @@ export const getElementSelectorPath = (inputEl: Element): string => {
     // we need to check '!!el' first because it is possible
     // that some ancestor of the inputEl was removed before it
     while (!!el && el.nodeType === Node.ELEMENT_NODE) {
-        let selector = el.nodeName.toLowerCase();
+        let selector: string = el.nodeName.toLowerCase();
         if (el.id && typeof el.id === 'string') {
             selector += `#${el.id}`;
             path.unshift(selector);
