@@ -1,7 +1,4 @@
-import {
-    TokenType,
-    tokenize,
-} from './tokenizer';
+import { TokenType, tokenize } from './tokenizer';
 
 import {
     NodeType,

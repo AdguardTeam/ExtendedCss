@@ -1,6 +1,11 @@
-import { parse } from '../../src/selector/parser';
+/**
+ * @jest-environment jsdom
+ */
 
-import { NodeType } from '../../src/selector/nodes';
+import {
+    NodeType,
+    parse,
+} from '../../src/selector';
 
 import {
     getRegularSelector,

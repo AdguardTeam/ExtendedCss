@@ -1,5 +1,7 @@
-import { parse as parseSelector } from '../selector/parser';
-import { AnySelectorNodeInterface } from '../selector/nodes';
+import {
+    AnySelectorNodeInterface,
+    parse as parseSelector,
+} from '../selector';
 
 import { TimingStats } from '../helpers/timing-stats';
 

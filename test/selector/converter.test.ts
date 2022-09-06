@@ -1,4 +1,8 @@
-import { convert } from '../../src/selector/converter';
+/**
+ * @jest-environment jsdom
+ */
+
+import { convert } from '../../src/selector';
 
 describe('converter', () => {
     describe('trim selectors', () => {

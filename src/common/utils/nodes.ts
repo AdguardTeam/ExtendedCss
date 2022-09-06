@@ -34,7 +34,7 @@ export const getElementSelectorPath = (inputEl: Element): string => {
     let el: Element | null;
 
     el = inputEl;
-    const path = [];
+    const path: string[] = [];
     // we need to check '!!el' first because it is possible
     // that some ancestor of the inputEl was removed before it
     while (!!el && el.nodeType === Node.ELEMENT_NODE) {

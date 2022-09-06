@@ -24,7 +24,7 @@ export const tokenize = (rawSelector: string): Token[] => {
     // for words collecting while iterating
     let buffer = '';
     // result collection
-    const tokens = [];
+    const tokens: Token[] = [];
 
     // iterate selector chars and collect tokens
     for (let i = 0; i < selector.length; i += 1) {

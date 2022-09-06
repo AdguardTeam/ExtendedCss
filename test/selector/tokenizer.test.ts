@@ -1,4 +1,8 @@
-import { tokenize } from '../../src/selector/tokenizer';
+/**
+ * @jest-environment jsdom
+ */
+
+import { tokenize } from '../../src/selector';
 
 describe('tokenizer', () => {
     it('simple', () => {
