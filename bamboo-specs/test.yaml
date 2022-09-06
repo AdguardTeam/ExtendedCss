@@ -1,0 +1,69 @@
+---
+version: 2
+plan:
+  project-key: AJL
+  key: EXTCSSTEST
+  name: extended-css - test new
+variables:
+  dockerPlaywright: adguard/playwright-runner:1.24.2--2
+
+stages:
+  - Build:
+      manual: 'false'
+      final: 'false'
+      jobs:
+        - Build
+
+Build:
+  key: BUILD
+  docker:
+    image: "${bamboo.dockerPlaywright}"
+    volumes:
+      ${system.YARN_DIR}: "${bamboo.cacheYarn}"
+  tasks:
+    - checkout:
+        force-clean-build: 'true'
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -e
+            set -x
+            # Fix mixed logs
+            exec 2>&1
+
+            yarn install ${bamboo.varsYarn}
+
+            yarn test
+            yarn build
+            rm -rf node_modules
+        environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
+                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
+  artifacts:
+    - name: extended-css.js
+      location: dist
+      pattern: extended-css.js
+      required: true
+  final-tasks:
+    - clean
+  requirements:
+    - adg-docker: 'true'
+
+branches:
+  create: for-pull-request
+  delete:
+    after-deleted-days: '1'
+    after-inactive-days: '5'
+  link-to-jira: 'true'
+
+notifications:
+  - events:
+      - plan-status-changed
+    recipients:
+      - webhook:
+          name: Build webhook
+          url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo
+
+labels: []
+other:
+  concurrent-build-plugin: system-default

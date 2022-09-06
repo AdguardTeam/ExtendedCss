@@ -1,61 +1,14 @@
 ---
-version: 2
-plan:
-  project-key: AJL
-  key: EXTCSSSPEC
-  name: extended-css - test
-variables:
-  dockerPuppeteer: buildkite/puppeteer:8.0.0
+!include 'build.yaml'
 
-stages:
-  - Build:
-      manual: 'false'
-      final: 'false'
-      jobs:
-        - Build
+---
+!include 'deploy.yaml'
 
-Build:
-  key: BUILD
-  docker:
-    image: "${bamboo.dockerPuppeteer}"
-    volumes:
-      ${system.YARN_DIR}: "${bamboo.cacheYarn}"
-  tasks:
-    - checkout:
-        force-clean-build: 'true'
-    - script:
-        interpreter: SHELL
-        scripts:
-          - |-
-            set -e
-            set -x
-            export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-            yarn install ${bamboo.varsYarn}
-            yarn browserstack
-            yarn build
-            rm -rf node_modules
-        environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
-                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
-  final-tasks:
-    - clean
-  requirements:
-    - adg-docker: 'true'
+---
+!include 'increment.yaml'
 
-branches:
-  create: for-pull-request
-  delete:
-    after-deleted-days: '1'
-    after-inactive-days: '5'
-  link-to-jira: 'true'
+---
+!include 'permissions.yaml'
 
-notifications:
-  - events:
-      - plan-status-changed
-    recipients:
-      - webhook:
-          name: Build webhook
-          url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo
-
-labels: []
-other:
-  concurrent-build-plugin: system-default
+---
+!include 'test.yaml'
