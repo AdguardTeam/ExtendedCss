@@ -122,26 +122,26 @@ export const getByExtendedSelector = (
         const [relativeSelectorList] = relativeSelectorNodes;
         // needed for :not()
         let errorOnInvalidSelector = false;
-        let relativePredicate: (e: Element) => boolean;
+        let relativePredicate: (e: HTMLElement) => boolean;
         switch (pseudoName) {
             case HAS_PSEUDO_CLASS_MARKER:
             case IF_PSEUDO_CLASS_MARKER:
             case ABP_HAS_PSEUDO_CLASS_MARKER:
-                relativePredicate = (element: Element) => hasRelativesBySelectorList({
+                relativePredicate = (element: HTMLElement) => hasRelativesBySelectorList({
                     element,
                     relativeSelectorList,
                     pseudoName,
                 });
                 break;
             case IF_NOT_PSEUDO_CLASS_MARKER:
-                relativePredicate = (element: Element) => !hasRelativesBySelectorList({
+                relativePredicate = (element: HTMLElement) => !hasRelativesBySelectorList({
                     element,
                     relativeSelectorList,
                     pseudoName,
                 });
                 break;
             case IS_PSEUDO_CLASS_MARKER:
-                relativePredicate = (element: Element) => isAnyElementBySelectorList({
+                relativePredicate = (element: HTMLElement) => isAnyElementBySelectorList({
                     element,
                     relativeSelectorList,
                     pseudoName,
@@ -149,7 +149,7 @@ export const getByExtendedSelector = (
                 break;
             case NOT_PSEUDO_CLASS_MARKER:
                 errorOnInvalidSelector = true;
-                relativePredicate = (element: Element) => !isAnyElementBySelectorList({
+                relativePredicate = (element: HTMLElement) => !isAnyElementBySelectorList({
                     element,
                     relativeSelectorList,
                     pseudoName,

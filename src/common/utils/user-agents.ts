@@ -1,8 +1,13 @@
-import {
-    BrowserName,
-    CHROMIUM_BRAND_NAME,
-    GOOGLE_CHROME_BRAND_NAME,
-} from '../constants';
+enum BrowserName {
+    Chrome = 'Chrome',
+    Firefox = 'Firefox',
+    Edge = 'Edg',
+    Opera = 'Opera',
+    Safari = 'Safari',
+}
+
+const CHROMIUM_BRAND_NAME = 'Chromium';
+const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';
 
 /**
  * Simple check for Safari browser

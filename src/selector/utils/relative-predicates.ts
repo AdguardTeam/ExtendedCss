@@ -28,7 +28,7 @@ export type Specificity = string;
 
 export interface RelativePredicateArgsInterface {
     // dom element to check relatives
-    element: Element,
+    element: HTMLElement,
     // SelectorList node
     relativeSelectorList: AnySelectorNodeInterface,
     // extended pseudo-class name
@@ -55,7 +55,7 @@ export const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterf
             }
 
             let specificity: Specificity = '';
-            let rootElement = null;
+            let rootElement: HTMLElement | null = null;
             if (relativeRegularSelector.value?.startsWith(NEXT_SIBLING_COMBINATOR)
                 || relativeRegularSelector.value?.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
                 /**

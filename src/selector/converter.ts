@@ -1,7 +1,12 @@
-import {
-    REGEXP_VALID_OLD_SYNTAX,
-    INVALID_OLD_SYNTAX_MARKER,
-} from '../common/constants';
+/**
+ * Regexp that matches backward compatible syntaxes
+ * */
+const REGEXP_VALID_OLD_SYNTAX = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
+
+/**
+ * Marker for checking invalid selector after old-syntax normalizing by selector converter
+ */
+const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
 
 /**
  * Complex replacement function.

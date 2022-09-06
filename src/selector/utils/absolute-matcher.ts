@@ -14,11 +14,19 @@ import {
     COLON,
     DOUBLE_QUOTE,
     EQUAL_SIGN,
-    REGEXP_ANY_SYMBOL,
-    REGEXP_WITH_FLAGS_REGEXP,
     SLASH,
-    CSS_PROPERTIES,
 } from '../../common/constants';
+
+enum CssProperty {
+    Background = 'background',
+    BackgroundImage = 'background-image',
+    Content = 'content',
+    Opacity = 'opacity',
+}
+
+const REGEXP_ANY_SYMBOL = '.*';
+
+const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
 export interface MatcherArgsInterface {
     // extended pseudo-class name
@@ -121,16 +129,16 @@ const convertStyleMatchValueToRegexp = (rawArg: string): RegExp => {
 const normalizePropertyValue = (propertyName: string, propertyValue: string): string => {
     let normalized = '';
     switch (propertyName) {
-        case CSS_PROPERTIES.BACKGROUND:
-        case CSS_PROPERTIES.BACKGROUND_IMAGE:
+        case CssProperty.Background:
+        case CssProperty.BackgroundImage:
             // sometimes url property does not have quotes
             // so we add them for consistent matching
             normalized = addUrlPropertyQuotes(propertyValue);
             break;
-        case CSS_PROPERTIES.CONTENT:
+        case CssProperty.Content:
             normalized = removeContentQuotes(propertyValue);
             break;
-        case CSS_PROPERTIES.OPACITY:
+        case CssProperty.Opacity:
             // https://bugs.webkit.org/show_bug.cgi?id=93445
             if (isSafariBrowser) {
                 normalized = (Math.round(parseFloat(propertyValue) * 100) / 100).toString();
@@ -450,7 +458,7 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
     // every base keys should be tested by regexp and it can be more that one results
     if (tempProp instanceof RegExp) {
         const nextProp = chain.slice(1);
-        const baseKeys = [];
+        const baseKeys: string[] = [];
         for (const key in base) {
             if (tempProp.test(key)) {
                 baseKeys.push(key);

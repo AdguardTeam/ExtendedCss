@@ -120,11 +120,13 @@ export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 
 /**
- * :remove() pseudo-class is used for element actions, not for element selecting
- * and 'clear' selector should not contain it
+ * `:remove()` pseudo-class and `remove` pseudo-property are used for element actions, not for element selecting
+ *
+ * selector text should not contain the pseudo-class
  * so selector parser should consider it as invalid
+ * and both are handled by stylesheet parser
  */
-export const REMOVE_PSEUDO_CLASS_MARKER = 'remove';
+export const REMOVE_PSEUDO_MARKER = 'remove';
 
 // relative:
 export const HAS_PSEUDO_CLASS_MARKER = 'has';
@@ -165,10 +167,6 @@ export const SUPPORTED_PSEUDO_CLASSES = [
     ...RELATIVE_PSEUDO_CLASSES,
 ];
 
-export const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
-
-export const REGEXP_ANY_SYMBOL = '.*';
-
 /**
  * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not()
  *
@@ -204,49 +202,8 @@ export const REGULAR_PSEUDO_ELEMENTS = {
     TARGET_TEXT: 'target-text',
 };
 
-export const CSS_PROPERTIES = {
-    BACKGROUND: 'background',
-    BACKGROUND_IMAGE: 'background-image',
-    CONTENT: 'content',
-    OPACITY: 'opacity',
-};
-
-// limit applying of wildcard :is and :not pseudo-class only to html children
-// e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
-export const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
-
-// limit applying of :xpath pseudo-class with to 'any' element
-// https://github.com/AdguardTeam/ExtendedCss/issues/115
-export const XPATH_PSEUDO_SELECTING_ROOT = 'body';
-
-// regexp that matches backward compatible syntaxes
-export const REGEXP_VALID_OLD_SYNTAX = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
-// marker for checking invalid selector after old-syntax normalizing by selector converter
-export const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
-
-export const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
-export const REMOVE_PSEUDO_PROPERTY_KEY = REMOVE_PSEUDO_CLASS_MARKER;
-
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
-
-export const REGEXP_LINES_DIVIDER = /\r?\n/;
-
-export const STYLESHEET_BLOCK_MARKS = [
-    LEFT_SQUARE_BRACKET,
-    RIGHT_SQUARE_BRACKET,
-    LEFT_PARENTHESIS,
-    RIGHT_PARENTHESIS,
-    LEFT_CURLY_BRACKET,
-    RIGHT_CURLY_BRACKET,
-    SINGLE_QUOTE,
-    DOUBLE_QUOTE,
-    BACKSLASH,
-];
-
-export const REGEXP_DECLARATION_END = /[;}]/g;
-export const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
-export const REGEXP_NON_WHITESPACE = /\S/g;
 
 export const STYLESHEET_ERROR_PREFIX = {
     NO_STYLE: 'No style declaration at stylesheet part',
@@ -257,14 +214,3 @@ export const STYLESHEET_ERROR_PREFIX = {
     INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
     NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
 };
-
-export enum BrowserName {
-    Chrome = 'Chrome',
-    Firefox = 'Firefox',
-    Edge = 'Edg',
-    Opera = 'Opera',
-    Safari = 'Safari',
-}
-
-export const CHROMIUM_BRAND_NAME = 'Chromium';
-export const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';

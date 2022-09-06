@@ -9,16 +9,17 @@ import { getObjectFromEntries } from '../common/utils/objects';
 import {
     BRACKETS,
     COLON,
-    DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
-    DEBUG_PSEUDO_PROPERTY_KEY,
+    REMOVE_PSEUDO_MARKER,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
-    REGEXP_DECLARATION_DIVIDER,
-    REGEXP_DECLARATION_END,
-    REGEXP_NON_WHITESPACE,
-    REMOVE_PSEUDO_CLASS_MARKER,
-    REMOVE_PSEUDO_PROPERTY_KEY,
+    DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     STYLESHEET_ERROR_PREFIX,
 } from '../common/constants';
+
+const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
+
+const REGEXP_DECLARATION_END = /[;}]/g;
+const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
+const REGEXP_NON_WHITESPACE = /\S/g;
 
 interface Style {
     property: string,
@@ -114,9 +115,9 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
      */
 
     // ':remove()'
-    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_CLASS_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`; // eslint-disable-line max-len
+    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`; // eslint-disable-line max-len
     // ':remove(' - needed for validation rules like 'div:remove(2)'
-    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_CLASS_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
+    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
 
     let selector: string;
     let shouldRemove = false;
@@ -148,7 +149,7 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     }
 
     const stylesOfSelector = shouldRemove
-        ? [{ property: REMOVE_PSEUDO_PROPERTY_KEY, value: String(shouldRemove) }]
+        ? [{ property: REMOVE_PSEUDO_MARKER, value: String(shouldRemove) }]
         : [];
 
     return { selector, stylesOfSelector };
@@ -298,7 +299,7 @@ const parseNextStyle = (context: Context): Style[] => {
  */
 const isRemoveSetInStyles = (styles: Style[]): boolean => {
     return styles.some((s) => {
-        return s.property === REMOVE_PSEUDO_PROPERTY_KEY
+        return s.property === REMOVE_PSEUDO_MARKER
             && s.value === PSEUDO_PROPERTY_POSITIVE_VALUE;
     });
 };
@@ -346,7 +347,7 @@ export const prepareRuleData = (
     if (shouldRemove) {
         // no other styles are needed to apply if 'remove' is set
         ruleData.style = {
-            [REMOVE_PSEUDO_PROPERTY_KEY]: PSEUDO_PROPERTY_POSITIVE_VALUE,
+            [REMOVE_PSEUDO_MARKER]: PSEUDO_PROPERTY_POSITIVE_VALUE,
         };
     } else {
         // otherwise all styles should be applied.

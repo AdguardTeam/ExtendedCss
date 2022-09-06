@@ -26,7 +26,7 @@ import { getElementSelectorPath } from './common/utils/nodes';
 import {
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
-    REMOVE_PSEUDO_PROPERTY_KEY,
+    REMOVE_PSEUDO_MARKER,
 } from './common/constants';
 
 const APPLY_RULES_DELAY = 150;
@@ -291,7 +291,7 @@ const applyStyle = (context: Context, affectedElement: AffectedElement): void =>
         if (!style) {
             throw new Error(`No affectedElement style to apply for selector: '${selector}'`);
         }
-        if (style[REMOVE_PSEUDO_PROPERTY_KEY] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
+        if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
             removeElement(context, affectedElement);
             return;
         }

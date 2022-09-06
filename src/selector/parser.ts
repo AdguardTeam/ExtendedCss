@@ -45,12 +45,19 @@ import {
     HAS_PSEUDO_CLASS_MARKERS,
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
-    REMOVE_PSEUDO_CLASS_MARKER,
+    REMOVE_PSEUDO_MARKER,
     REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
-    IS_OR_NOT_PSEUDO_SELECTING_ROOT,
-    XPATH_PSEUDO_SELECTING_ROOT,
 } from '../common/constants';
+
+// limit applying of wildcard :is and :not pseudo-class only to html children
+// e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
+const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
+
+// limit applying of :xpath pseudo-class with to 'any' element
+// https://github.com/AdguardTeam/ExtendedCss/issues/115
+const XPATH_PSEUDO_SELECTING_ROOT = 'body';
+
 
 /**
  * Checks whether the passed token is supported extended pseudo-class
@@ -555,7 +562,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
 
                             if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
-                                if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_CLASS_MARKER) {
+                                if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
                                     // :remove() pseudo-class should be handled before
                                     // as it is not about element selecting but actions with elements
                                     // e.g. 'body > div:empty:remove()'
@@ -599,7 +606,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // if supported extended pseudo-class is next to colon
                                 // add ExtendedSelector to Selector children
                                 addAstNodeByType(context, NodeType.ExtendedSelector);
-                            } else if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_CLASS_MARKER) {
+                            } else if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
                                 // :remove() pseudo-class should be handled before
                                 // as it is not about element selecting but actions with elements
                                 // e.g. '#banner:upward(2):remove()'
