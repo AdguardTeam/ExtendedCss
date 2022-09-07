@@ -27,6 +27,7 @@ import {
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REMOVE_PSEUDO_MARKER,
+    MAX_STYLE_PROTECTION_COUNT,
 } from './common/constants';
 
 const APPLY_RULES_DELAY = 150;
@@ -122,8 +123,6 @@ const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     });
 };
 
-const MAX_STYLE_PROTECTION_COUNT = 50;
-
 const protectionObserverOption = {
     attributes: true,
     attributeOldValue: true,
@@ -135,26 +134,13 @@ const protectionObserverOption = {
  * @param styles
  */
 const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => {
-    const protectionCallback = (mutations: MutationRecord[], observer: ExtMutationObserver): void => {
-        if (!mutations.length) {
-            return;
-        }
+    const protectionCallback = (mutations: MutationRecord[], extObserver: ExtMutationObserver): void => {
         const { target } = mutations[0];
-        observer.disconnect();
+        extObserver.disconnect();
         styles.forEach((style) => {
             setStyleToElement(target, style);
         });
-
-        if (typeof observer.styleProtectionCount === 'undefined') {
-            observer.styleProtectionCount = 0;
-        }
-        observer.styleProtectionCount += 1;
-
-        if (observer.styleProtectionCount < MAX_STYLE_PROTECTION_COUNT) {
-            observer.observe(target, protectionObserverOption);
-        } else {
-            logger.error('ExtendedCss: infinite loop protection for style');
-        }
+        extObserver.observe(target, protectionObserverOption);
     };
 
     return protectionCallback;
@@ -273,7 +259,7 @@ interface RemovalsStatistic {
  * @param affectedElement Object containing DOM node and rule to be applied
  */
 const applyStyle = (context: Context, affectedElement: AffectedElement): void => {
-    if (affectedElement.protectionObserver?.isActive) {
+    if (affectedElement.protectionObserver) {
         // style is already applied and protected by the observer
         return;
     }
@@ -302,11 +288,11 @@ const applyStyle = (context: Context, affectedElement: AffectedElement): void =>
 /**
  * Reverts style for the affected object
  */
-const revertStyle = (affElement: AffectedElement): void => {
-    if (affElement.protectionObserver?.isActive) {
-        affElement.protectionObserver.disconnect();
+const revertStyle = (affectedElement: AffectedElement): void => {
+    if (affectedElement.protectionObserver) {
+        affectedElement.protectionObserver.disconnect();
     }
-    affElement.node.style.cssText = affElement.originalStyle;
+    affectedElement.node.style.cssText = affectedElement.originalStyle;
 };
 
 /**
@@ -483,16 +469,19 @@ export class ExtendedCss {
         let affLength = context.affectedElements.length;
         // do nothing if there is no elements to process
         while (affLength) {
-            const affectedEl = context.affectedElements[affLength - 1];
-            if (!newSelectedElements.includes(affectedEl.node)) {
+            const affectedElement = context.affectedElements[affLength - 1];
+            if (!newSelectedElements.includes(affectedElement.node)) {
                 // Time to revert style
-                revertStyle(affectedEl);
+                revertStyle(affectedElement);
                 context.affectedElements.splice(affLength - 1, 1);
-            } else if (!affectedEl.removed) {
+            } else if (!affectedElement.removed) {
                 // Add style protection observer
                 // Protect "style" attribute from changes
-                if (!affectedEl.protectionObserver?.isActive) {
-                    affectedEl.protectionObserver = protectStyleAttribute(affectedEl.node, affectedEl.rules);
+                if (!affectedElement.protectionObserver) {
+                    affectedElement.protectionObserver = protectStyleAttribute(
+                        affectedElement.node,
+                        affectedElement.rules,
+                    );
                 }
             }
             affLength -= 1;

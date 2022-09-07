@@ -108,17 +108,18 @@ QUnit.test('Reaction on DOM modification', (assert) => {
 QUnit.test('Protection from recurring style fixes', (assert) => {
     const done = assert.async();
 
-    const testNode = document.getElementById('case11');
+    const testNodeId = 'case11';
+    const testNode = document.getElementById(testNodeId);
     if (!testNode) {
         throw new Error('No needed test element #case11 on page');
     }
 
     let styleTamperCount = 0;
 
-    const tamperStyle = function () {
+    const tamperStyle = () => {
         if (testNode.hasAttribute('style')) {
             testNode.removeAttribute('style');
-            styleTamperCount++;
+            styleTamperCount += 1;
         }
     };
 
@@ -135,9 +136,14 @@ QUnit.test('Protection from recurring style fixes', (assert) => {
 
     setTimeout(() => {
         tamperObserver.disconnect();
-        assert.ok(styleTamperCount < 60);
-        assert.ok(styleTamperCount >= 50);
-        assert.notOk(testNode.hasAttribute('style'));
+        assert.ok(
+            styleTamperCount >= 50 && styleTamperCount < 60,
+            `style should be protected >= 50 && < 60 times. actual: ${styleTamperCount}`,
+        );
+        assert.notOk(
+            testNode.hasAttribute('style'),
+            `'style' attribute for #${testNodeId} should not be set`,
+        );
         done();
     }, 1000);
 });

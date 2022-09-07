@@ -16,6 +16,6 @@ export const commonPlugins = [
     }),
     typescript({
         transpiler: 'babel',
-        browserslist: ['last 1 version', '> 1%'],
+        // 'browserslist' should be set as 'targets' in babel.config.js
     }),
 ];

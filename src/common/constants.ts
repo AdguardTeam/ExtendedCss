@@ -214,3 +214,5 @@ export const STYLESHEET_ERROR_PREFIX = {
     INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
     NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
 };
+
+export const MAX_STYLE_PROTECTION_COUNT = 50;
