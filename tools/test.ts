@@ -113,12 +113,12 @@ const buildBrowserstackTests = async (): Promise<void> => {
 
 const runJest = async (): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await runCLI(jestConfig as any, [projectRootPath]);
+    const { results } = await runCLI(jestConfig as any, [projectRootPath]);
 
-    if (result.results.success) {
+    if (results.success) {
         log(chalk.greenBright('Tests completed'));
     } else {
-        log(chalk.redBright.bold('Tests failed'));
+        throw new Error(chalk.redBright.bold('Tests failed'));
     }
 };
 

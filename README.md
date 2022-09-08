@@ -163,22 +163,15 @@ div:contains(/it .* banner/gi)
 
 ### <a id="extended-css-matches-css"></a> Pseudo-class `:matches-css()`
 
-Actually there are three pseudo-classes for matching the element by its current style properties: `:matches-css()`, `:matches-css-before()`, `:matches-css-before()`. The work of these pseudo-classes is based on using the [`Window.getComputedStyle()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) method.
+Pseudo-class `:matches-css()` allows to match the element by its current style properties. The work of the pseudo-class is based on using the [`Window.getComputedStyle()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) method.
 
 **Syntax**
 
 ```
-! element style matching
-[target]:matches-css(property ":" pattern)
-
-! ::before pseudo-element style matching
-[target]:matches-css-before(property ":" pattern)
-
-! ::after pseudo-element style matching
-[target]:matches-css-after(property ":" pattern)
+[target]:matches-css([pseudo-element, ] property: pattern)
 ```
-
 - `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `pseudo-element` — optional, valid standard pseudo-element, e.g. `before`, `after`, `first-line`, etc.
 - `property` — required, a name of CSS property to check the element for
 - `pattern` —  required, a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner. In the case of a regular expression, the pattern looks like `/regexp/`.
 
@@ -206,14 +199,16 @@ For such DOM:
 `div` elements with pseudo-element `::before` with specified `content` property can be selected by any of these extended selectors:
 ```
 ! string pattern
-div:matches-css-before(content: block me)
+div:matches-css(before, content: block me)
 
 ! string pattern with wildcard
-div:matches-css-before(content: block*)
+div:matches-css(before, content: block*)
 
 ! regular expression pattern
-div:matches-css-before(content: /block me/)
+div:matches-css(before, content: /block me/)
 ```
+
+> Obsolete pseudo-classes `:matches-css-before()` and `:matches-css-after()` are supported for better compatibility.
 
 > [Backward compatible syntax for `:matches-css()`](#old-syntax-matches-css) is supported but not recommended.
 
@@ -600,9 +595,9 @@ div[-ext-contains="/this .* banner/"]
 
 **Syntax**
 ```
-target[-ext-matches-css="property ":" pattern"]
-target[-ext-matches-css-after="property ":" pattern"]
-target[-ext-matches-css-before="property ":" pattern"]
+target[-ext-matches-css="property: pattern"]
+target[-ext-matches-css-after="property: pattern"]
+target[-ext-matches-css-before="property: pattern"]
 ```
 
 **Examples**
@@ -619,10 +614,10 @@ target[-ext-matches-css-before="property ":" pattern"]
 
 ```
 ! string pattern
-div:matches-css-before(content: block me)
+div[-ext-matches-css-before="content: block me"]
 
 ! regular expression pattern
-div:matches-css-before(content: /block me/)
+div[-ext-matches-css-before="content: /block me/"]
 ```
 
 

@@ -118,7 +118,7 @@ describe('playwright required tests', () => {
             await expectNoMatch(extCssSelector);
         });
 
-        it('matches-css-before', async () => {
+        it('matches-css + before', async () => {
             const bodyInnerHtml = `
                 <div id="target">
                     <style>
@@ -138,14 +138,19 @@ describe('playwright required tests', () => {
             const targetSelector = 'div#target';
             let extCssSelector;
 
+            // old syntax
             extCssSelector = 'div:matches-css-before(color: rgb(255, 255, 255))';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
 
-            extCssSelector = 'div:matches-css-before(content: /^Advertisement$/)';
+            // new syntax
+            extCssSelector = 'div:matches-css(before, color: rgb(255, 255, 255))';
+            expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+
+            extCssSelector = 'div:matches-css(before,content: /^Advertisement$/)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
         });
 
-        it('matches-css-after', async () => {
+        it('matches-css + after', async () => {
             const bodyInnerHtml = `
                 <style>
                     #target {
@@ -166,16 +171,45 @@ describe('playwright required tests', () => {
             const targetSelector = 'div#target';
             let extCssSelector;
 
+            // old syntax
             extCssSelector = 'div:matches-css-after(color: rgb(255, 255, 255))';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
 
-            extCssSelector = 'div:matches-css-after(content: /^Advertisement$/)';
+            extCssSelector = 'div:matches-css(after, content: /^Advertisement$/)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
 
-            extCssSelector = 'div:matches-css-after(content: advertisement)';
+            extCssSelector = 'div:matches-css(after, content: advertisement)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
 
-            extCssSelector = 'div:matches-css-after(content: advert*)';
+            extCssSelector = 'div:matches-css(after,content: advert*)';
+            expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+        });
+
+        it('matches-css + first-line', async () => {
+            const bodyInnerHtml = `
+                <style>
+                    #target {
+                        color: #000;
+                        word-spacing: normal;
+                    }
+
+                    #target::first-line {
+                        color: #fff;
+                        word-spacing: 15px;
+                    }
+                </style>
+
+                <p id="target"></p>
+            `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const targetSelector = 'p#target';
+            let extCssSelector;
+
+            extCssSelector = 'p:matches-css(first-line, color: rgb(255, 255, 255))';
+            expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+
+            extCssSelector = 'p:matches-css(first-line, word-spacing: *px)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
         });
     });

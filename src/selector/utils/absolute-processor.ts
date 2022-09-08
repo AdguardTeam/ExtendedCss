@@ -17,10 +17,8 @@ import {
 } from './absolute-finder';
 
 import {
-    COLON,
     MATCHES_CSS_BEFORE_PSEUDO,
     MATCHES_CSS_AFTER_PSEUDO,
-    REGULAR_PSEUDO_ELEMENTS,
     CONTAINS_PSEUDO,
     HAS_TEXT_PSEUDO,
     ABP_CONTAINS_PSEUDO,
@@ -59,8 +57,6 @@ export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: strin
     let argsData: MatcherArgsInterface;
     let errorMessage: string;
     let callback: MatcherCallback;
-    // no standard pseudo-element is needed for :matched-css
-    let regularPseudoElement = '';
 
     switch (pseudoName) {
         case CONTAINS_PSEUDO:
@@ -73,13 +69,8 @@ export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: strin
         case MATCHES_CSS_PSEUDO:
         case MATCHES_CSS_AFTER_PSEUDO:
         case MATCHES_CSS_BEFORE_PSEUDO:
-            if (pseudoName === MATCHES_CSS_BEFORE_PSEUDO) {
-                regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.BEFORE}`;
-            } else if (pseudoName === MATCHES_CSS_AFTER_PSEUDO) {
-                regularPseudoElement = `${COLON}${REGULAR_PSEUDO_ELEMENTS.AFTER}`;
-            }
             callback = isStyleMatched;
-            argsData = { pseudoName, pseudoArg, domElement, regularPseudoElement };
+            argsData = { pseudoName, pseudoArg, domElement };
             errorMessage = `Error while matching element style by arg '${pseudoArg}'.`;
             break;
         case MATCHES_ATTR_PSEUDO_CLASS_MARKER:

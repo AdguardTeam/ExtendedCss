@@ -1,3 +1,5 @@
+import { BRACKETS, COMMA } from '../common/constants';
+
 /**
  * Regexp that matches backward compatible syntaxes
  * */
@@ -29,6 +31,13 @@ const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue:
 const reScope = /\(:scope >/g;
 const SCOPE_REPLACER = '(>';
 
+const MATCHES_CSS_PSEUDO_ELEMENT_REGEXP = /(:matches-css)-(before|after)\(/g;
+const convertMatchesCss = (match: string, extendedPseudoClass: string, regularPseudoElement: string): string => {
+    // ':matches-css-before('  -->  ':matches-css(before, '
+    // ':matches-css-after('   -->  ':matches-css(after, '
+    return `${extendedPseudoClass}${BRACKETS.PARENTHESES.LEFT}${regularPseudoElement}${COMMA}`;
+};
+
 /**
  * Handles old syntax and :scope inside :has
  * @param selector trimmed selector to normalize
@@ -37,7 +46,8 @@ const SCOPE_REPLACER = '(>';
 const normalize = (selector: string): string => {
     const normalizedSelector = selector
         .replace(REGEXP_VALID_OLD_SYNTAX, evaluateMatch)
-        .replace(reScope, SCOPE_REPLACER);
+        .replace(reScope, SCOPE_REPLACER)
+        .replace(MATCHES_CSS_PSEUDO_ELEMENT_REGEXP, convertMatchesCss);
 
     // validate old syntax after normalizing
     // e.g. '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]'

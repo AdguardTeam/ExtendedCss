@@ -38,6 +38,26 @@ describe('converter', () => {
         });
     });
 
+    describe('old matches-css pseudo-classes', () => {
+        const testsInputs = [
+            {
+                actual: 'span:matches-css-before(content:ad*))',
+                expected: 'span:matches-css(before,content:ad*))',
+            },
+            {
+                actual: 'span:matches-css-after(content:ad*))',
+                expected: 'span:matches-css(after,content:ad*))',
+            },
+            {
+                actual: 'div:matches-css-after(color: rgb(255, 255, 255))',
+                expected: 'div:matches-css(after,color: rgb(255, 255, 255))',
+            },
+        ];
+        test.each(testsInputs)('%s', ({ actual, expected }) => {
+            expect(convert(actual)).toEqual(expected);
+        });
+    });
+
     describe('old syntax', () => {
         const testsInputs = [
             // has
@@ -97,11 +117,11 @@ describe('converter', () => {
             },
             {
                 actual: '#test-matches-css div[-ext-matches-css-before="content: *find me*"]',
-                expected: '#test-matches-css div:matches-css-before(content: *find me*)',
+                expected: '#test-matches-css div:matches-css(before,content: *find me*)',
             },
             {
                 actual: '#test-matches-css div[-ext-matches-css-after="content: *find me*"]',
-                expected: '#test-matches-css div:matches-css-after(content: *find me*)',
+                expected: '#test-matches-css div:matches-css(after,content: *find me*)',
             },
             // combinations
             {
@@ -134,16 +154,16 @@ describe('converter', () => {
             },
             {
                 actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
-                expected: ':matches-css-before(content:  /^[A-Z][a-z]{2}\\s/  )',
+                expected: ':matches-css(before,content:  /^[A-Z][a-z]{2}\\s/  )',
             },
             {
                 actual: '[-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']',
-                expected: ':has(+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
+                expected: ':has(+:matches-css(after, content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
             },
             {
                 /* eslint-disable max-len */
                 actual: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + [-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'][-ext-has=\'+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/)\']',
-                expected: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + :matches-css-before(content:  /^[A-Z][a-z]{2}\\s/  ):has(+:matches-css-after( content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
+                expected: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ) + :matches-css(before,content:  /^[A-Z][a-z]{2}\\s/  ):has(+:matches-css(after, content  :   /(\\d+\\s)*me/  ):contains(/^(?![\\s\\S])/))',
                 /* eslint-enable max-len */
             },
         ];

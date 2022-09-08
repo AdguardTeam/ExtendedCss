@@ -15,6 +15,8 @@ import {
     DOUBLE_QUOTE,
     EQUAL_SIGN,
     SLASH,
+    COMMA,
+    REGULAR_PSEUDO_ELEMENTS,
 } from '../../common/constants';
 
 enum CssProperty {
@@ -35,8 +37,6 @@ export interface MatcherArgsInterface {
     pseudoArg: string,
     // dom element to check
     domElement: Element,
-    // standard pseudo-element, needed only for :matches-css()
-    regularPseudoElement?: string,
 }
 
 /**
@@ -154,13 +154,13 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
  * Gets domElement style property value
  * by css property name and standard pseudo-element
  * @param domElement dom node
- * @param regularPseudoElement standard pseudo-element — :before or :after
  * @param propertyName css property name
+ * @param regularPseudoElement standard pseudo-element — :before, :after etc.
  */
 const getComputedStylePropertyValue = (
     domElement: Element,
     propertyName: string,
-    regularPseudoElement?: string,
+    regularPseudoElement: string | null,
 ): string => {
     const style = getComputedStyle(domElement, regularPseudoElement);
     const propertyValue = style.getPropertyValue(propertyName);
@@ -196,16 +196,50 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
     return { name, value };
 };
 
+interface MatchesCssArgData {
+    regularPseudoElement: string | null,
+    styleMatchArg: string,
+}
+
+/**
+ * Parses :matches-css() pseudo-class arg
+ * where regular pseudo-element can be a part of arg
+ * e.g. 'div:matches-css(before, color: rgb(255, 255, 255))'    <-- obsolete :matches-css-before()
+ * @param pseudoName
+ * @param rawArg
+ */
+const parseStyleMatchArg = (pseudoName: string, rawArg: string): MatchesCssArgData => {
+    const { name, value } = getPseudoArgData(rawArg, COMMA);
+
+    let regularPseudoElement: string | null = name;
+    let styleMatchArg: string | undefined = value;
+
+    // check whether the string part before the separator is valid regular pseudo-element,
+    // otherwise `regularPseudoElement` is null, and `styleMatchArg` is rawArg
+    if (!Object.values(REGULAR_PSEUDO_ELEMENTS).includes(name)) {
+        regularPseudoElement = null;
+        styleMatchArg = rawArg;
+    }
+
+    if (!styleMatchArg) {
+        throw new Error(`Required style property argument part is missing in :${pseudoName}() arg: '${rawArg}'`);
+    }
+
+    return { regularPseudoElement, styleMatchArg };
+};
+
 /**
  * Checks whether the domElement is matched by :matches-css() arg
  * @param argsData
  */
 export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
-    const { pseudoName, pseudoArg, domElement, regularPseudoElement } = argsData;
+    const { pseudoName, pseudoArg, domElement } = argsData;
 
-    const { name: matchName, value: matchValue } = getPseudoArgData(pseudoArg, COLON);
+    const { regularPseudoElement, styleMatchArg } = parseStyleMatchArg(pseudoName, pseudoArg);
+
+    const { name: matchName, value: matchValue } = getPseudoArgData(styleMatchArg, COLON);
     if (!matchName || !matchValue) {
-        throw new Error(`Required property name or value is missing in :${pseudoName}() arg: '${pseudoArg}'`);
+        throw new Error(`Required property name or value is missing in :${pseudoName}() arg: '${styleMatchArg}'`);
     }
 
     let valueRegexp: RegExp;
@@ -213,7 +247,7 @@ export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
         valueRegexp = convertStyleMatchValueToRegexp(matchValue);
     } catch (e) {
         logger.error(e);
-        throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${pseudoArg}'`);
+        throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${styleMatchArg}'`);
     }
 
     const value = getComputedStylePropertyValue(domElement, matchName, regularPseudoElement);

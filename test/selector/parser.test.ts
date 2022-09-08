@@ -662,14 +662,14 @@ describe('old syntax', () => {
             actual: '#test-matches-css div[-ext-matches-css-before="content: *find me*"]',
             expected: [
                 { isRegular: true, value: '#test-matches-css div' },
-                { isAbsolute: true, name: 'matches-css-before', value: 'content: *find me*' },
+                { isAbsolute: true, name: 'matches-css', value: 'before,content: *find me*' },
             ],
         },
         {
             actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
             expected: [
                 { isRegular: true, value: '*' },
-                { isAbsolute: true, name: 'matches-css-before', value: 'content:  /^[A-Z][a-z]{2}\\s/  ' },
+                { isAbsolute: true, name: 'matches-css', value: 'before,content:  /^[A-Z][a-z]{2}\\s/  ' },
             ],
         },
         {
@@ -792,7 +792,7 @@ describe('old syntax', () => {
                         getRegularSelector('*'),
                         getAbsoluteExtendedSelector('matches-css', '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    '),
                         getRegularSelector('+ *'),
-                        getAbsoluteExtendedSelector('matches-css-before', 'content:  /^[A-Z][a-z]{2}\\s/  '),
+                        getAbsoluteExtendedSelector('matches-css', 'before,content:  /^[A-Z][a-z]{2}\\s/  '),
                         {
                             type: NodeType.ExtendedSelector,
                             children: [
@@ -802,7 +802,7 @@ describe('old syntax', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '+*' },
-                                            { isAbsolute: true, name: 'matches-css-after', value: ' content  :   /(\\d+\\s)*me/  ' },
+                                            { isAbsolute: true, name: 'matches-css', value: 'after, content  :   /(\\d+\\s)*me/  ' },
                                             { isAbsolute: true, name: 'contains', value: '/^(?![\\s\\S])/' },
                                         ]),
                                     ],
@@ -1001,7 +1001,7 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '> div > div > div[class*="__label"] > span' },
-                                            { isAbsolute: true, name: 'matches-css-before', value: 'content:*Яндекс.Директ' }, // eslint-disable-line max-len
+                                            { isAbsolute: true, name: 'matches-css', value: 'before,content:*Яндекс.Директ' }, // eslint-disable-line max-len
                                         ],
                                         )],
                                 },
@@ -1271,7 +1271,7 @@ describe('combined selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '+*' },
-                                            { isAbsolute: true, name: 'matches-css-after', value: ' content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
+                                            { isAbsolute: true, name: 'matches-css', value: 'after, content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
                                         ]),
                                     ],
                                 },
