@@ -12,7 +12,7 @@ const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    testProp: string | Object,
+    testProp: string | Object;
 }
 
 /**
@@ -29,7 +29,7 @@ interface TestStyleMap {
 }
 
 interface TestLoggedStats {
-    selector: string,
+    selectorParsed: string,
     timings: TimingStats,
 }
 
@@ -618,10 +618,12 @@ describe('extended css library', () => {
         logger.info = function (...args) {
             if (args.length === 3
                     && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
-                const stats = args[2];
-                expect(stats).toBeDefined();
-                expect(stats.length).toEqual(1);
-                expect(stats[0].selector.includes('with-debug')).toBeTruthy();
+                const loggedData = args[2];
+                expect(loggedData).toBeDefined();
+
+                const selectors = Object.keys(loggedData);
+                expect(selectors.length).toEqual(1);
+                expect(selectors[0].includes('with-debug')).toBeTruthy();
 
                 // Cleanup
                 logger.info = loggerInfo;
@@ -649,14 +651,15 @@ describe('extended css library', () => {
         logger.info = function (...args) {
             if (args.length === 3
                     && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
-                const stats: TestLoggedStats[] = args[2];
+                const loggedData: TestLoggedStats[] = args[2];
+                expect(loggedData).toBeDefined();
 
-                expect(stats).toBeDefined();
-                expect(stats.length).toEqual(3);
+                const selectors = Object.keys(loggedData);
+                expect(selectors.length).toEqual(3);
 
-                expect(stats.filter((item) => item.selector.includes('with-global-debug')).length).toEqual(1);
-                expect(stats.filter((item) => item.selector.includes('without-debug-before-global')).length).toEqual(1);
-                expect(stats.filter((item) => item.selector.includes('without-debug-after-global')).length).toEqual(1);
+                expect(selectors.filter((s) => s.includes('with-global-debug')).length).toEqual(1);
+                expect(selectors.filter((s) => s.includes('without-debug-before-global')).length).toEqual(1);
+                expect(selectors.filter((s) => s.includes('without-debug-after-global')).length).toEqual(1);
 
                 // Cleanup
                 logger.info = loggerInfo;

@@ -8,8 +8,8 @@ export enum TokenType {
 }
 
 export interface Token {
-    type: TokenType,
-    value: string,
+    type: TokenType;
+    value: string;
 }
 
 /**

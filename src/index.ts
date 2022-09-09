@@ -1,2 +1,2 @@
 export { ExtendedCss } from './extended-css';
-export type { IAffectedElement } from './extended-css';
+export type { ExtCssConfiguration, IAffectedElement } from './extended-css';

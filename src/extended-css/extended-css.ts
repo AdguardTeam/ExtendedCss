@@ -30,7 +30,7 @@ type ValidationResult = {
     error: string | null,
 };
 
-interface ExtCssConfiguration {
+export interface ExtCssConfiguration {
     // css stylesheet
     styleSheet: string;
     // the callback that handles affected elements
@@ -65,7 +65,7 @@ export class ExtendedCss {
 
         this.context = {
             beforeStyleApplied: configuration.beforeStyleApplied,
-            debug: configuration.debug || false,
+            debug: false,
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
@@ -73,8 +73,9 @@ export class ExtendedCss {
             mainCallback: () => {},
         };
 
-        // true if any one rule in styleSheet has `debug: global`
-        this.context.debug = this.context.parsedRules.some((ruleData) => {
+        // true if set in configuration
+        // or any rule in styleSheet has `debug: global`
+        this.context.debug = configuration.debug || this.context.parsedRules.some((ruleData) => {
             return ruleData.debug === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE;
         });
 

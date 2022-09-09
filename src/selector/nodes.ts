@@ -11,10 +11,10 @@ export enum NodeType {
  * Universal interface for all node types
  */
 export interface AnySelectorNodeInterface {
-    type: string,
-    children: AnySelectorNodeInterface[],
-    value?: string,
-    name?: string,
+    type: string;
+    children: AnySelectorNodeInterface[];
+    value?: string;
+    name?: string;
 
     addChild(child: AnySelectorNodeInterface): void;
 }

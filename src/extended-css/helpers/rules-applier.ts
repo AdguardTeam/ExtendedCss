@@ -60,11 +60,11 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     });
 
     if (isDebuggingMode && startTime) {
-        const elapsed = AsyncWrapper.now() - startTime;
+        const elapsedTimeMs = AsyncWrapper.now() - startTime;
         if (!ruleData.timingStats) {
             ruleData.timingStats = new TimingStats();
         }
-        ruleData.timingStats.push(elapsed);
+        ruleData.timingStats.push(elapsedTimeMs);
     }
 
     return nodes;
@@ -72,6 +72,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
 
 /**
  * Applies filtering rules
+ * @param context extended-css context
  */
 export const applyRules = (context: Context): void => {
     const newSelectedElements: HTMLElement[] = [];
@@ -82,6 +83,11 @@ export const applyRules = (context: Context): void => {
     context.parsedRules.forEach((ruleData) => {
         const nodes = applyRule(context, ruleData);
         Array.prototype.push.apply(newSelectedElements, nodes);
+        // save matched elements to ruleData as linked to applied rule
+        // only for debugging purposes
+        if (ruleData.debug) {
+            ruleData.matchedElements = nodes;
+        }
     });
     // Now revert styles for elements which are no more affected
     let affLength = context.affectedElements.length;

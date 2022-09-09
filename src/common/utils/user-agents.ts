@@ -15,12 +15,12 @@ const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';
 export const isSafariBrowser = navigator.vendor === 'Apple Computer, Inc.';
 
 interface BrowserData {
-    MASK: RegExp,
-    MIN_VERSION: number,
+    MASK: RegExp;
+    MIN_VERSION: number;
 }
 
 type SupportedBrowsersData = {
-    [key: string]: BrowserData
+    [key: string]: BrowserData;
 };
 
 const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {

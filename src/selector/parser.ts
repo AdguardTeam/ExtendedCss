@@ -87,43 +87,43 @@ interface Context {
     /**
      * Collected result
      */
-    ast: AnySelectorNodeInterface | null,
+    ast: AnySelectorNodeInterface | null;
 
     /**
      * Array of nodes as path to buffer node
      */
-    pathToBufferNode: AnySelectorNodeInterface[],
+    pathToBufferNode: AnySelectorNodeInterface[];
 
     /**
      * Array of extended pseudo-class names;
      * needed for checking while going deep into extended selector
      */
-    extendedPseudoNamesStack: string[],
+    extendedPseudoNamesStack: string[];
 
     /**
      * Array of brackets for proper extended selector args collecting
      */
-    extendedPseudoBracketsStack: string[],
+    extendedPseudoBracketsStack: string[];
 
     /**
      * Array of standard pseudo-class names
      */
-    standardPseudoNamesStack: string[],
+    standardPseudoNamesStack: string[];
 
     /**
      * Array of brackets for proper standard pseudo-class handling
      */
-    standardPseudoBracketsStack: string[],
+    standardPseudoBracketsStack: string[];
 
     /**
      * Flag for processing comma inside attribute value
      */
-    isAttributeBracketsOpen: boolean,
+    isAttributeBracketsOpen: boolean;
 
     /**
      * Flag for extended pseudo-class arg regexp values
      */
-    isRegexpOpen: boolean,
+    isRegexpOpen: boolean;
 }
 
 /**

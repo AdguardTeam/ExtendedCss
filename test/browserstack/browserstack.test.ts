@@ -1,10 +1,10 @@
 interface TestExtCssConfig {
-    styleSheet: string ;
+    styleSheet: string;
 }
 
 interface ExtendedCssInstance {
-    apply(): void,
-    dispose(): void,
+    apply(): void;
+    dispose(): void;
 }
 
 // Needed to avoid declare global error:

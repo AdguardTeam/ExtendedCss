@@ -28,14 +28,14 @@ export type Specificity = string;
 
 export interface RelativePredicateArgsInterface {
     // dom element to check relatives
-    element: HTMLElement,
+    element: HTMLElement;
     // SelectorList node
-    relativeSelectorList: AnySelectorNodeInterface,
+    relativeSelectorList: AnySelectorNodeInterface;
     // extended pseudo-class name
-    pseudoName: string,
+    pseudoName: string;
     // flag for error throwing on invalid selector from selectorList
     // e.g. true for :not() pseudo-class
-    errorOnInvalidSelector?: boolean,
+    errorOnInvalidSelector?: boolean;
 }
 
 /**

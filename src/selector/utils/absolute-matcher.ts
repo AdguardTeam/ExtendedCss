@@ -32,11 +32,11 @@ const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
 export interface MatcherArgsInterface {
     // extended pseudo-class name
-    pseudoName: string,
+    pseudoName: string;
     // extended pseudo-class arg
-    pseudoArg: string,
+    pseudoArg: string;
     // dom element to check
-    domElement: Element,
+    domElement: Element;
 }
 
 /**
@@ -168,8 +168,8 @@ const getComputedStylePropertyValue = (
 };
 
 interface PseudoArgData {
-    name: string,
-    value?: string,
+    name: string;
+    value?: string;
 }
 
 /**
@@ -197,8 +197,8 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
 };
 
 interface MatchesCssArgData {
-    regularPseudoElement: string | null,
-    styleMatchArg: string,
+    regularPseudoElement: string | null;
+    styleMatchArg: string;
 }
 
 /**
@@ -312,8 +312,8 @@ export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): s
 };
 
 interface RawMatchingArgData {
-    rawName: string,
-    rawValue?: string,
+    rawName: string;
+    rawValue?: string;
 }
 
 /**
@@ -452,9 +452,9 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
 };
 
 interface Chain {
-    base: Element,
-    prop: string,
-    value?: string,
+    base: Element;
+    prop: string;
+    value?: string;
 }
 
 /**

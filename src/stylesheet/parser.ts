@@ -21,18 +21,18 @@ const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
 const REGEXP_NON_WHITESPACE = /\S/g;
 
 interface Style {
-    property: string,
-    value: string,
+    property: string;
+    value: string;
 }
 
 interface RawCssRuleData {
-    selector: string,
-    ast?: AnySelectorNodeInterface,
-    styles?: Style[],
+    selector: string;
+    ast?: AnySelectorNodeInterface;
+    styles?: Style[];
 }
 
 interface RawResultValue {
-    ast: AnySelectorNodeInterface,
+    ast: AnySelectorNodeInterface;
     styles: Style[];
 }
 type RawResults = Map<string, RawResultValue>;
@@ -42,46 +42,47 @@ export interface CssStyleMap {
 }
 
 export interface ExtCssRuleData {
-    selector: string,
-    ast: AnySelectorNodeInterface,
-    style?: CssStyleMap,
-    debug?: string,
-    timingStats?: TimingStats,
+    selector: string;
+    ast: AnySelectorNodeInterface;
+    style?: CssStyleMap;
+    debug?: string;
+    timingStats?: TimingStats;
+    matchedElements?: HTMLElement[];
 }
 
 interface SelectorPartData {
-    success: boolean,
-    selector: string,
+    success: boolean;
+    selector: string;
     // might be not defined if selector is not valid
-    ast?: AnySelectorNodeInterface,
-    stylesOfSelector?: Style[],
+    ast?: AnySelectorNodeInterface;
+    stylesOfSelector?: Style[];
 }
 
 interface Context {
     /**
      * Flag for parsing rules parts
      */
-    isSelector: boolean,
+    isSelector: boolean;
 
     /**
      * Parser position
      */
-    nextIndex: number,
+    nextIndex: number;
 
     /**
      * Stylesheet left to parse
      */
-    cssToParse: string,
+    cssToParse: string;
 
     /**
      * Buffer for selector text collecting
      */
-    selectorBuffer: string,
+    selectorBuffer: string;
 
     /**
      * Buffer for rule data collecting
      */
-    rawRuleData: RawCssRuleData,
+    rawRuleData: RawCssRuleData;
 }
 
 /**
