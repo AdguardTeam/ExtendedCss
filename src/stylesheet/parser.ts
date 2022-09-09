@@ -1,7 +1,4 @@
-import {
-    AnySelectorNodeInterface,
-    parse as parseSelector,
-} from '../selector';
+import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
 
 import { TimingStats } from '../extended-css';
 
@@ -159,9 +156,10 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
 
 /**
  * Parses cropped selector part found before `{` previously
- * @param context
+ * @param context stylesheet parser context
+ * @param extCssDoc needed for caching of selector ast
  */
-const parseSelectorPart = (context: Context): SelectorPartData => {
+const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
 
     let removeSelectorData: ParsedSelectorData;
@@ -190,7 +188,7 @@ const parseSelectorPart = (context: Context): SelectorPartData => {
         stylesOfSelector = removeSelectorData.stylesOfSelector;
         // validate found selector by parsing it to ast
         // so if it is invalid error will be thrown
-        ast = parseSelector(selector);
+        ast = extCssDoc.getSelectorAst(selector);
         success = true;
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         success = false;
@@ -399,13 +397,13 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  *    slice next stylesheet part to `{` [2] and validates again [3]
  *  - no error — saves found string part as selector and starts to parse styles (recursively)
  * @param rawStylesheet as string
+ * @param extCssDoc ExtCssDocument which uses cache while selectors parsing
  * @returns array of rules data which contains:
  * - selector as string
  * - ast to query elements by
  * - map of styles to apply
- *
  */
-export const parse = (rawStylesheet: string): ExtCssRuleData[] => {
+export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();
     const context: Context = {
         // any stylesheet should start with selector
@@ -444,7 +442,7 @@ export const parse = (rawStylesheet: string): ExtCssRuleData[] => {
                 context.selectorBuffer += context.cssToParse.slice(0, context.nextIndex);
             }
 
-            selectorData = parseSelectorPart(context);
+            selectorData = parseSelectorPart(context, extCssDoc);
             if (selectorData.success) {
                 // selector successfully parsed
                 context.rawRuleData.selector = selectorData.selector.trim();

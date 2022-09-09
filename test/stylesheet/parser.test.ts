@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { parse } from '../../src/stylesheet/parser';
+import { parse } from '../../src/stylesheet';
+import { ExtCssDocument } from '../../src/selector';
 
 import { STYLESHEET_ERROR_PREFIX } from '../../src/common/constants';
 
@@ -18,7 +19,8 @@ interface SingleRuleInput {
 }
 const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     const { actual, expected } = input;
-    const parsed = parse(actual);
+    const extCssDoc = new ExtCssDocument();
+    const parsed = parse(actual, extCssDoc);
     expect(parsed.length).toEqual(1);
     expect(parsed[0].selector).toEqual(expected.selector);
     expect(parsed[0].style).toEqual(expected.style);
@@ -31,7 +33,8 @@ interface MultipleRuleInput {
 }
 const expectMultipleRulesParsed = (input: MultipleRuleInput): void => {
     const { actual, expected } = input;
-    const parsedRules = parse(actual);
+    const extCssDoc = new ExtCssDocument();
+    const parsedRules = parse(actual, extCssDoc);
     parsedRules.forEach((parsed, i) => {
         expect(parsed.selector).toEqual(expected[i].selector);
         expect(parsed.style).toEqual(expected[i].style);
@@ -46,7 +49,8 @@ interface ToThrowInput {
 const expectToThrowInput = (input: ToThrowInput): void => {
     const { selector, error } = input;
     expect(() => {
-        parse(selector);
+        const extCssDoc = new ExtCssDocument();
+        parse(selector, extCssDoc);
     }).toThrow(error);
 };
 

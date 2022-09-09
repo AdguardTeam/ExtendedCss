@@ -5,9 +5,8 @@ import { protectStyleAttribute } from './style-protector';
 import { TimingStats, printTimingInfo } from './timing-stats';
 import { AffectedElement, Context } from './types';
 
-import { ExtCssRuleData } from '../../stylesheet/parser';
-
-import { selectElementsByAst } from '../../selector/query';
+import { ExtCssRuleData } from '../../stylesheet';
+import { selectElementsByAst } from '../../selector';
 
 /**
  * Finds affectedElement object for the specified DOM node

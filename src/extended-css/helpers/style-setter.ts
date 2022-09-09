@@ -1,5 +1,5 @@
 import { AffectedElement, Context, IAffectedElement } from './types';
-import { CssStyleMap } from '../../stylesheet/parser';
+import { CssStyleMap } from '../../stylesheet';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';
 import { removeSuffix } from '../../common/utils/strings';

@@ -2,7 +2,7 @@ import { setStyleToElement } from './style-setter';
 import { ExtMutationObserver } from './mutation-observer';
 import { ProtectionCallback } from './types';
 
-import { CssStyleMap, ExtCssRuleData } from '../../stylesheet/parser';
+import { CssStyleMap, ExtCssRuleData } from '../../stylesheet';
 
 import { natives } from '../../common/utils/natives';
 

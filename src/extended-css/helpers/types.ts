@@ -1,4 +1,4 @@
-import { CssStyleMap, ExtCssRuleData } from '../../stylesheet/parser';
+import { CssStyleMap, ExtCssRuleData } from '../../stylesheet';
 import { ExtMutationObserver } from './mutation-observer';
 
 export type MainCallback = () => void;

@@ -1,6 +1,5 @@
-import { parse as parseStylesheet } from '../stylesheet/parser';
-
-import { ExtCssDocument } from '../selector/query';
+import { ExtCssDocument } from '../selector';
+import { parse as parseStylesheet } from '../stylesheet';
 
 import { AsyncWrapper } from './helpers/async-wrapper';
 import { applyRules } from './helpers/rules-applier';
@@ -41,7 +40,7 @@ interface ExtCssConfiguration {
 }
 
 /**
- * Main Extended css class
+ * Main ExtendedCss class
  */
 export class ExtendedCss {
     private context: Context;
@@ -49,6 +48,9 @@ export class ExtendedCss {
     private applyRulesScheduler: AsyncWrapper;
 
     private mainCallback: MainCallback;
+
+    // Instance of ExtCssDocument is needed for using selector-ast cache
+    extCssDocument: ExtCssDocument;
 
     constructor(configuration: ExtCssConfiguration) {
         if (!isBrowserSupported()) {
@@ -59,13 +61,15 @@ export class ExtendedCss {
             throw new Error('ExtendedCss configuration should be provided.');
         }
 
+        this.extCssDocument = new ExtCssDocument();
+
         this.context = {
             beforeStyleApplied: configuration.beforeStyleApplied,
             debug: configuration.debug || false,
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
-            parsedRules: parseStylesheet(configuration.styleSheet),
+            parsedRules: parseStylesheet(configuration.styleSheet, this.extCssDocument),
             mainCallback: () => {},
         };
 

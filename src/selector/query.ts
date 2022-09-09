@@ -70,7 +70,7 @@ export class ExtCssDocument {
      * - if no cached ast — saves newly parsed ast to cache and returns it
      * @param selector
      */
-    private getSelectorAst(selector: string): AnySelectorNodeInterface {
+    getSelectorAst(selector: string): AnySelectorNodeInterface {
         let ast = this.getAstFromCache(selector);
         if (!ast) {
             ast = parse(selector);
