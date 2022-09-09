@@ -2,10 +2,9 @@
  * @jest-environment jsdom
  */
 
-
 import { ExtendedCss } from '../src';
 
-import { TimingStats } from '../src/helpers/timing-stats';
+import { TimingStats } from '../src/extended-css';
 
 import { logger } from '../src/common/utils/logger';
 

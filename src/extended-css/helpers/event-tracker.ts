@@ -1,4 +1,4 @@
-import { isSafariBrowser } from '../common/utils/user-agents';
+import { isSafariBrowser } from '../../common/utils/user-agents';
 
 const LAST_EVENT_TIMEOUT_MS = 10;
 

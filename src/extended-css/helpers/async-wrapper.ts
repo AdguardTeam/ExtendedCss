@@ -1,6 +1,5 @@
-import { Context } from '../extended-css';
-
-import { isNumber } from '../common/utils/numbers';
+import { isNumber } from '../../common/utils/numbers';
+import { Context } from './types';
 
 const isSupported = (typeof window.requestAnimationFrame !== 'undefined');
 const rAF = isSupported ? requestAnimationFrame : window.setTimeout;

@@ -1,9 +1,8 @@
-import { natives } from '../common/utils/natives';
-import { logger } from '../common/utils/logger';
+import { ProtectionCallback } from './types';
+import { natives } from '../../common/utils/natives';
+import { logger } from '../../common/utils/logger';
 
-import { MAX_STYLE_PROTECTION_COUNT } from '../common/constants';
-
-export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
+import { MAX_STYLE_PROTECTION_COUNT } from '../../common/constants';
 
 /**
  * ExtMutationObserver is a wrapper over regular MutationObserver with one additional function:

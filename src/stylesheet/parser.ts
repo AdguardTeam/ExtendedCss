@@ -3,7 +3,7 @@ import {
     parse as parseSelector,
 } from '../selector';
 
-import { TimingStats } from '../helpers/timing-stats';
+import { TimingStats } from '../extended-css';
 
 import { logger } from '../common/utils/logger';
 import { getObjectFromEntries } from '../common/utils/objects';
