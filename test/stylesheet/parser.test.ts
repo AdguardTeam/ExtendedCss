@@ -42,15 +42,27 @@ const expectMultipleRulesParsed = (input: MultipleRuleInput): void => {
     });
 };
 
-interface ToThrowInput {
+interface ToThrowOnSelectorInput {
     selector: string,   // selector for extCss querySelectorAll()
     error: string,      // error text to match
 }
-const expectToThrowInput = (input: ToThrowInput): void => {
+const expectToThrowOnSelector = (input: ToThrowOnSelectorInput): void => {
     const { selector, error } = input;
     expect(() => {
         const extCssDoc = new ExtCssDocument();
         parse(selector, extCssDoc);
+    }).toThrow(error);
+};
+
+interface ToThrowOnStylesheetInput {
+    stylesheet: string,   // selector for extCss querySelectorAll()
+    error: string,      // error text to match
+}
+const expectToThrowOnStylesheet = (input: ToThrowOnStylesheetInput): void => {
+    const { stylesheet, error } = input;
+    expect(() => {
+        const extCssDoc = new ExtCssDocument();
+        parse(stylesheet, extCssDoc);
     }).toThrow(error);
 };
 
@@ -562,7 +574,7 @@ describe('stylesheet parser', () => {
                 '.block > span:contains({background: #410e13})',
                 '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
             ];
-            test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+            test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
         });
 
         describe('invalid remove pseudo-class', () => {
@@ -576,7 +588,7 @@ describe('stylesheet parser', () => {
                 'div:remove(0)',
                 'div:not([class]):remove(invalid)',
             ];
-            test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+            test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
         });
 
         describe('invalid style declaration', () => {
@@ -590,7 +602,30 @@ describe('stylesheet parser', () => {
                 { selector: 'div { display: none; visible }', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
                 { selector: 'div { remove }', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
             ];
-            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+            test.each(toThrowInputs)('%s', (input) => expectToThrowOnSelector(input));
+        });
+
+        it('fail on comments in stylesheet', () => {
+            const stylesheet = `
+                div:not(.header) { display: none; }
+                /* div:not(.header) { padding: 0; } */
+            `;
+            const error = 'Comments in stylesheet are not supported';
+            expectToThrowOnStylesheet({ stylesheet, error });
+        });
+
+        it('fail on media query in stylesheet', () => {
+            const error = 'At-rules are not supported';
+            let stylesheet;
+
+            stylesheet = '@media (max-width: 768px) { body { padding-top: 50px !important; } }';
+            expectToThrowOnStylesheet({ stylesheet, error });
+
+            stylesheet = `
+                div:not(.header) { display: none; }
+                @media (max-width: 768px) { body { padding-top: 50px !important; } }
+            `;
+            expectToThrowOnStylesheet({ stylesheet, error });
         });
     });
 
@@ -622,10 +657,6 @@ describe('stylesheet parser', () => {
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });
 
-    /**
-     * TODO: remake
-     * do NOT merge styles
-     */
     describe('merge styles for same selectors', () => {
         describe('single rule as result', () => {
             const testsInputs = [
@@ -730,28 +761,4 @@ describe('stylesheet parser', () => {
             test.each(testsInputs)('%s', (input) => expectMultipleRulesParsed(input));
         });
     });
-
-    /**
-     * TODO: add tests for debug pseudo-property --- 'global'
-     */
-
-    /**
-     * TODO: handle multiple rules with same selector and :
-     *
-     * 1 same style declaration -- return unique -- DONE
-     *
-     * 2 different style declaration:
-     *
-     *   - with multiple css style for same property -- no need
-     *     'div { display: none; }\n div { display: block !important; } ' // should be handled by 'important'
-     *     'div { display: none !important }\n div { display: block !important; }' // conflicting
-     *
-     * 3 fail on comments and mediaquery
-     *   - '#$?#h1 { background-color: #fd3332 !important; /* red header * / }  - with no space before last '/'
-     *   - '#$#@media (max-width: 768px) { body { padding-top: 50px !important; } }'
-     */
-
-    /**
-     * TODO: add tests for invalid css rules
-     */
 });

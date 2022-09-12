@@ -1,12 +1,18 @@
 {
-  "name": "extended-css",
+  "name": "@adguard/extended-css",
   "version": "2.0.0",
-  "description": "Module for applying CSS styles with extended selection properties.",
-  "main": "dist/extended-css.cjs.js",
+  "description": "AdGuard's JavaScript library for applying CSS styles with extended selection properties.",
+  "main": "dist/extended-css.umd.js",
   "module": "dist/extended-css.esm.js",
   "typings": "dist/types",
-  "directories": {
-    "test": "test"
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "default": "./dist/extended-css.umd.js"
+    }
   },
   "engines": {
     "node": ">=14"

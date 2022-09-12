@@ -45,6 +45,8 @@ import {
     REMOVE_PSEUDO_MARKER,
     REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
+    UPWARD_PSEUDO_CLASS_MARKER,
+    NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
 } from '../common/constants';
 
 // limit applying of wildcard :is and :not pseudo-class only to html children
@@ -54,7 +56,6 @@ const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
 // limit applying of :xpath pseudo-class with to 'any' element
 // https://github.com/AdguardTeam/ExtendedCss/issues/115
 const XPATH_PSEUDO_SELECTING_ROOT = 'body';
-
 
 /**
  * Checks whether the passed token is supported extended pseudo-class
@@ -508,6 +509,14 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                  * or   :not(span):not(p)
                                  */
                                 initAst(context, IS_OR_NOT_PSEUDO_SELECTING_ROOT);
+                            } else if (nextTokenValue === UPWARD_PSEUDO_CLASS_MARKER
+                                || nextTokenValue === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
+                                /**
+                                 * selector should be specified before :nth-ancestor() or :upward()
+                                 * e.g. ':nth-ancestor(3)'
+                                 * or   ':upward(span)'
+                                 */
+                                throw new Error(`Selector should be specified before :${nextTokenValue}() pseudo-class`); // eslint-disable-line max-len
                             } else {
                                 // make it more obvious if selector starts with pseudo with no tag specified
                                 // e.g. ':has(a)' -> '*:has(a)'

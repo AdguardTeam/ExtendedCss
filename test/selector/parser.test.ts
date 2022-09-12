@@ -417,9 +417,39 @@ describe('relative extended selectors', () => {
             expect(parse(actual)).toEqual(expected);
         });
 
-        /**
-         * TODO: .banner > :has(span, p), a img.ad
-         */
+        it('selector list: has with selector list as arg + regular selector', () => {
+            const actual = '.banner > :has(span, p), a img.ad';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('.banner > *'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            getSelectorListOfRegularSelectors(['span', 'p']),
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('a img.ad'),
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
     });
 
     describe('if-not', () => {
@@ -1169,10 +1199,6 @@ describe('combined selectors', () => {
                 { isRegular: true, value: '::selection' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
-
-            /**
-             * TODO: check this case is selector
-             */
         });
 
         it(':not():not()::selection', () => {
@@ -2129,6 +2155,24 @@ describe('fail on invalid selector', () => {
         const invalidSelectors = [
             // part of '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']' before opening `{`
             '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('upward with no specified selector before', () => {
+        const error = 'Selector should be specified before :upward() pseudo-class';
+        const invalidSelectors = [
+            ':upward(1)',
+            ':upward(p[class])',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('nth-ancestor with no specified selector before', () => {
+        const error = 'Selector should be specified before :nth-ancestor() pseudo-class';
+        const invalidSelectors = [
+            ':nth-ancestor(1)',
+            ':nth-ancestor(p[class])',
         ];
         test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
     });

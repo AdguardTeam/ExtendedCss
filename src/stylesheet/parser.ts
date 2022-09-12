@@ -12,6 +12,8 @@ import {
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     STYLESHEET_ERROR_PREFIX,
+    SLASH,
+    ASTERISK,
 } from '../common/constants';
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
@@ -19,6 +21,10 @@ const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
 const REGEXP_DECLARATION_END = /[;}]/g;
 const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
 const REGEXP_NON_WHITESPACE = /\S/g;
+
+// ExtendedCss does not support at-rules
+// https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
+const AT_RULE_MARKER = '@';
 
 interface Style {
     property: string;
@@ -162,6 +168,9 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
  */
 const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
+    if (selector.startsWith(AT_RULE_MARKER)) {
+        throw new Error(`At-rules are not supported: '${selector}'.`);
+    }
 
     let removeSelectorData: ParsedSelectorData;
     try {
@@ -406,6 +415,10 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  */
 export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();
+    if (stylesheet.includes(`${SLASH}${ASTERISK}`) && stylesheet.includes(`${ASTERISK}${SLASH}`)) {
+        throw new Error(`Comments in stylesheet are not supported: '${stylesheet}'`);
+    }
+
     const context: Context = {
         // any stylesheet should start with selector
         isSelector: true,

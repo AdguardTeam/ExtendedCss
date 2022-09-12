@@ -69,10 +69,6 @@ export const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterf
                 specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
             } else {
                 /**
-                 * TODO: figure out something with :scope usage as IE does not support it
-                 * https://developer.mozilla.org/en-US/docs/Web/CSS/:scope#browser_compatibility
-                 */
-                /**
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
                  * e.g. 'a:has(> img)' -> `aNode.querySelectorAll(':scope > img')`

@@ -588,10 +588,6 @@ export const isTextMatched = (argsData: MatcherArgsInterface): boolean => {
     const textContent = getNodeTextContent(domElement);
     let isTextContentMatched;
 
-    /**
-     * TODO: consider adding helper for parsing pseudoArg (string or regexp) later,
-     * seems to be similar for few extended pseudo-classes
-     */
     let pseudoArgToMatch = pseudoArg;
 
     if (pseudoArgToMatch.startsWith(SLASH)

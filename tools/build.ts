@@ -38,8 +38,9 @@ const prodConfig = {
             banner: libOutputBanner,
         },
         {
-            file: `${prodOutputDir}/${LIB_FILE_NAME}.cjs.js`,
-            format: OutputFormat.CJS,
+            // umd is preferred over cjs to avoid variables renaming in tsurlfilter
+            file: `${prodOutputDir}/${LIB_FILE_NAME}.umd.js`,
+            format: OutputFormat.UMD,
             name: LIBRARY_NAME,
             banner: libOutputBanner,
         },

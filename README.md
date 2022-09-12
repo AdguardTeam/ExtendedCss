@@ -355,7 +355,6 @@ Pseudo-class `:nth-ancestor()` allows to lookup the *nth* ancestor relative to t
 ```
 subject:nth-ancestor(n)
 ```
-<!-- TODO: make `subject` required in code, add tests -->
 - `subject` — required, standard or extended css selector
 - `n` — required, number >= 1 and < 256, distance to the needed ancestor from the element selected by `subject`
 
@@ -390,7 +389,6 @@ Pseudo-class `:upward()` allows to lookup the ancestor relative to the previousl
 ```
 subject:upward(ancestor)
 ```
-<!-- TODO: make `subject` required in code, add tests -->
 - `subject` — required, standard or extended css selector
 - `ancestor` — required, specification for the ancestor of the element selected by `subject`, can be set as:
   - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
