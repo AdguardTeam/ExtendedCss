@@ -504,6 +504,8 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 
 > If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
 
+> Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
+
 **Examples**
 
 `#container > *:not(h2, .text)` will select only `div#target1`

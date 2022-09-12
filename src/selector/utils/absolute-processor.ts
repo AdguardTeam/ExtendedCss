@@ -165,13 +165,6 @@ export const findByAbsolutePseudoPseudo = {
                 if (!parent) {
                     return null;
                 }
-                /**
-                 * TODO: decide the way :upward should work
-                 *
-                 * previously it was done with node.closest(selector)
-                 * that's why argument of :upward(selector) should be standard selector
-                 * so I assume cases where :not() is part of arg should consider :not() as standard pseudo-class
-                 */
                 return parent.closest(rawPseudoArg);
             })
             .filter(isHtmlElement);

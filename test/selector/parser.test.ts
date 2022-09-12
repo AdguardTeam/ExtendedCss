@@ -1065,6 +1065,15 @@ describe('combined extended selectors', () => {
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
 
+    it('upward(not)', () => {
+        const actual = '.SocialMediaShareButton:upward(div:not([class]))';
+        const expected = [
+            { isRegular: true, value: '.SocialMediaShareButton' },
+            { isAbsolute: true, name: 'upward', value: 'div:not([class])' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
     it('contains upward', () => {
         const actual = 'div > p:contains(PR):upward(2)';
         const expected = [

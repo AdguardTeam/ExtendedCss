@@ -1248,6 +1248,8 @@ describe('combined pseudo-classes', () => {
                 { actual: 'div[level="2"]:upward(1):if(#disabledInput)', expected: 'div#parent2' },
                 // upward(selector) -abp-has
                 { actual: 'div[level="2"]:upward(div[id]):-abp-has(#disabledInput)', expected: 'div#parent2' },
+                // upward(not)
+                { actual: '#innerParagraph:upward(div:not([class]))', expected: 'div#parent' },
                 // -abp-contains upward
                 { actual: 'p:-abp-contains(inner paragraph):upward(div[id])', expected: 'div#inner' },
                 // -abp-contains upward not
