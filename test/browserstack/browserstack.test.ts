@@ -105,6 +105,10 @@ QUnit.test('Reaction on DOM modification', (assert) => {
     }, 200);
 });
 
+QUnit.test('Modifier -ext-matches-css -- opacity property', (assert) => {
+    assertElementStyle('case6-blocked', { display: 'none' }, assert);
+});
+
 QUnit.test('Protection from recurring style fixes', (assert) => {
     const done = assert.async();
 

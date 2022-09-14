@@ -140,9 +140,9 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
             break;
         case CssProperty.Opacity:
             // https://bugs.webkit.org/show_bug.cgi?id=93445
-            if (isSafariBrowser) {
-                normalized = (Math.round(parseFloat(propertyValue) * 100) / 100).toString();
-            }
+            normalized = isSafariBrowser
+                ? (Math.round(parseFloat(propertyValue) * 100) / 100).toString()
+                : propertyValue;
             break;
         default:
             normalized = propertyValue;
