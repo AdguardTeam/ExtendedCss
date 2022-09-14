@@ -45,7 +45,7 @@ export const toRegExp = (str: string): RegExp => {
  * e.g. undefined -> 'undefined'
  * @param value
  */
-export const convertTypeIntoString = (value: undefined | null | boolean | number | string): string => {
+export const convertTypeIntoString = (value?: Element[keyof Element]): string => {
     let output;
     switch (value) {
         case undefined:

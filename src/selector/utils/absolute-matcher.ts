@@ -454,7 +454,7 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
 interface Chain {
     base: Element;
     prop: string;
-    value?: string;
+    value?: Element[keyof Element];
 }
 
 /**
@@ -467,20 +467,21 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
     const tempProp = chain[0];
 
     if (chain.length === 1) {
-        for (const key in base) {
+        let key: keyof Element;
+        for (key in base) {
             if (tempProp instanceof RegExp) {
                 if (tempProp.test(key)) {
                     output.push({
                         base,
                         prop: key,
-                        value: Object.getOwnPropertyDescriptor(base, key)?.value,
+                        value: base[key],
                     });
                 }
             } else if (tempProp === key) {
                 output.push({
                     base,
                     prop: tempProp,
-                    value: Object.getOwnPropertyDescriptor(base, key)?.value,
+                    value: base[key],
                 });
             }
         }

@@ -633,8 +633,15 @@ describe('extended pseudo-classes', () => {
             const testPropValue = 'abc';
             testEl[testPropName] = testPropValue;
 
-            const actual = 'div:matches-property(_testProp=/[\\w]{3}/)';
-            const expected = 'div#target';
+            let actual;
+            let expected;
+
+            actual = 'div:matches-property(_testProp=/[\\w]{3}/)';
+            expected = 'div#target';
+            expectSuccessInput({ actual, expected });
+
+            actual = 'div:matches-property("id"=/tar/)';
+            expected = 'div#target';
             expectSuccessInput({ actual, expected });
         });
 
