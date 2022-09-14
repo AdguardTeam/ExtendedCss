@@ -1934,6 +1934,50 @@ describe('combined selectors', () => {
             expect(parse(actual)).toEqual(expected);
         });
     });
+
+    it('un-tokenizable complex selector testcase', () => {
+        // eslint-disable-next-line max-len
+        const actual = '*:contains(/absolute[\\s\\S]*-\\d{4}/) + * > .banner:contains(/а/) ~ #case17.banner:has(> div:nth-child(100n + 2):contains(/а/))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('*'),
+                        getAbsoluteExtendedSelector('contains', '/absolute[\\s\\S]*-\\d{4}/'),
+                        getRegularSelector('+ * > .banner'),
+                        getAbsoluteExtendedSelector('contains', '/а/'),
+                        getRegularSelector('~ #case17.banner'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('> div:nth-child(100n + 2)'),
+                                                        getAbsoluteExtendedSelector('contains', '/а/'),
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
 });
 
 describe('raw valid selectors', () => {

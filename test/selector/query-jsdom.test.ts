@@ -292,13 +292,20 @@ describe('extended pseudo-classes', () => {
             document.body.innerHTML = `
                 <div id="container">
                     <h1 id="NOT_A_TARGET_1">Test template</h1>
-                    <span id="target">text for contains pseudo checking</span>
+                    <span id="target">text for contains pseudo checking + "quotes"</span>
                     <span id="NOT_A_TARGET_2">123456</span>
                     <p id="NOT_A_TARGET_3">text123</p>
                 </div>
             `;
-            const actual = '#container > :contains(/^text\\s/)';
-            const expected = 'span#target';
+            let actual;
+            let expected;
+
+            actual = '#container > :contains(/^text\\s/)';
+            expected = 'span#target';
+            expectSuccessInput({ actual, expected });
+
+            actual = '#container > :contains(/"quote[\\w]"/)';
+            expected = 'span#target';
             expectSuccessInput({ actual, expected });
         });
 
@@ -1485,6 +1492,35 @@ describe('combined pseudo-classes', () => {
             },
         ];
         test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+    });
+
+    it('un-tokenizable complex selector testcase', () => {
+        document.body.innerHTML = `
+            <p id="start"> as text { position: absolute; top: -2500px; } </p>
+            <div>
+                <div id="not-target" class="banner">
+                    aaааaaаaaaaaaaаaaaааaaaаaaaa
+                </div>
+                <div id="case17" class="banner">
+                    <div>
+                        <div>
+                            aaааaaаaaaaaaaаaaaааaaaаaaaa
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            aaааaaаaaaaaaaаaaaааaaaаaaaa
+                        </div>
+                    </div>
+                    <div></div>
+                </div>
+            </div>
+        `;
+        // eslint-disable-next-line max-len
+        const actual = '*:contains(/absolute[\\s\\S]*-\\d{4}/) + * > .banner:contains(/а/) ~ #case17.banner:has(> div:nth-child(100n + 2):contains(/а/))';
+        const expected = 'div#case17';
+        expectSuccessInput({ actual, expected });
+        document.body.innerHTML = '';
     });
 });
 

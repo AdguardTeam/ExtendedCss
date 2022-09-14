@@ -326,7 +326,9 @@ export const getByFollowingRegularSelector = (
             .map((element) => {
                 const rootElement = element.parentElement;
                 if (!rootElement) {
-                    throw new Error(`Selection by '${value}' part of selector is not possible.`);
+                    // do not throw error if there in no parent for element
+                    // e.g. '*:contains(text)' selects `html` which has no parentElement
+                    return [];
                 }
                 const elementSelectorText = getElementSelectorDesc(element);
                 const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
