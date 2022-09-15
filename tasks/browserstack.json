@@ -29,14 +29,6 @@
       "os": "Windows",
       "os_version": "10",
       "cli_key": 3
-    },
-    {
-      "browser": "Opera",
-      "browser_version": "42",
-      "device": null,
-      "os": "Windows",
-      "os_version": "10",
-      "cli_key": 4
     }
   ]
 }
