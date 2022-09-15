@@ -5,7 +5,7 @@ plan:
   key: EXTCSSTEST
   name: extended-css - test new
 variables:
-  dockerPuppeteer: adguard/puppeteer-runner:8.0--1
+  dockerPlaywright: adguard/playwright-runner:1.24.2--2
 
 stages:
   - Build:
@@ -17,7 +17,7 @@ stages:
 Build:
   key: BUILD
   docker:
-    image: "${bamboo.dockerPuppeteer}"
+    image: "${bamboo.dockerPlaywright}"
     volumes:
       ${system.YARN_DIR}: "${bamboo.cacheYarn}"
   tasks:
@@ -29,18 +29,21 @@ Build:
           - |-
             set -e
             set -x
-
             # Fix mixed logs
             exec 2>&1
 
-            export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-
             yarn install ${bamboo.varsYarn}
-            yarn browserstack
+
+            yarn test
             yarn build
             rm -rf node_modules
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
                      BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
+  artifacts:
+    - name: extended-css.js
+      location: dist
+      pattern: extended-css.js
+      required: true
   final-tasks:
     - clean
   requirements:
