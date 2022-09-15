@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.15 - Thu Sep 15 2022
+/*! extended-css - v1.3.16 - Thu Sep 15 2022
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2022 AdGuard. Licensed GPL-3.0
 */
