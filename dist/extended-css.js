@@ -1,4 +1,4 @@
-/*! extended-css - v1.3.14 - Fri Mar 18 2022
+/*! extended-css - v1.3.15 - Thu Sep 15 2022
 * https://github.com/AdguardTeam/ExtendedCss
 * Copyright (c) 2022 AdGuard. Licensed GPL-3.0
 */
@@ -1034,6 +1034,11 @@ var ExtendedCss = (function () {
 
                 if (newSelector) {
                   try {
+                    if (newSelector.indexOf(':has(') > -1) {
+                      // https://github.com/AdguardTeam/ExtendedCss/issues/149
+                      throw new Error('Do not handle :has() pseudo-class by the native method');
+                    }
+
                     push.apply(results, newContext.querySelectorAll(newSelector));
                     return results;
                   } catch (qsaError) {
