@@ -134,8 +134,6 @@ This pseudo-class principle is very simple: it allows to select the elements tha
 
 > Regexp flags are supported for `match`.
 
-> For **regexp** patterns `\` should be escaped, e.g. `div:contains(/\\w{8,}/)`.
-
 **Examples**
 
 For such DOM:
