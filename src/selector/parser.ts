@@ -49,11 +49,11 @@ import {
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
 } from '../common/constants';
 
-// limit applying of wildcard :is and :not pseudo-class only to html children
+// limit applying of wildcard :is() and :not() pseudo-class only to html children
 // e.g. ':is(.page, .main) > .banner' or '*:not(span):not(p)'
 const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
 
-// limit applying of :xpath pseudo-class with to 'any' element
+// limit applying of :xpath() pseudo-class to 'any' element
 // https://github.com/AdguardTeam/ExtendedCss/issues/115
 const XPATH_PSEUDO_SELECTING_ROOT = 'body';
 
@@ -84,6 +84,9 @@ const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: st
         || nextTokenValue === BRACKETS.SQUARE.LEFT;
 };
 
+/**
+ * Interface for selector parser context
+ */
 interface Context {
     /**
      * Collected result

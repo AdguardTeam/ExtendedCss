@@ -24,7 +24,7 @@ export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInt
 /**
  * Returns extended selector AbsolutePseudoClass node
  * @param name extended pseudo-class name
- * @param arg arg of pseudo-class
+ * @param value value of pseudo-class
  */
 export const getAbsoluteExtendedSelector = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
@@ -113,8 +113,7 @@ export const getAstWithSingleRegularSelector = (regularValue: string): TestAnySe
  * 1. Only one of isRegular/isAbsolute/isRelative should be true
  * 2. Acceptable parameters for:
  *   - isRegular: value
- *   - isAbsolute: name, arg
- *   - isRelative: name, value
+ *   - isAbsolute or isRelative: name, value
  */
 interface AnyChildOfSelectorRaw {
     isRegular?: boolean,
@@ -122,7 +121,6 @@ interface AnyChildOfSelectorRaw {
     isRelative?: boolean
     value?: string,
     name?: string,
-    arg?: string,
 }
 
 /**
@@ -171,9 +169,17 @@ export const getSingleSelectorAstWithAnyChildren = (
 };
 
 interface SelectorListOfRegularsInput {
-    actual: string,     // selector for parsing
-    expected: string[], // array of expected values for RegularSelector nodes
+    /**
+     * selector for parsing
+     */
+    actual: string,
+
+    /**
+     * array of expected values for RegularSelector nodes
+     */
+    expected: string[],
 }
+
 /**
  * Checks whether the passed selector is parsed into proper SelectorList
  * @param input - { actual, expected }
@@ -183,9 +189,17 @@ export const expectSelectorListOfRegularSelectors = ({ actual, expected }: Selec
 };
 
 interface SelectorListOfAnyChildrenInput {
-    actual: string, // selector for parsing
-    expected: AnyChildOfSelectorRaw[] // array of data for building ast
+    /**
+     * selector for parsing
+     */
+    actual: string,
+
+    /**
+     * array of data for building ast
+     */
+    expected: AnyChildOfSelectorRaw[],
 }
+
 /**
  * Checks whether the 'actual' is parsed into AST with specified parameters
  * @param input - { actual, expected }
@@ -195,9 +209,17 @@ export const expectSingleSelectorAstWithAnyChildren = ({ actual, expected }: Sel
 };
 
 interface ToThrowSelectorInput {
-    selector: string,   // selector for extCss querySelectorAll()
-    error: string,      // error text to match
+    /**
+     * selector for extCss querySelectorAll()
+     */
+    selector: string,
+
+    /**
+     * error text to match
+     */
+    error: string,
 }
+
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;
     expect(() => {

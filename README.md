@@ -3,6 +3,7 @@
 AdGuard's ExtendedCss library for applying CSS styles with extended selection properties.
 
 * [Extended capabilities](#extended-capabilities)
+  * [Limitations](#extended-css-limitations)
   * [Pseudo-class :has()](#extended-css-has)
   * [Pseudo-class :if-not()](#extended-css-if-not)
   * [Pseudo-class :contains()](#extended-css-contains)
@@ -32,22 +33,23 @@ AdGuard's ExtendedCss library for applying CSS styles with extended selection pr
 
 ## Extended capabilities
 
-> Extended pseudo-class should specify the element selection at the end of it's selector representation after the standard part. So `div[class="ad"]:has(img)` is valid but `div:has(img)[class="ad"]` is not.
-
 > Some pseudo-classes does not require selector before it. Still adding a [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` makes an extended selector easier to read, even though it has no effect on the matching behavior. So selector `#block :has(> .inner)` works exactly like `#block *:has(> .inner)` but second one is more obvious.
 
 > Pseudo-class names are case-insensitive, e.g. `:HAS()` will work as `:has()`.
+
+### <a id="extended-css-limitations"></a> Limitations
+
+1. CSS [comments](https://developer.mozilla.org/en-US/docs/Web/CSS/Comments) and [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are not supported.
+
+2. Specific pseudo-class might have its own limitations:
+[`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations), [`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and [`:remove()`](#extended-css-remove-limitations).
+
 
 ### <a id="extended-css-has"></a> Pseudo-class `:has()`
 
 Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet widely [supported by browsers](https://developer.mozilla.org/en-US/docs/Web/CSS/:has#browser_compatibility).
 
 > Synonyms `:-abp-has` and `:if` are supported for better compatibility.
-
-> Usage of `:has()` pseudo-class is [restricted for some cases](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
-> 1. Disallow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the :has() invalidation complexity.
-> 2. Disallow `:has()` inside the pseudos accepting only compound selectors.
-> 3. Disallow `:has()` after regular pseudo-elements.
 
 **Syntax**
 
@@ -58,6 +60,13 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/T
 - `selector` — required, standard or extended css selector
 
 Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator. Selector list can be set in `selector` as well.
+
+<a id="extended-css-has-limitations"></a> **Limitations**
+
+> Usage of `:has()` pseudo-class is [restricted for some cases](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
+> 1. Disallow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the :has() invalidation complexity.
+> 2. Disallow `:has()` inside the pseudos accepting only compound selectors.
+> 3. Disallow `:has()` after regular pseudo-elements.
 
 **Examples**
 
@@ -325,6 +334,8 @@ Pseudo-class `:xpath()` allows to select an element by evaluating a XPath expres
 - `target`- optional, standard or extended css selector
 - `expression` — required, valid XPath expression
 
+<a id="extended-css-xpath-limitations"></a> **Limitations**
+
 > `target` can be omitted so it is optional. For any other pseudo-class that would mean "apply to *all* DOM nodes", but in case of `:xpath()` it just means "apply to the *whole* document", and such applying slows elements selecting significantly. That's why rules like `#?#:xpath(expression)` are limited for looking inside the `body` tag. For example, rule `#?#:xpath(//div[@data-st-area=\'Advert\'])` is parsed as `#?#body:xpath(//div[@data-st-area=\'Advert\'])`.
 
 > Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not recommended, so `target` should be specified instead.
@@ -431,8 +442,6 @@ For such DOM:
 
 Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use pseudo-class `:remove()` as well as pseudo-property `remove`.
 
-> **Pseudo-class `:remove()` is limited to work properly only at the end of selector.**
-
 **Syntax**
 
 ```
@@ -444,7 +453,13 @@ selector { remove: true; }
 ```
 - `selector` — required, standard or extended css selector
 
+<a id="extended-css-remove-limitations"></a> **Limitations**
+
+> Pseudo-class `:remove()` is limited to work properly only at the end of selector.
+
 > For applying `:remove()` pseudo-class to any element [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` should be used. Otherwise extended selector may be considered as invalid, e.g. `.banner > :remove()` is not valid for removing any child element of `banner` class element, so it should look like `.banner > *:remove()`.
+
+> If `:remove()` pseudo-class or `remove` pseudo-property is used, all style properties will be ignored except of [`debug` pseudo-property](#selectors-debug-mode).
 
 **Examples**
 
@@ -455,8 +470,6 @@ div:has(> div[ad-attr]):remove()
 div:contains(advertisement) { remove: true; }
 div[class]:has(> a > img) { remove: true; }
 ```
-
-> If `:remove()` pseudo-class or `remove` pseudo-property is used, all style properties will be ignored except of [`debug` pseudo-property](#selectors-debug-mode).
 
 > Rules with `remove` pseudo-property should use `#$?#` marker: `$` for CSS style rules syntax, `?` for ExtendedCss syntax.
 
@@ -472,6 +485,8 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
 ```
 - `target` — optional, standard or extended css selector, can be missed for checking *any* element
 - `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors
+
+<a id="extended-css-is-limitations"></a> **Limitations**
 
 > If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`.
 
@@ -501,6 +516,8 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 ```
 - `target` — optional, standard or extended css selector, can be missed for checking *any* element
 - `selectors` — selector list of standard or extended selectors
+
+<a id="extended-css-not-limitations"></a> **Limitations**
 
 > If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
 

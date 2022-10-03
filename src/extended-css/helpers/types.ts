@@ -59,6 +59,9 @@ interface RemovalsStatistic {
  */
 export type BeforeStyleAppliedCallback = (x:IAffectedElement) => AffectedElement;
 
+/**
+ * Interface for ExtendedCss context. Needed to store affected elements, collect removal stats, etc.
+ */
 export interface Context {
     /**
      * Callback that handles affected elements

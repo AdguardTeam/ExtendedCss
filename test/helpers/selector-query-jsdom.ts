@@ -21,8 +21,15 @@ export const expectNoMatch = (selectedElements: HTMLElement[]) => {
 };
 
 interface SuccessSelectorInput {
-    actual: string,     // selector for extCss querySelectorAll()
-    expected: string,   // target selector for checking
+    /**
+     * selector for extCss querySelectorAll()
+     */
+    actual: string,
+
+    /**
+     * target selector for checking
+     */
+    expected: string,
 }
 export const expectSuccessInput = (input: SuccessSelectorInput): void => {
     const { actual, expected } = input;
@@ -33,7 +40,10 @@ export const expectSuccessInput = (input: SuccessSelectorInput): void => {
 };
 
 interface NoMatchSelectorInput {
-    selector: string,   // selector for extCss querySelectorAll()
+    /**
+     * selector for extCss querySelectorAll()
+     */
+    selector: string,
 }
 export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
     const { selector } = input;
@@ -43,8 +53,15 @@ export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
 };
 
 interface ToThrowSelectorInput {
-    selector: string,   // selector for extCss querySelectorAll()
-    error: string,      // error text to match
+    /**
+     * selector for extCss querySelectorAll()
+     */
+    selector: string,
+
+    /**
+     * error text to match
+     */
+    error: string,
 }
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;

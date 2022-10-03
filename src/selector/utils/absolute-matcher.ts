@@ -31,11 +31,19 @@ const REGEXP_ANY_SYMBOL = '.*';
 const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
 export interface MatcherArgsInterface {
-    // extended pseudo-class name
+    /**
+     * extended pseudo-class name
+     */
     pseudoName: string;
-    // extended pseudo-class arg
+
+    /**
+     * extended pseudo-class arg
+     */
     pseudoArg: string;
-    // dom element to check
+
+    /**
+     * dom element to check
+     */
     domElement: Element;
 }
 
@@ -179,7 +187,7 @@ interface PseudoArgData {
  * for :matches-attr() and :matches-property() - with EQUAL_SIGN as separator
  * @param pseudoArg
  * @param separator
- * @returns {PseudoArgData} { name, value } where 'value' can be undefined
+ * @returns {PseudoArgData}
  */
 const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData => {
     const index = pseudoArg.indexOf(separator);

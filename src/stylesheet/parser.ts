@@ -47,23 +47,71 @@ export interface CssStyleMap {
     [key: string]: string;
 }
 
+/**
+ * Interface for rules data parsed from passed styleSheet
+ */
 export interface ExtCssRuleData {
+    /**
+     * selector text
+     */
     selector: string;
+
+    /**
+     * selector ast to query dom elements
+     */
     ast: AnySelectorNodeInterface;
+
+    /**
+     * styles to apply to matched dom elements
+     */
     style?: CssStyleMap;
+
+    /**
+     * flag for specific rule debugging mode
+     */
     debug?: string;
+
+    /**
+     * log data, available only for debugging mode
+     */
     timingStats?: TimingStats;
+
+    /**
+     * dom elements matched by rule, available only for debugging mode
+     */
     matchedElements?: HTMLElement[];
 }
 
+/**
+ * Interface for storing data parsed from selector rule part
+ */
 interface SelectorPartData {
+    /**
+     * success status
+     */
     success: boolean;
+
+    /**
+     * parsed selector
+     */
     selector: string;
-    // might be not defined if selector is not valid
+
+    /**
+     * selector ast to query elements by,
+     * might be not defined if selector is not valid
+     */
     ast?: AnySelectorNodeInterface;
+
+    /**
+     * styles parsed from selector rule part,
+     * relevant to rules with `:remove()` pseudo-class which may not have actual style declaration
+     */
     stylesOfSelector?: Style[];
 }
 
+/**
+ * Interface for stylesheet parser context
+ */
 interface Context {
     /**
      * Flag for parsing rules parts

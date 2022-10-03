@@ -30,17 +30,62 @@ type ValidationResult = {
     error: string | null,
 };
 
+/**
+ * Interface for ExtendedCss constructor argument. Needed to create the instance of ExtendedCss.
+ *
+ * ExtendedCss configuration should contain:
+ * - CSS stylesheet of rules to apply
+ * - the callback for matched elements
+ * and also may contain a flag for global logging which is useful for selectors debugging.
+ *
+ * Stylesheet can contain not just extended selectors, and all of them will be applied by the lib.
+ * Stylesheet does not support CSS comments and at-rules.
+ */
 export interface ExtCssConfiguration {
-    // css stylesheet
+    /**
+     * Standard CSS stylesheet — a set of CSS rules
+     * which generally consists of selector and style (except `:remove()` pseudo-class).
+     *
+     * ExtendedCss is able to parse and apply almost any CSS stylesheet, not just extended selectors
+     * but there are some limitations - for example, CSS comments and at-rules are not supported;
+     * learn more about the Limitations in README.md
+     */
     styleSheet: string;
-    // the callback that handles affected elements
+
+    /**
+     * The callback that handles affected elements.
+     *
+     * Needed for getting affected node elements and handle style properties
+     * before they are applied to them if it is necessary.
+     *
+     * Used by AdGuard Browser extension to display rules in Filtering log
+     * and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
+     */
     beforeStyleApplied?: BeforeStyleAppliedCallback;
-    // flag for applied selectors logging
+
+    /**
+     * Optional flag for global debugging mode.
+     *
+     * Alternatively can be set by extended pseudo-property `debug: global` in styleSheet rules
+     *
+     * Learn more about Selectors debug mode in README.md
+     */
     debug?: boolean;
 }
 
 /**
- * Main ExtendedCss class
+ * Main class of ExtendedCss lib.
+ *
+ * Parses css stylesheet with any selectors (passed to its argument as styleSheet),
+ * and guarantee its applying as mutation observer is used to prevent the restyling of needed elements by other scripts.
+ * This style protection is limited to 50 times to avoid infinite loop (MAX_STYLE_PROTECTION_COUNT).
+ * Our own AsyncWrapper is used for styles applying to avoid too often lib reactions on page mutations.
+ *
+ * Constructor creates the instance of class which should be run be `apply()` method to apply the rules,
+ * and the applying can be stopped by `dispose()`.
+ *
+ * Can be used to select page elements by selector with `query()` method (similar to `Document.querySelectorAll()`),
+ * which does not require instance creating
  */
 export class ExtendedCss {
     private context: Context;

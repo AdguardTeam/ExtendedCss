@@ -44,15 +44,29 @@ import { logger } from '../../common/utils/logger';
  */
 export type Specificity = string;
 
-export interface RelativePredicateArgsInterface {
-    // dom element to check relatives
+/**
+ * Interface for relative pseudo-class helpers args
+ */
+interface RelativePredicateArgsInterface {
+    /**
+     * dom element to check relatives
+     */
     element: HTMLElement;
-    // SelectorList node
+
+    /**
+     * SelectorList node
+     */
     relativeSelectorList: AnySelectorNodeInterface;
-    // extended pseudo-class name
+
+    /**
+     * extended pseudo-class name
+     */
     pseudoName: string;
-    // flag for error throwing on invalid selector from selectorList
-    // e.g. true for :not() pseudo-class
+
+    /**
+     * flag for error throwing on invalid selector from selectorList
+     * e.g. true for :not() pseudo-class
+     */
     errorOnInvalidSelector?: boolean;
 }
 
