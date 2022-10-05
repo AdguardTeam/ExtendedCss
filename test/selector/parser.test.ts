@@ -1187,6 +1187,67 @@ describe('combined extended selectors', () => {
         expect(parse(selector)).toEqual(expected);
     });
 
+    it('not(has(not))', () => {
+        const actual = 'div:not(:has(:not(img)))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('div'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('*'),
+                                                        {
+                                                            type: NodeType.ExtendedSelector,
+                                                            children: [
+                                                                {
+                                                                    type: NodeType.RelativePseudoClass,
+                                                                    name: 'has',
+                                                                    children: [
+                                                                        {
+                                                                            type: NodeType.SelectorList,
+                                                                            children: [
+                                                                                {
+                                                                                    type: NodeType.Selector,
+                                                                                    children: [
+                                                                                        getRegularSelector('*'),
+                                                                                        getRelativeExtendedWithSingleRegular('not', 'img'), // eslint-disable-line max-len
+                                                                                    ],
+                                                                                },
+                                                                            ],
+                                                                        },
+                                                                    ],
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
     it('two not with simple selector next to each other', () => {
         const actual = ':not(span):not(p)';
         const expected = [

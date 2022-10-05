@@ -1268,6 +1268,8 @@ describe('combined pseudo-classes', () => {
                 { actual: 'p:-abp-contains(inner paragraph):upward(div[id])', expected: 'div#inner' },
                 // -abp-contains upward not
                 { actual: 'p:-abp-contains(inner paragraph):upward(div[id]:not([class]))', expected: 'div#parent' },
+                // not(has(not))
+                { actual: 'div.base:not(:has(:not(span, p)))', expected: 'div#inner' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
