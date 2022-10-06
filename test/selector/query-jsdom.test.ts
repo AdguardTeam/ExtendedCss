@@ -1338,6 +1338,35 @@ describe('combined pseudo-classes', () => {
         });
     });
 
+    describe('complex selector with different order of compound selector in it', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <style type="text/css">
+                    .off {
+                        width: 20px;
+                    }
+                </style>
+                <div id="root">
+                    <input id="disabledInput" class="off" disabled>
+                </div>
+            `;
+        });
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+        const testsInputs = [
+            { actual: 'input:disabled', expected: '#disabledInput' },
+            { actual: 'input.off:disabled', expected: '#disabledInput' },
+            { actual: 'input:disabled.off', expected: '#disabledInput' },
+            { actual: 'input:disabled[class]', expected: '#disabledInput' },
+            { actual: 'input:disabled#disabledInput', expected: '#disabledInput' },
+            { actual: 'input:disabled:matches-attr(class)', expected: '#disabledInput' },
+            { actual: 'input:disabled:matches-css(width: 20px)[class]', expected: '#disabledInput' },
+            { actual: 'input:matches-css(width: 20px)[class]:disabled[id]', expected: '#disabledInput' },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSuccessInput(input));
+    });
+
     describe('regular selector AFTER extended absolute selector', () => {
         beforeEach(() => {
             document.body.innerHTML = `
@@ -1393,12 +1422,15 @@ describe('combined pseudo-classes', () => {
 
         const successInputs = [
             { actual: 'div[random]:has(span) .text', expected: 'p#paragraph' },
+            { actual: 'div[random]:has(span)[random] .text', expected: 'p#paragraph' },
             { actual: '#root :not([class^="base"]) > p[class="text"]', expected: 'p#paragraph' },
             { actual: '#parent > p + [id]:not([random]) > div', expected: 'div#inner' },
+            { actual: '#parent > p + *:not([random])[id] > div', expected: 'div#inner' },
             { actual: 'div:has(> span) > span.span', expected: 'span#innerSpan' },
             { actual: 'div[id="child"]:not([level="1"]) > div > span', expected: 'span#innerSpan' },
             { actual: 'div:has(> #innerParagraph)> .span', expected: 'span#innerSpan' },
             { actual: '*[id="paragraph"]:not([level])+ div > div', expected: 'div#inner' },
+            { actual: '*:not([level])[id="paragraph"]+ div > div', expected: 'div#inner' },
             { actual: '*[id="paragraph"]:not([level])~ div > div', expected: 'div#inner' },
             { actual: '#parent :is(.block, .base) .span', expected: 'span#innerSpan' },
             { actual: '#parent :is(.block, .base) > .span', expected: 'span#innerSpan' },

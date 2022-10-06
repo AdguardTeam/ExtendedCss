@@ -340,6 +340,8 @@ Pseudo-class `:xpath()` allows to select an element by evaluating a XPath expres
 
 > Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not recommended, so `target` should be specified instead.
 
+> Works properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).
+
 **Examples**
 
 `:xpath(//*[@class="banner"])` will select `div#target1`:

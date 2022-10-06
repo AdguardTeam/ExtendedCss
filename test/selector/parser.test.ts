@@ -30,6 +30,7 @@ describe('regular selectors', () => {
     describe('compound', () => {
         const selectors = [
             'div.banner',
+            '.banner.text',
             'div.ad > a.redirect + a',
             'div[style]',
             'div#top[onclick*="redirect"]',
@@ -1260,13 +1261,104 @@ describe('combined extended selectors', () => {
 });
 
 describe('combined selectors', () => {
+    describe('complex selector with extended pseudo-class inside', () => {
+        const testsInputs = [
+            {
+                actual: 'div:upward(3).banner',
+                expected: [
+                    { isRegular: true, value: 'div.banner' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                ],
+            },
+            {
+                actual: '.test:upward(3).banner',
+                expected: [
+                    { isRegular: true, value: '.test.banner' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                ],
+            },
+            {
+                actual: '.test:upward(3)#id',
+                expected: [
+                    { isRegular: true, value: '.test#id' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                ],
+            },
+            {
+                actual: '.test:upward(3)[attr]',
+                expected: [
+                    { isRegular: true, value: '.test[attr]' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                ],
+            },
+            {
+                actual: 'div:upward(3).class#id[attr]',
+                expected: [
+                    { isRegular: true, value: 'div.class#id[attr]' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                ],
+            },
+            {
+                actual: '.banner:has(img).inner',
+                expected: [
+                    { isRegular: true, value: '.banner.inner' },
+                    { isRelative: true, name: 'has', value: 'img' },
+                ],
+            },
+            {
+                actual: 'div:has(.test).class#id[attr]',
+                expected: [
+                    { isRegular: true, value: 'div.class#id[attr]' },
+                    { isRelative: true, name: 'has', value: '.test' },
+                ],
+            },
+            {
+                actual: 'div[attr].class:has(.inner)#id',
+                expected: [
+                    { isRegular: true, value: 'div[attr].class#id' },
+                    { isRelative: true, name: 'has', value: '.inner' },
+                ],
+            },
+            {
+                actual: '.test:upward(3).banner:matches-css(z-index: 10)',
+                expected: [
+                    { isRegular: true, value: '.test.banner' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                    { isAbsolute: true, name: 'matches-css', value: 'z-index: 10' },
+                ],
+            },
+            {
+                actual: '.test:upward(3).banner:matches-css(z-index: 10)[attr=true]',
+                expected: [
+                    { isRegular: true, value: '.test.banner[attr=true]' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                    { isAbsolute: true, name: 'matches-css', value: 'z-index: 10' },
+                ],
+            },
+            {
+                actual: '.test:upward(#top > .block)[attr]',
+                expected: [
+                    { isRegular: true, value: '.test[attr]' },
+                    { isAbsolute: true, name: 'upward', value: '#top > .block' },
+                ],
+            },
+            {
+                actual: 'div:contains(/а/):nth-child(100n + 2)',
+                expected: [
+                    { isRegular: true, value: 'div:nth-child(100n + 2)' },
+                    { isAbsolute: true, name: 'contains', value: '/а/' },
+                ],
+            },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+    });
+
     describe('selectors with standard pseudos', () => {
         it(':not::selection', () => {
             const actual = '*:not(input)::selection';
             const expected = [
-                { isRegular: true, value: 'html *' },
+                { isRegular: true, value: 'html *::selection' },
                 { isRelative: true, name: 'not', value: 'input' },
-                { isRegular: true, value: '::selection' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
@@ -1274,10 +1366,18 @@ describe('combined selectors', () => {
         it(':not():not()::selection', () => {
             const actual = 'html > body *:not(input):not(textarea)::selection';
             const expected = [
-                { isRegular: true, value: 'html > body *' },
+                { isRegular: true, value: 'html > body *::selection' },
                 { isRelative: true, name: 'not', value: 'input' },
                 { isRelative: true, name: 'not', value: 'textarea' },
-                { isRegular: true, value: '::selection' },
+            ];
+            expectSingleSelectorAstWithAnyChildren({ actual, expected });
+        });
+
+        it(':matches-css():checked', () => {
+            const actual = 'input:matches-css(padding: 10):checked';
+            const expected = [
+                { isRegular: true, value: 'input:checked' },
+                { isAbsolute: true, name: 'matches-css', value: 'padding: 10' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
@@ -1907,6 +2007,65 @@ describe('combined selectors', () => {
                     { isRelative: true, name: 'not', value: '[class]' },
                 ],
             },
+            // complex selectors with extended pseudo-class inside as part before combinator
+            {
+                actual: 'div:upward(3).banner .inner',
+                expected: [
+                    { isRegular: true, value: 'div.banner' },
+                    { isAbsolute: true, name: 'upward', value: '3' },
+                    { isRegular: true, value: '.inner' },
+                ],
+            },
+            {
+                actual: 'div:has(img).banner > .text-ad',
+                expected: [
+                    { isRegular: true, value: 'div.banner' },
+                    { isRelative: true, name: 'has', value: 'img' },
+                    { isRegular: true, value: '> .text-ad' },
+                ],
+            },
+            {
+                actual: 'div:has(> img).banner > .text-ad',
+                expected: [
+                    { isRegular: true, value: 'div.banner' },
+                    { isRelative: true, name: 'has', value: '> img' },
+                    { isRegular: true, value: '> .text-ad' },
+                ],
+            },
+            {
+                actual: '.test:has(> img).banner[attr=true] > .text-ad',
+                expected: [
+                    { isRegular: true, value: '.test.banner[attr=true]' },
+                    { isRelative: true, name: 'has', value: '> img' },
+                    { isRegular: true, value: '> .text-ad' },
+                ],
+            },
+            {
+                actual: '.test:has(> img).banner[attr=true] ~ .text-ad:matches-css(z-index: 10)',
+                expected: [
+                    { isRegular: true, value: '.test.banner[attr=true]' },
+                    { isRelative: true, name: 'has', value: '> img' },
+                    { isRegular: true, value: '~ .text-ad' },
+                    { isAbsolute: true, name: 'matches-css', value: 'z-index: 10' },
+                ],
+            },
+            {
+                actual: '.test:upward(#top > .block)[attr] .banner',
+                expected: [
+                    { isRegular: true, value: '.test[attr]' },
+                    { isAbsolute: true, name: 'upward', value: '#top > .block' },
+                    { isRegular: true, value: '.banner' },
+                ],
+            },
+            {
+                actual: '.test:upward(#top > .block)[attr] > div:upward(2).banner',
+                expected: [
+                    { isRegular: true, value: '.test[attr]' },
+                    { isAbsolute: true, name: 'upward', value: '#top > .block' },
+                    { isRegular: true, value: '> div.banner' },
+                    { isAbsolute: true, name: 'upward', value: '2' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
 
@@ -1997,8 +2156,7 @@ describe('combined selectors', () => {
     });
 
     it('un-tokenizable complex selector testcase', () => {
-        // eslint-disable-next-line max-len
-        const actual = '*:contains(/absolute[\\s\\S]*-\\d{4}/) + * > .banner:contains(/а/) ~ #case17.banner:has(> div:nth-child(100n + 2):contains(/а/))';
+        let actual;
         const expected = {
             type: NodeType.SelectorList,
             children: [
@@ -2037,6 +2195,13 @@ describe('combined selectors', () => {
                 },
             ],
         };
+
+        // eslint-disable-next-line max-len
+        actual = '*:contains(/absolute[\\s\\S]*-\\d{4}/) + * > .banner:contains(/а/) ~ #case17.banner:has(> div:nth-child(100n + 2):contains(/а/))';
+        expect(parse(actual)).toEqual(expected);
+
+        // eslint-disable-next-line max-len
+        actual = '*:contains(/absolute[\\s\\S]*-\\d{4}/) + * > .banner:contains(/а/) ~ #case17.banner:has(> div:contains(/а/):nth-child(100n + 2))';
         expect(parse(actual)).toEqual(expected);
     });
 });
