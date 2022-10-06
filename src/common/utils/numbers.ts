@@ -3,5 +3,6 @@
  * @param arg
  */
 export const isNumber = <T>(arg: T): boolean => {
-    return typeof arg === 'number';
+    return typeof arg === 'number'
+        && !Number.isNaN(arg);
 };
