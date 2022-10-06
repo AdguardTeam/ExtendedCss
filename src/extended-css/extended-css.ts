@@ -9,7 +9,6 @@ import {
     AffectedElement,
     BeforeStyleAppliedCallback,
     Context,
-    MainCallback,
 } from './helpers/types';
 
 import { isBrowserSupported } from '../common/utils/user-agents';
@@ -92,8 +91,6 @@ export class ExtendedCss {
 
     private applyRulesScheduler: AsyncWrapper;
 
-    private mainCallback: MainCallback;
-
     // Instance of ExtCssDocument is needed for using selector-ast cache
     extCssDocument: ExtCssDocument;
 
@@ -125,9 +122,8 @@ export class ExtendedCss {
         });
 
         this.applyRulesScheduler = new AsyncWrapper(this.context, applyRules, APPLY_RULES_DELAY);
-        this.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
 
-        this.context.mainCallback = this.mainCallback;
+        this.context.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
 
         if (this.context.beforeStyleApplied && typeof this.context.beforeStyleApplied !== 'function') {
             throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`); // eslint-disable-line max-len
