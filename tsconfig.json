@@ -23,7 +23,7 @@
   "ts-node": {
       // override these options only for ts-node
       "compilerOptions": {
-      "module": "commonjs"
+        "module": "commonjs"
       }
   },
   "include": [
