@@ -1,6 +1,8 @@
-# <a id="homepage"> ExtendedCss
+# <a id="homepage"></a> ExtendedCss ![npm](https://img.shields.io/npm/v/@adguard/extended-css) [![install size](https://packagephobia.com/badge?p=@adguard/extended-css)](https://packagephobia.com/result?p=@adguard/extended-css) ![GitHub](https://img.shields.io/github/license/AdGuardTeam/ExtendedCss)
 
-AdGuard's ExtendedCss library for applying CSS styles with extended selection properties.
+AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.
+
+The idea of extended capabilities is an opportunity to match DOM elements with selectors based on their own representation (style, text content, etc.) or relations with other elements. There is also an opportunity to apply styles with non-standard CSS properties.
 
 * [Extended capabilities](#extended-capabilities)
   * [Limitations](#extended-css-limitations)
