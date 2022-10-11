@@ -22,6 +22,9 @@ const observeDocument = (context: Context, callback: MainCallback): void => {
             if (eventTracker.isIgnoredEventType() && shouldIgnoreMutations(mutations)) {
                 return;
             }
+            // save instance of EventTracker to context
+            // for removing its event listeners on disconnectDocument() while mainDisconnect()
+            context.eventTracker = eventTracker;
             callback();
         }));
         context.domMutationObserver.observe(document, {
@@ -45,6 +48,8 @@ const disconnectDocument = (context: Context, callback: MainCallback): void => {
         document.removeEventListener('DOMNodeRemoved', callback, false);
         document.removeEventListener('DOMAttrModified', callback, false);
     }
+    // clean up event listeners
+    context.eventTracker?.stopTracking();
 };
 
 export const mainObserve = (context: Context, mainCallback: MainCallback): void => {

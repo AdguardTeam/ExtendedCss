@@ -25,8 +25,6 @@ const SAFARI_PROBLEMATIC_EVENTS = ['wheel'];
 export class EventTracker {
     private trackedEvents: string[];
 
-    private lastEvent?: Event;
-
     private lastEventType?: string;
 
     private lastEventTime?: number;
@@ -42,7 +40,6 @@ export class EventTracker {
     }
 
     private trackEvent(event: Event): void {
-        this.lastEvent = event;
         this.lastEventType = event.type;
         this.lastEventTime = Date.now();
     }
@@ -63,5 +60,11 @@ export class EventTracker {
             && IGNORED_EVENTS.includes(lastEventType)
             && !!sinceLastEventTime
             && sinceLastEventTime < LAST_EVENT_TIMEOUT_MS;
+    }
+
+    stopTracking(): void {
+        this.trackedEvents.forEach((eventName) => {
+            document.documentElement.removeEventListener(eventName, this.trackEvent, true);
+        });
     }
 }

@@ -91,6 +91,8 @@ export class ExtendedCss {
 
     private applyRulesScheduler: AsyncWrapper;
 
+    private applyRulesCallbackListener: () => void;
+
     // Instance of ExtCssDocument is needed for using selector-ast cache
     extCssDocument: ExtCssDocument;
 
@@ -128,6 +130,10 @@ export class ExtendedCss {
         if (this.context.beforeStyleApplied && typeof this.context.beforeStyleApplied !== 'function') {
             throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`); // eslint-disable-line max-len
         }
+
+        this.applyRulesCallbackListener = () => {
+            applyRules(this.context);
+        };
     }
 
     /**
@@ -139,7 +145,7 @@ export class ExtendedCss {
         if (document.readyState !== 'complete') {
             document.addEventListener(
                 'DOMContentLoaded',
-                () => { applyRules(this.context); },
+                this.applyRulesCallbackListener,
                 false,
             );
         }
@@ -153,6 +159,11 @@ export class ExtendedCss {
         this.context.affectedElements.forEach((el) => {
             revertStyle(el);
         });
+        document.removeEventListener(
+            'DOMContentLoaded',
+            this.applyRulesCallbackListener,
+            false,
+        );
     }
 
     /**

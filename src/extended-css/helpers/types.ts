@@ -1,4 +1,5 @@
 import { CssStyleMap, ExtCssRuleData } from '../../stylesheet';
+import { EventTracker } from './event-tracker';
 import { ExtMutationObserver } from './mutation-observer';
 
 export type MainCallback = () => void;
@@ -77,6 +78,11 @@ export interface Context {
      * Flag for mainObserve() and mainDisconnect(), used while rules applying
      */
     isDomObserved: boolean;
+
+    /**
+     * Instance of EventTracker for document observing
+     */
+    eventTracker?: EventTracker;
 
     /**
      * Main document mutation observer
