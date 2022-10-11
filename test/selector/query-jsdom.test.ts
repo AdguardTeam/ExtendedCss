@@ -954,6 +954,17 @@ describe('extended pseudo-classes', () => {
                             </div>
                         </div>
                     </div>
+                    <ul>
+                        <li id="firstLi">
+                            <span id="firstSpan"></span>
+                            <img id="firstImg">
+                        </li>
+                        <li id="secondLi">
+                            <div id="secondDiv">
+                                <img id="secondImg">
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             `;
         });
@@ -972,6 +983,11 @@ describe('extended pseudo-classes', () => {
                 { actual: ':has(> div > .banner)', expected: 'div#parent' },
                 { actual: ':has(> p + a + div #innerParagraph)', expected: 'div#parent' },
                 { actual: ':has(> p ~ div #innerParagraph)', expected: 'div#parent' },
+                { actual: 'li:has(> span):has(+ li > div > img)', expected: 'li#firstLi' },
+                { actual: 'li:has(+ li > div > img) > span', expected: 'span#firstSpan' },
+                { actual: 'li:has(> span) + li:has(> div > img)', expected: 'li#secondLi' },
+                { actual: 'li:has(> span) + li > div:has(> img)', expected: 'div#secondDiv' },
+                { actual: 'li:has(> span) + li > div > img', expected: 'img#secondImg' },
                 // next sibling combinator in arg
                 { actual: 'p:has(+ a)', expected: 'p#paragraph' },
                 { actual: 'p:has(+ * + div#child)', expected: 'p#paragraph' },
@@ -979,6 +995,7 @@ describe('extended pseudo-classes', () => {
                 // subsequent-sibling combinator in arg
                 { actual: 'p:has(~ a)', expected: 'p#paragraph' },
                 { actual: 'p:has(~ div#child)', expected: 'p#paragraph' },
+                { actual: '#root p:has(~ div#child)', expected: 'p#paragraph' },
                 // selector list as arg
                 { actual: 'div[id][class]:has(.base, p#innerParagraph)', expected: 'div#child' },
                 { actual: 'div:has([id][class="base"], p)', expected: '#root, #parent, #child' },
@@ -1194,6 +1211,10 @@ describe('extended pseudo-classes', () => {
 });
 
 describe('combined pseudo-classes', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
     describe('different combinations of pseudos', () => {
         beforeEach(() => {
             document.body.innerHTML = `
@@ -1268,6 +1289,8 @@ describe('combined pseudo-classes', () => {
                 { actual: 'p:-abp-contains(inner paragraph):upward(div[id])', expected: 'div#inner' },
                 // -abp-contains upward not
                 { actual: 'p:-abp-contains(inner paragraph):upward(div[id]:not([class]))', expected: 'div#parent' },
+                // not(has)
+                { actual: '#parent div.base:not(:has(> div > span))', expected: 'div#inner' },
                 // not(has(not))
                 { actual: 'div.base:not(:has(:not(span, p)))', expected: 'div#inner' },
             ];
@@ -1284,6 +1307,78 @@ describe('combined pseudo-classes', () => {
             const expected = 'div#inner2';
             expectSuccessInput({ actual, expected });
         });
+    });
+
+    it('is(has, has)', () => {
+        document.body.innerHTML = `
+            <ul>
+                <li id="firstLi">
+                    <span id="firstSpan"></span>
+                    <img id="firstImg">
+                </li>
+                <li id="secondLi">
+                    <div id="secondDiv">
+                        <img id="secondImg">
+                    </div>
+                </li>
+                <li id="thirdLi">
+                    <span id="thirdSpan">
+                        <img id="thirdImg">
+                    </span>
+                </li>
+            </ul>
+        `;
+        const actual = 'li:is(:has(> img), :has(> span > img))';
+        const expected = 'li#firstLi, li#thirdLi';
+        expectSuccessInput({ actual, expected });
+    });
+
+    it('has(> not)', () => {
+        document.body.innerHTML = `
+            <ul>
+                <li id="firstLi">
+                    <img id="firstImg01">
+                    <img id="firstImg02">
+                </li>
+                <li id="secondLi">
+                    <div id="secondDiv">
+                        <img id="secondImg">
+                    </div>
+                </li>
+                <li id="thirdLi">
+                    <span id="thirdSpan">
+                        <img id="thirdImg">
+                    </span>
+                </li>
+            </ul>
+        `;
+        const actual = 'li:has(> :not(img))';
+        const expected = 'li#secondLi, li#thirdLi';
+        expectSuccessInput({ actual, expected });
+    });
+
+    it('has(nth-child)', () => {
+        document.body.innerHTML = `
+            <ul>
+                <li id="firstLi">
+                    <span id="firstSpan"></span>
+                    <img id="firstImg">
+                </li>
+                <li id="secondLi">
+                    <div id="secondDiv">
+                        <img id="secondImg">
+                    </div>
+                </li>
+                <li id="thirdLi">
+                    <span id="thirdSpan">
+                        <img id="thirdImg">
+                    </span>
+                </li>
+            </ul>
+        `;
+        const actual = 'li:has(img:nth-child(2))';
+        const expected = 'li#firstLi';
+        expectSuccessInput({ actual, expected });
     });
 
     describe('has limitation', () => {
@@ -1379,6 +1474,11 @@ describe('combined pseudo-classes', () => {
                                 <p id="innerParagraph" >inner paragraph</p>
                             </div>
                         </div>
+                        <script class="ads"></script>
+                    </div>
+                    <iframe id="frameTarget" class="advert"></iframe>
+                    <div id="divAfter">
+                        <div class="advert"></div>
                     </div>
                 </div>
             `;
@@ -1396,6 +1496,9 @@ describe('combined pseudo-classes', () => {
             { actual: '#innerParagraph:nth-ancestor(1)> .span', expected: '#innerSpan' },
             { actual: '#inner :contains(text)+ [id]', expected: 'p#innerParagraph' },
             { actual: '#inner :contains(text)~ [id]', expected: 'p#innerParagraph' },
+            { actual: 'div:has(> script.ads) *.text', expected: 'p#paragraph' },
+            { actual: 'div:has(> script) + *.advert', expected: 'iframe#frameTarget' },
+            { actual: 'div:has(> script) ~ *:has(*.advert)', expected: '#divAfter' },
         ];
         test.each(testsInputs)('%s', (input) => expectSuccessInput(input));
     });
