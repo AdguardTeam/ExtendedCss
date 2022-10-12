@@ -1,7 +1,7 @@
 import { ExtCssDocument } from '../selector';
 import { parse as parseStylesheet } from '../stylesheet';
 
-import { AsyncWrapper } from './helpers/async-wrapper';
+import { ThrottleWrapper } from './helpers/throttle-wrapper';
 import { applyRules } from './helpers/rules-applier';
 import { revertStyle } from './helpers/style-setter';
 import { mainDisconnect } from './helpers/document-observer';
@@ -17,7 +17,7 @@ import { logger } from '../common/utils/logger';
 import { DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE } from '../common/constants';
 
 /**
- * Throttle timeout for AsyncWrapper to execute applyRules()
+ * Throttle timeout for ThrottleWrapper to execute applyRules()
  */
 const APPLY_RULES_DELAY = 150;
 
@@ -78,7 +78,7 @@ export interface ExtCssConfiguration {
  * Parses css stylesheet with any selectors (passed to its argument as styleSheet),
  * and guarantee its applying as mutation observer is used to prevent the restyling of needed elements by other scripts.
  * This style protection is limited to 50 times to avoid infinite loop (MAX_STYLE_PROTECTION_COUNT).
- * Our own AsyncWrapper is used for styles applying to avoid too often lib reactions on page mutations.
+ * Our own ThrottleWrapper is used for styles applying to avoid too often lib reactions on page mutations.
  *
  * Constructor creates the instance of class which should be run be `apply()` method to apply the rules,
  * and the applying can be stopped by `dispose()`.
@@ -89,7 +89,7 @@ export interface ExtCssConfiguration {
 export class ExtendedCss {
     private context: Context;
 
-    private applyRulesScheduler: AsyncWrapper;
+    private applyRulesScheduler: ThrottleWrapper;
 
     private applyRulesCallbackListener: () => void;
 
@@ -123,7 +123,7 @@ export class ExtendedCss {
             return ruleData.debug === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE;
         });
 
-        this.applyRulesScheduler = new AsyncWrapper(this.context, applyRules, APPLY_RULES_DELAY);
+        this.applyRulesScheduler = new ThrottleWrapper(this.context, applyRules, APPLY_RULES_DELAY);
 
         this.context.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
 
@@ -186,13 +186,13 @@ export class ExtendedCss {
             throw new Error('Selector should be defined as a string.');
         }
 
-        const start = AsyncWrapper.now();
+        const start = ThrottleWrapper.now();
 
         try {
             const extCssDoc = new ExtCssDocument();
             return extCssDoc.querySelectorAll(selector);
         } finally {
-            const end = AsyncWrapper.now();
+            const end = ThrottleWrapper.now();
             if (!noTiming) {
                 logger.info(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
             }

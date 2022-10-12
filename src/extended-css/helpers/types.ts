@@ -90,7 +90,7 @@ export interface Context {
     domMutationObserver?: MutationObserver;
 
     /**
-     * Actually the main callback — applyRules() scheduled by AsyncWrapper
+     * Actually the main callback — applyRules() scheduled by ThrottleWrapper
      */
     mainCallback: MainCallback;
 

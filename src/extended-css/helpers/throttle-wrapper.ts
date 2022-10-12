@@ -2,12 +2,13 @@ import { isNumber } from '../../common/utils/numbers';
 import { Context } from './types';
 
 const isSupported = (typeof window.requestAnimationFrame !== 'undefined');
-const rAF = isSupported ? requestAnimationFrame : window.setTimeout;
+const timeout = isSupported ? requestAnimationFrame : window.setTimeout;
+const deleteTimeout = isSupported ? cancelAnimationFrame : clearTimeout;
 const perf = isSupported ? performance : Date;
 
 const DEFAULT_THROTTLE_DELAY_MS = 150;
 
-type WrappedCallback = (timestamp: number) => void;
+type WrappedCallback = (timestamp?: number) => void;
 
 /**
  * Method for filtering rules applying
@@ -15,23 +16,27 @@ type WrappedCallback = (timestamp: number) => void;
 type ApplyRulesCallback = (context: Context) => void;
 
 /**
- * The purpose of AsyncWrapper is to debounce calls of the function
+ * The purpose of ThrottleWrapper is to throttle calls of the function
  * that applies ExtendedCss rules. The reasoning here is that the function calls
  * are triggered by MutationObserver and there may be many mutations in a short period of time.
  * We do not want to apply rules on every mutation so we use this helper to make sure
  * that there is only one call in the given amount of time.
  */
-export class AsyncWrapper {
+export class ThrottleWrapper {
     private context: Context;
 
     private callback?: ApplyRulesCallback;
 
-    // number, the provided callback should be executed twice in this time frame
+    /**
+     * the provided callback should be executed twice in this time frame:
+     * very first time and not more often than throttleDelayMs for further executions.
+     * @see {@link ThrottleWrapper.run}
+     */
     private throttleDelayMs: number;
 
     private wrappedCb: WrappedCallback;
 
-    private rAFid?: number;
+    private timeoutId?: number;
 
     private timerId?: number;
 
@@ -44,11 +49,22 @@ export class AsyncWrapper {
         this.wrappedCb = this.wrappedCallback.bind(this);
     }
 
+    /**
+     * Wraps the callback (which supposed to be `applyRules`),
+     * needed to update `lastRunTime` and clean previous timeouts for proper execution of the callback
+     * @param timestamp
+     */
     private wrappedCallback(timestamp?: number): void {
         this.lastRunTime = isNumber(timestamp)
             ? timestamp
             : perf.now();
-        delete this.rAFid;
+        // `timeoutId` can be requestAnimationFrame-related
+        // so cancelAnimationFrame() as deleteTimeout() needs the arg to be defined
+        if (this.timeoutId) {
+            deleteTimeout(this.timeoutId);
+            delete this.timeoutId;
+        }
+        clearTimeout(this.timerId);
         delete this.timerId;
         if (this.callback) {
             this.callback(this.context);
@@ -59,13 +75,13 @@ export class AsyncWrapper {
      * Indicates whether there is a scheduled callback.
      */
     private hasPendingCallback(): boolean {
-        return isNumber(this.rAFid) || isNumber(this.timerId);
+        return isNumber(this.timeoutId) || isNumber(this.timerId);
     }
 
     /**
      * Schedules the function which applies ExtendedCss rules before the next animation frame.
      *
-     * Wraps function execution into requestAnimationFrame or setTimeout.
+     * Wraps function execution into `timeout` — requestAnimationFrame or setTimeout.
      * For the first time runs the function without any condition.
      * As it may be triggered by any mutation which may occur too ofter, we limit the function execution:
      * 1. If `elapsedTime` since last function execution is less then set `throttleDelayMs`,
@@ -84,7 +100,7 @@ export class AsyncWrapper {
                 return;
             }
         }
-        this.rAFid = rAF(this.wrappedCb);
+        this.timeoutId = timeout(this.wrappedCb);
     }
 
     public static now(): number {

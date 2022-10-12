@@ -1,4 +1,4 @@
-import { AsyncWrapper } from './async-wrapper';
+import { ThrottleWrapper } from './throttle-wrapper';
 import { mainDisconnect, mainObserve } from './document-observer';
 import { applyStyle, revertStyle } from './style-setter';
 import { protectStyleAttribute } from './style-protector';
@@ -33,7 +33,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     const isDebuggingMode = !!ruleData.debug || context.debug;
     let startTime: number | undefined;
     if (isDebuggingMode) {
-        startTime = AsyncWrapper.now();
+        startTime = ThrottleWrapper.now();
     }
 
     const { ast } = ruleData;
@@ -60,7 +60,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     });
 
     if (isDebuggingMode && startTime) {
-        const elapsedTimeMs = AsyncWrapper.now() - startTime;
+        const elapsedTimeMs = ThrottleWrapper.now() - startTime;
         if (!ruleData.timingStats) {
             ruleData.timingStats = new TimingStats();
         }
