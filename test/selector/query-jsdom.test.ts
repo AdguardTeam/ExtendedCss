@@ -1265,6 +1265,12 @@ describe('combined pseudo-classes', () => {
                 { actual: 'div[id^="inn"][class]:has(p:contains(inner))', expected: 'div#inner' },
                 // has(contains) has contains
                 { actual: '#root div:has(:contains(text)):has(#paragraph):contains(inner paragraph)', expected: '#parent' }, // eslint-disable-line max-len
+                // has(has)
+                { actual: '#parent div:has(div:has(> p))', expected: '#child' },
+                // has(has contains)
+                { actual: '#parent div:has(div:has(> p):contains(inner span text))', expected: '#child' },
+                // has(has(contains))
+                { actual: '#parent div:has(div:has(> p:contains(inner)))', expected: '#child' },
                 // matches-attr matches-attr upward
                 { actual: '#root *[id^="p"][random] > *:matches-attr("/class/"="/base/"):matches-attr("/level$/"="/^[0-9]$/"):upward(1)', expected: '#parent' }, // eslint-disable-line max-len
                 // matches-attr contains xpath
@@ -1383,19 +1389,6 @@ describe('combined pseudo-classes', () => {
 
     describe('has limitation', () => {
         const toThrowInputs = [
-            // no :has, :is, :where inside :has
-            {
-                selector: 'banner:has(> div:has(> img))',
-                error: 'Usage of :has pseudo-class is not allowed inside upper :has',
-            },
-            {
-                selector: 'banner:has(> div:is(> img))',
-                error: 'Usage of :is pseudo-class is not allowed inside upper :has',
-            },
-            {
-                selector: 'banner:has(> div:where(> img))',
-                error: 'Usage of :where pseudo-class is not allowed inside upper :has',
-            },
             // no :has inside regular pseudos
             {
                 selector: '::slotted(:has(.a))',

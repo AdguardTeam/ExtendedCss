@@ -922,6 +922,98 @@ describe('combined extended selectors', () => {
         expect(parse(actual)).toEqual(expected);
     });
 
+    it('has(has)', () => {
+        const actual = 'div:has(.banner:has(> a > img))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('div'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('.banner'),
+                                                        getRelativeExtendedWithSingleRegular('has', '> a > img'),
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    it('has(has(contains))', () => {
+        const actual = 'div:has(.banner:has(> span:contains(inner text)))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('div'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'has',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('.banner'),
+                                                        {
+                                                            type: NodeType.ExtendedSelector,
+                                                            children: [
+                                                                {
+                                                                    type: NodeType.RelativePseudoClass,
+                                                                    name: 'has',
+                                                                    children: [
+                                                                        getSingleSelectorAstWithAnyChildren([
+                                                                            { isRegular: true, value: '> span' },
+                                                                            { isAbsolute: true, name: 'contains', value: 'inner text' },  // eslint-disable-line max-len
+                                                                        ]),
+                                                                    ],
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
     it('is(selector list) contains', () => {
         const actual = '#__next > :is(.header, .footer):contains(ads)';
         const expected = {
@@ -1723,19 +1815,6 @@ describe('combined selectors', () => {
 
     describe('has pseudo-class limitation', () => {
         const toThrowInputs = [
-            // no :has, :is, :where inside :has
-            {
-                selector: 'banner:has(> div:has(> img))',
-                error: 'Usage of :has pseudo-class is not allowed inside upper :has',
-            },
-            {
-                selector: 'banner:has(> div:is(> img))',
-                error: 'Usage of :is pseudo-class is not allowed inside upper :has',
-            },
-            {
-                selector: 'banner:has(> div:where(> img))',
-                error: 'Usage of :where pseudo-class is not allowed inside upper :has',
-            },
             // no :has inside regular pseudos
             {
                 selector: '::slotted(:has(.a))',
@@ -2068,6 +2147,47 @@ describe('combined selectors', () => {
             },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+
+        it('has(has) + has', () => {
+            const actual = 'div:has(> .banner:has(> a > img)) + .ad:has(> img)';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('div'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            getRegularSelector('> .banner'),
+                                                            getRelativeExtendedWithSingleRegular('has', '> a > img'),
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            getRegularSelector('+ .ad'),
+                            getRelativeExtendedWithSingleRegular('has', '> img'),
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
 
         it('not > has(not > regular)', () => {
             // eslint-disable-next-line max-len

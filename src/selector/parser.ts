@@ -44,7 +44,6 @@ import {
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
     REMOVE_PSEUDO_MARKER,
-    REGULAR_PSEUDO_CLASSES,
     REGULAR_PSEUDO_ELEMENTS,
     UPWARD_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
@@ -707,18 +706,6 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // case with colon at the start of string - e.g. ':contains(text)'
                                 // is covered by 'bufferNode === null' above at start of COLON checking
                                 updateBufferNode(context, ASTERISK);
-                            }
-                            // Disallow :has(), :is(), :where() inside :has() argument
-                            // to avoid increasing the :has() invalidation complexity
-                            // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
-                            if (context.extendedPseudoNamesStack.length > 0
-                                // check the last extended pseudo-class name from context
-                                && HAS_PSEUDO_CLASS_MARKERS.includes(getLast(context.extendedPseudoNamesStack))
-                                // and check the processing pseudo-class
-                                && (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
-                                    || nextTokenValue === IS_PSEUDO_CLASS_MARKER
-                                    || nextTokenValue === REGULAR_PSEUDO_CLASSES.WHERE)) {
-                                throw new Error(`Usage of :${nextTokenValue} pseudo-class is not allowed inside upper :has`); // eslint-disable-line max-len
                             }
                             handleNextTokenOnColon(context, selector, tokenValue, nextTokenValue, nextToNextTokenValue);
                         }

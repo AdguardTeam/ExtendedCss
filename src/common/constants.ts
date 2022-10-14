@@ -175,7 +175,6 @@ export const SUPPORTED_PSEUDO_CLASSES = [
  */
 export const REGULAR_PSEUDO_CLASSES = {
     SCOPE: 'scope',
-    WHERE: 'where',
 };
 
 /**

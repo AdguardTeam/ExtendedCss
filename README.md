@@ -49,9 +49,11 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 ### <a id="extended-css-has"></a> Pseudo-class `:has()`
 
-Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet widely [supported by browsers](https://developer.mozilla.org/en-US/docs/Web/CSS/:has#browser_compatibility).
+Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet [supported by all popular browsers](https://caniuse.com/css-has).
 
-> Synonyms `:-abp-has` and `:if` are supported for better compatibility.
+> Rules with `:has()` pseudo-class should use [native implementation of `:has()`]() if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
+
+> Synonyms `:-abp-has` and `:if` are supported by ExtendedCss for better compatibility.
 
 **Syntax**
 
@@ -63,12 +65,15 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/T
 
 Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator. Selector list can be set in `selector` as well.
 
-<a id="extended-css-has-limitations"></a> **Limitations**
+<a id="extended-css-has-limitations"></a> **Limitations and notes**
 
-> Usage of `:has()` pseudo-class is [restricted for some cases](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
-> 1. Disallow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the :has() invalidation complexity.
-> 2. Disallow `:has()` inside the pseudos accepting only compound selectors.
-> 3. Disallow `:has()` after regular pseudo-elements.
+> Usage of `:has()` pseudo-class is [restricted for some cases (2, 3)](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
+> - disallow `:has()` inside the pseudos accepting only compound selectors;
+> - disallow `:has()` after regular pseudo-elements.
+
+> Native `:has()` pseudo-class does not allow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the `:has()` invalidation complexity ([case 1](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54)). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we will not add this limitation in ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
+
+> Native implementation does not allow any usage of `:scope` inside `:has()` argument ([[1]](https://github.com/w3c/csswg-drafts/issues/7211), [[2]](https://github.com/w3c/csswg-drafts/issues/6399)). Still there some such rules in filter lists: `div:has(:scope > a)` which we will continue to support simply converting them to `div:has(> a)` as it was earlier.
 
 **Examples**
 
