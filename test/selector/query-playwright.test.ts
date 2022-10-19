@@ -1,7 +1,8 @@
 /**
- * jsdom does not support pseudo-elements
- * https://github.com/jsdom/jsdom/issues/1928
- * so playwright is required for matches-css-before and matches-css-after selector tests
+ * Pseudo-elements are not supported by jsdom
+ * so playwright is required for matches-css-before and matches-css-after selector tests.
+ *
+ * @see {@link https://github.com/jsdom/jsdom/issues/1928}
  */
 
 import { chromium, Browser, Page } from 'playwright';
@@ -15,8 +16,9 @@ let page: Page;
 const TESTS_RUN_TIMEOUT_MS = 10 * 1000;
 
 /**
- * Sets document.body.innerHTML with passed htmlContent
- * @param htmlContent
+ * Sets document.body.innerHTML with passed htmlContent.
+ *
+ * @param htmlContent Inner html content.
  */
 const setBodyInnerHtml = async (htmlContent: string): Promise<void> => {
     await page.evaluate((bodyInnerHtml) => {
@@ -31,8 +33,9 @@ declare global {
 }
 
 /**
- * Returns elements ids selected by extCss.querySelectorAll
- * @param extCssSelector selector for extended css
+ * Returns elements ids selected by extCss.querySelectorAll.
+ *
+ * @param extCssSelector Selector for extended css.
  */
 const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
     return page.evaluate((selector: string): string[] => {
@@ -41,8 +44,9 @@ const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
 };
 
 /**
- * Returns elements ids selected by document.querySelectorAll
- * @param regularSelector standard selector
+ * Returns elements ids selected by document.querySelectorAll().
+ *
+ * @param regularSelector Standard selector.
  */
 const getIdsByRegular = async (regularSelector: string): Promise<string[]> => {
     return page.evaluate((selector) => {
@@ -51,8 +55,9 @@ const getIdsByRegular = async (regularSelector: string): Promise<string[]> => {
 };
 
 /**
- * Checks whether there is no elements selected by extCssSelector
- * @param extCssSelector
+ * Checks whether there is no elements selected by extCssSelector.
+ *
+ * @param extCssSelector Extended css selector.
  */
 const expectNoMatch = async (extCssSelector: string): Promise<void> => {
     const selectedIds = await getIdsByExtended(extCssSelector);

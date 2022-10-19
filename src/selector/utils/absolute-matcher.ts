@@ -32,17 +32,17 @@ const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
 export interface MatcherArgsInterface {
     /**
-     * extended pseudo-class name
+     * Extended pseudo-class name.
      */
     pseudoName: string;
 
     /**
-     * extended pseudo-class arg
+     * Extended pseudo-class arg.
      */
     pseudoArg: string;
 
     /**
-     * dom element to check
+     * Dom element to check.
      */
     domElement: Element;
 }
@@ -50,12 +50,13 @@ export interface MatcherArgsInterface {
 /**
  * Removes quotes for specified content value.
  *
- * For example, content style declaration with ::before can be set as '-' (e.g. unordered list)
- * which displayed as simple dash `-` with no quotes,
- * but CSSStyleDeclaration.getPropertyValue('content') will return value
+ * For example, content style declaration with `::before` can be set as '-' (e.g. unordered list)
+ * which displayed as simple dash `-` with no quotes.
+ * But CSSStyleDeclaration.getPropertyValue('content') will return value
  * wrapped into quotes, e.g. '"-"', which should be removed
- * because filters maintainers does not use any quotes in real rules
- * @param str
+ * because filters maintainers does not use any quotes in real rules.
+ *
+ * @param str Input string.
  */
 const removeContentQuotes = (str: string): string => {
     return str.replace(/^(["'])([\s\S]*)\1$/, '$2');
@@ -65,13 +66,14 @@ const removeContentQuotes = (str: string): string => {
  * Adds quotes for specified background url value.
  *
  * If background-image is specified **without** quotes:
- * e.g. 'background: url(data:image/gif;base64,R0lGODlhAQA7)'
+ * e.g. 'background: url(data:image/gif;base64,R0lGODlhAQA7)'.
  *
  * CSSStyleDeclaration.getPropertyValue('background-image') may return value **with** quotes:
- * e.g. 'background: url("data:image/gif;base64,R0lGODlhAQA7")'
+ * e.g. 'background: url("data:image/gif;base64,R0lGODlhAQA7")'.
  *
- * So we add quotes for compatibility since filters maintainers might use quotes in real rules
- * @param str
+ * So we add quotes for compatibility since filters maintainers might use quotes in real rules.
+ *
+ * @param str Input string.
  */
 const addUrlPropertyQuotes = (str: string): string => {
     if (!str.includes('url("')) {
@@ -82,7 +84,7 @@ const addUrlPropertyQuotes = (str: string): string => {
 };
 
 /**
- * Adds quotes to url arg for consistent property value matching
+ * Adds quotes to url arg for consistent property value matching.
  */
 const addUrlQuotesTo = {
     regexpArg: (str: string): string => {
@@ -95,8 +97,9 @@ const addUrlQuotesTo = {
 };
 
 /**
- * Escapes regular expression string
- * @param str
+ * Escapes regular expression string.
+ *
+ * @param str Input string.
  */
 const escapeRegExp = (str: string): string => {
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
@@ -108,31 +111,33 @@ const escapeRegExp = (str: string): string => {
 };
 
 /**
- * Converts :matches-css arg property value match to regexp
- * @param rawArg
+ * Converts :matches-css() arg property value match to regexp.
+ *
+ * @param rawValue Style match value pattern.
  */
-const convertStyleMatchValueToRegexp = (rawArg: string): RegExp => {
-    let arg: string;
-    if (rawArg.startsWith(SLASH) && rawArg.endsWith(SLASH)) {
+const convertStyleMatchValueToRegexp = (rawValue: string): RegExp => {
+    let value: string;
+    if (rawValue.startsWith(SLASH) && rawValue.endsWith(SLASH)) {
         // For regex patterns double quotes `"` and backslashes `\` should be escaped
-        arg = addUrlQuotesTo.regexpArg(rawArg);
-        arg = arg.slice(1, -1);
+        value = addUrlQuotesTo.regexpArg(rawValue);
+        value = value.slice(1, -1);
     } else {
         // For non-regex patterns parentheses `(` `)` and square brackets `[` `]`
         // should be unescaped, because their escaping in filter rules is required
-        arg = addUrlQuotesTo.noneRegexpArg(rawArg);
-        arg = arg.replace(/\\([\\()[\]"])/g, '$1');
-        arg = escapeRegExp(arg);
+        value = addUrlQuotesTo.noneRegexpArg(rawValue);
+        value = value.replace(/\\([\\()[\]"])/g, '$1');
+        value = escapeRegExp(value);
         // e.g. div:matches-css(background-image: url(data:*))
-        arg = replaceAll(arg, ASTERISK, REGEXP_ANY_SYMBOL);
+        value = replaceAll(value, ASTERISK, REGEXP_ANY_SYMBOL);
     }
-    return new RegExp(arg, 'i');
+    return new RegExp(value, 'i');
 };
 
 /**
- * Makes some properties values compatible
- * @param propertyName
- * @param propertyValue
+ * Makes some properties values compatible.
+ *
+ * @param propertyName Name of style property.
+ * @param propertyValue Value of style property.
  */
 const normalizePropertyValue = (propertyName: string, propertyValue: string): string => {
     let normalized = '';
@@ -160,10 +165,11 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
 
 /**
  * Gets domElement style property value
- * by css property name and standard pseudo-element
- * @param domElement dom node
- * @param propertyName css property name
- * @param regularPseudoElement standard pseudo-element — :before, :after etc.
+ * by css property name and standard pseudo-element.
+ *
+ * @param domElement DOM element.
+ * @param propertyName CSS property name.
+ * @param regularPseudoElement Standard pseudo-element — :before, :after etc.
  */
 const getComputedStylePropertyValue = (
     domElement: Element,
@@ -184,10 +190,10 @@ interface PseudoArgData {
  * Parses arg of absolute pseudo-class into 'name' and 'value' if set.
  *
  * Used for :matches-css() - with COLON as separator,
- * for :matches-attr() and :matches-property() - with EQUAL_SIGN as separator
- * @param pseudoArg
- * @param separator
- * @returns {PseudoArgData}
+ * for :matches-attr() and :matches-property() - with EQUAL_SIGN as separator.
+ *
+ * @param pseudoArg Arg of pseudo-class.
+ * @param separator Divider symbol.
  */
 const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData => {
     const index = pseudoArg.indexOf(separator);
@@ -212,9 +218,12 @@ interface MatchesCssArgData {
 /**
  * Parses :matches-css() pseudo-class arg
  * where regular pseudo-element can be a part of arg
- * e.g. 'div:matches-css(before, color: rgb(255, 255, 255))'    <-- obsolete :matches-css-before()
- * @param pseudoName
- * @param rawArg
+ * e.g. 'div:matches-css(before, color: rgb(255, 255, 255))'    <-- obsolete `:matches-css-before()`.
+ *
+ * @param pseudoName Pseudo-class name.
+ * @param rawArg Pseudo-class arg.
+ *
+ * @throws An error on invalid `rawArg`.
  */
 const parseStyleMatchArg = (pseudoName: string, rawArg: string): MatchesCssArgData => {
     const { name, value } = getPseudoArgData(rawArg, COMMA);
@@ -237,8 +246,11 @@ const parseStyleMatchArg = (pseudoName: string, rawArg: string): MatchesCssArgDa
 };
 
 /**
- * Checks whether the domElement is matched by :matches-css() arg
- * @param argsData
+ * Checks whether the domElement is matched by :matches-css() arg.
+ *
+ * @param argsData Pseudo-class name, arg, and dom element to check.
+ *
+ * @throws An error on invalid pseudo-class arg.
  */
 export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
@@ -264,8 +276,9 @@ export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
 };
 
 /**
- * Validates string arg for :matches-attr() and :matches-property()
- * @param arg
+ * Validates string arg for :matches-attr() and :matches-property().
+ *
+ * @param arg Pseudo-class arg.
  */
 const validateStrMatcherArg = (arg: string): boolean => {
     if (arg.includes(SLASH)) {
@@ -278,9 +291,12 @@ const validateStrMatcherArg = (arg: string): boolean => {
 };
 
 /**
- * Returns valid arg for :matches-attr and :matcher-property
- * @param rawArg arg pattern
- * @param [isWildcardAllowed=false] flag for wildcard (`*`) using as pseudo-class arg
+ * Returns valid arg for :matches-attr and :matcher-property.
+ *
+ * @param rawArg Arg pattern.
+ * @param [isWildcardAllowed=false] Flag for wildcard (`*`) using as pseudo-class arg.
+ *
+ * @throws An error on invalid `rawArg`.
  */
 export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): string | RegExp => {
     // if rawArg is missing for pseudo-class
@@ -325,9 +341,12 @@ interface RawMatchingArgData {
 }
 
 /**
- * Parses pseudo-class argument and returns parsed data
- * @param pseudoName extended pseudo-class name
- * @param pseudoArg extended pseudo-class argument
+ * Parses pseudo-class argument and returns parsed data.
+ *
+ * @param pseudoName Extended pseudo-class name.
+ * @param pseudoArg Extended pseudo-class argument.
+ *
+ * @throws An error if attribute name is missing in pseudo-class arg.
  */
 export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMatchingArgData => {
     const { name: rawName, value: rawValue } = getPseudoArgData(pseudoArg, EQUAL_SIGN);
@@ -338,8 +357,11 @@ export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMa
 };
 
 /**
- * Checks whether the domElement is matched by :matches-attr() arg
- * @param argsData
+ * Checks whether the domElement is matched by :matches-attr() arg.
+ *
+ * @param argsData Pseudo-class name, arg, and dom element to check.
+ *
+ * @throws An error on invalid arg of pseudo-class.
  */
 export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
@@ -393,8 +415,11 @@ export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
 };
 
 /**
- * Parses raw :matches-property() arg which may be chain of properties
- * @param input argument of :matches-property()
+ * Parses raw :matches-property() arg which may be chain of properties.
+ *
+ * @param input Argument of :matches-property().
+ *
+ * @throws An error on invalid chain.
  */
 export const parseRawPropChain = (input: string): (string | RegExp)[] => {
     if (input.length > 1 && input.startsWith(DOUBLE_QUOTE) && input.endsWith(DOUBLE_QUOTE)) {
@@ -467,9 +492,10 @@ interface Chain {
 
 /**
  * Checks if the property exists in the base object (recursively).
- * @param base
- * @param chain array of objects - parsed string property chain
- * @param [output=[]] result acc
+ *
+ * @param base Element to check.
+ * @param chain Array of objects - parsed string property chain.
+ * @param [output=[]] Result acc.
  */
 const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], output: Chain[] = []): Chain[] => {
     const tempProp = chain[0];
@@ -525,8 +551,11 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
 };
 
 /**
- * Checks whether the domElement is matched by :matches-property() arg
- * @param argsData
+ * Checks whether the domElement is matched by :matches-property() arg.
+ *
+ * @param argsData Pseudo-class name, arg, and dom element to check.
+ *
+ * @throws An error on invalid prop in chain.
  */
 export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
@@ -589,8 +618,11 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
 };
 
 /**
- * Checks whether the textContent is matched by :contains arg
- * @param argsData
+ * Checks whether the textContent is matched by :contains arg.
+ *
+ * @param argsData Pseudo-class name, arg, and dom element to check.
+ *
+ * @throws An error on invalid arg of pseudo-class.
  */
 export const isTextMatched = (argsData: MatcherArgsInterface): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;

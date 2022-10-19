@@ -1,6 +1,6 @@
 export const logger = {
     /**
-     * Safe console.error version
+     * Safe console.error version.
      */
     error: (
         typeof console !== 'undefined'
@@ -10,8 +10,8 @@ export const logger = {
         : console.error,
 
     /**
-    * Safe console.info version
-    */
+     * Safe console.info version.
+     */
     info: (
         typeof console !== 'undefined'
             && console.info

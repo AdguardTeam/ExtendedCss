@@ -38,42 +38,43 @@ import { logger } from '../../common/utils/logger';
  * Native Document.querySelectorAll() does not select exact descendant elements
  * but match all page elements satisfying the selector,
  * so extra specification is needed for proper descendants selection
- * e.g. 'div:has(> img)'
+ * e.g. 'div:has(> img)'.
  *
  * Its calculation depends on extended selector.
  */
 export type Specificity = string;
 
 /**
- * Interface for relative pseudo-class helpers args
+ * Interface for relative pseudo-class helpers args.
  */
 interface RelativePredicateArgsInterface {
     /**
-     * dom element to check relatives
+     * Dom element to check relatives.
      */
     element: HTMLElement;
 
     /**
-     * SelectorList node
+     * SelectorList node.
      */
     relativeSelectorList: AnySelectorNodeInterface;
 
     /**
-     * extended pseudo-class name
+     * Extended pseudo-class name.
      */
     pseudoName: string;
 
     /**
-     * flag for error throwing on invalid selector from selectorList
-     * e.g. true for :not() pseudo-class
+     * Flag for error throwing on invalid selector from selectorList
+     * e.g. `true` for :not() pseudo-class.
      */
     errorOnInvalidSelector?: boolean;
 }
 
 /**
- * Checks whether the element has all relative elements specified by pseudo-class arg
- * Used for :has() and :if-not()
- * @param argsData
+ * Checks whether the element has all relative elements specified by pseudo-class arg.
+ * Used for :has() and :if-not() pseudo-classes.
+ *
+ * @param argsData Relative pseudo-class helpers args data.
  */
 const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
@@ -92,9 +93,10 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
                 || relativeRegularSelector.value?.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
                 /**
                  * For matching the element by "element:has(+ next-sibling)" and "element:has(~ sibling)"
-                 * we check whether the element's parentElement has specific direct child combination
-                 * e.g. 'h1:has(+ .share)' -> `h1Node.parentElement.querySelectorAll(':scope > h1 + .share')`
-                 * https://www.w3.org/TR/selectors-4/#relational
+                 * we check whether the element's parentElement has specific direct child combination,
+                 * e.g. 'h1:has(+ .share)' -> `h1Node.parentElement.querySelectorAll(':scope > h1 + .share')`.
+                 *
+                 * @see {@link https://www.w3.org/TR/selectors-4/#relational}
                  */
                 rootElement = element.parentElement;
                 const elementSelectorText = element.tagName.toLowerCase();
@@ -104,7 +106,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
                  * e.g. 'a:has(> img)' -> `aNode.querySelectorAll(':scope > img')`
-                 * OR '.block(div > span)' -> `blockClassNode.querySelectorAll(':scope div > span')`
+                 * OR '.block(div > span)' -> `blockClassNode.querySelectorAll(':scope div > span')`.
                  */
                 specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${DESCENDANT_COMBINATOR}`;
                 rootElement = element;
@@ -129,8 +131,9 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
 
 /**
  * Checks whether the element is an any element specified by pseudo-class arg.
- * Used for :is() and :not()
- * @param argsData
+ * Used for :is() and :not() pseudo-classes.
+ *
+ * @param argsData Relative pseudo-class helpers args data.
  */
 const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
     const { element, relativeSelectorList, pseudoName, errorOnInvalidSelector } = argsData;
@@ -145,7 +148,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
 
             /**
              * For checking the element by 'div:is(.banner)' and 'div:not([data="content"])
-             * we check whether the element's parentElement has any specific direct child
+             * we check whether the element's parentElement has any specific direct child.
              */
             const rootElement = element.parentElement;
             if (!rootElement) {
@@ -155,7 +158,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
             /**
              * So we calculate the element "description" by it's tagname and attributes for targeting
              * and use it to specify the selection
-             * e.g. 'div:is(.banner)' -> `divNode.parentElement.querySelectorAll(':scope > div[class="banner"]')`
+             * e.g. `div:is(.banner)` --> `divNode.parentElement.querySelectorAll(':scope > div[class="banner"]')`.
              */
             const elementSelectorText = getElementSelectorDesc(element);
             const specificity = `${COLON}${REGULAR_PSEUDO_CLASSES.SCOPE}${CHILD_COMBINATOR}${elementSelectorText}`;
@@ -179,10 +182,14 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
 };
 
 /**
- * Selects dom elements by value of RegularSelector
- * @param regularSelectorNode RegularSelector node
- * @param root root dom element
- * @param specificity
+ * Selects dom elements by value of RegularSelector.
+ *
+ * @param regularSelectorNode RegularSelector node.
+ * @param root Root DOM element.
+ * @param specificity @see {@link Specificity}.
+ *
+ * @throws An error if RegularSelector has no value
+ * or RegularSelector.value is invalid selector.
  */
 export const getByRegularSelector = (
     regularSelectorNode: AnySelectorNodeInterface,
@@ -206,10 +213,14 @@ export const getByRegularSelector = (
 };
 
 /**
- * Returns list of dom elements filtered or selected by ExtendedSelector node
- * @param domElements array of dom elements
- * @param extendedSelectorNode ExtendedSelector node
- * @returns array of dom elements
+ * Returns list of dom elements filtered or selected by ExtendedSelector node.
+ *
+ * @param domElements Array of DOM elements.
+ * @param extendedSelectorNode ExtendedSelector node.
+ *
+ * @throws An error on unknown pseudo-class,
+ * absent or invalid arg of extended pseudo-class, etc.
+ * @returns Array of DOM elements.
  */
 export const getByExtendedSelector = (
     domElements: HTMLElement[],
@@ -309,10 +320,13 @@ export const getByExtendedSelector = (
 };
 
 /**
- * Returns list of dom elements which is selected by RegularSelector value
- * @param domElements array of dom elements
- * @param regularSelectorNode RegularSelector node
- * @returns array of dom elements
+ * Returns list of dom elements which is selected by RegularSelector value.
+ *
+ * @param domElements Array of DOM elements.
+ * @param regularSelectorNode RegularSelector node.
+ *
+ * @throws An error if RegularSelector has not value.
+ * @returns Array of DOM elements.
  */
 export const getByFollowingRegularSelector = (
     domElements: HTMLElement[],
@@ -370,14 +384,14 @@ export const getByFollowingRegularSelector = (
  *
  * Relative pseudo-classes has it's own subtree so getElementsForSelectorNode is called recursively.
  *
- * 'specificity' is needed for :has(), :is() and :not() pseudo-classes.
- * e.g. ':scope' specification is needed for proper descendants selection for 'div:has(> img)'
- * as native querySelectorAll() does not select exact element descendants even if it is called on 'div'.
- * so we check `divNode.querySelectorAll(':scope > img').length > 0`
+ * 'specificity' is needed for :has(), :is(), and :not() pseudo-classes
+ * as native querySelectorAll() does not select exact element descendants even if it is called on 'div'
+ * e.g. ':scope' specification is needed for proper descendants selection for 'div:has(> img)'.
+ * So we check `divNode.querySelectorAll(':scope > img').length > 0`.
  *
- * @param selectorNode Selector node
- * @param root root dom element
- * @param specificity needed element specification
+ * @param selectorNode Selector node.
+ * @param root Root DOM element.
+ * @param specificity Needed element specification.
  */
 export const getElementsForSelectorNode = (
     selectorNode: AnySelectorNodeInterface,

@@ -1,9 +1,10 @@
 import { ExtCssDocument } from '../../src/selector';
 
 /**
- * Checks whether selectedElements and expectedElements are the same
- * @param selectedElements selected by extCss querySelectorAll()
- * @param expectedElements expected element selected by native document.querySelectorAll()
+ * Checks whether selectedElements and expectedElements are the same.
+ *
+ * @param selectedElements Selected by extCss querySelectorAll().
+ * @param expectedElements Expected element selected by native document.querySelectorAll().
  */
 export const expectTheSameElements = (selectedElements: HTMLElement[], expectedElements: NodeListOf<Element>) => {
     expect(selectedElements.length).toEqual(expectedElements.length);
@@ -13,8 +14,9 @@ export const expectTheSameElements = (selectedElements: HTMLElement[], expectedE
 };
 
 /**
- * Checks whether there is no element selected
- * @param selectedElements selected by extCss querySelectorAll()
+ * Checks whether there is no element selected.
+ *
+ * @param selectedElements Selected by extCss querySelectorAll().
  */
 export const expectNoMatch = (selectedElements: HTMLElement[]) => {
     expect(selectedElements.length).toEqual(0);
@@ -22,12 +24,12 @@ export const expectNoMatch = (selectedElements: HTMLElement[]) => {
 
 interface SuccessSelectorInput {
     /**
-     * selector for extCss querySelectorAll()
+     * Selector for extCss querySelectorAll().
      */
     actual: string,
 
     /**
-     * target selector for checking
+     * Target selector for checking.
      */
     expected: string,
 }
@@ -41,7 +43,7 @@ export const expectSuccessInput = (input: SuccessSelectorInput): void => {
 
 interface NoMatchSelectorInput {
     /**
-     * selector for extCss querySelectorAll()
+     * Selector for extCss querySelectorAll().
      */
     selector: string,
 }
@@ -54,12 +56,12 @@ export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
 
 interface ToThrowSelectorInput {
     /**
-     * selector for extCss querySelectorAll()
+     * Selector for extCss querySelectorAll().
      */
     selector: string,
 
     /**
-     * error text to match
+     * Error text to match.
      */
     error: string,
 }

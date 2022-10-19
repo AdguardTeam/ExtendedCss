@@ -1,16 +1,18 @@
 import { nodeTextContentGetter } from './natives';
 
 /**
- * Returns textContent of passed domElement
- * @param domElement
+ * Returns textContent of passed domElement.
+ *
+ * @param domElement DOM element.
  */
 export const getNodeTextContent = (domElement: Node): string => {
     return nodeTextContentGetter?.apply(domElement) || '';
 };
 
 /**
- * Returns element selector text based on it's tagName and attributes
- * @param element
+ * Returns element selector text based on it's tagName and attributes.
+ *
+ * @param element DOM element.
  */
 export const getElementSelectorDesc = (element: Element): string => {
     let selectorText = element.tagName.toLowerCase();
@@ -24,7 +26,10 @@ export const getElementSelectorDesc = (element: Element): string => {
 
 /**
  * Returns path to a DOM element as a selector string.
- * @param inputEl input element
+ *
+ * @param inputEl Input element.
+ *
+ * @throws An error if `inputEl` in not instance of `Element`.
  */
 export const getElementSelectorPath = (inputEl: Element): string => {
     if (!(inputEl instanceof Element)) {
@@ -63,8 +68,9 @@ export const getElementSelectorPath = (inputEl: Element): string => {
 };
 
 /**
- * Checks whether the element is instance of HTMLElement
- * @param element
+ * Checks whether the element is instance of HTMLElement.
+ *
+ * @param element Element to check.
  */
 export const isHtmlElement = (element: HTMLElement | Node | null): element is HTMLElement => {
     return element instanceof HTMLElement;

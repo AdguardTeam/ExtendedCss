@@ -13,8 +13,9 @@ export interface Token {
 }
 
 /**
- * Splits selector string into tokens
- * @param rawSelector raw css selector
+ * Splits selector string into tokens.
+ *
+ * @param rawSelector Raw css selector.
  */
 export const tokenize = (rawSelector: string): Token[] => {
     const selector = convert(rawSelector);

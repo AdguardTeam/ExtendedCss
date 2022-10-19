@@ -18,9 +18,16 @@ import { MAX_STYLE_PROTECTION_COUNT } from '../../common/constants';
 export class ExtMutationObserver {
     private observer: MutationObserver;
 
-    // extra property for keeping 'style fix counts'
+    /**
+     * Extra property for keeping 'style fix counts'.
+     */
     private styleProtectionCount: number;
 
+    /**
+     * Creates new ExtMutationObserver.
+     *
+     * @param protectionCallback Callback which execution should be counted.
+     */
     constructor(protectionCallback: ProtectionCallback) {
         this.styleProtectionCount = 0;
         this.observer = new natives.MutationObserver((mutations: MutationRecord[]) => {
@@ -34,7 +41,10 @@ export class ExtMutationObserver {
 
     /**
      * Starts to observe target element,
-     * prevents infinite loop of observing due to the limited number of times of callback runs
+     * prevents infinite loop of observing due to the limited number of times of callback runs.
+     *
+     * @param target Target to observe.
+     * @param options Mutation observer options.
      */
     observe(target: Node, options: MutationObserverInit): void {
         if (this.styleProtectionCount < MAX_STYLE_PROTECTION_COUNT) {
@@ -45,7 +55,8 @@ export class ExtMutationObserver {
     }
 
     /**
-     * Disconnect ExtMutationObserver
+     * Stops ExtMutationObserver from observing any mutations.
+     * Until the `observe()` is used again, `protectionCallback` will not be invoked.
      */
     disconnect(): void {
         this.observer.disconnect();

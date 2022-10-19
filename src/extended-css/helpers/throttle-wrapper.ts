@@ -11,7 +11,7 @@ const DEFAULT_THROTTLE_DELAY_MS = 150;
 type WrappedCallback = (timestamp?: number) => void;
 
 /**
- * Method for filtering rules applying
+ * Method for filtering rules applying.
  */
 type ApplyRulesCallback = (context: Context) => void;
 
@@ -28,8 +28,9 @@ export class ThrottleWrapper {
     private callback?: ApplyRulesCallback;
 
     /**
-     * the provided callback should be executed twice in this time frame:
+     * The provided callback should be executed twice in this time frame:
      * very first time and not more often than throttleDelayMs for further executions.
+     *
      * @see {@link ThrottleWrapper.run}
      */
     private throttleDelayMs: number;
@@ -42,6 +43,13 @@ export class ThrottleWrapper {
 
     private lastRunTime?: number;
 
+    /**
+     * Creates new ThrottleWrapper.
+     *
+     * @param context ExtendedCss context.
+     * @param callback The callback.
+     * @param throttleMs Throttle delay in ms.
+     */
     constructor(context: Context, callback?: ApplyRulesCallback, throttleMs?: number) {
         this.context = context;
         this.callback = callback;
@@ -51,8 +59,9 @@ export class ThrottleWrapper {
 
     /**
      * Wraps the callback (which supposed to be `applyRules`),
-     * needed to update `lastRunTime` and clean previous timeouts for proper execution of the callback
-     * @param timestamp
+     * needed to update `lastRunTime` and clean previous timeouts for proper execution of the callback.
+     *
+     * @param timestamp Timestamp.
      */
     private wrappedCallback(timestamp?: number): void {
         this.lastRunTime = isNumber(timestamp)
@@ -103,6 +112,9 @@ export class ThrottleWrapper {
         this.timeoutId = timeout(this.wrappedCb);
     }
 
+    /**
+     * Returns timestamp for 'now'.
+     */
     public static now(): number {
         return perf.now();
     }

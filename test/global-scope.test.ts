@@ -3,7 +3,7 @@
  */
 
 /**
- * store global window before any import
+ * Store global window before any import.
  */
 const windowBefore = Object.assign({}, window);
 
@@ -11,9 +11,10 @@ const { ExtendedCss } = require('../src'); // eslint-disable-line @typescript-es
 const { expectElementStyle } = require('./extended-css.test'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 /**
- * Compares whether the objects are equal
- * @param obj1
- * @param obj2
+ * Compares whether the two objects are equal.
+ *
+ * @param obj1 First object.
+ * @param obj2 Second object.
  */
 const isEqual = <T extends Window>(obj1: T, obj2: T): boolean => {
     const keys1 = Object.keys(obj1);

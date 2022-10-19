@@ -29,6 +29,9 @@ export class EventTracker {
 
     private lastEventTime?: number;
 
+    /**
+     * Creates new EventTracker.
+     */
     constructor() {
         this.trackedEvents = isSafariBrowser
             ? SUPPORTED_EVENTS.filter((event) => !SAFARI_PROBLEMATIC_EVENTS.includes(event))
@@ -39,6 +42,11 @@ export class EventTracker {
         });
     }
 
+    /**
+     * Callback for event listener for events tracking.
+     *
+     * @param event Any event.
+     */
     private trackEvent(event: Event): void {
         this.lastEventType = event.type;
         this.lastEventTime = Date.now();
@@ -53,6 +61,9 @@ export class EventTracker {
         return Date.now() - this.lastEventTime;
     };
 
+    /**
+     * Checks whether the last caught event should be ignored.
+     */
     isIgnoredEventType(): boolean {
         const lastEventType = this.getLastEventType();
         const sinceLastEventTime = this.getTimeSinceLastEvent();
@@ -62,6 +73,9 @@ export class EventTracker {
             && sinceLastEventTime < LAST_EVENT_TIMEOUT_MS;
     }
 
+    /**
+     * Stops event tracking by removing event listener.
+     */
     stopTracking(): void {
         this.trackedEvents.forEach((eventName) => {
             document.documentElement.removeEventListener(eventName, this.trackEvent, true);

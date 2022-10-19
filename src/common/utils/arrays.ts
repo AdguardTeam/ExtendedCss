@@ -1,8 +1,13 @@
+
 /**
  * Some browsers do not support Array.prototype.flat()
- * for example, Opera 42 which is used for browserstack tests
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
- * @param input
+ * e.g. Opera 42 which is used for browserstack tests.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat}
+ *
+ * @param input Array needed to be flatten.
+ *
+ * @throws An error if array cannot be flatten.
  */
 export const flatten = <T>(input: Array<T | T[]>): Array<T> => {
     const stack: Array<T | T[]> = [];
@@ -26,8 +31,9 @@ export const flatten = <T>(input: Array<T | T[]>): Array<T> => {
 };
 
 /**
- * Returns last item from array
- * @param array
+ * Returns last item from array.
+ *
+ * @param array Input array.
  */
 export const getLast = <T>(array: Array<T>): T => {
     return array[array.length - 1];

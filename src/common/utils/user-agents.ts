@@ -10,7 +10,7 @@ const CHROMIUM_BRAND_NAME = 'Chromium';
 const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';
 
 /**
- * Simple check for Safari browser
+ * Simple check for Safari browser.
  */
 export const isSafariBrowser = navigator.vendor === 'Apple Computer, Inc.';
 
@@ -50,8 +50,9 @@ const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
 /**
  * Returns chromium brand object from navigator.userAgentData.brands or null if not supported.
  * Chromium because of all browsers based on it should be supported as well
- * and it is universal wey to check it
- * https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands
+ * and it is universal way to check it.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands}
  */
 const getChromiumBrand = (): NavigatorUABrandVersion | null => {
     const brandsData = navigator.userAgentData?.brands;
@@ -73,7 +74,7 @@ type BrowserInfo = {
 
 /**
  * Parses userAgent string and returns the data object for supported browsers;
- * otherwise returns null
+ * otherwise returns null.
  */
 const parseUserAgent = (): BrowserInfo | null => {
     let browserName;
@@ -100,7 +101,7 @@ const parseUserAgent = (): BrowserInfo | null => {
 };
 
 /**
- * Gets info about current browser
+ * Gets info about current browser.
  */
 const getCurrentBrowserInfoAsSupported = (): BrowserInfo | null => {
     const brandData = getChromiumBrand();
@@ -123,7 +124,7 @@ const getCurrentBrowserInfoAsSupported = (): BrowserInfo | null => {
 };
 
 /**
- * Checks whether the current browser is supported
+ * Checks whether the current browser is supported.
  */
 export const isBrowserSupported = (): boolean => {
     const ua = navigator.userAgent;

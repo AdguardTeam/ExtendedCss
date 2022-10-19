@@ -1,7 +1,10 @@
 /**
- * Validates number arg for :nth-ancestor and :upward pseudo-classes
- * @param rawArg raw arg of pseudo-class
- * @param pseudoName pseudo-class name
+ * Validates number arg for :nth-ancestor() and :upward() pseudo-classes.
+ *
+ * @param rawArg Raw arg of pseudo-class.
+ * @param pseudoName Pseudo-class name.
+ *
+ * @throws An error on invalid `rawArg`.
  */
 export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): number => {
     const deep = Number(rawArg);
@@ -12,18 +15,21 @@ export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): n
 };
 
 /**
- * Returns nth ancestor by 'deep' number arg OR undefined if ancestor range limit exceeded
- * @param domElement
- * @param deep
- * @param pseudoName
+ * Returns nth ancestor by 'deep' number arg OR undefined if ancestor range limit exceeded.
+ *
+ * @param domElement DOM element to find ancestor for.
+ * @param nth Depth up to needed ancestor.
+ * @param pseudoName Pseudo-class name.
+ *
+ * @throws An error on invalid `nth` arg.
  */
-export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName: string): HTMLElement | null => {
+export const getNthAncestor = (domElement: HTMLElement, nth: number, pseudoName: string): HTMLElement | null => {
     let ancestor: HTMLElement | null = null;
     let i = 0;
-    while (i < deep) {
+    while (i < nth) {
         ancestor = domElement.parentElement;
         if (!ancestor) {
-            throw new Error(`Argument of :${pseudoName}() pseudo-class is too big — '${deep}', out of DOM elements root.`); // eslint-disable-line max-len
+            throw new Error(`Argument of :${pseudoName}() pseudo-class is too big — '${nth}', out of DOM elements root.`); // eslint-disable-line max-len
         }
         domElement = ancestor;
         i += 1;
@@ -32,8 +38,9 @@ export const getNthAncestor = (domElement: HTMLElement, deep: number, pseudoName
 };
 
 /**
- * Validates standard CSS selector
- * @param selector
+ * Validates standard CSS selector.
+ *
+ * @param selector Standard selector.
  */
 export const validateStandardSelector = (selector: string): boolean => {
     let isValid: boolean;

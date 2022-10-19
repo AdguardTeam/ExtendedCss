@@ -48,105 +48,106 @@ export interface CssStyleMap {
 }
 
 /**
- * Interface for rules data parsed from passed styleSheet
+ * Interface for rules data parsed from passed styleSheet.
  */
 export interface ExtCssRuleData {
     /**
-     * selector text
+     * Selector text.
      */
     selector: string;
 
     /**
-     * selector ast to query dom elements
+     * Selector ast to query dom elements.
      */
     ast: AnySelectorNodeInterface;
 
     /**
-     * styles to apply to matched dom elements
+     * Styles to apply to matched dom elements.
      */
     style?: CssStyleMap;
 
     /**
-     * flag for specific rule debugging mode
+     * Flag for specific rule debugging mode.
      */
     debug?: string;
 
     /**
-     * log data, available only for debugging mode
+     * Log data, available only for debugging mode.
      */
     timingStats?: TimingStats;
 
     /**
-     * dom elements matched by rule, available only for debugging mode
+     * Dom elements matched by rule, available only for debugging mode.
      */
     matchedElements?: HTMLElement[];
 }
 
 /**
- * Interface for storing data parsed from selector rule part
+ * Interface for storing data parsed from selector rule part.
  */
 interface SelectorPartData {
     /**
-     * success status
+     * Success status.
      */
     success: boolean;
 
     /**
-     * parsed selector
+     * Parsed selector.
      */
     selector: string;
 
     /**
-     * selector ast to query elements by,
-     * might be not defined if selector is not valid
+     * Selector ast to query elements by,
+     * might be not defined if selector is not valid.
      */
     ast?: AnySelectorNodeInterface;
 
     /**
-     * styles parsed from selector rule part,
-     * relevant to rules with `:remove()` pseudo-class which may not have actual style declaration
+     * Styles parsed from selector rule part,
+     * relevant to rules with `:remove()` pseudo-class which may not have actual style declaration.
      */
     stylesOfSelector?: Style[];
 }
 
 /**
- * Interface for stylesheet parser context
+ * Interface for stylesheet parser context.
  */
 interface Context {
     /**
-     * Flag for parsing rules parts
+     * Flag for parsing rules parts.
      */
     isSelector: boolean;
 
     /**
-     * Parser position
+     * Parser position.
      */
     nextIndex: number;
 
     /**
-     * Stylesheet left to parse
+     * Stylesheet left to parse.
      */
     cssToParse: string;
 
     /**
-     * Buffer for selector text collecting
+     * Buffer for selector text collecting.
      */
     selectorBuffer: string;
 
     /**
-     * Buffer for rule data collecting
+     * Buffer for rule data collecting.
      */
     rawRuleData: RawCssRuleData;
 }
 
 /**
- * Init value for rawRuleData
+ * Init value for rawRuleData.
  */
 const initRawRuleData = { selector: '' };
 
 /**
- * Resets rule data buffer to init value after rule successfully collected
- * @param context
+ * Resets rule data buffer to init value after rule successfully collected.
+ *
+ * @param context Stylesheet parser context.
  */
 const restoreRuleAcc = (context: Context): void => {
     context.rawRuleData = initRawRuleData;
@@ -158,14 +159,17 @@ interface ParsedSelectorData {
 }
 
 /**
- * Checks the presence of :remove() pseudo-class and validates it while parsing the selector part of css rule
- * @param rawSelector
+ * Checks the presence of :remove() pseudo-class and validates it while parsing the selector part of css rule.
+ *
+ * @param rawSelector Selector which may contain :remove() pseudo-class.
+ *
+ * @throws An error on invalid :remove() position.
  */
 const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
     /**
-     * no error will be thrown on invalid selector as it will be validated later
-     * so it's better to explicitly specify 'any' selector for :remove() pseudo-class by '*'
-     * e.g. '.banner > *:remove()' instead of '.banner > :remove()'
+     * No error will be thrown on invalid selector as it will be validated later
+     * so it's better to explicitly specify 'any' selector for :remove() pseudo-class by '*',
+     * e.g. '.banner > *:remove()' instead of '.banner > :remove()'.
      */
 
     // ':remove()'
@@ -210,9 +214,12 @@ const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
 };
 
 /**
- * Parses cropped selector part found before `{` previously
- * @param context stylesheet parser context
- * @param extCssDoc needed for caching of selector ast
+ * Parses cropped selector part found before `{` previously.
+ *
+ * @param context Stylesheet parser context.
+ * @param extCssDoc Needed for caching of selector ast.
+ *
+ * @throws An error on unsupported CSS features, e.g. at-rules.
  */
 const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
@@ -262,8 +269,13 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
 };
 
 /**
- * Recursively parses style declaration string into `Style`s
- * @return a number index of the next `}` in `this.cssToParse`.
+ * Recursively parses style declaration string into `Style`s.
+ *
+ * @param context Stylesheet parser context.
+ * @param styles Array of styles.
+ *
+ * @throws An error on invalid style declaration.
+ * @returns A number index of the next `}` in `this.cssToParse`.
  */
 const parseUntilClosingBracket = (context: Context, styles: Style[]): number => {
     // Expects ":", ";", and "}".
@@ -328,8 +340,9 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
 };
 
 /**
- * Parses next style declaration part in stylesheet
- * @param context
+ * Parses next style declaration part in stylesheet.
+ *
+ * @param context Stylesheet parser context.
  */
 const parseNextStyle = (context: Context): Style[] => {
     const styles: Style[] = [];
@@ -352,8 +365,9 @@ const parseNextStyle = (context: Context): Style[] => {
 
 /**
  * Checks whether the 'remove' property positively set in styles
- * with only one positive value - 'true'
- * @param styles
+ * with only one positive value - 'true'.
+ *
+ * @param styles Array of styles.
  */
 const isRemoveSetInStyles = (styles: Style[]): boolean => {
     return styles.some((s) => {
@@ -364,8 +378,9 @@ const isRemoveSetInStyles = (styles: Style[]): boolean => {
 
 /**
  * Gets valid 'debug' property value set in styles
- * where possible values are 'true' and 'global'
- * @param styles
+ * where possible values are 'true' and 'global'.
+ *
+ * @param styles Array of styles.
  */
 const getDebugStyleValue = (styles: Style[]): string | undefined => {
     const debugStyle = styles.find((s) => {
@@ -375,10 +390,11 @@ const getDebugStyleValue = (styles: Style[]): string | undefined => {
 };
 
 /**
- * Prepares final RuleData
- * @param selector
- * @param ast
- * @param rawStyles array of previously collected styles which may contain 'remove' and 'debug'
+ * Prepares final RuleData.
+ *
+ * @param selector String selector.
+ * @param ast Parsed ast.
+ * @param rawStyles Array of previously collected styles which may contain 'remove' and 'debug'.
  */
 export const prepareRuleData = (
     selector: string,
@@ -424,9 +440,12 @@ export const prepareRuleData = (
 };
 
 /**
- * Saves rules data for unique selectors
- * @param rawResults
- * @param rawRuleData
+ * Saves rules data for unique selectors.
+ *
+ * @param rawResults Previously collected results of parsing.
+ * @param rawRuleData Parsed rule data.
+ *
+ * @throws An error if there is no rawRuleData.styles or rawRuleData.ast.
  */
 const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): void => {
     const { selector, ast, styles } = rawRuleData;
@@ -448,18 +467,20 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
 
 /**
  * Parses stylesheet of rules into rules data objects (non-recursively):
- * 1. Iterates through stylesheet string
- * 2. Finds first `{` which can be style declaration start or part of selector
- * 3. Validates found string part via selector parser; and if
+ * 1. Iterates through stylesheet string.
+ * 2. Finds first `{` which can be style declaration start or part of selector.
+ * 3. Validates found string part via selector parser; and if:
  *  - it throws error — saves string part to buffer as part of selector,
- *    slice next stylesheet part to `{` [2] and validates again [3]
- *  - no error — saves found string part as selector and starts to parse styles (recursively)
- * @param rawStylesheet as string
- * @param extCssDoc ExtCssDocument which uses cache while selectors parsing
- * @returns array of rules data which contains:
- * - selector as string
- * - ast to query elements by
- * - map of styles to apply
+ *    slice next stylesheet part to `{` [2] and validates again [3];
+ *  - no error — saves found string part as selector and starts to parse styles (recursively).
+ *
+ * @param rawStylesheet Raw stylesheet as string.
+ * @param extCssDoc ExtCssDocument which uses cache while selectors parsing.
+ * @throws An error on unsupported CSS features, e.g. comments, or invalid stylesheet syntax.
+ * @returns Array of rules data which contains:
+ * - selector as string;
+ * - ast to query elements by;
+ * - map of styles to apply.
  */
 export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();

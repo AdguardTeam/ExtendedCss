@@ -16,8 +16,9 @@ interface TestPropElement extends Element {
 }
 
 /**
- * Applies extended css stylesheet
- * @param styleSheet
+ * Applies extended css stylesheet.
+ *
+ * @param styleSheet Extended css stylesheet.
  */
 const applyExtCss = (styleSheet: string): void => {
     const extendedCss = new ExtendedCss({ styleSheet });
@@ -34,9 +35,10 @@ interface TestLoggedStats {
 }
 
 /**
- * Asserts that specified function has specified expected styles
- * @param actualId actual element id
- * @param expectedStyle expected style of element
+ * Asserts that specified function has specified expected styles.
+ *
+ * @param actualId Actual element id.
+ * @param expectedStyle Expected style of element.
  */
 export const expectElementStyle = (actualId: string, expectedStyle: TestStyleMap) => {
     const element = document.getElementById(actualId);
@@ -55,6 +57,9 @@ export const expectElementStyle = (actualId: string, expectedStyle: TestStyleMap
  * It throttles setTimeout callbacks as well, but it is called within a
  * relatively short time. (within several seconds)
  * We apply rAF in tests as well to postpone test for similar amount of time.
+ *
+ * @param callback Callback to postpone.
+ * @param delay Time in ms.
  */
 const rAF = (callback: Function, delay: number) => { // eslint-disable-line @typescript-eslint/ban-types
     if (typeof window.requestAnimationFrame !== 'undefined') {

@@ -16,7 +16,7 @@ export interface TimingStatsInterface {
 }
 
 /**
- * A helper class for applied rule stats
+ * A helper class for applied rule stats.
  */
 export class TimingStats implements TimingStatsInterface {
     appliesTimings: number[];
@@ -31,6 +31,9 @@ export class TimingStats implements TimingStatsInterface {
 
     standardDeviation: number;
 
+    /**
+     * Creates new TimingStats.
+     */
     constructor() {
         this.appliesTimings = [];
         this.appliesCount = 0;
@@ -41,7 +44,9 @@ export class TimingStats implements TimingStatsInterface {
     }
 
     /**
-     * Observe target element and mark observer as active
+     * Observe target element and mark observer as active.
+     *
+     * @param elapsedTimeMs Time in ms.
      */
     push(elapsedTimeMs: number): void {
         this.appliesTimings.push(elapsedTimeMs);
@@ -66,16 +71,18 @@ type LogStatData = {
 };
 
 /**
- * Makes the timestamps more readable
- * @param timestamp
+ * Makes the timestamps more readable.
+ *
+ * @param timestamp Raw timestamp.
  */
 const beautifyTimingNumber = (timestamp: number): number => {
     return Number(timestamp.toFixed(STATS_DECIMAL_DIGITS_COUNT));
 };
 
 /**
- * Improves timing stats readability
- * @param rawTimings
+ * Improves timing stats readability.
+ *
+ * @param rawTimings Collected timings with raw timestamp.
  */
 const beautifyTimings = (rawTimings: TimingStatsInterface): TimingStatsInterface => {
     return {
@@ -88,7 +95,9 @@ const beautifyTimings = (rawTimings: TimingStatsInterface): TimingStatsInterface
 };
 
 /**
- * Prints timing information if debugging mode is enabled
+ * Prints timing information if debugging mode is enabled.
+ *
+ * @param context ExtendedCss context.
  */
 export const printTimingInfo = (context: Context): void => {
     if (context.areTimingsPrinted) {

@@ -10,8 +10,9 @@ interface TestAnySelectorNodeInterface {
 }
 
 /**
- * Returns RegularSelector with specified value
- * @param regularValue
+ * Returns RegularSelector with specified value.
+ *
+ * @param regularValue String value for RegularSelector.
  */
 export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInterface => {
     return {
@@ -22,9 +23,10 @@ export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInt
 };
 
 /**
- * Returns extended selector AbsolutePseudoClass node
- * @param name extended pseudo-class name
- * @param value value of pseudo-class
+ * Returns extended selector AbsolutePseudoClass node.
+ *
+ * @param name Extended pseudo-class name.
+ * @param value Value of pseudo-class.
  */
 export const getAbsoluteExtendedSelector = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
@@ -41,8 +43,9 @@ export const getAbsoluteExtendedSelector = (name: string, value: string): TestAn
 };
 
 /**
- * Returns Selector node with RegularSelector as single child
- * @param regularValue
+ * Returns Selector node with RegularSelector as single child.
+ *
+ * @param regularValue String value for RegularSelector.
  */
 export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeInterface => {
     const selectorNode = {
@@ -53,9 +56,10 @@ export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeI
 };
 
 /**
- * Returns extended selector RelativePseudoClass node with single RegularSelector
- * @param name extended pseudo-class name
- * @param value value of it's inner regular selector
+ * Returns extended selector RelativePseudoClass node with single RegularSelector.
+ *
+ * @param name Extended pseudo-class name.
+ * @param value Value of it's inner regular selector.
  */
 export const getRelativeExtendedWithSingleRegular = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
@@ -87,8 +91,9 @@ export const getRelativeExtendedWithSingleRegular = (name: string, value: string
 };
 
 /**
- * Returns SelectorList with multiple Selector nodes which have single RegularSelector node with specified value
- * @param regularValues
+ * Returns SelectorList with multiple Selector nodes which have single RegularSelector node with specified value.
+ *
+ * @param regularValues Array of RegularSelector values.
  */
 export const getSelectorListOfRegularSelectors = (regularValues: string[]): TestAnySelectorNodeInterface => {
     const selectorNodes = regularValues.map((value) => {
@@ -101,19 +106,20 @@ export const getSelectorListOfRegularSelectors = (regularValues: string[]): Test
 };
 
 /**
- * Returns SelectorList with single Selector node which has single RegularSelector node with specified value
- * @param regularValue
+ * Returns SelectorList with single Selector node which has single RegularSelector node with specified value.
+ *
+ * @param regularValue String value for RegularSelector.
  */
 export const getAstWithSingleRegularSelector = (regularValue: string): TestAnySelectorNodeInterface => {
     return getSelectorListOfRegularSelectors([regularValue]);
 };
 
 /**
- * Data object for generating Selector children nodes
- * 1. Only one of isRegular/isAbsolute/isRelative should be true
+ * Data object for generating Selector children nodes:
+ * 1. Only one of isRegular/isAbsolute/isRelative should be true.
  * 2. Acceptable parameters for:
- *   - isRegular: value
- *   - isAbsolute or isRelative: name, value
+ *   - isRegular: value;
+ *   - isAbsolute or isRelative: name, value.
  */
 interface AnyChildOfSelectorRaw {
     isRegular?: boolean,
@@ -124,8 +130,9 @@ interface AnyChildOfSelectorRaw {
 }
 
 /**
+ * Returns SelectorList with single Selector node which with any ast node.
  *
- * @param expected
+ * @param expected Simplified data for Selector child to expect.
  */
 export const getSingleSelectorAstWithAnyChildren = (
     expected: AnyChildOfSelectorRaw[],
@@ -170,19 +177,22 @@ export const getSingleSelectorAstWithAnyChildren = (
 
 interface SelectorListOfRegularsInput {
     /**
-     * selector for parsing
+     * Selector for parsing.
      */
     actual: string,
 
     /**
-     * array of expected values for RegularSelector nodes
+     * Array of expected values for RegularSelector nodes.
      */
     expected: string[],
 }
 
 /**
- * Checks whether the passed selector is parsed into proper SelectorList
- * @param input - { actual, expected }
+ * Checks whether the passed selector is parsed into proper SelectorList.
+ *
+ * @param input - { actual, expected }.
+ * @param input.actual Selector to parse to ast.
+ * @param input.expected Expected ast selector.
  */
 export const expectSelectorListOfRegularSelectors = ({ actual, expected }: SelectorListOfRegularsInput): void => {
     expect(parse(actual)).toEqual(getSelectorListOfRegularSelectors(expected));
@@ -190,19 +200,22 @@ export const expectSelectorListOfRegularSelectors = ({ actual, expected }: Selec
 
 interface SelectorListOfAnyChildrenInput {
     /**
-     * selector for parsing
+     * Selector for parsing.
      */
     actual: string,
 
     /**
-     * array of data for building ast
+     * Array of data for building ast.
      */
     expected: AnyChildOfSelectorRaw[],
 }
 
 /**
- * Checks whether the 'actual' is parsed into AST with specified parameters
- * @param input - { actual, expected }
+ * Checks whether the 'actual' is parsed into AST with specified parameters.
+ *
+ * @param input - { actual, expected }.
+ * @param input.actual Selector to parse to ast.
+ * @param input.expected Expected ast selector.
  */
 export const expectSingleSelectorAstWithAnyChildren = ({ actual, expected }: SelectorListOfAnyChildrenInput): void => {
     expect(parse(actual)).toEqual(getSingleSelectorAstWithAnyChildren(expected));
@@ -210,12 +223,12 @@ export const expectSingleSelectorAstWithAnyChildren = ({ actual, expected }: Sel
 
 interface ToThrowSelectorInput {
     /**
-     * selector for extCss querySelectorAll()
+     * Selector for extCss querySelectorAll().
      */
     selector: string,
 
     /**
-     * error text to match
+     * Error text to match.
      */
     error: string,
 }

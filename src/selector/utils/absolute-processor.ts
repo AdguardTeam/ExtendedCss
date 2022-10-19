@@ -31,10 +31,13 @@ type MatcherCallback = (a: MatcherArgsInterface) => boolean;
 
 /**
  * Wrapper to run matcher `callback` with `args`
- * and throw error with `errorMessage` if `callback` run fails
- * @param callback
- * @param argsData
- * @param errorMessage
+ * and throw error with `errorMessage` if `callback` run fails.
+ *
+ * @param callback Matcher callback.
+ * @param argsData Args needed for matcher callback.
+ * @param errorMessage Error message.
+ *
+ * @throws An error if `callback` fails.
  */
 const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterface, errorMessage: string): boolean => {
     let isMatched: boolean;
@@ -48,10 +51,13 @@ const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterfac
 };
 
 /**
- * Checks whether the domElement is matched by absolute extended pseudo-class argument
- * @param domElement
- * @param pseudoName
- * @param pseudoArg
+ * Checks whether the domElement is matched by absolute extended pseudo-class argument.
+ *
+ * @param domElement Page element.
+ * @param pseudoName Pseudo-class name.
+ * @param pseudoArg Pseudo-class arg.
+ *
+ * @throws An error on unknown absolute pseudo-class.
  */
 export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
     let argsData: MatcherArgsInterface;
@@ -92,10 +98,11 @@ export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: strin
 
 export const findByAbsolutePseudoPseudo = {
     /**
-     * Gets list of nth ancestors relative to every dom node from domElements list
-     * @param domElements dom nodes
-     * @param rawPseudoArg number arg of :nth-ancestor or :upward pseudo-class
-     * @param pseudoName pseudo-class name
+     * Gets list of nth ancestors relative to every dom node from domElements list.
+     *
+     * @param domElements DOM elements.
+     * @param rawPseudoArg Number arg of :nth-ancestor() or :upward() pseudo-class.
+     * @param pseudoName Pseudo-class name.
      */
     nthAncestor: (domElements: HTMLElement[], rawPseudoArg: string, pseudoName: string): HTMLElement[] => {
         const deep = getValidNumberAncestorArg(rawPseudoArg, pseudoName);
@@ -114,9 +121,10 @@ export const findByAbsolutePseudoPseudo = {
     },
 
     /**
-     * Gets list of elements by xpath expression, evaluated on every dom node from domElements list
-     * @param domElements dom nodes
-     * @param rawPseudoArg arg of :xpath pseudo-class
+     * Gets list of elements by xpath expression, evaluated on every dom node from domElements list.
+     *
+     * @param domElements DOM elements.
+     * @param rawPseudoArg Arg of :xpath() pseudo-class.
      */
     xpath: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {
         const foundElements = domElements
@@ -149,9 +157,12 @@ export const findByAbsolutePseudoPseudo = {
     },
 
     /**
-     * Gets list of closest ancestors relative to every dom node from domElements list
-     * @param domElements dom nodes
-     * @param rawPseudoArg standard selector arg of :upward pseudo-class
+     * Gets list of closest ancestors relative to every dom node from domElements list.
+     *
+     * @param domElements DOM elements.
+     * @param rawPseudoArg Standard selector arg of :upward() pseudo-class.
+     *
+     * @throws An error if `rawPseudoArg` is not a valid standard selector.
      */
     upward: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {
         if (!validateStandardSelector(rawPseudoArg)) {

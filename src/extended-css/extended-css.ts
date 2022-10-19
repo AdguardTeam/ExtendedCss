@@ -17,12 +17,12 @@ import { logger } from '../common/utils/logger';
 import { DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE } from '../common/constants';
 
 /**
- * Throttle timeout for ThrottleWrapper to execute applyRules()
+ * Throttle timeout for ThrottleWrapper to execute applyRules().
  */
 const APPLY_RULES_DELAY = 150;
 
 /**
- * Result of selector validation
+ * Result of selector validation.
  */
 type ValidationResult = {
     ok: boolean,
@@ -47,7 +47,7 @@ export interface ExtCssConfiguration {
      *
      * ExtendedCss is able to parse and apply almost any CSS stylesheet, not just extended selectors
      * but there are some limitations - for example, CSS comments and at-rules are not supported;
-     * learn more about the Limitations in README.md
+     * learn more about the Limitations in README.md.
      */
     styleSheet: string;
 
@@ -58,16 +58,16 @@ export interface ExtCssConfiguration {
      * before they are applied to them if it is necessary.
      *
      * Used by AdGuard Browser extension to display rules in Filtering log
-     * and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
+     * and `collect-hits-count` (via tsurlfilter's CssHitsCounter).
      */
     beforeStyleApplied?: BeforeStyleAppliedCallback;
 
     /**
      * Optional flag for global debugging mode.
      *
-     * Alternatively can be set by extended pseudo-property `debug: global` in styleSheet rules
+     * Alternatively can be set by extended pseudo-property `debug: global` in styleSheet rules.
      *
-     * Learn more about Selectors debug mode in README.md
+     * Learn more about Selectors debug mode in README.md.
      */
     debug?: boolean;
 }
@@ -84,7 +84,7 @@ export interface ExtCssConfiguration {
  * and the applying can be stopped by `dispose()`.
  *
  * Can be used to select page elements by selector with `query()` method (similar to `Document.querySelectorAll()`),
- * which does not require instance creating
+ * which does not require instance creating.
  */
 export class ExtendedCss {
     private context: Context;
@@ -96,6 +96,11 @@ export class ExtendedCss {
     // Instance of ExtCssDocument is needed for using selector-ast cache
     extCssDocument: ExtCssDocument;
 
+    /**
+     * Creates new ExtendedCss.
+     *
+     * @param configuration ExtendedCss configuration.
+     */
     constructor(configuration: ExtCssConfiguration) {
         if (!isBrowserSupported()) {
             throw new Error('Browser is not supported by ExtendedCss.');
@@ -137,7 +142,7 @@ export class ExtendedCss {
     }
 
     /**
-     * Applies stylesheet rules on page
+     * Applies stylesheet rules on page.
      */
     apply(): void {
         applyRules(this.context);
@@ -152,7 +157,7 @@ export class ExtendedCss {
     }
 
     /**
-     * Disposes ExtendedCss and removes our styles from matched elements
+     * Disposes ExtendedCss and removes our styles from matched elements.
      */
     dispose(): void {
         mainDisconnect(this.context, this.context.mainCallback);
@@ -167,7 +172,7 @@ export class ExtendedCss {
     }
 
     /**
-     * Exposed for testing purposes only
+     * Exposed for testing purposes only.
      */
     getAffectedElements(): AffectedElement[] {
         return this.context.affectedElements;
@@ -175,11 +180,13 @@ export class ExtendedCss {
 
     /**
      * Returns a list of the document's elements that match the specified selector.
-     * Uses ExtCssDocument.querySelectorAll()
-     * @param selector selector text
-     * @param [noTiming=true] if true -- do not print the timing to the console
-     * @returns a list of elements that match the selector
-     * @throws an error if selector is not valid
+     * Uses ExtCssDocument.querySelectorAll().
+     *
+     * @param selector Selector text.
+     * @param [noTiming=true] If true — do not print the timings to the console.
+     *
+     * @throws An error if selector is not valid.
+     * @returns A list of elements that match the selector.
      */
     public static query(selector: string, noTiming = true): HTMLElement[] {
         if (typeof selector !== 'string') {
@@ -200,8 +207,9 @@ export class ExtendedCss {
     }
 
     /**
-     * Validates selector
-     * @param selector selector text
+     * Validates selector.
+     *
+     * @param selector Selector text.
      */
     public static validate(selector: string): ValidationResult {
         try {

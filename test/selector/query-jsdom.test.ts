@@ -481,9 +481,10 @@ describe('extended pseudo-classes', () => {
         });
 
         /**
-         * matches-css-before and matches-css-after tests located in selector-playwright.test.ts
-         * because jsdom does not support pseudo-elements so it does not work
-         * https://github.com/jsdom/jsdom/issues/1928
+         * Matches-css-before and matches-css-after tests located in selector-playwright.test.ts
+         * because jsdom does not support pseudo-elements so it does not work.
+         *
+         * @see {@link https://github.com/jsdom/jsdom/issues/1928}
          */
     });
 
@@ -1392,12 +1393,12 @@ describe('combined pseudo-classes', () => {
             // no :has inside regular pseudos
             {
                 selector: '::slotted(:has(.a))',
-                error: 'Usage of :has pseudo-class is not allowed inside regular pseudo',
+                error: 'Usage of :has() pseudo-class is not allowed inside regular pseudo',
             },
             // no :has after pseudo-elements
             {
                 selector: '::part(foo):has(.a)',
-                error: 'Usage of :has pseudo-class is not allowed after any regular pseudo-element',
+                error: 'Usage of :has() pseudo-class is not allowed after any regular pseudo-element',
             },
         ];
         test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));

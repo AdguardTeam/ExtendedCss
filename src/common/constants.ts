@@ -113,18 +113,19 @@ export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 
 /**
- * :upward() can get number or selector arg
+ * Pseudo-class :upward() can get number or selector arg
  * and if the arg is selector it should be standard, not extended
- * so :upward pseudo-class is always absolute
+ * so :upward pseudo-class is always absolute.
  */
 export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
 
 /**
- * `:remove()` pseudo-class and `remove` pseudo-property are used for element actions, not for element selecting
+ * Pseudo-class `:remove()` and pseudo-property `remove`
+ * are used for element actions, not for element selecting.
  *
- * selector text should not contain the pseudo-class
+ * Selector text should not contain the pseudo-class
  * so selector parser should consider it as invalid
- * and both are handled by stylesheet parser
+ * and both are handled by stylesheet parser.
  */
 export const REMOVE_PSEUDO_MARKER = 'remove';
 
@@ -168,10 +169,11 @@ export const SUPPORTED_PSEUDO_CLASSES = [
 ];
 
 /**
- * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not()
+ * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not().
  *
- * ':where' is needed for limitation it's using inside :has() arg
- * https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [1]
+ * ':where' is needed for limitation it's using inside :has() arg.
+ *
+ * @see {@link https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54} [case 1]
  */
 export const REGULAR_PSEUDO_CLASSES = {
     SCOPE: 'scope',
@@ -179,8 +181,9 @@ export const REGULAR_PSEUDO_CLASSES = {
 
 /**
  * ':after' and ':before' are needed for :matches-css() pseudo-class
- * all other are needed for :has() limitation after regular pseudo-elements
- * https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [3]
+ * all other are needed for :has() limitation after regular pseudo-elements.
+ *
+ * @see {@link https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54} [case 3]
  */
 export const REGULAR_PSEUDO_ELEMENTS = {
     AFTER: 'after',

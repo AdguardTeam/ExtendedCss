@@ -33,7 +33,11 @@ interface TestExpectedStyle {
 }
 
 /**
- * Asserts that specified function has specified expected styles
+ * Asserts that specified function has specified expected styles.
+ *
+ * @param id ID of element to check.
+ * @param expectedStyle Expected style of element selected by id.
+ * @param assert Qunit assert instance.
  */
 const assertElementStyle = function (id: string, expectedStyle: TestExpectedStyle, assert: Assert) {
     const element = document.getElementById(id);
@@ -62,6 +66,9 @@ type RafCallback = () => void;
  * It throttles setTimeout callbacks as well, but it is called within a
  * relatively short time. (within several seconds)
  * We apply rAF in tests as well to postpone test for similar amount of time.
+ *
+ * @param callback Callback to postpone.
+ * @param delay Time in ms.
  */
 const rAF = (callback: RafCallback, delay: number) => {
     if (typeof window.requestAnimationFrame !== 'undefined') {

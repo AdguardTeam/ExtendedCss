@@ -9,20 +9,22 @@ import { ExtCssRuleData } from '../../stylesheet';
 import { selectElementsByAst } from '../../selector';
 
 /**
- * Finds affectedElement object for the specified DOM node
- * @param affElements context.affectedElements
- * @param domNode DOM node
- * @returns found affectedElement or undefined
+ * Finds affectedElement object for the specified DOM node.
+ *
+ * @param affElements Array of affected elements — context.affectedElements.
+ * @param domNode DOM node.
+ * @returns Found affectedElement or undefined.
  */
 const findAffectedElement = (affElements: AffectedElement[], domNode: Element): AffectedElement | undefined => {
     return affElements.find((affEl) => affEl.node === domNode);
 };
 
 /**
- * Applies specified rule and returns list of elements affected
- * @param context extended-css context
- * @param ruleData rule to apply
- * @returns list of elements affected by the rule
+ * Applies specified rule and returns list of elements affected.
+ *
+ * @param context ExtendedCss context.
+ * @param ruleData Rule to apply.
+ * @returns List of elements affected by the rule.
  */
 const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] => {
     // debugging mode can be enabled in two ways:
@@ -71,8 +73,9 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
 };
 
 /**
- * Applies filtering rules
- * @param context extended-css context
+ * Applies filtering rules.
+ *
+ * @param context ExtendedCss context.
  */
 export const applyRules = (context: Context): void => {
     const newSelectedElements: HTMLElement[] = [];

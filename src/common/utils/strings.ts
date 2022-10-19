@@ -1,9 +1,10 @@
 import { SLASH } from '../constants';
 
 /**
- * Gets string without suffix
- * @param str input string
- * @param suffix needed to remove
+ * Gets string without suffix.
+ *
+ * @param str Input string.
+ * @param suffix Needed to remove.
  */
 export const removeSuffix = (str: string, suffix: string): string => {
     const index = str.indexOf(suffix, str.length - suffix.length);
@@ -15,11 +16,13 @@ export const removeSuffix = (str: string, suffix: string): string => {
 
 /**
  * Replaces all `pattern`s with `replacement` in `input` string.
- * String.replaceAll() polyfill because it is not supported by old browsers, e.g. Chrome 55
- * https://caniuse.com/?search=String.replaceAll
- * @param input
- * @param pattern
- * @param replacement
+ * String.replaceAll() polyfill because it is not supported by old browsers, e.g. Chrome 55.
+ *
+ * @see {@link https://caniuse.com/?search=String.replaceAll}
+ *
+ * @param input Input string to process.
+ * @param pattern Find in the input string.
+ * @param replacement Replace the pattern with.
  */
 export const replaceAll = (input: string, pattern: string, replacement: string): string => {
     if (!input) {
@@ -29,8 +32,9 @@ export const replaceAll = (input: string, pattern: string, replacement: string):
 };
 
 /**
- * Converts string pattern to regular expression
- * @param str
+ * Converts string pattern to regular expression.
+ *
+ * @param str String to convert.
  */
 export const toRegExp = (str: string): RegExp => {
     if (str.startsWith(SLASH) && str.endsWith(SLASH)) {
@@ -41,9 +45,10 @@ export const toRegExp = (str: string): RegExp => {
 };
 
 /**
- * Converts any simple type value to string type
- * e.g. undefined -> 'undefined'
- * @param value
+ * Converts any simple type value to string type,
+ * e.g. `undefined` -> `'undefined'`.
+ *
+ * @param value Any type value.
  */
 export const convertTypeIntoString = (value?: Element[keyof Element]): string => {
     let output;
@@ -61,9 +66,10 @@ export const convertTypeIntoString = (value?: Element[keyof Element]): string =>
 };
 
 /**
- * Converts instance of string value into other simple types
- * e.g. 'null' -> null, 'true' -> true
- * @param value
+ * Converts instance of string value into other simple types,
+ * e.g. `'null'` -> `null`, `'true'` -> `true`.
+ *
+ * @param value String-type value.
  */
 export const convertTypeFromString = (value: string): undefined | null | boolean | number | string => {
     const numValue = Number(value);

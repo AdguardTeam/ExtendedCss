@@ -12,9 +12,10 @@ import {
 } from '../../common/constants';
 
 /**
- * Removes affectedElement.node from DOM
- * @param context
- * @param affectedElement
+ * Removes affectedElement.node from DOM.
+ *
+ * @param context ExtendedCss context.
+ * @param affectedElement Affected element.
  */
 const removeElement = (context: Context, affectedElement: AffectedElement): void => {
     const { node } = affectedElement;
@@ -39,9 +40,10 @@ const removeElement = (context: Context, affectedElement: AffectedElement): void
 };
 
 /**
- * Sets style to the specified DOM node
- * @param node element
- * @param style style
+ * Sets style to the specified DOM node.
+ *
+ * @param node DOM element.
+ * @param style Style to set.
  */
 export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     if (!(node instanceof HTMLElement)) {
@@ -60,9 +62,12 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
 };
 
 /**
- * Applies style to the specified DOM node
- * @param context
- * @param affectedElement Object containing DOM node and rule to be applied
+ * Applies style to the specified DOM node.
+ *
+ * @param context ExtendedCss context.
+ * @param affectedElement Object containing DOM node and rule to be applied.
+ *
+ * @throws An error if affectedElement has no style to apply.
  */
 export const applyStyle = (context: Context, affectedElement: AffectedElement): void => {
     if (affectedElement.protectionObserver) {
@@ -92,7 +97,9 @@ export const applyStyle = (context: Context, affectedElement: AffectedElement): 
 };
 
 /**
- * Reverts style for the affected object
+ * Reverts style for the affected object.
+ *
+ * @param affectedElement Affected element.
  */
 export const revertStyle = (affectedElement: AffectedElement): void => {
     if (affectedElement.protectionObserver) {

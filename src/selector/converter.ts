@@ -1,12 +1,12 @@
 import { BRACKETS, COMMA } from '../common/constants';
 
 /**
- * Regexp that matches backward compatible syntaxes
- * */
+ * Regexp that matches backward compatible syntaxes.
+ */
 const REGEXP_VALID_OLD_SYNTAX = /\[-(?:ext)-([a-z-_]+)=(["'])((?:(?=(\\?))\4.)*?)\2\]/g;
 
 /**
- * Marker for checking invalid selector after old-syntax normalizing by selector converter
+ * Marker for checking invalid selector after old-syntax normalizing by selector converter.
  */
 const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
 
@@ -14,10 +14,10 @@ const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
  * Complex replacement function.
  * Undo quote escaping inside of an extended selector.
  *
- * @param match     Whole matched string
- * @param name      Group 1
- * @param quoteChar Group 2
- * @param rawValue  Group 3
+ * @param match     Whole matched string.
+ * @param name      Group 1.
+ * @param quoteChar Group 2.
+ * @param rawValue  Group 3.
  */
 const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue: string): string => {
     // Unescape quotes
@@ -39,9 +39,11 @@ const convertMatchesCss = (match: string, extendedPseudoClass: string, regularPs
 };
 
 /**
- * Handles old syntax and :scope inside :has
- * @param selector trimmed selector to normalize
- * @returns normalized selector
+ * Handles old syntax and :scope inside :has().
+ *
+ * @param selector Trimmed selector to normalize.
+ *
+ * @throws An error on invalid old extended syntax selector.
  */
 const normalize = (selector: string): string => {
     const normalizedSelector = selector
@@ -60,11 +62,12 @@ const normalize = (selector: string): string => {
 
 /**
  * Prepares the rawSelector before tokenization:
- * 1. trims it
- * 2. converts old syntax `[-ext-pseudo-class="..."]` to new one `:pseudo-class(...)`
- * 3. handles :scope pseudo inside :has() pseudo-class arg
- * @param rawSelector selector with no style declaration
- * @returns prepared selector with no style declaration
+ * 1. Trims it.
+ * 2. Converts old syntax `[-ext-pseudo-class="..."]` to new one `:pseudo-class(...)`.
+ * 3. Handles :scope pseudo inside :has() pseudo-class arg.
+ *
+ * @param rawSelector Selector with no style declaration.
+ * @returns Prepared selector with no style declaration.
  */
 export const convert = (rawSelector: string): string => {
     const trimmedSelector = rawSelector.trim();

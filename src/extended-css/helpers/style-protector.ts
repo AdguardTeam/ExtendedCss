@@ -13,8 +13,9 @@ const PROTECTION_OBSERVER_OPTIONS = {
 };
 
 /**
- * Creates MutationObserver protection callback
- * @param styles
+ * Creates MutationObserver protection callback.
+ *
+ * @param styles Styles data object.
  */
 const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => {
     const protectionCallback = (mutations: MutationRecord[], extObserver: ExtMutationObserver): void => {
@@ -29,10 +30,11 @@ const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => 
 };
 
 /**
- * Sets up a MutationObserver which protects style attributes from changes
- * @param node DOM node
- * @param rules rule data objects
- * @returns Mutation observer used to protect attribute or null if there's nothing to protect
+ * Sets up a MutationObserver which protects style attributes from changes.
+ *
+ * @param node DOM node.
+ * @param rules Rule data objects.
+ * @returns Mutation observer used to protect attribute or null if there's nothing to protect.
  */
 export const protectStyleAttribute = (
     node: HTMLElement,

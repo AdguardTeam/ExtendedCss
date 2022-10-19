@@ -14,7 +14,7 @@ interface AffectedElementProto {
 }
 
 /**
- * Interface for internal lib usage
+ * Interface for internal lib usage.
  */
 export interface AffectedElement extends AffectedElementProto {
     rules: ExtCssRuleData[];
@@ -22,21 +22,21 @@ export interface AffectedElement extends AffectedElementProto {
 
 /**
  * Needed for ExtCssConfiguration.beforeStyleApplied();
- * value of 'content' property is applied rule text
+ * value of 'content' property is applied rule text.
  */
 interface CssStyleMapWithContent extends CssStyleMap {
     content: string;
 }
 
 /**
- * Rule data interface with required 'style' property defined with required 'content' property
+ * Rule data interface with required 'style' property defined with required 'content' property.
  */
 interface ExtCssRuleDataWithContentStyle extends Partial<ExtCssRuleData> {
     style: CssStyleMapWithContent;
 }
 
 /**
- * Api interface with required 'content' style property in rules
+ * Api interface with required 'content' style property in rules.
  */
 export interface IAffectedElement extends Partial<AffectedElementProto> {
     node: HTMLElement;
@@ -45,7 +45,7 @@ export interface IAffectedElement extends Partial<AffectedElementProto> {
 
 /**
  * Data pairs for selector and number of times the element was removed by ExtendedCss.
- * Needed to avoid infinite loop of re-setting styles
+ * Needed to avoid infinite loop of re-setting styles.
  */
 interface RemovalsStatistic {
     [key: string]: number;
@@ -56,7 +56,7 @@ interface RemovalsStatistic {
  * before they are applied to them if it is necessary.
  *
  * Used by AdGuard Browser extension to display rules in Filtering log
- * and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
+ * and `collect-hits-count` (via tsurlfilter's CssHitsCounter).
  */
 export type BeforeStyleAppliedCallback = (x:IAffectedElement) => AffectedElement;
 
@@ -65,7 +65,7 @@ export type BeforeStyleAppliedCallback = (x:IAffectedElement) => AffectedElement
  */
 export interface Context {
     /**
-     * Callback that handles affected elements
+     * Callback that handles affected elements.
      */
     beforeStyleApplied?: BeforeStyleAppliedCallback;
 
@@ -75,43 +75,43 @@ export interface Context {
     affectedElements: AffectedElement[];
 
     /**
-     * Flag for mainObserve() and mainDisconnect(), used while rules applying
+     * Flag for mainObserve() and mainDisconnect(), used while rules applying.
      */
     isDomObserved: boolean;
 
     /**
-     * Instance of EventTracker for document observing
+     * Instance of EventTracker for document observing.
      */
     eventTracker?: EventTracker;
 
     /**
-     * Main document mutation observer
+     * Main document mutation observer.
      */
     domMutationObserver?: MutationObserver;
 
     /**
-     * Actually the main callback — applyRules() scheduled by ThrottleWrapper
+     * Actually the main callback — applyRules() scheduled by ThrottleWrapper.
      */
     mainCallback: MainCallback;
 
     /**
-     * Info about element selectors and their removing counter
+     * Info about element selectors and their removing counter.
      */
     removalsStatistic: RemovalsStatistic;
 
     /**
-     * Array of parsed rules data needed for elements selecting and processing by ExtendedCss
+     * Array of parsed rules data needed for elements selecting and processing by ExtendedCss.
      */
     parsedRules: ExtCssRuleData[];
 
     /**
      * Flag for global debugging mode
-     * which can be set in either ExtCssConfiguration or rules
+     * which can be set in either ExtCssConfiguration or rules.
      */
     debug: boolean;
 
     /**
-     * Flag for printing information about applied rules
+     * Flag for printing information about applied rules.
      */
     areTimingsPrinted?: boolean;
 }

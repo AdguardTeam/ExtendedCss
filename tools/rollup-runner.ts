@@ -4,9 +4,10 @@ import chalk from 'chalk';
 const { log } = console;
 
 /**
- * Runs single rollup config
- * @param config
- * @param [name] config name for better logging
+ * Runs single rollup config.
+ *
+ * @param config Rollup config.
+ * @param [name] Config name for better logging.
  */
 const runOneConfig = async (config: RollupOptions, name?: string) => {
     const { input, output } = config;
@@ -29,9 +30,10 @@ const runOneConfig = async (config: RollupOptions, name?: string) => {
 };
 
 /**
- * Builds lib
- * @param config config may be list of configs or just one config
- * @param [name] config name for better logging
+ * Builds the lib.
+ *
+ * @param config May be a list of configs or just one config.
+ * @param [name] Config name for better logging.
  */
 export const rollupRunner = async (config: RollupOptions | RollupOptions[], name?: string) => {
     if (Array.isArray(config)) {

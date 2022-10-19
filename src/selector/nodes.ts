@@ -8,7 +8,7 @@ export enum NodeType {
 }
 
 /**
- * Universal interface for all node types
+ * Universal interface for all node types.
  */
 export interface AnySelectorNodeInterface {
     type: string;
@@ -21,19 +21,26 @@ export interface AnySelectorNodeInterface {
 
 /**
  * Class needed for creating ast nodes while selector parsing.
- * Used for SelectorList, Selector, ExtendedSelector
+ * Used for SelectorList, Selector, ExtendedSelector.
  */
 export class AnySelectorNode implements AnySelectorNodeInterface {
     type: string;
 
     children: AnySelectorNodeInterface[] = [];
 
+    /**
+     * Creates new ast node.
+     *
+     * @param type Ast node type.
+     */
     constructor(type: NodeType) {
         this.type = type;
     }
 
     /**
-     * Adds child node to children array
+     * Adds child node to children array.
+     *
+     * @param child Ast node.
      */
     public addChild(child: AnySelectorNodeInterface): void {
         this.children.push(child);
@@ -41,11 +48,16 @@ export class AnySelectorNode implements AnySelectorNodeInterface {
 }
 
 /**
- * Class needed for creating ast RegularSelector node while selector parsing
+ * Class needed for creating RegularSelector ast node while selector parsing.
  */
 export class RegularSelectorNode extends AnySelectorNode {
     value: string;
 
+    /**
+     * Creates RegularSelector ast node.
+     *
+     * @param value Value of RegularSelector node.
+     */
     constructor(value: string) {
         super(NodeType.RegularSelector);
         this.value = value;
@@ -53,11 +65,16 @@ export class RegularSelectorNode extends AnySelectorNode {
 }
 
 /**
- * Class needed for creating ast RelativePseudoClass node while selector parsing
+ * Class needed for creating RelativePseudoClass ast node while selector parsing.
  */
 export class RelativePseudoClassNode extends AnySelectorNode {
     name: string;
 
+    /**
+     * Creates RegularSelector ast node.
+     *
+     * @param name Name of RelativePseudoClass node.
+     */
     constructor(name: string) {
         super(NodeType.RelativePseudoClass);
         this.name = name;
@@ -65,21 +82,28 @@ export class RelativePseudoClassNode extends AnySelectorNode {
 }
 
 /**
- * Class needed for creating ast AbsolutePseudoClass node while selector parsing
+ * Class needed for creating AbsolutePseudoClass ast node while selector parsing.
  */
 export class AbsolutePseudoClassNode extends AnySelectorNode {
     name: string;
 
     value = '';
 
+    /**
+     * Creates AbsolutePseudoClass ast node.
+     *
+     * @param name Name of AbsolutePseudoClass node.
+     */
     constructor(name: string) {
         super(NodeType.AbsolutePseudoClass);
         this.name = name;
     }
 }
 
+/* eslint-disable jsdoc/require-description-complete-sentence */
+
 /**
- * Root node
+ * Root node.
  *
  * SelectorList
  *   : Selector
@@ -88,7 +112,7 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
  */
 
 /**
- * Selector node
+ * Selector node.
  *
  * Selector
  *   : RegularSelector
@@ -98,8 +122,8 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
  */
 
 /**
- * Regular selector node;
- * it can be selected by querySelectorAll()
+ * Regular selector node.
+ * It can be selected by querySelectorAll().
  *
  * RegularSelector
  *   : type
@@ -108,7 +132,7 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
  */
 
 /**
- * Extended selector node
+ * Extended selector node.
  *
  * ExtendedSelector
  *   : AbsolutePseudoClass
@@ -117,8 +141,8 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
  */
 
 /**
- * Absolute extended pseudo-class node
- * i.e. none-selector args
+ * Absolute extended pseudo-class node,
+ * i.e. none-selector args.
  *
  * AbsolutePseudoClass
  *   : type
@@ -129,7 +153,7 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
 
 /**
  * Relative extended pseudo-class node
- * i.e. selector as arg
+ * i.e. selector as arg.
  *
  * RelativePseudoClass
  *   : type
