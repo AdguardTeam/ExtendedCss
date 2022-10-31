@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance test page</title>
+</head>
+<body>
+    <style type="text/css">
+        #case3-blocked {
+            background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+        }
+
+        #case5 .target-banner {
+            background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+        }
+
+        .case6-marker::before {
+            content: "test"
+        }
+    </style>
+
+    <div id="container" class="container">
+
+        <div id="case1">
+            <div>
+                <div id="case1-blocked">
+                    <div class="banner"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="case2">
+            <div>
+                <div id="case2-blocked">
+                    Block this
+                </div>
+            </div>
+        </div>
+
+        <div id="case3">
+            <div>
+                <div id="case3-blocked"></div>
+            </div>
+        </div>
+
+        <div id="case4">
+            <div>
+                <div id="case4-blocked">
+                    <div class="banner">
+                        Block this
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="case5">
+            <div>
+                <div id="case5-blocked" data-id="toolkit-test">
+                    <div>
+                        <div class="banner">
+                            <a href="https://example.com/">
+                                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"/>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="banner"></div>
+                        <div class="target-banner"></div>
+                        <div class="banner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="case6">
+            <div id="case6-blocked">
+                <div class="case6-marker"></div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

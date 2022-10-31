@@ -8,4 +8,4 @@ export { tokenize } from './tokenizer';
 
 export { parse } from './parser';
 
-export { ExtCssDocument, selectElementsByAst } from './query';
+export { extCssDocument, ExtCssDocument, selectElementsByAst } from './query';

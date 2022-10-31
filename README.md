@@ -671,6 +671,11 @@ Run local node testing
 yarn test local
 ```
 
+Run performance tests which are not included in `test local` run and should be executed manually:
+```
+yarn test performance
+```
+
 ## Usage
 
 You can import, require or copy IIFE module with ExtendedCss into your code, e.g.

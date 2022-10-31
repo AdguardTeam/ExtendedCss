@@ -2,3 +2,4 @@ node_modules
 dist
 .eslintrc.js
 babel.config.js
+test/test-files

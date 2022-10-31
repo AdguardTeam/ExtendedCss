@@ -1,4 +1,4 @@
-import { ExtCssDocument } from '../selector';
+import { extCssDocument } from '../selector';
 import { parse as parseStylesheet } from '../stylesheet';
 
 import { ThrottleWrapper } from './helpers/throttle-wrapper';
@@ -72,6 +72,7 @@ export interface ExtCssConfiguration {
     debug?: boolean;
 }
 
+
 /**
  * Main class of ExtendedCss lib.
  *
@@ -93,8 +94,6 @@ export class ExtendedCss {
 
     private applyRulesCallbackListener: () => void;
 
-    // Instance of ExtCssDocument is needed for using selector-ast cache
-    extCssDocument: ExtCssDocument;
 
     /**
      * Creates new ExtendedCss.
@@ -110,15 +109,13 @@ export class ExtendedCss {
             throw new Error('ExtendedCss configuration should be provided.');
         }
 
-        this.extCssDocument = new ExtCssDocument();
-
         this.context = {
             beforeStyleApplied: configuration.beforeStyleApplied,
             debug: false,
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
-            parsedRules: parseStylesheet(configuration.styleSheet, this.extCssDocument),
+            parsedRules: parseStylesheet(configuration.styleSheet, extCssDocument),
             mainCallback: () => {},
         };
 
@@ -196,8 +193,7 @@ export class ExtendedCss {
         const start = ThrottleWrapper.now();
 
         try {
-            const extCssDoc = new ExtCssDocument();
-            return extCssDoc.querySelectorAll(selector);
+            return extCssDocument.querySelectorAll(selector);
         } finally {
             const end = ThrottleWrapper.now();
             if (!noTiming) {

@@ -97,3 +97,5 @@ export class ExtCssDocument {
         return selectElementsByAst(ast);
     }
 }
+
+export const extCssDocument = new ExtCssDocument();

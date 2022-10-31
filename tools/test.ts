@@ -10,6 +10,10 @@ import html2 from 'rollup-plugin-html2';
 import { rollupRunner } from './rollup-runner';
 import { commonPlugins, libOutputBanner } from './rollup-commons';
 
+import type { Config } from '@jest/types';
+import commonJestConfig from '../jest.config';
+import performanceConfig from '../test/performance-selector/jest.config';
+
 import { runBrowserstack } from '../test/browserstack';
 
 import {
@@ -25,9 +29,14 @@ import {
     BROWSERSTACK_TEST_FILE_NAME,
 } from './constants';
 
-import jestConfig from '../jest.config';
-
 const { log } = console;
+
+const PERFORMANCE_XPATH_EVALUATION_PATH = './test/helpers/xpath-evaluate-counter.ts';
+const PERFORMANCE_SELECTOR_PATH = './test/helpers/performance-checker.ts';
+
+const TEST_FILES_DIR_PATH = '../test/test-files';
+const EXT_CSS_V1_BUNDLE_FILENAME = 'extCssV1.js';
+const EXT_CSS_V2_BUNDLE_FILENAME = 'extCssV2.js';
 
 const projectRootPath = path.resolve(__dirname, ROOT_PATH);
 const srcInputPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_FILENAME);
@@ -35,6 +44,7 @@ const selectorInputPath = path.resolve(__dirname, SELECTOR_SRC_DIR_PATH, SELECTO
 const testTempDir = path.resolve(__dirname, TEST_TEMP_DIR_PATH);
 const browserstackTestInput = path.resolve(__dirname, TEST_BROWSERSTACK_DIR_PATH, BROWSERSTACK_TEST_FILE_NAME);
 const testBrowserstackDir = path.resolve(__dirname, TEST_BROWSERSTACK_DIR_PATH);
+const extCssV1BundlePath = path.resolve(__dirname, TEST_FILES_DIR_PATH, EXT_CSS_V1_BUNDLE_FILENAME);
 
 const selectorTestConfig = {
     input: selectorInputPath,
@@ -60,6 +70,110 @@ const selectorTestConfig = {
 const buildSelectorTests = async () => {
     const name = 'selector tests for playwright';
     await rollupRunner(selectorTestConfig, name);
+};
+
+// independent test config for xpath evaluate
+const v2XpathEvaluationPerformanceTestConfig = {
+    input: PERFORMANCE_XPATH_EVALUATION_PATH,
+    output: [
+        {
+            file: `${testTempDir}/performance-xpath-evaluate.js`,
+            format: OutputFormat.IIFE,
+            name: 'v2ExtCssPerformanceXpath',
+            banner: '/* xpath evaluation performance testing */',
+        },
+    ],
+    plugins: [
+        ...commonPlugins,
+        html2({
+            template: 'test/test-files/performance.html',
+            fileName: `${testTempDir}/performance-xpath-evaluate.html`,
+        }),
+    ],
+};
+const buildXpathPerformanceTests = async () => {
+    const name = 'xpath evaluate tests';
+    await rollupRunner(v2XpathEvaluationPerformanceTestConfig, name);
+};
+
+const temp1HtmlPath = `${testTempDir}/performance-selector-temp1.html`;
+const tempV1SelectorPerformanceConfig = {
+    // bundled extCssV1 is being injected into template performance.html;
+    // after that use the generated html as template for selectorPerformanceTestConfig
+    input: extCssV1BundlePath,
+    output: [
+        {
+            file: `${testTempDir}/${EXT_CSS_V1_BUNDLE_FILENAME}`,
+            format: OutputFormat.IIFE,
+            name: 'extCssV1',
+            banner: '/* ExtendedCSS v1 for performance comparing */',
+        },
+    ],
+    plugins: [
+        html2({
+            // output file
+            fileName: temp1HtmlPath,
+            // initial template to inject ExtendedCSS v1
+            template: 'test/test-files/performance.html',
+        }),
+    ],
+};
+
+const temp2HtmlPath = `${testTempDir}/performance-selector-temp2.html`;
+// ExtendedCss v2 should be bundled before running selector performance comparing test
+const tempV2SelectorPerformanceConfig = {
+    input: srcInputPath,
+    output: [
+        {
+            file: `${testTempDir}/${EXT_CSS_V2_BUNDLE_FILENAME}`,
+            format: OutputFormat.IIFE,
+            name: 'extCssV2',
+            banner: '/* ExtendedCSS v2 for performance comparing */',
+        },
+    ],
+    plugins: [
+        ...commonPlugins,
+        html2({
+            // output file
+            fileName: temp2HtmlPath,
+            // template is generated previously html with injected ExtendedCss v1
+            template: temp1HtmlPath,
+        }),
+    ],
+};
+
+const selectorPerformanceTestConfig = {
+    input: PERFORMANCE_SELECTOR_PATH,
+    output: [
+        {
+            file: `${testTempDir}/performance-selector.js`,
+            format: OutputFormat.IIFE,
+            name: 'extCssPerformance',
+            banner: '/* selector performance testing */',
+        },
+    ],
+    plugins: [
+        ...commonPlugins,
+        html2({
+            template: temp2HtmlPath,
+            fileName: `${testTempDir}/performance-selector.html`,
+        }),
+        // bundled ExtendedCSS v1 lib code is stored in test/test-files,
+        // it should be copied to test/dist
+        copy({
+            targets: [
+                { src: extCssV1BundlePath, dest: testTempDir },
+            ],
+        }),
+    ],
+};
+const buildPerformanceSelectorTests = async () => {
+    const v1PreparationBuildName = 'prepare ExtendedCss v1';
+    await rollupRunner(tempV1SelectorPerformanceConfig, v1PreparationBuildName);
+    const v2PreparationBuildName = 'prepare ExtendedCss v2';
+    await rollupRunner(tempV2SelectorPerformanceConfig, v2PreparationBuildName);
+    const finalBuildName = 'selector performance compare tests';
+    await rollupRunner(selectorPerformanceTestConfig, finalBuildName);
 };
 
 // needed for browserstack tests
@@ -111,10 +225,13 @@ const buildBrowserstackTests = async (): Promise<void> => {
     await rollupRunner(browserstackTestConfig, name);
 };
 
-const runJest = async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { results } = await runCLI(jestConfig as any, [projectRootPath]);
-
+/**
+ * Runs jest tests.
+ *
+ * @param config Jest config.
+ */
+const runJest = async (config: Config.InitialOptions): Promise<void> => {
+    const { results } = await runCLI(config as Config.Argv, [projectRootPath]);
     if (results.success) {
         log(chalk.greenBright('Tests completed'));
     } else {
@@ -124,7 +241,8 @@ const runJest = async (): Promise<void> => {
 
 const runTestsLocally = async (): Promise<void> => {
     await buildSelectorTests();
-    await runJest();
+    await buildXpathPerformanceTests();
+    await runJest(commonJestConfig);
 };
 
 const runTestsOnBrowserstack = async (): Promise<void> => {
@@ -153,6 +271,19 @@ program
     .description('only browserstack tests run')
     .action(async () => {
         await runTestsOnBrowserstack();
+    });
+
+// run performance selector tests, should be run manually only when needed
+const runSelectorPerformanceTests = async (): Promise<void> => {
+    await buildPerformanceSelectorTests();
+    await runJest(performanceConfig);
+};
+
+program
+    .command('performance')
+    .description('only performance selector tests run')
+    .action(async () => {
+        await runSelectorPerformanceTests();
     });
 
 program.parse(process.argv);
