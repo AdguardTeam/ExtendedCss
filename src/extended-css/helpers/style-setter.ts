@@ -84,15 +84,19 @@ export const applyStyle = (context: Context, affectedElement: AffectedElement): 
 
     const { node, rules } = affectedElement;
     for (let i = 0; i < rules.length; i += 1) {
-        const { selector, style } = rules[i];
-        if (!style) {
-            throw new Error(`No affectedElement style to apply for selector: '${selector}'`);
+        const { selector, style, debug } = rules[i];
+        // rule may not have style to apply
+        // e.g. 'div:has(> a) { debug: true }' -> means no style to apply, and enable debug mode
+        if (style) {
+            if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
+                removeElement(context, affectedElement);
+                return;
+            }
+            setStyleToElement(node, style);
+        } else if (!debug) {
+            // but rule should not have both style and debug properties
+            throw new Error(`No style declaration in rule for selector: '${selector}'`);
         }
-        if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
-            removeElement(context, affectedElement);
-            return;
-        }
-        setStyleToElement(node, style);
     }
 };
 

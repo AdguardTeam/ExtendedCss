@@ -61,7 +61,7 @@ export class TimingStats implements TimingStatsInterface {
 type SelectorLogData = {
     selectorParsed: string;
     timings: TimingStatsInterface;
-    styleApplied?: CssStyleMap;
+    styleApplied?: CssStyleMap | null;
     removed?: boolean;
     matchedElements?: HTMLElement[];
 };
@@ -109,18 +109,23 @@ export const printTimingInfo = (context: Context): void => {
 
     context.parsedRules.forEach((ruleData) => {
         if (ruleData.timingStats) {
-            const { selector, style, matchedElements } = ruleData;
-            if (!style) {
-                throw new Error(`Rule with selector '${selector}' should have style declaration.`);
+            const { selector, style, debug, matchedElements } = ruleData;
+            // style declaration for some rules is parsed to debug property and no style to apply
+            // e.g. 'div:has(> a) { debug: true }'
+            if (!style && !debug) {
+                throw new Error(`Rule should have style declaration for selector: '${selector}'`);
             }
             const selectorData: SelectorLogData = {
                 selectorParsed: selector,
                 timings: beautifyTimings(ruleData.timingStats),
             };
-            if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
+            // `ruleData.style` may contain `remove` pseudo-property
+            // and make logs look better
+            if (style && style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
                 selectorData.removed = true;
+                // no matchedElements for such case as they are removed after ExtendedCss applied
             } else {
-                selectorData.styleApplied = style;
+                selectorData.styleApplied = style || null;
                 selectorData.matchedElements = matchedElements;
             }
             timingsLogData[selector] = selectorData;

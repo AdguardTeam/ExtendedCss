@@ -46,10 +46,12 @@ export const protectStyleAttribute = (
     const styles: CssStyleMap[] = [];
     rules.forEach((ruleData) => {
         const { style } = ruleData;
-        if (!style) {
-            throw new Error(`No affectedElement style to apply for selector: '${ruleData.selector}'`);
+        // some rules might have only debug property in style declaration
+        // e.g. 'div:has(> a) { debug: true }' -> parsed to boolean `ruleData.debug`
+        // so no style is fine, and here we should collect only valid styles to protect
+        if (style) {
+            styles.push(style);
         }
-        styles.push(style);
     });
     const protectionObserver = new ExtMutationObserver(createProtectionCallback(styles));
     protectionObserver.observe(node, PROTECTION_OBSERVER_OPTIONS);

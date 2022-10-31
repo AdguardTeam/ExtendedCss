@@ -676,4 +676,34 @@ describe('extended css library', () => {
 
         extendedCss.apply();
     });
+
+    it('debugging - only debug property for logging', (done) => {
+        expect.assertions(3);
+        document.body.innerHTML = '<div id="case13"></div>';
+        const styleSheet = `
+            #case13:not(with-debug) { debug: true }
+        `;
+        const extendedCss = new ExtendedCss({ styleSheet });
+
+        const loggerInfo = logger.info;
+        logger.info = function (...args) {
+            if (args.length === 3
+                    && typeof args[0] === 'string' && args[0].indexOf('Timings') !== -1) {
+                const loggedData = args[2];
+                expect(loggedData).toBeDefined();
+
+                const selectors = Object.keys(loggedData);
+                expect(selectors.length).toEqual(1);
+                expect(selectors[0].includes('with-debug')).toBeTruthy();
+
+                // Cleanup
+                logger.info = loggerInfo;
+                extendedCss.dispose();
+                done();
+            }
+            return loggerInfo.apply(this, args);
+        };
+
+        extendedCss.apply();
+    });
 });
