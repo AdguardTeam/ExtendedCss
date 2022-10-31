@@ -36,10 +36,10 @@ export const rawConfig = {
         },
         {
             browser: 'Safari',
-            browser_version: '10',
+            browser_version: '11',
             device: null,
             os: 'OS X',
-            os_version: 'Sierra',
+            os_version: 'High Sierra',
         },
     ],
 };

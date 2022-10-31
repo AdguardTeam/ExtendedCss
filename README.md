@@ -819,5 +819,5 @@ ExtendedCss.query(selector);
 | Firefox               | ✅ 52     |
 | Edge                  | ✅ 80     |
 | Opera                 | ✅ 80     |
-| Safari                | ✅ 10     |
+| Safari                | ✅ 11     |
 | Internet Explorer     | ❌        |

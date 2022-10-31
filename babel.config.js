@@ -5,13 +5,16 @@ module.exports = (api) => {
             [
                 '@babel/env',
                 {
-                    // we do not support ie 11,
-                    // because it requires polyfills, which are modifying global scope
                     targets: [
                         'last 1 version',
                         '> 1%',
-                        "chrome >= 55",
-                        'safari >= 10',
+                        // ie 11 is dead and no longer supported
+                        'not dead',
+                        'chrome >= 55',
+                        'firefox >= 52',
+                        'opera >= 80',
+                        'edge >= 80',
+                        'safari >= 11',
                     ],
                 },
             ],
