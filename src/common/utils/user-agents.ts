@@ -84,7 +84,7 @@ const parseUserAgent = (): BrowserInfo | null => {
     for (let i = 0; i < browserNames.length; i += 1) {
         const match = SUPPORTED_BROWSERS_DATA[browserNames[i]].MASK.exec(navigator.userAgent);
         if (match) {
-            // for safari order is different because of regexp
+            // for safari browser the order is different because of regexp
             if (match[3] === browserNames[i]) {
                 browserName = match[3];
                 currentVersion = Number(match[1]);
