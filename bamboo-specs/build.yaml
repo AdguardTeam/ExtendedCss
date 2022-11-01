@@ -5,7 +5,7 @@ plan:
   key: EXTCSSSBUILD
   name: extended-css - build
 variables:
-  dockerContainer: adguard/node-ssh:14.18--0
+  dockerContainer: adguard/node-ssh:16.17--1
 
 stages:
   - Build:
@@ -42,6 +42,8 @@ Build:
 
             yarn pack --filename extended-css.tgz
 
+            ls -la
+
             rm -rf node_modules
     - inject-variables:
         file: dist/build.txt
@@ -54,7 +56,7 @@ Build:
           tagName: v${bamboo.inject.version}
   artifacts:
     - name: extended-css.tgz
-      location: /
+      location: ./
       pattern: extended-css.tgz
       shared: true
       required: true
