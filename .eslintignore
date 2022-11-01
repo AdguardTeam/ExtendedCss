@@ -1,6 +1,5 @@
-node_modules/*
-build/*
-dist/*
-lib/sizzle.patched.js
-test/qunit/*
-test/build/*
+node_modules
+dist
+.eslintrc.js
+babel.config.js
+test/test-files

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es5",
+    "downlevelIteration": true,
+    "module": "es2015",
+    "lib": ["esnext", "dom"],
+    "strict": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "typeRoots": [
+      "node_modules/@types",
+    ],
+    "types": [
+      "qunit",
+      "./node_modules/user-agent-data-types"
+    ],
+  },
+  "ts-node": {
+      // override these options only for ts-node
+      "compilerOptions": {
+        "module": "commonjs"
+      }
+  },
+  "include": [
+    "src"
+  ]
+}

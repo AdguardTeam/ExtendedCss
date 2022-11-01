@@ -1,8 +1,11 @@
-# Extended Css engine
+# <a id="homepage"></a> ExtendedCss ![npm](https://img.shields.io/npm/v/@adguard/extended-css) [![install size](https://packagephobia.com/badge?p=@adguard/extended-css)](https://packagephobia.com/result?p=@adguard/extended-css) ![GitHub](https://img.shields.io/github/license/AdGuardTeam/ExtendedCss)
 
-Module for applying CSS styles with extended selection properties.
+AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.
+
+The idea of extended capabilities is an opportunity to match DOM elements with selectors based on their own representation (style, text content, etc.) or relations with other elements. There is also an opportunity to apply styles with non-standard CSS properties.
 
 * [Extended capabilities](#extended-capabilities)
+  * [Limitations](#extended-css-limitations)
   * [Pseudo-class :has()](#extended-css-has)
   * [Pseudo-class :if-not()](#extended-css-if-not)
   * [Pseudo-class :contains()](#extended-css-contains)
@@ -14,253 +17,282 @@ Module for applying CSS styles with extended selection properties.
   * [Pseudo-class :upward()](#extended-css-upward)
   * [Pseudo-class :remove() and pseudo-property `remove`](#remove-pseudos)
   * [Pseudo-class :is()](#extended-css-is)
+  * [Pseudo-class :not()](#extended-css-not)
   * [Selectors debug mode](#selectors-debug-mode)
+  * [Backward compatible syntax](#extended-css-old-syntax)
+* [How to build](#how-to-build)
+* [How to test](#how-to-test)
 * [Usage](#usage)
-* [Debugging extended selectors](#debugging-extended-selectors)
-* [Projects using Extended Css](#projects-using-extended-css)
-* [Test page](#test-page)
+  * [API description](#extended-css-api)
+    * [Constructor](#extended-css-constructor)
+    * [apply() and dispose()](#extended-css-apply-dispose)
+    * [query()](#extended-css-query)
+    * [validate()](#extended-css-validate)
+  * [Debugging extended selectors](#debugging-extended-selectors)
+* [Projects using ExtendedCss](#projects-using-extended-css)
+* [Browser compatibility](#browser-compatibility)
+
 
 ## Extended capabilities
 
-<a id="extended-css-has"></a>
-### Pseudo-class `:has()`
+> Some pseudo-classes does not require selector before it. Still adding a [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` makes an extended selector easier to read, even though it has no effect on the matching behavior. So selector `#block :has(> .inner)` works exactly like `#block *:has(> .inner)` but second one is more obvious.
 
-Draft CSS 4.0 specification describes [pseudo-class `:has`](https://drafts.csswg.org/selectors/#relational). Unfortunately, it is not yet supported by browsers.
+> Pseudo-class names are case-insensitive, e.g. `:HAS()` will work as `:has()`.
+
+### <a id="extended-css-limitations"></a> Limitations
+
+1. CSS [comments](https://developer.mozilla.org/en-US/docs/Web/CSS/Comments) and [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are not supported.
+
+2. Specific pseudo-class might have its own limitations:
+[`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations), [`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and [`:remove()`](#extended-css-remove-limitations).
+
+
+### <a id="extended-css-has"></a> Pseudo-class `:has()`
+
+Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet [supported by all popular browsers](https://caniuse.com/css-has).
+
+> Rules with `:has()` pseudo-class should use [native implementation of `:has()`]() if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
+
+> Synonyms `:-abp-has` and `:if` are supported by ExtendedCss for better compatibility.
 
 **Syntax**
-```
-:has(selector)
-```
 
-Backward compatible syntax:
 ```
-[-ext-has="selector"]
+[target]:has(selector)
 ```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `selector` — required, standard or extended css selector
 
-Supported synonyms for better compatibility: `:-abp-has`, `:if`.
+Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator. Selector list can be set in `selector` as well.
 
-Pseudo-class `:has()` selects the elements that includes the elements that fit to `selector`.
+<a id="extended-css-has-limitations"></a> **Limitations and notes**
+
+> Usage of `:has()` pseudo-class is [restricted for some cases (2, 3)](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
+> - disallow `:has()` inside the pseudos accepting only compound selectors;
+> - disallow `:has()` after regular pseudo-elements.
+
+> Native `:has()` pseudo-class does not allow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the `:has()` invalidation complexity ([case 1](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54)). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we will not add this limitation in ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
+
+> Native implementation does not allow any usage of `:scope` inside `:has()` argument ([[1]](https://github.com/w3c/csswg-drafts/issues/7211), [[2]](https://github.com/w3c/csswg-drafts/issues/6399)). Still there some such rules in filter lists: `div:has(:scope > a)` which we will continue to support simply converting them to `div:has(> a)` as it was earlier.
 
 **Examples**
 
-Selecting  all `div` elements, which contain an element with the `banner` class:
-
+`div:has(.banner)` will select all `div` elements, which **includes** an element with the `banner` class:
 ```html
 <!-- HTML code -->
-<div>Do not select this div</div>
-<div>Select this div<span class="banner"></span></div>
+<div>Not selected</div>
+<div>Selected
+  <span class="banner">inner element</span>
+</div>
 ```
 
-Selector:
+`div:has(> .banner)` will select all `div` elements, which **includes** an `banner` class element as a *direct child* of `div`:
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div>Selected
+  <p class="banner">child element</p>
+</div>
 ```
-div:has(.banner)
+
+`div:has(+ .banner)` will select all `div` elements **preceding** `banner` class element which *immediately follows* the `div` and both are children of the same parent:
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div>Selected</div>
+<p class="banner">adjacent sibling</p>
+<span>Not selected</span>
 ```
 
-Backward compatible syntax:
+`div:has(~ .banner)` will select all `div` elements **preceding** `banner` class element which *follows* the `div` but *not necessarily immediately* and both are children of the same parent:
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div>Selected</div>
+<span>Not selected</span>
+<p class="banner">general sibling</p>
 ```
-div[-ext-has=".banner"]
+
+`div:has(span, .banner)` will select all `div` elements, which **includes both** `span` element and `banner` class element:
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div>Selected
+  <span>child span</span>
+  <p class="banner">child .banner</p>
+</div>
 ```
 
-<a id="extended-css-if-not"></a>
-### Pseudo-class `:if-not()`
+> [Backward compatible syntax for `:has()`](#old-syntax-has) is supported but not recommended.
 
-This pseudo-class is basically a shortcut for `:not(:has())`. It is supported by ExtendedCss for better compatibility with some filters subscriptions, but it is not recommended to use it in AdGuard filters. The rationale is that one day browsers will add `:has` native support, but it will never happen to this pseudo-class.
 
-<a id="extended-css-contains"></a>
-### Pseudo-class `:contains()`
+### <a id="extended-css-if-not"></a> Pseudo-class `:if-not()`
 
-This pseudo-class principle is very simple: it allows to select the elements that contain specified text or which content matches a specified regular expression. Regex flags are supported. Please note, that this pseudo-class uses `textContent` element property for matching (and not the `innerHTML`).
+Pseudo-class `:if-not()` is basically a shortcut for `:not(:has())`. It is supported by ExtendedCss for better compatibility with some other filter lists.
+
+> `:if-not()` is not recommended to use in AdGuard filters. The reason is that one day browsers will add `:has` native support, but it will never happen to this pseudo-class.
+
+### <a id="extended-css-contains"></a> Pseudo-class `:contains()`
+
+This pseudo-class principle is very simple: it allows to select the elements that contain specified text or which content matches a specified regular expression. Regexp flags are supported.
+
+> Pseudo-class `:contains()` uses the `textContent` element property for matching, not the `innerHTML`.
+
+> Synonyms `:-abp-contains` and `:has-text` are supported for better compatibility.
 
 **Syntax**
-```
-// matching by plain text
-:contains(text)
 
-// matching by a regular expression
-:contains(/regex/i)
 ```
-
-Backward compatible syntax:
+[target]:contains(match)
 ```
-// matching by plain text
-[-ext-contains="text"]
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `match` — required, string or regular expression for matching element textContent
 
-// matching by a regular expression
-[-ext-contains="/regex/"]
-```
-
-> Supported synonyms for better compatibility: `:-abp-contains`, `:has-text`.
+> Regexp flags are supported for `match`.
 
 **Examples**
 
-Selecting all `div` elements, which contain text `banner`:
+For such DOM:
 ```html
 <!-- HTML code -->
-<div>Do not select this div</div>
-<div id="selected">Select this div (banner)</div>
-<div>Do not select this div <div class="banner"></div></div>
+<div>Not selected</div>
+<div id="match">Selected as IT contains "banner"</div>
+<div>Not selected <div class="banner"></div></div>
 ```
 
-Selector:
+`div#match` can be selected by any on these extended selectors:
 ```
-// matching by plain text
+! plain text
 div:contains(banner)
 
-// matching by a regular expression
-div:contains(/this .* banner/)
+! regular expression
+div:contains(/as .* banner/)
 
-// also with regex flags
-div:contains(/this .* banner/gi)
+! regular expression with flags
+div:contains(/it .* banner/gi)
 ```
 
-Backward compatible syntax:
-```
-// matching by plain text
-div[-ext-contains="banner"]
+> Only a `div` with `id=match` will be selected because the next element does not contain any text, and `banner` is a part of code, not a text.
 
-// matching by a regular expression
-div[-ext-contains="/this .* banner/"]
-```
+> [Backward compatible syntax for `:contains()`](#old-syntax-contains) is supported but not recommended.
 
-> Please note that in this example only a `div` with `id=selected` will be selected, because the next element does not contain any text; `banner` is a part of code, not a text.
 
-<a id="extended-css-matches-css"></a>
-### Pseudo-class `:matches-css()`
+### <a id="extended-css-matches-css"></a> Pseudo-class `:matches-css()`
 
-These pseudo-classes allow to select an element by its current style property. The work of this pseudo-class is based on using the [`window.getComputedStyle`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) function.
+Pseudo-class `:matches-css()` allows to match the element by its current style properties. The work of the pseudo-class is based on using the [`Window.getComputedStyle()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) method.
 
 **Syntax**
+
 ```
-/* element style matching */
-selector:matches-css(property-name ":" pattern)
-
-/* ::before pseudo-element style matching */
-selector:matches-css-before(property-name ":" pattern)
-
-/* ::after pseudo-element style matching */
-selector:matches-css-after(property-name ":" pattern)
+[target]:matches-css([pseudo-element, ] property: pattern)
 ```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `pseudo-element` — optional, valid standard pseudo-element, e.g. `before`, `after`, `first-line`, etc.
+- `property` — required, a name of CSS property to check the element for
+- `pattern` —  required, a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner. In the case of a regular expression, the pattern looks like `/regexp/`.
 
-Backward compatible syntax:
-```
-selector[-ext-matches-css="property-name ":" pattern"]
-selector[-ext-matches-css-after="property-name ":" pattern"]
-selector[-ext-matches-css-before="property-name ":" pattern"]
-```
+> For **non-regexp** patterns `(`,`)`,`[`,`]` must be **unescaped**, e.g. `:matches-css(background-image:url(data:*))`.
 
-- `property-name` — a name of CSS property to check the element for
-- `pattern` —  a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner. In the case of a regular expression, the pattern looks like `/regex/`.
+> For **regexp** patterns `\` should be **escaped**, e.g. `:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)`.
 
-> For non-regex patterns, `(`,`)`,`[`,`]` must be unescaped, because we require escaping them in the filtering rules. For example, `:matches-css(background-image:url(data:*))`.
-
-> For regex patterns, `"` and `\` should be escaped, because we manually escape those in extended-css-selector.js. For example: `:matches-css(background-image: /^url\\(\\"data\\:\\image.+/)`.
+<!-- TODO: https://github.com/AdguardTeam/ExtendedCss/issues/138 -->
+> Regexp patterns does not support flags.
 
 **Examples**
 
-Selecting all `div` elements which contain pseudo-class `::before` with specified content:
+For such DOM:
 ```html
 <!-- HTML code -->
 <style type="text/css">
-    #to-be-blocked::before {
+    #matched::before {
         content: "Block me"
     }
 </style>
-<div id="to-be-blocked" class="banner"></div>
-<div id="not-to-be-blocked" class="banner"></div>
+<div id="matched"></div>
+<div id="not-matched"></div>
 ```
 
-Selector:
+`div` elements with pseudo-element `::before` with specified `content` property can be selected by any of these extended selectors:
 ```
-// Simple matching
-div.banner:matches-css-before(content: block me)
+! string pattern
+div:matches-css(before, content: block me)
 
-// Regular expressions
-div.banner:matches-css-before(content: /block me/)
-```
+! string pattern with wildcard
+div:matches-css(before, content: block*)
 
-Backward compatible syntax:
-```
-// Simple matching
-div.banner[-ext-matches-css-before="content: block me"]
-
-// Regular expressions
-div.banner[-ext-matches-css-before="content: /block me/"]
+! regular expression pattern
+div:matches-css(before, content: /block me/)
 ```
 
-<a id="extended-css-matches-attr"></a>
-### Pseudo-class `:matches-attr()`
+> Obsolete pseudo-classes `:matches-css-before()` and `:matches-css-after()` are supported for better compatibility.
 
-This pseudo-class allows to select an element by its attributes, especially if they are randomized.
+> [Backward compatible syntax for `:matches-css()`](#old-syntax-matches-css) is supported but not recommended.
+
+
+### <a id="extended-css-matches-attr"></a> Pseudo-class `:matches-attr()`
+
+Pseudo-class `:matches-attr()` allows to select an element by its attributes, especially if they are randomized.
 
 **Syntax**
-```
-selector:matches-attr("name"[="value"])
-```
 
-- `name` — attribute name OR regular expression for attribute name
-- `value` — optional, attribute value OR regular expression for attribute value
+```
+[target]:matches-attr("name"[="value"])
+```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `name` — required, simple string *or* string with wildcard *or* regular expression for attribute name matching
+- `value` — optional, simple string *or* string with wildcard *or* regular expression for attribute value matching
 
-> For regex patterns, `"` and `\` should be escaped.
+> For **regexp** patterns `"` and `\` should be **escaped**, e.g. `div:matches-attr(class=/[\\w]{5}/)`.
 
 **Examples**
 
+`div:matches-attr("ad-link")` will select `div#target1`:
 ```html
 <!-- HTML code -->
-<div id="targer1" class="matches-attr" ad-link="ssdgsg-banner_240x400"></div>
+<div id="target1" ad-link="ssdgsg-banner_240x400"></div>
+```
 
-<div id="targer2" class="has matches-attr">
-  <div data-sdfghlhw="adbanner"></div>
-</div>
+`div:matches-attr("data-*"="adBanner")` will select `div#target2`:
+```html
+<!-- HTML code -->
+<div id="target2" data-sdfghlhw="adBanner"></div>
+```
 
-<div id="targer3-host" class="matches-attr has contains">
-  <div id="not-targer3" wsdfg-unit012="click">
-    <span>socials</span>
-  </div>
-  <div id="targer3" hrewq-unit094="click">
-    <span>ads</span>
-  </div>
-</div>
+`div:matches-attr(*unit*=/^click$/)` will select `div#target3`:
+```html
+<!-- HTML code -->
+<div id="target3" hrewq-unit094="click"></div>
+```
 
-<div id="targer4" class="matches-attr upward">
-  <div >
-    <inner-afhhw class="nyf5tx3" nt4f5be90delay="1000"></inner-afhhw>
-  </div>
+`*:matches-attr("/.{5,}delay$/"="/^[0-9]*$/")` will select `#target4`:
+```html
+<!-- HTML code -->
+<div>
+  <inner-afhhw id="target4" nt4f5be90delay="1000"></inner-afhhw>
 </div>
 ```
 
-```
-// for div#targer1
-div:matches-attr("ad-link")
 
-// for div#targer2
-div:has(> div:matches-attr("/data-/"="adbanner"))
+### <a id="extended-css-matches-property"></a> Pseudo-class `:matches-property()`
 
-// for div#targer3
-div:matches-attr("/-unit/"="/click/"):has(> span:contains(ads))
-
-// for div#targer4
-*[class]:matches-attr("/.{5,}delay$/"="/^[0-9]*$/"):upward(2)
-```
-
-<a id="extended-css-matches-property"></a>
-### Pseudo-class `:matches-property()`
-
-This pseudo-class allows to select an element by its properties.
+Pseudo-class `:matches-property()` allows to select an element by matching its properties.
 
 **Syntax**
+
 ```
-selector:matches-property("name"[="value"])
+[target]:matches-property("name"[="value"])
 ```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `name` — required, simple string *or* string with wildcard *or* regular expression for element property name matching
+- `value` — optional, simple string *or* string with wildcard *or* regular expression for element property value matching
 
-- `name` — property name OR regular expression for property name
-- `value` — optional, property value OR regular expression for property value
+> For **regexp** patterns `"` and `\` should be escaped, e.g. `div:matches-property(prop=/[\\w]{4}/)`.
 
-> For regex patterns, `"` and `\` should be escaped.
-
-> `name` supports regexp for property in chain, e.g. `prop./^unit[\\d]{4}$/.type`
+> `name` supports regexp for property in chain, e.g. `prop./^unit[\\d]{4}$/.type`.
 
 **Examples**
 
+Element with such properties:
 ```javascript
 divProperties = {
     id: 1,
@@ -279,95 +311,111 @@ divProperties = {
 };
 ```
 
+can be selected by any of these extended selectors:
 ```
-// element with such properties can be matched by any of such rules:
-
-div:matches-property("check.track")
+div:matches-property(check.track)
 
 div:matches-property("check./^unit_.{4,6}$/")
 
-div:matches-property("memoizedProps.key"="null")
+div:matches-property("check.unit_*"=true)
 
-div:matches-property("memoizedProps._owner.src"="/ad/")
+div:matches-property(memoizedProps.key="null")
+
+div:matches-property(memoizedProps._owner.src=/ad/)
 ```
 
-<details>
-  <summary><b>For filters maintainers</b></summary>
+> **For filters maintainers:** To check properties of specific element, you should do:
+> 1. Inspect the needed page element or select it in `Elements` tab of browser DevTools.
+> 2. Run `console.dir($0)` in `Console` tab.
 
-  To check properties of specific element, do:
-  1. Select the element on the page.
-  2. Go to Console tab and run `console.dir($0)`.
-</details>
 
-<a id="extended-css-xpath"></a>
-### Pseudo-class `:xpath()`
+### <a id="extended-css-xpath"></a> Pseudo-class `:xpath()`
 
-This pseudo-class allows to select an element by evaluating a XPath expression.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
-
-The :xpath(...) pseudo is different than other pseudo-classes. Whereas all other operators are used to filter down a resultset of elements, the :xpath(...) operator can be used both to create a new resultset or filter down an existing one. For this reason, subject selector is optional. For example, an :xpath(...) operator could be used to create a new resultset consisting of all ancestors elements of a subject element, something not otherwise possible with either plain CSS selectors or other procedural operators.
-
-Normally, a pseudo-class is applied to nodes selected by a `selector`. However, :xpath is special as the selector can be ommited. For any other pseudo-class that would mean "apply to ALL DOM nodes", but in case of :xpath it just means "apply me to the document", and that significantly slows elements selecting. That's why we convert `#?#:xpath(...)` rules for looking inside the body tag. Rules like `#?#*:xpath(...)` can still be used but we highly recommend you avoid it and specify the `selector`.
+Pseudo-class `:xpath()` allows to select an element by evaluating a XPath expression.
 
 **Syntax**
-```
-[selector]:xpath(expression)
-```
 
-- `selector`- optional, a plain CSS selector, or a Sizzle compatible selector
-- `expression` — a valid XPath expression
+```
+[target]:xpath(expression)
+```
+- `target`- optional, standard or extended css selector
+- `expression` — required, valid XPath expression
+
+<a id="extended-css-xpath-limitations"></a> **Limitations**
+
+> `target` can be omitted so it is optional. For any other pseudo-class that would mean "apply to *all* DOM nodes", but in case of `:xpath()` it just means "apply to the *whole* document", and such applying slows elements selecting significantly. That's why rules like `#?#:xpath(expression)` are limited for looking inside the `body` tag. For example, rule `#?#:xpath(//div[@data-st-area=\'Advert\'])` is parsed as `#?#body:xpath(//div[@data-st-area=\'Advert\'])`.
+
+> Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not recommended, so `target` should be specified instead.
+
+> Works properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).
 
 **Examples**
-```
-// Filtering results from selector
-div:xpath(//*[@class="test-xpath-class"])
-div:has-text(/test-xpath-content/):xpath(../../..)
 
-// Use xpath only to select elements
-facebook.com##:xpath(//div[@id="stream_pagelet"]//div[starts-with(@id,"hyperfeed_story_id_")][.//h6//span/text()="People You May Know"])
+`:xpath(//*[@class="banner"])` will select `div#target1`:
+```html
+<!-- HTML code -->
+<div id="target1" class="banner"></div>
 ```
 
-<a id="extended-css-nth-ancestor"></a>
-### Pseudo-class `:nth-ancestor()`
+`:xpath(//*[@class="inner"]/..)` will select `div#target2`:
+```html
+<!-- HTML code -->
+<div id="target2">
+  <div class="inner"></div>
+</div>
+```
 
-This pseudo-class allows to lookup the nth ancestor relative to the currently selected node.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
 
-It is a low-overhead equivalent to `:xpath(..[/..]*)`.
+### <a id="extended-css-nth-ancestor"></a> Pseudo-class `:nth-ancestor()`
+
+Pseudo-class `:nth-ancestor()` allows to lookup the *nth* ancestor relative to the previously selected element.
 
 **Syntax**
+
 ```
-selector:nth-ancestor(n)
+subject:nth-ancestor(n)
 ```
-- `selector` — a plain CSS selector, or a Sizzle compatible selector.
-- `n` — positive number >= 1 and < 256, distance from the currently selected node.
+- `subject` — required, standard or extended css selector
+- `n` — required, number >= 1 and < 256, distance to the needed ancestor from the element selected by `subject`
 
 **Examples**
+
+For such DOM:
+```html
+<!-- HTML code -->
+<div id="target1">
+  <div class="child"></div>
+
+  <div id="target2">
+    <div>
+      <div>
+        <div class="inner"></div>
+      </div>
+    </div>
+  </div>
+</div>
 ```
-div.test:nth-ancestor(4)
 
-div:has-text(/test/):nth-ancestor(2)
-```
+`.child:nth-ancestor(1)` will select `div#target1`
+`div[class="inner"]:nth-ancestor(3)` will select `div#target2`
 
-<a id="extended-css-upward"></a>
-### Pseudo-class `:upward()`
 
-This pseudo-class allows to lookup the ancestor relative to the currently selected node.
-> **Limited to work properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).**
+### <a id="extended-css-upward"></a> Pseudo-class `:upward()`
+
+Pseudo-class `:upward()` allows to lookup the ancestor relative to the previously selected element.
 
 **Syntax**
-```
-/* selector parameter */
-subjectSelector:upward(targetSelector)
 
-/* number parameter */
-subjectSelector:upward(n)
 ```
-- `subjectSelector` — a plain CSS selector, or a Sizzle compatible selector
-- `targetSelector` — a valid plain CSS selector
-- `n` — positive number >= 1 and < 256, distance from the currently selected node
+subject:upward(ancestor)
+```
+- `subject` — required, standard or extended css selector
+- `ancestor` — required, specification for the ancestor of the element selected by `subject`, can be set as:
+  - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
+  - *standard css selector* for matching closest ancestor
 
 **Examples**
+
 ```
 div.child:upward(div[id])
 div:contains(test):upward(div[class^="parent-wrapper-")
@@ -376,14 +424,35 @@ div.test:upward(4)
 div:has-text(/test/):upward(2)
 ```
 
-<a id="remove-pseudos"></a>
-### Pseudo-class `:remove()` and pseudo-property `remove`
+For such DOM:
+```html
+<!-- HTML code -->
+<div id="target1" data="true">
+  <div class="child"></div>
+
+  <div id="target2">
+    <div>
+      <div>
+        <div class="inner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+`.inner:upward(div[data])` will select `div#target1`
+`.inner:upward(div[id])` will select `div#target2`
+
+`.child:upward(1)` will select `div#target1`
+`.inner:upward(3)` will select `div#target2`
+
+
+### <a id="remove-pseudos"></a> Pseudo-class `:remove()` and pseudo-property `remove`
 
 Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use pseudo-class `:remove()` as well as pseudo-property `remove`.
 
-> **Pseudo-class `:remove()` is limited to work properly only at the end of selector.**
-
 **Syntax**
+
 ```
 ! pseudo-class
 selector:remove()
@@ -391,45 +460,94 @@ selector:remove()
 ! pseudo-property
 selector { remove: true; }
 ```
-- `selector` — a plain CSS selector, or a Sizzle compatible selector
+- `selector` — required, standard or extended css selector
+
+<a id="extended-css-remove-limitations"></a> **Limitations**
+
+> Pseudo-class `:remove()` is limited to work properly only at the end of selector.
+
+> For applying `:remove()` pseudo-class to any element [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` should be used. Otherwise extended selector may be considered as invalid, e.g. `.banner > :remove()` is not valid for removing any child element of `banner` class element, so it should look like `.banner > *:remove()`.
+
+> If `:remove()` pseudo-class or `remove` pseudo-property is used, all style properties will be ignored except of [`debug` pseudo-property](#selectors-debug-mode).
 
 **Examples**
+
 ```
-div.inner:remove()
+div.banner:remove()
 div:has(> div[ad-attr]):remove()
-div:xpath(../..):remove()
 
-div:contains(target text) { remove: true; }
-div[class]:has(> a:not([id])) { remove: true; }
+div:contains(advertisement) { remove: true; }
+div[class]:has(> a > img) { remove: true; }
 ```
 
-> Please note that all style properties will be ignored if `:remove()` pseudo-class or `remove` pseudo-property is used.
+> Rules with `remove` pseudo-property should use `#$?#` marker: `$` for CSS style rules syntax, `?` for ExtendedCss syntax.
 
-> `remove` pseudo-property should be used with `#$?#` marker as it is a part of ExtendedCss library and at the same time it looks like CSS style rules.
 
-<a id="extended-css-is"></a>
-### Pseudo-class `:is()`
+### <a id="extended-css-is"></a> Pseudo-class `:is()`
 
-This pseudo-class allown to match any element that can be selected by one of the selectors passed to :is().
-If there is invalid selector passed, it will be passed and pseudo-class will deal with valid ones.
-Our implementation of matches-any pseudo-class https://developer.mozilla.org/en-US/docs/Web/CSS/:is
+Pseudo-class `:is()` allows to match any element that can be selected by any of selectors passed to it. Invalid selectors passed as arg will be skipped and pseudo-class will deal with valid ones with no error. Our implementation of [`:is() (:matches(), :any())` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:is).
 
 **Syntax**
-```
 
-:is(selectors)
 ```
-- `selectors` — list of plain CSS selector
+[target]:is(selectors)
+```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors
+
+<a id="extended-css-is-limitations"></a> **Limitations**
+
+> If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`.
 
 **Examples**
+
+`#container *:is(.inner, .footer)` will select only `div#target1`
+```html
+<!-- HTML code -->
+<div id="container">
+  <div data="true">
+    <div>
+      <div id="target1" class="inner"></div>
+    </div>
+  </div>
+</div>
 ```
-#main :is(.header, .body, .footer) .banner-inner
-:is(.div-inner, .div-inner2):contains(textmarker)
+
+
+### <a id="extended-css-not"></a> Pseudo-class `:not()`
+
+Pseudo-class `:not()` allows to select elements which are *not matched* by selectors passed as arg. Invalid selectors in arg are not allowed and error will be thrown. Our implementation of [`:not()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:not).
+
+**Syntax**
+
 ```
+[target]:not(selectors)
+```
+- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `selectors` — selector list of standard or extended selectors
+
+<a id="extended-css-not-limitations"></a> **Limitations**
+
+> If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
+
+> Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
+
+**Examples**
+
+`#container > *:not(h2, .text)` will select only `div#target1`
+```html
+<!-- HTML code -->
+<div id="container">
+  <h2>Header</h2>
+  <div id="target1"></div>
+  <span class="text">text</span>
+</div>
+```
+
 
 ### Selectors debug mode
 
-Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with javascript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables the "debug"-mode either for a single selector or for all selectors depending on the `debug` value.
+Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with javascript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables debug mode either for a single selector or for all selectors depending on the `debug` value.
 
 **Debugging a single selector**
 ```
@@ -441,11 +559,126 @@ Sometimes, you might need to check the performance of a given selector or a styl
 .banner { display: none; debug: global; }
 ```
 
-### Usage
+> Global debugging mode also can be enabled by positive `debug` property in [`ExtCssConfiguration`](#ext-css-configuration-interface):
+```js
+const extendedCss = new ExtendedCss({
+  styleSheet, // required, rules as string
+  debug,      // optional, boolean
+});
+```
 
-You can import, require or copy IIFE module with ExtendedCss into your code.
 
-e.g.
+### <a id="extended-css-old-syntax"></a> Backward compatible syntax
+
+**Backward compatible syntax is supported but not recommended.**
+
+### <a id="old-syntax-has"></a> Old syntax for pseudo-class `:has()`
+
+**Syntax**
+```
+target[-ext-has="selector"]
+```
+
+**Examples**
+```
+div[-ext-has=".banner"]
+```
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div>Selected <span class="banner"></span></div>
+```
+
+
+### <a id="old-syntax-contains"></a> Old syntax for pseudo-class `:contains()`
+
+**Syntax**
+```
+// matching by plain text
+target[-ext-contains="text"]
+
+// matching by a regular expression
+target[-ext-contains="/regex/"]
+```
+
+**Examples**
+```
+// matching by plain text
+div[-ext-contains="banner"]
+
+// matching by a regular expression
+div[-ext-contains="/this .* banner/"]
+```
+
+```html
+<!-- HTML code -->
+<div>Not selected</div>
+<div id="selected">Selected as it contains "banner"</div>
+```
+
+
+### <a id="old-syntax-matches-css"></a> Old syntax for pseudo-class `:matches-css()`
+
+**Syntax**
+```
+target[-ext-matches-css="property: pattern"]
+target[-ext-matches-css-after="property: pattern"]
+target[-ext-matches-css-before="property: pattern"]
+```
+
+**Examples**
+```html
+<!-- HTML code -->
+<style type="text/css">
+    #matched::before {
+        content: "Block me"
+    }
+</style>
+<div id="matched"></div>
+<div id="not-matched"></div>
+```
+
+```
+! string pattern
+div[-ext-matches-css-before="content: block me"]
+
+! regular expression pattern
+div[-ext-matches-css-before="content: /block me/"]
+```
+
+
+## How to build
+
+Install dependencies
+```
+yarn install
+```
+
+And just run
+```
+yarn build
+```
+
+## How to test
+
+Install dependencies
+```
+yarn install
+```
+
+Run local node testing
+```
+yarn test local
+```
+
+Run performance tests which are not included in `test local` run and should be executed manually:
+```
+yarn test performance
+```
+
+## Usage
+
+You can import, require or copy IIFE module with ExtendedCss into your code, e.g.
 ```
 import ExtendedCss from 'extended-css';
 ```
@@ -455,45 +688,141 @@ const ExtendedCss = require('extended-css');
 ```
 IIFE module can be found by the following path `./dist/extended-css.js`
 
-After that you can use ExtendedCss as you wish:
+After that you can use ExtendedCss as you wish.
+
+### <a id="extended-css-api"></a> API description
+
+#### <a id="extended-css-constructor"></a> Constructor
 
 ```
+/**
+ * Creates an instance of ExtendedCss
+ *
+ * @param configuration — required
+ */
+constructor(configuration: ExtCssConfiguration)
+```
+
+<a id="ext-css-configuration-interface"></a>
+where
+```ts
+interface ExtCssConfiguration {
+  // css stylesheet
+  styleSheet: string;
+
+  // the callback that handles affected elements
+  beforeStyleApplied?: BeforeStyleAppliedCallback;
+
+  // flag for applied selectors logging; equals to `debug: global` in `styleSheet`
+  debug?: boolean;
+}
+```
+
+```ts
+/**
+ * Needed for getting affected node elements and handle style properties before they are applied to them if it is necessary.
+ *
+ * Used by AdGuard Browser extension to display rules in Filtering log and `collect-hits-count` (via tsurlfilter's CssHitsCounter)
+ */
+type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
+
+/**
+ * Simplified just for representation
+ * there is a required property 'content' is an applied rule text
+ */
+interface IAffectedElement {
+  rules: { style: { content: string }}[]
+  node: HTMLElement;
+}
+```
+
+<a id="extended-css-apply-dispose"></a>
+
+After instance of ExtendedCss is created, it can be applied on page by `apply()` method. Its applying also can be stopped and styles will be restored by `dispose()` method.
+
+```js
 (function() {
-  var cssText = 'div.wrapper>div[-ext-has=".banner"] { display:none!important; }\n';
-  cssText += 'div.wrapper>div[-ext-contains="some word"] { background:none!important; }';
-  var extendedCss = new ExtendedCss({ cssText: cssText });
+  let styleSheet = 'div.wrapper > div:has(.banner) { display:none!important; }\n';
+  styleSheet += 'div.wrapper > div:contains(ads) { background:none!important; }';
+  const extendedCss = new ExtendedCss({ styleSheet });
+
+  // apply styleSheet
   extendedCss.apply();
 
-  // Just an example of how to stop applying this extended CSS
+  // stop applying of this styleSheet
   setTimeout(function() {
     extendedCss.dispose();
   }, 10 * 1000);
 })();
 ```
 
+#### <a id="extended-css-query"></a> Public method `query()`
+```ts
+/**
+ * Returns a list of the document's elements that match the specified selector
+ *
+ * @param {string} selector — selector text
+ * @param {boolean} [noTiming=true] — optional, if true -- do not print the timing to the console
+ *
+ * @returns a list of elements found
+ * @throws an error if the argument is not a valid selector
+ */
+public static query(selector: string, noTiming = true): HTMLElement[]
+```
+
+#### <a id="extended-css-validate"></a> Public method `validate()`
+
+```ts
+/**
+ * Validates selector
+ * @param selector — selector text
+ */
+public static validate(selector: string): ValidationResult
+```
+
+where
+```ts
+type ValidationResult = {
+    // true for valid selector, false for invalid one
+    ok: boolean,
+    // specified for invalid selector
+    error: string | null,
+};
+```
+
 ### Debugging extended selectors
 
-To load ExtendedCss to a current page, copy and execute the following code in a browser console:
-```
-!function(E,x,t,C,s,s_){C=E.createElement(x),s=E.getElementsByTagName(x)[0],C.src=t,
-C.onload=function(){alert('ExtCss loaded successfully')},s.parentNode.insertBefore(C,s)}
-(document,'script','https://AdguardTeam.github.io/ExtendedCss/extended-css.min.js')
+ExtendedCss can be executed on any page without using any AdGuard product. In order to do that you should copy and execute the following code in a browser console:
+```js
+!function(e,t,d){C=e.createElement(t),C.src=d,C.onload=function(){alert("ExtendedCss loaded successfully")},s=e.getElementsByTagName(t)[0],s?s.parentNode.insertBefore(C,s):(h=e.getElementsByTagName("head")[0],h.appendChild(C))}(document,"script","https://AdguardTeam.github.io/ExtendedCss/extended-css.min.js");
 ```
 
-Alternative, install an "ExtendedCssDebugger" userscript: https://github.com/AdguardTeam/Userscripts/blob/master/extendedCssDebugger/extended-css.debugger.user.js
+Now you can now use the `ExtendedCss` from global scope, and run its method [`query()`](#extended-css-query) as `Document.querySelectorAll()`.
+```js
+const selector = 'div.block:has=(.header:matches-css-after(content: Ads))';
 
-You can now use the `ExtendedCss` constructor in the global scope, and its method `ExtendedCss.query` as `document.querySelectorAll`.
+// array of HTMLElement matched the `selector` will be returned
+ExtendedCss.query(selector);
 ```
-var selectorText = "div.block[-ext-has='.header:matches-css-after(content: Anzeige)']";
 
-ExtendedCss.query(selectorText) // returns an array of Elements matching selectorText
-```
 
-### Projects using Extended Css
-* [CoreLibs](https://github.com/AdguardTeam/CoreLibs) (Content Script should be updated)
+## <a id="projects-using-extended-css"></a> Projects using ExtendedCss
+
+* [CoreLibs](https://github.com/AdguardTeam/CoreLibs) — `Content Script` dist should be updated
 * [TSUrlFilter](https://github.com/AdguardTeam/tsurlfilter)
-* [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari)
+* [FiltersCompiler](https://github.com/AdguardTeam/FiltersCompiler)
+* [AdguardBrowserExtension](https://github.com/AdguardTeam/AdguardBrowserExtension) — `TSUrlFilter` should be updated
+* [AdguardForSafari](https://github.com/AdguardTeam/AdGuardForSafari) — `adguard-resources` should be updated
+* [AdguardForiOS](https://github.com/AdguardTeam/AdguardForiOS)  — both `ExtendedCss` and `TSUrlFilter` should be updated in `advanced-adblocker-web-extension`
 
-### Test page
 
-[Link](https://AdguardTeam.github.io/ExtendedCss)
+### <a id="browser-compatibility"></a> Browser compatibility
+
+| Browser               | Version   |
+|-----------------------|:----------|
+| Chrome                | ✅ 55     |
+| Firefox               | ✅ 52     |
+| Edge                  | ✅ 80     |
+| Opera                 | ✅ 80     |
+| Safari                | ✅ 11.1   |
+| Internet Explorer     | ❌        |
