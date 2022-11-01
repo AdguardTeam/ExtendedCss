@@ -819,10 +819,10 @@ ExtendedCss.query(selector);
 ### <a id="browser-compatibility"></a> Browser compatibility
 
 | Browser               | Version   |
-|-----------------------|:---------:|
+|-----------------------|:----------|
 | Chrome                | ✅ 55     |
 | Firefox               | ✅ 52     |
 | Edge                  | ✅ 80     |
 | Opera                 | ✅ 80     |
-| Safari                | ✅ 11     |
+| Safari                | ✅ 11.1   |
 | Internet Explorer     | ❌        |

@@ -42,8 +42,8 @@ const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
         MIN_VERSION: 80,
     },
     [BrowserName.Safari]: {
-        MASK: /\sVersion\/(\d+)\..+\s(Safari)\//,
-        MIN_VERSION: 10,
+        MASK: /\sVersion\/(\d{2}\.\d)(.+\s|\s)(Safari)\//,
+        MIN_VERSION: 11.1,
     },
 };
 
@@ -85,8 +85,8 @@ const parseUserAgent = (): BrowserInfo | null => {
         const match = SUPPORTED_BROWSERS_DATA[browserNames[i]].MASK.exec(navigator.userAgent);
         if (match) {
             // for safari order is different because of regexp
-            if (match[2] === browserNames[i]) {
-                browserName = match[2];
+            if (match[3] === browserNames[i]) {
+                browserName = match[3];
                 currentVersion = Number(match[1]);
             } else {
                 // for others first is name and second is version
