@@ -51,7 +51,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet [supported by all popular browsers](https://caniuse.com/css-has).
 
-> Rules with `:has()` pseudo-class should use [native implementation of `:has()`]() if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
+> Rules with `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
 
 > Synonyms `:-abp-has` and `:if` are supported by ExtendedCss for better compatibility.
 
