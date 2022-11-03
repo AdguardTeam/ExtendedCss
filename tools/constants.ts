@@ -4,7 +4,7 @@ export enum OutputFormat {
     UMD = 'umd',
 }
 
-export const LIBRARY_NAME = 'ExtendedCSS';
+export const LIBRARY_NAME = 'ExtendedCss';
 export const LIB_FILE_NAME = 'extended-css';
 
 export const ROOT_PATH = '..';
