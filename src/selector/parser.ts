@@ -372,7 +372,11 @@ const handleNextTokenOnColon = (
         // no brackets balance needed for such case,
         // parser position is on first colon after the 'div':
         // e.g. 'div:last-child:has(button.privacy-policy__btn)'
-        if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
+        if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT
+            // no brackets balance needed for parentheses inside attribute value
+            // e.g. 'a[href="javascript:void(0)"]'   <-- parser position is on colon `:`
+            // before `void`           ↑
+            && !context.isAttributeBracketsOpen) {
             context.standardPseudoNamesStack.push(nextTokenValue);
         }
     } else {
@@ -625,6 +629,13 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             // add SelectorList to children of RelativePseudoClass node
                             initRelativeSubtree(context, tokenValue);
+                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                // besides of creating the relative subtree
+                                // opening square bracket means start of attribute
+                                // e.g. 'div:not([class="content"])'
+                                //      'div:not([href*="window.print()"])'
+                                context.isAttributeBracketsOpen = true;
+                            }
                         } else if (bufferNode.type === NodeType.Selector) {
                             // after the extended pseudo closing parentheses
                             // parser position is on Selector node
@@ -755,6 +766,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         }
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
+                            // :xpath() pseudo-class should be the last of extended pseudo-classes
+                            if (bufferNode.name === XPATH_PSEUDO_CLASS_MARKER
+                                && SUPPORTED_PSEUDO_CLASSES.includes(nextToken.value)
+                                && nextToNextToken.value === BRACKETS.PARENTHESES.LEFT) {
+                                throw new Error(`:xpath() pseudo-class should be at the end of selector: '${selector}'`); // eslint-disable-line max-len
+                            }
                             // collecting arg for absolute pseudo-class
                             // e.g. 'div:matches-css(width:400px)'
                             updateBufferNode(context, tokenValue);
@@ -810,6 +827,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 updateBufferNode(context, tokenValue);
                                 context.standardPseudoBracketsStack.push(tokenValue);
                             }
+                            // parentheses inside attribute value should be part of RegularSelector value
+                            // e.g. 'div:not([href*="window.print()"])'   <-- parser position
+                            // is on the `(` after `print`       ↑
+                            if (context.isAttributeBracketsOpen) {
+                                updateBufferNode(context, tokenValue);
+                            }
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
                             // save opening bracket for balancing
@@ -863,7 +886,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
-                            if (context.standardPseudoNamesStack.length > 0
+                            if (context.isAttributeBracketsOpen) {
+                                // parentheses inside attribute value should be part of RegularSelector value
+                                // e.g. 'div:not([href*="window.print()"])'   <-- parser position
+                                // is on the `)` after `print(`       ↑
+                                updateBufferNode(context, tokenValue);
+                            } else if (context.standardPseudoNamesStack.length > 0
                                 && context.standardPseudoBracketsStack.length > 0) {
                                 // standard pseudo-class was processing.
                                 // collect the closing bracket to value of RegularSelector

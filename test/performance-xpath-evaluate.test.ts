@@ -27,6 +27,10 @@ const getXpathEvaluationResult = async (extSelector: string): Promise<[number, n
 
 const XPATH_PERFORMANCE_PORT = 8587;
 
+// default 5 seconds may be not enough sometime
+const TESTS_RUN_TIMEOUT_MS = 15 * 1000;
+jest.setTimeout(TESTS_RUN_TIMEOUT_MS);
+
 describe('xpath evaluation test', () => {
     beforeAll(async () => {
         await server.start(XPATH_PERFORMANCE_PORT);

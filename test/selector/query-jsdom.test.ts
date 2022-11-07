@@ -800,6 +800,17 @@ describe('extended pseudo-classes', () => {
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
+
+        describe('xpath - invalid position in selector', () => {
+            const invalidXpathPositionErrorText = ':xpath() pseudo-class should be at the end of selector';
+            const toThrowInputs = [
+                {
+                    selector: 'div:xpath(../../..):has-text(/test-xpath-content/)',
+                    error: invalidXpathPositionErrorText,
+                },
+            ];
+            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+        });
     });
 
     describe('nth-ancestor pseudo', () => {

@@ -37,6 +37,7 @@ describe('regular selectors', () => {
             'div[data-comma="0,1"]',
             'input[data-comma=\'0,1\']',
             'div[class*=" "]',
+            'a[href="javascript:void(0)"]',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -578,6 +579,13 @@ describe('relative extended selectors', () => {
                 expected: [
                     { isRegular: true, value: 'div.banner > div' },
                     { isRelative: true, name, value: '> a[class^="ad"]' },
+                ],
+            },
+            {
+                actual: '.detail-share-item > a:not([href*="window.print()"])',
+                expected: [
+                    { isRegular: true, value: '.detail-share-item > a' },
+                    { isRelative: true, name, value: '[href*="window.print()"]' },
                 ],
             },
         ];
@@ -1947,6 +1955,14 @@ describe('combined selectors', () => {
                     { isRegular: true, value: 'td[align="left"]' },
                     { isRelative: true, name: 'not', value: '[width]' },
                     { isRegular: true, value: '+ a > img' },
+                ],
+            },
+            {
+                actual: 'div:not(.clear) > a[href="javascript:void(0)"]',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isRelative: true, name: 'not', value: '.clear' },
+                    { isRegular: true, value: '> a[href="javascript:void(0)"]' },
                 ],
             },
         ];
