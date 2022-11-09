@@ -212,7 +212,7 @@ export class ExtendedCss {
             ExtendedCss.query(selector);
             return { ok: true, error: null };
         } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            const error = `Error: selector "${selector}" is invalid — ${e.message})`;
+            const error = `Selector is not valid: '${selector}' -- ${e.message}`;
             return { ok: false, error };
         }
     }
