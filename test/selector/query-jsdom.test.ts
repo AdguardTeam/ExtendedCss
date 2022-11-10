@@ -1133,6 +1133,7 @@ describe('extended pseudo-classes', () => {
                 { actual: 'div:is(#parent, #parent2, #parent3)', expected: 'div#parent' },
                 { actual: '#parent > :is(.base, .target)', expected: 'div#child' },
                 { actual: 'div:is(#child, #child2)', expected: '#child, #child2' },
+                { actual: '*:is([id^="child2"])', expected: '#child2, #child2InnerParagraph' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
@@ -1252,6 +1253,12 @@ describe('combined pseudo-classes', () => {
                         </div>
                         <input id="disabledInput" disabled>
                     </div>
+
+                    <footer>
+                        <div id="inner3">
+                            <a id="anchor" href="mailto:support@example.org">support@example.org</a>
+                        </div>
+                    </footer>
                 </div>
             `;
         });
@@ -1270,8 +1277,8 @@ describe('combined pseudo-classes', () => {
                 // not(contains, regular selector)
                 { actual: '#inner2 > :not(:contains(span2 text),#deepDiv)', expected: '#innerParagraph2' },
                 // not not not
-                { actual: '#root [id]:not([class]):not([level]):not(p)', expected: 'input#disabledInput' },
-                // has(not), few targets
+                { actual: '#parent2 [id]:not([class]):not([level]):not(p)', expected: 'input#disabledInput' },
+                // has(not)
                 { actual: '#parent div[id][class]:has(:not(div))', expected: '#child, #inner' },
                 // has(contains)
                 { actual: 'div[id^="inn"][class]:has(p:contains(inner))', expected: 'div#inner' },
@@ -1397,6 +1404,21 @@ describe('combined pseudo-classes', () => {
         const actual = 'li:has(img:nth-child(2))';
         const expected = 'li#firstLi';
         expectSuccessInput({ actual, expected });
+    });
+
+    it('is > is(not has)', () => {
+        document.body.innerHTML = `
+            <div id="parent" class="base2" level="3">
+                <span id="innerSpan" class="span">text</span>
+                <div id="innerDiv">
+                    <input id="disabledInput" disabled>
+                </div>
+            </div>
+        `;
+        const actual = '#parent > :is(*:not([class]):has(> input))';
+        const expected = 'div#innerDiv';
+        expectSuccessInput({ actual, expected });
+        document.body.innerHTML = '';
     });
 
     describe('has limitation', () => {
@@ -1600,14 +1622,9 @@ describe('combined pseudo-classes', () => {
                 expected: 'input#disabledInput',
             },
             {
-                actual: ':is([id^="child"]) > :is(*:not([class]) > input[id])',
-                expected: 'div#deep2',
-            },
-            {
                 actual: '#parent div:contains(inner span text) + .base2:contains(inP2)',
                 expected: 'div#child2',
             },
-
             {
                 actual: '#parent > *:not(p):not(.base2) > div p:contains(inner paragraph)',
                 expected: 'p#innerParagraph',
@@ -1799,9 +1816,9 @@ describe('case-insensitivity for pseudo-class names', () => {
         { actual: 'div.base[level="3"]:UPWARD([level="0"])', expected: 'div#root' },
         { actual: 'div.base[LEVEL="3"]:UPWARD([level="0"])', expected: 'div#root' },
         { actual: 'div:HAS(> #paragraph)', expected: 'div#parent' },
-        { actual: '#root p:CONTAINS(text)', expected: 'div#paragraph' },
-        { actual: '#parent *:NOT([class])', expected: 'div#paragraph' },
-        { actual: '#parent *:NOT([CLASS]):CONTAINS(text)', expected: 'div#paragraph' },
+        { actual: '#root p:CONTAINS(text)', expected: 'p#paragraph' },
+        { actual: '#parent *:NOT([class])', expected: 'p#paragraph' },
+        { actual: '#parent *:NOT([CLASS]):CONTAINS(text)', expected: 'p#paragraph' },
     ];
     test.each(testInputs)('%s', (input) => expectSuccessInput(input));
 });

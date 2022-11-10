@@ -43,8 +43,8 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 1. CSS [comments](https://developer.mozilla.org/en-US/docs/Web/CSS/Comments) and [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are not supported.
 
-2. Specific pseudo-class might have its own limitations:
-[`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations), [`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and [`:remove()`](#extended-css-remove-limitations).
+2. Specific pseudo-class may have its own limitations:
+[`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations), [`:nth-ancestor()`](#extended-css-nth-ancestor-limitations), [`:upward()`](#extended-css-upward-limitations), [`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and [`:remove()`](#extended-css-remove-limitations).
 
 
 ### <a id="extended-css-has"></a> Pseudo-class `:has()`
@@ -378,6 +378,10 @@ subject:nth-ancestor(n)
 - `subject` — required, standard or extended css selector
 - `n` — required, number >= 1 and < 256, distance to the needed ancestor from the element selected by `subject`
 
+<a id="extended-css-nth-ancestor-limitations"></a> **Limitations**
+
+> Pseudo-class `:nth-ancestor()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument.
+
 **Examples**
 
 For such DOM:
@@ -413,6 +417,10 @@ subject:upward(ancestor)
 - `ancestor` — required, specification for the ancestor of the element selected by `subject`, can be set as:
   - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
   - *standard css selector* for matching closest ancestor
+
+<a id="extended-css-upward-limitations"></a> **Limitations**
+
+> Pseudo-class `:upward()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument.
 
 **Examples**
 
@@ -493,15 +501,17 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
 [target]:is(selectors)
 ```
 - `target` — optional, standard or extended css selector, can be missed for checking *any* element
-- `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors
+- `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors. For extended selectors only compound selectors are supported, not complex.
 
 <a id="extended-css-is-limitations"></a> **Limitations**
 
 > If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`.
 
+> [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed. Check examples below.
+
 **Examples**
 
-`#container *:is(.inner, .footer)` will select only `div#target1`
+`#container *:is(.inner, .footer)` will select only `div#target1`:
 ```html
 <!-- HTML code -->
 <div id="container">
@@ -510,6 +520,16 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
       <div id="target1" class="inner"></div>
     </div>
   </div>
+</div>
+```
+
+Due to limitations `:is(*:not([class]) > .banner)'` will not work
+but `:is(*:not([class]):has(> .banner))` can be used instead of it to select `div#target2`:
+```html
+<!-- HTML code -->
+<span class="span">text</span>
+<div id="target2">
+  <p class="banner">inner paragraph</p>
 </div>
 ```
 
@@ -531,6 +551,8 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 > If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
 
 > Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
+
+> "Up-looking" pseudo-classes which are [`:nth-ancestor()`](#extended-css-nth-ancestor) and [`:upward()`](#extended-css-upward)  are not supported inside `selectors` argument for `:not()` pseudo-class.
 
 **Examples**
 

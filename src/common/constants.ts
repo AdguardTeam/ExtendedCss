@@ -170,14 +170,8 @@ export const SUPPORTED_PSEUDO_CLASSES = [
 
 /**
  * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not().
- *
- * ':where' is needed for limitation it's using inside :has() arg.
- *
- * @see {@link https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54} [case 1]
  */
-export const REGULAR_PSEUDO_CLASSES = {
-    SCOPE: 'scope',
-};
+export const SCOPE_CSS_PSEUDO_CLASS = ':scope';
 
 /**
  * ':after' and ':before' are needed for :matches-css() pseudo-class

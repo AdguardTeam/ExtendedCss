@@ -1155,6 +1155,37 @@ describe('combined extended selectors', () => {
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
 
+    it('not upward', () => {
+        const actual = 'a[href^="mailto:"]:not(:upward(footer))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('a[href^="mailto:"]'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'not',
+                                    children: [
+                                        getSingleSelectorAstWithAnyChildren([
+                                            { isRegular: true, value: '*' },
+                                            { isAbsolute: true, name: 'upward', value: 'footer' },
+                                        ]),
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
     it('upward not not', () => {
         const actual = 'a[href^="https://example."]:upward(1):not(section):not(div[class^="article"])';
         const expected = [
