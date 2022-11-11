@@ -369,7 +369,7 @@ describe('extended pseudo-classes', () => {
 
         describe('contains - invalid args', () => {
             const toThrowInputs = [
-                { selector: 'p:contains()', error: 'Missing arg for :contains pseudo-class' },
+                { selector: 'p:contains()', error: 'Missing arg for :contains() pseudo-class' },
                 { selector: 'p:contains(/ab.?+)', error: 'Unbalanced brackets for extended pseudo-class' },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
@@ -538,7 +538,7 @@ describe('extended pseudo-classes', () => {
         describe('matches-attr - invalid args', () => {
             const matchAttrErrorText = 'Error while matching element attributes by arg';
             const toThrowInputs = [
-                { selector: 'div:matches-attr()', error: 'Missing arg for :matches-attr pseudo-class' },
+                { selector: 'div:matches-attr()', error: 'Missing arg for :matches-attr() pseudo-class' },
                 { selector: 'div:matches-attr("//")', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(*)', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
@@ -737,7 +737,7 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('matches-property - invalid args', () => {
-            const missingArgErrorText = 'Missing arg for :matches-property pseudo-class';
+            const missingArgErrorText = 'Missing arg for :matches-property() pseudo-class';
             const matchPropErrorText = 'Error while matching element properties by arg';
             const unbalancedBracketsErrorText = 'Unbalanced brackets for extended pseudo-class';
             const toThrowInputs = [
@@ -793,7 +793,7 @@ describe('extended pseudo-classes', () => {
         describe('xpath - invalid args', () => {
             const invalidArgErrorText = 'Invalid argument of :xpath pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:xpath()', error: 'Missing arg for :xpath pseudo-class' },
+                { selector: 'div:xpath()', error: 'Missing arg for :xpath() pseudo-class' },
                 { selector: 'div:xpath("//")', error: invalidArgErrorText },
                 { selector: 'div:xpath(2)', error: invalidArgErrorText },
                 { selector: 'div:xpath(300)', error: invalidArgErrorText },
@@ -848,7 +848,7 @@ describe('extended pseudo-classes', () => {
         describe('nth-ancestor - invalid args', () => {
             const invalidArgErrorText = 'Invalid argument of :nth-ancestor pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:nth-ancestor()', error: 'Missing arg for :nth-ancestor pseudo-class' },
+                { selector: 'div:nth-ancestor()', error: 'Missing arg for :nth-ancestor() pseudo-class' },
                 { selector: 'div:nth-ancestor("//")', error: invalidArgErrorText },
                 { selector: 'div:nth-ancestor(0)', error: invalidArgErrorText },
                 { selector: 'div:nth-ancestor(300)', error: invalidArgErrorText },
@@ -988,6 +988,7 @@ describe('extended pseudo-classes', () => {
         describe('has - ok', () => {
             const successInputs = [
                 { actual: 'div:has(#parent)', expected: 'div#root' },
+                { actual: '[level="2"]:has([href])', expected: 'div#child' },
                 { actual: 'div:has(#child)', expected: '#root, #parent' },
                 { actual: 'div[class]:has(div > span)', expected: 'div#child' },
                 // child combinator in arg
@@ -1024,9 +1025,9 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('has - no arg or invalid selectors', () => {
-            const invalidArgErrorText = 'Invalid selector for :has pseudo-class';
+            const invalidArgErrorText = 'Invalid selector for :has() pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:has()', error: 'Missing arg for :has pseudo-class' },
+                { selector: 'div:has()', error: 'Missing arg for :has() pseudo-class' },
                 { selector: 'div:has(1)', error: invalidArgErrorText },
                 { selector: '#parent > :has(..banner)', error: invalidArgErrorText },
                 { selector: '#parent > :has(id="123") > .test-inner', error: invalidArgErrorText },
@@ -1088,9 +1089,9 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('if-not - no arg or invalid selectors', () => {
-            const invalidArgErrorText = 'Invalid selector for :if-not pseudo-class';
+            const invalidArgErrorText = 'Invalid selector for :if-not() pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:if-not()', error: 'Missing arg for :if-not pseudo-class' },
+                { selector: 'div:if-not()', error: 'Missing arg for :if-not() pseudo-class' },
                 { selector: 'div:if-not(1)', error: invalidArgErrorText },
                 { selector: '#parent > :if-not(..banner)', error: invalidArgErrorText },
                 { selector: '#parent > :if-not(id="123") > .test-inner', error: invalidArgErrorText },
@@ -1151,8 +1152,8 @@ describe('extended pseudo-classes', () => {
 
         describe('is - invalid args', () => {
             const toThrowInputs = [
-                { selector: 'div:is()', error: 'Missing arg for :is pseudo-class' },
-                { selector: 'html:is(.modal-active)', error: 'Selection by :is pseudo-class is not possible' },
+                { selector: 'div:is()', error: 'Missing arg for :is() pseudo-class' },
+                { selector: 'html:is(.modal-active)', error: 'Selection by :is() pseudo-class is not possible' },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -1209,14 +1210,14 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('not - invalid args', () => {
-            const invalidArgErrorText = 'Invalid selector for :not pseudo-class';
+            const invalidArgErrorText = 'Invalid selector for :not() pseudo-class';
             const toThrowInputs = [
-                { selector: 'div:not()', error: 'Missing arg for :not pseudo-class' },
+                { selector: 'div:not()', error: 'Missing arg for :not() pseudo-class' },
                 { selector: 'div:not(1)', error: invalidArgErrorText },
                 { selector: '#parent > :not(id="123") > .test-inner', error: invalidArgErrorText },
                 { selector: '#parent > :not(..banner) > .test-inner', error: invalidArgErrorText },
                 // there is no parentElement for html-node
-                { selector: 'html:not(.modal-active)', error: 'Selection by :not pseudo-class is not possible' },
+                { selector: 'html:not(.modal-active)', error: 'Selection by :not() pseudo-class is not possible' },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -1696,12 +1697,10 @@ describe('check invalid selectors', () => {
             '(',
             '()',
             ',',
-            '[',
             '{',
             '<',
             '<>',
             '{}',
-            '[id=012345678901234567890123456789',
             ':nth-child(2+0)',
             ':nth-child(- 1n)',
             ':first-child(n)',
@@ -1716,6 +1715,15 @@ describe('check invalid selectors', () => {
         ];
         const error = 'is not a valid selector';
         test.each(invalidInputs)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('unbalanced attributes brackets', () => {
+        const unknownPseudoInputs = [
+            '[',
+            '[id=012345678901234567890123456789',
+        ];
+        const error = 'Unbalanced attribute brackets is selector:';
+        test.each(unknownPseudoInputs)('%s', (selector) => expectToThrowInput({ selector, error }));
     });
 
     describe('unknown pseudo-classes', () => {

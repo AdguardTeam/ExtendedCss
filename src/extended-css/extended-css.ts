@@ -24,7 +24,7 @@ const APPLY_RULES_DELAY = 150;
 /**
  * Result of selector validation.
  */
-type ValidationResult = {
+export type SelectorValidationResult = {
     ok: boolean,
     error: string | null,
 };
@@ -207,7 +207,7 @@ export class ExtendedCss {
      *
      * @param selector Selector text.
      */
-    public static validate(selector: string): ValidationResult {
+    public static validate(selector: string): SelectorValidationResult {
         try {
             ExtendedCss.query(selector);
             return { ok: true, error: null };

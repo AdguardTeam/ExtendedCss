@@ -21,10 +21,27 @@ import {
 } from '../helpers/selector-parser';
 
 describe('regular selectors', () => {
-    it('simple', () => {
-        const selector = 'div';
-        const expectedAst = getAstWithSingleRegularSelector(selector);
-        expect(parse(selector)).toEqual(expectedAst);
+    describe('simple', () => {
+        const selectors = [
+            'div',
+            '.banner',
+            '[style*="z-index: 100000000;"]',
+            '[data-dfp-sizes="728x90,960x250,1260x110"]',
+            '[style="background-color: #fff; padding: 6px; text-align: center"]',
+            '[onclick^="window.open (\'https://example.com/share?url="]',
+            '[data-bind="visible: showCookieWarning"]',
+            '[href="javascript: bot.renew()"]',
+            '[style^="background-color: rgb(24, 28, 31);"]',
+            '[href^="https://www.example.com/swiety-ogien-rzymu-wespazjan-tom-8-fabbri-robert,p1242140709,ksiazka-p"]',
+            '[href^="/watch?v="]',
+            // TODO: handle `]` inside attribute value
+            // '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+            // 'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+        ];
+        test.each(selectors)('%s', (selector) => {
+            const expectedAst = getAstWithSingleRegularSelector(selector);
+            expect(parse(selector)).toEqual(expectedAst);
+        });
     });
 
     describe('compound', () => {
@@ -38,6 +55,8 @@ describe('regular selectors', () => {
             'input[data-comma=\'0,1\']',
             'div[class*=" "]',
             'a[href="javascript:void(0)"]',
+            // eslint-disable-next-line max-len
+            '[style^="font-size: 13px; border: 1px solid #ccc; margin-bottom: 15px; padding: 0px 7px;"][style$="-moz-border-radius: 3px; -webkit-border-radius:3px; border-radius:3px;"]',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -49,6 +68,7 @@ describe('regular selectors', () => {
         const selectors = [
             'div > span',
             '.banner + div[style="clear:both;"]',
+            '[style="margin-bottom: 20px; "] > A',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -85,6 +105,14 @@ describe('regular selectors', () => {
             {
                 actual: '.banner, div[data-comma="0,1"]',
                 expected: ['.banner', 'div[data-comma="0,1"]'],
+            },
+            {
+                actual: '.banner, [style*="z-index: 100000000;"]',
+                expected: ['.banner', '[style*="z-index: 100000000;"]'],
+            },
+            {
+                actual: '[id^="test"],[style^="height: 90px;"],.ad_text,#div',
+                expected: ['[id^="test"]', '[style^="height: 90px;"]', '.ad_text', '#div'],
             },
         ];
         test.each(testsInputs)('%s', ({ actual, expected }) => {
@@ -386,6 +414,21 @@ describe('relative extended selectors', () => {
                 expected: [
                     { isRegular: true, value: '.banner' },
                     { isRelative: true, name, value: '> a[class^="ad"]' },
+                ],
+            },
+            {
+                actual: '[style="min-height: 260px;"]:has([id^="banner-top"])',
+                expected: [
+                    { isRegular: true, value: '[style="min-height: 260px;"]' },
+                    { isRelative: true, name, value: '[id^="banner-top"]' },
+                ],
+            },
+            // TODO: may be unnecessary, consider removing
+            {
+                actual: '[style*="border-radius: 3px; margin-bottom: 20px; width: 160px;"]:-abp-has([target="_blank"])',
+                expected: [
+                    { isRegular: true, value: '[style*="border-radius: 3px; margin-bottom: 20px; width: 160px;"]' },
+                    { isRelative: true, name: '-abp-has', value: '[target="_blank"]' },
                 ],
             },
         ];
@@ -2571,6 +2614,9 @@ describe('fail on white space which is before or after extended pseudo-class nam
             'div:invalid-pseudo (1)',
             '.block:nth-child (2) .inner',
             '.block:nth-child\t(2) .inner',
+            // may be validated by FilterCompiler
+            '+js(overlay-buster)',
+            '+js(set-constant, Object.prototype.getHoneypot, null)',
         ];
         test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
     });
@@ -2587,7 +2633,7 @@ describe('fail on invalid selector', () => {
     });
 
     describe('unbalanced brackets - attributes is selector', () => {
-        const error = 'Unbalanced brackets for attributes is selector';
+        const error = 'Unbalanced attribute brackets is selector';
         const invalidSelectors = [
             // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
             'a[href][data-item^=\'{',

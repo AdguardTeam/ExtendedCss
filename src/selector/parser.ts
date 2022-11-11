@@ -194,7 +194,7 @@ const updateBufferNode = (context: Context, tokenValue: string): void => {
         || type === NodeType.AbsolutePseudoClass) {
         bufferNode.value += tokenValue;
     } else {
-        throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported.`); // eslint-disable-line max-len
+        throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported`); // eslint-disable-line max-len
     }
 };
 
@@ -293,7 +293,7 @@ const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface | null
     upToClosest(context, NodeType.Selector);
     const selectorNode = getBufferNode(context);
     if (!selectorNode) {
-        throw new Error('No SelectorNode, impossible to continue selector parsing');
+        throw new Error('No SelectorNode, impossible to continue selector parsing by ExtendedCss');
     }
     const lastSelectorNodeChild = getLast(selectorNode.children);
     const hasExtended = lastSelectorNodeChild.type === NodeType.ExtendedSelector
@@ -534,12 +534,17 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                     || (prevTokenType === TokenType.Word
                                         && nextTokenValue === BRACKETS.PARENTHESES.LEFT))
                             ) {
-                                throw new Error(`'${selector}' is not a valid selector.`);
+                                throw new Error(`'${selector}' is not a valid selector`);
                             }
                             // collect current tokenValue to value of RegularSelector
                             // if it is the last token or standard selector continues after the space.
                             // otherwise it will be skipped
-                            if (!nextTokenValue || doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)) {
+                            if (!nextTokenValue
+                                || doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)
+                                // we also should collect space inside attribute value
+                                // e.g. `[onclick^="window.open ('https://example.com/share?url="]`
+                                // parser position             ↑
+                                || context.isAttributeBracketsOpen) {
                                 updateBufferNode(context, tokenValue);
                             }
                         }
@@ -591,6 +596,14 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         // so we need to check whether the new ast node should be added (example above)
                         // or previous regular selector node should be updated
                         if (COMBINATORS.includes(tokenValue)) {
+                            if (bufferNode === null) {
+                                // cases where combinator at very beginning of a selector
+                                // e.g. '> div'
+                                // or   '~ .banner'
+                                // or even '+js(overlay-buster)' which not a selector at all
+                                // but may be validated by FilterCompiler so error message should be appropriate
+                                throw new Error(`'${selector}' is not a valid selector`);
+                            }
                             bufferNode = getUpdatedBufferNode(context);
                         }
                         if (bufferNode === null) {
@@ -609,6 +622,10 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // or   '#top > div.ad'
                                 // or   '[class][style][attr]'
                                 initAst(context, tokenValue);
+                                if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                    // e.g. '[class^="banner-"]'
+                                    context.isAttributeBracketsOpen = true;
+                                }
                             }
                         } else if (bufferNode.type === NodeType.RegularSelector) {
                             // collect the mark to the value of RegularSelector node
@@ -657,12 +674,19 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             addAstNodeByType(context, NodeType.Selector);
                             // and RegularSelector as it is always the first child of Selector
                             addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
+                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                // handle simple attribute selector in selector list
+                                // e.g. '.banner, [class^="ad-"]'
+                                context.isAttributeBracketsOpen = true;
+                            }
                         }
                         break;
                     case BRACKETS.SQUARE.RIGHT:
                         if (bufferNode?.type === NodeType.RegularSelector) {
                             // needed for proper parsing regular selectors after the attributes with comma
                             // e.g. 'div[data-comma="0,1"] > img'
+                            // TODO: handle `]` inside attribute value
+                            // e.g. '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]'
                             context.isAttributeBracketsOpen = false;
                             // collect the bracket to the value of RegularSelector node
                             updateBufferNode(context, tokenValue);
@@ -956,14 +980,14 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                     case CARRIAGE_RETURN:
                         // such characters at start and end of selector should be trimmed
                         // so is there is one them among tokens, it is not valid selector
-                        throw new Error(`'${selector}' is not a valid selector.`);
+                        throw new Error(`'${selector}' is not a valid selector`);
                 }
                 break;
                 // no default statement for Marks as they are limited to SUPPORTED_SELECTOR_MARKS
                 // and all other symbol combinations are tokenized as Word
                 // so error for invalid Word will be thrown later while element selecting by parsed ast
             default:
-                throw new Error(`Unknown type of token: '${tokenValue}'.`);
+                throw new Error(`Unknown type of token: '${tokenValue}'`);
         }
 
         i += 1;
@@ -980,7 +1004,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
     }
 
     if (context.isAttributeBracketsOpen) {
-        throw new Error(`Unbalanced brackets for attributes is selector: '${selector}'`);
+        throw new Error(`Unbalanced attribute brackets is selector: '${selector}'`);
     }
 
     return context.ast;

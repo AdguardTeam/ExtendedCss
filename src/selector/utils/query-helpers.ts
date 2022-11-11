@@ -80,7 +80,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
             // selectorList.children always starts with regular selector as any selector generally
             const [relativeRegularSelector] = selector.children;
             if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
+                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
             }
 
             let specifiedSelector: SpecifiedSelector = '';
@@ -120,7 +120,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
             }
 
             if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
+                throw new Error(`Selection by :${pseudoName}() pseudo-class is not possible`);
             }
 
             let relativeElements: HTMLElement[];
@@ -130,7 +130,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
             } catch (e) {
                 logger.error(e);
                 // fail for invalid selector
-                throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`);
+                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
             }
             return relativeElements.length > 0;
         });
@@ -150,7 +150,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
             // selectorList.children always starts with regular selector
             const [relativeRegularSelector] = selector.children;
             if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
+                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
             }
 
             /**
@@ -159,7 +159,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
              */
             const rootElement = element.parentElement;
             if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
+                throw new Error(`Selection by :${pseudoName}() pseudo-class is not possible`);
             }
 
             /**
@@ -199,7 +199,7 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
             // selectorList.children always starts with regular selector
             const [relativeRegularSelector] = selector.children;
             if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName} pseudo-class.`);
+                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
             }
 
             /**
@@ -208,7 +208,7 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
              */
             const rootElement = element.parentElement;
             if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName} pseudo-class is not possible.`);
+                throw new Error(`Selection by :${pseudoName}() pseudo-class is not possible`);
             }
 
             /**
@@ -225,7 +225,7 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
             } catch (e) {
                 // fail on invalid selectors for :not()
                 logger.error(e);
-                throw new Error(`Invalid selector for :${pseudoName} pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
+                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
             }
 
             // TODO: figure out how to handle up-looking pseudo-classes inside :not()
@@ -292,7 +292,7 @@ export const getByExtendedSelector = (
         const absolutePseudoArg = extendedSelectorNode.children[0].value;
         if (!absolutePseudoArg) {
             // absolute extended pseudo-classes should have an argument
-            throw new Error(`Missing arg for :${pseudoName} pseudo-class`);
+            throw new Error(`Missing arg for :${pseudoName}() pseudo-class`);
         }
         if (pseudoName === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
             // :nth-ancestor()
@@ -302,7 +302,7 @@ export const getByExtendedSelector = (
             try {
                 document.createExpression(absolutePseudoArg, null);
             } catch (e) {
-                throw new Error(`Invalid argument of :${pseudoName} pseudo-class: '${absolutePseudoArg}'`);
+                throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${absolutePseudoArg}'`);
             }
             foundElements = findByAbsolutePseudoPseudo.xpath(domElements, absolutePseudoArg);
         } else if (pseudoName === UPWARD_PSEUDO_CLASS_MARKER) {
@@ -324,7 +324,7 @@ export const getByExtendedSelector = (
         const relativeSelectorNodes = extendedSelectorNode.children[0].children;
         if (relativeSelectorNodes.length === 0) {
             // extended relative pseudo-classes should have an argument as well
-            throw new Error(`Missing arg for :${pseudoName} pseudo-class`);
+            throw new Error(`Missing arg for :${pseudoName}() pseudo-class`);
         }
         const [relativeSelectorList] = relativeSelectorNodes;
         let relativePredicate: (e: HTMLElement) => boolean;
@@ -360,12 +360,12 @@ export const getByExtendedSelector = (
                 });
                 break;
             default:
-                throw new Error(`Unknown relative pseudo-class: ':${pseudoName}()'`);
+                throw new Error(`Unknown relative pseudo-class: '${pseudoName}'`);
         }
         foundElements = domElements.filter(relativePredicate);
     } else {
         // extra check is parser missed something
-        throw new Error(`Unknown extended pseudo-class: ':${pseudoName}()'`);
+        throw new Error(`Unknown extended pseudo-class: '${pseudoName}'`);
     }
     return foundElements;
 };
