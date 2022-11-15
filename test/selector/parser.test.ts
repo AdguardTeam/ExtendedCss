@@ -285,12 +285,18 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' }, // eslint-disable-line max-len
                 ],
             },
-            // div:matches-css(background-image: /^url\(data:image/png;base64,iVBOR/)
             {
                 actual: 'div:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
                 expected: [
                     { isRegular: true, value: 'div' },
                     { isAbsolute: true, name, value: 'background-image: /^url\\(data:image/png;base64,iVBOR/' },
+                ],
+            },
+            {
+                actual: 'div[class*=" "]:matches-css(background-image: /^url\\(https:\\/\\/example\\.org\\//)',
+                expected: [
+                    { isRegular: true, value: 'div[class*=" "]' },
+                    { isAbsolute: true, name, value: 'background-image: /^url\\(https:\\/\\/example\\.org\\//' },
                 ],
             },
         ];

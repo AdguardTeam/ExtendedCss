@@ -507,6 +507,11 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         const previousToken = tokens[i - 1] || [];
         const { type: prevTokenType, value: prevTokenValue } = previousToken;
 
+        // needed for proper parsing of regexp pattern arg
+        // e.g. ':matches-css(background-image: /^url\(https:\/\/example\.org\//)'
+        const previousToPreviousToken = tokens[i - 2] || [];
+        const { value: prevToPrevTokenValue } = previousToPreviousToken;
+
         let bufferNode = getBufferNode(context);
 
         switch (tokenType) {
@@ -713,13 +718,20 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                             // 'isRegexpOpen' flag is needed for brackets balancing inside extended pseudo-class arg
                             if (tokenValue === SLASH
-                                && prevTokenValue !== BACKSLASH
                                 && context.extendedPseudoNamesStack.length > 0) {
-                                if (isRegexpOpening(context, prevTokenValue, bufferNode.value)) {
-                                    context.isRegexpOpen = !context.isRegexpOpen;
-                                } else {
-                                    // otherwise force `isRegexpOpen` flag to `false`
+                                if (prevTokenValue === SLASH
+                                    && prevToPrevTokenValue === BACKSLASH) {
+                                    // it may be specific url regexp pattern in arg of pseudo-class
+                                    // e.g. ':matches-css(background-image: /^url\(https:\/\/example\.org\//)'
+                                    // parser position is on final slash before `)`                        ↑
                                     context.isRegexpOpen = false;
+                                } else if (prevTokenValue !== BACKSLASH) {
+                                    if (isRegexpOpening(context, prevTokenValue, bufferNode.value)) {
+                                        context.isRegexpOpen = !context.isRegexpOpen;
+                                    } else {
+                                        // otherwise force `isRegexpOpen` flag to `false`
+                                        context.isRegexpOpen = false;
+                                    }
                                 }
                             }
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {

@@ -376,6 +376,7 @@ describe('extended css library', () => {
             'div[id*="-ad-"]:remove()',
             '#main div[id*="_containerWrap_"]:has(img[src$="Banner/ad.jpg"]):remove()',
             'div[class*=" "]:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
+            'div[class*=" "]:matches-css(background-image: /^url\\(https:\\/\\/example\\.org\\//)',
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();
