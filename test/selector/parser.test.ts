@@ -37,6 +37,7 @@ describe('regular selectors', () => {
             // TODO: handle `]` inside attribute value
             // '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
             // 'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+            'div[style^=" margin-right: auto; margin-left: auto;	text-align: left;	padding-bottom: 10px;"]',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -207,6 +208,41 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '/[\\w]{9,}/' },
                 ],
             },
+            {
+                actual: '#container > :contains(/"quote[\\w]"/)',
+                expected: [
+                    { isRegular: true, value: '#container > *' },
+                    { isAbsolute: true, name, value: '/"quote[\\w]"/' },
+                ],
+            },
+            {
+                actual: 'p:-abp-contains(=== Ads / Sponsored ===)',
+                expected: [
+                    { isRegular: true, value: 'p' },
+                    { isAbsolute: true, name: '-abp-contains', value: '=== Ads / Sponsored ===' },
+                ],
+            },
+            {
+                actual: '.obj-cont dt:-abp-contains( Advertisement/)',
+                expected: [
+                    { isRegular: true, value: '.obj-cont dt' },
+                    { isAbsolute: true, name: '-abp-contains', value: ' Advertisement/' },
+                ],
+            },
+            {
+                actual: '#main .et_pb_blurb_content:-abp-contains(text1/text2)',
+                expected: [
+                    { isRegular: true, value: '#main .et_pb_blurb_content' },
+                    { isAbsolute: true, name: '-abp-contains', value: 'text1/text2' },
+                ],
+            },
+            {
+                actual: '.article:has-text(src="https://example.org/test.png")',
+                expected: [
+                    { isRegular: true, value: '.article' },
+                    { isAbsolute: true, name: 'has-text', value: 'src="https://example.org/test.png"' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
@@ -247,6 +283,14 @@ describe('absolute extended selectors', () => {
                 expected: [
                     { isRegular: true, value: '*' },
                     { isAbsolute: true, name, value: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' }, // eslint-disable-line max-len
+                ],
+            },
+            // div:matches-css(background-image: /^url\(data:image/png;base64,iVBOR/)
+            {
+                actual: 'div:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: 'background-image: /^url\\(data:image/png;base64,iVBOR/' },
                 ],
             },
         ];
@@ -423,7 +467,6 @@ describe('relative extended selectors', () => {
                     { isRelative: true, name, value: '[id^="banner-top"]' },
                 ],
             },
-            // TODO: may be unnecessary, consider removing
             {
                 actual: '[style*="border-radius: 3px; margin-bottom: 20px; width: 160px;"]:-abp-has([target="_blank"])',
                 expected: [
@@ -1523,6 +1566,13 @@ describe('combined selectors', () => {
                     { isAbsolute: true, name: 'contains', value: '/а/' },
                 ],
             },
+            {
+                actual: 'body > div:not([id])[style="position: absolute; z-index: 10000;"]',
+                expected: [
+                    { isRegular: true, value: 'body > div[style="position: absolute; z-index: 10000;"]' },
+                    { isRelative: true, name: 'not', value: '[id]' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
@@ -1967,6 +2017,22 @@ describe('combined selectors', () => {
                     { isRegular: true, value: '#main .target' },
                     { isAbsolute: true, name: 'nth-ancestor', value: '2' },
                     { isRegular: true, value: '+ .banner' },
+                ],
+            },
+            {
+                actual: 'p:-abp-contains(=== Ads / Sponsored ===) + p',
+                expected: [
+                    { isRegular: true, value: 'p' },
+                    { isAbsolute: true, name: '-abp-contains', value: '=== Ads / Sponsored ===' },
+                    { isRegular: true, value: '+ p' },
+                ],
+            },
+            {
+                actual: 'p:-abp-contains(=== Ads / Sponsored ===) + p + p',
+                expected: [
+                    { isRegular: true, value: 'p' },
+                    { isAbsolute: true, name: '-abp-contains', value: '=== Ads / Sponsored ===' },
+                    { isRegular: true, value: '+ p + p' },
                 ],
             },
         ];

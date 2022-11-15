@@ -47,6 +47,9 @@ import {
     REGULAR_PSEUDO_ELEMENTS,
     UPWARD_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
+    EQUAL_SIGN,
+    DOT,
+    CONTAINS_PSEUDO_NAMES,
 } from '../common/constants';
 
 // limit applying of wildcard :is() and :not() pseudo-class only to html children
@@ -84,6 +87,69 @@ const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: st
         // e.g. 'div[class*=" "]'
         || nextTokenValue === DOUBLE_QUOTE
         || nextTokenValue === BRACKETS.SQUARE.LEFT;
+};
+
+/**
+ * Limited list of available symbols before slash `/`
+ * to check whether it is valid regexp pattern opening.
+ */
+const POSSIBLE_MARKS_BEFORE_REGEXP = {
+    COMMON: [
+        // e.g. ':matches-attr(/data-/)'
+        BRACKETS.PARENTHESES.LEFT,
+        // e.g. `:matches-attr('/data-/')`
+        SINGLE_QUOTE,
+        // e.g. ':matches-attr("/data-/")'
+        DOUBLE_QUOTE,
+        // e.g. ':matches-attr(check=/data-v-/)'
+        EQUAL_SIGN,
+        // e.g. ':matches-property(inner./_test/=null)'
+        DOT,
+        // e.g. ':matches-css(height:/20px/)'
+        COLON,
+        // ':matches-css-after( content  :   /(\\d+\\s)*me/  )'
+        SPACE,
+    ],
+    CONTAINS: [
+        // e.g. ':contains(/text/)'
+        BRACKETS.PARENTHESES.LEFT,
+        // e.g. `:contains('/text/')`
+        SINGLE_QUOTE,
+        // e.g. ':contains("/text/")'
+        DOUBLE_QUOTE,
+    ],
+};
+
+/**
+ * Checks whether the regexp pattern for pseudo-class arg starts.
+ * Needed for `context.isRegexpOpen` flag.
+ *
+ * @param context Selector parser context.
+ * @param prevTokenValue Value of previous token.
+ * @param bufferNodeValue Value of bufferNode.
+ *
+ * @throws An error on invalid regexp pattern.
+ */
+const isRegexpOpening = (context: Context, prevTokenValue: string, bufferNodeValue: string): boolean => {
+    const lastExtendedPseudoClassName = getLast(context.extendedPseudoNamesStack);
+    // for regexp pattens the slash should not be escaped
+    // const isRegexpPatternSlash = prevTokenValue !== BACKSLASH;
+    // regexp pattern can be set as arg of pseudo-class
+    // which means limited list of available symbols before slash `/`;
+    // for :contains() pseudo-class regexp pattern should be at the beginning of arg
+    if (CONTAINS_PSEUDO_NAMES.includes(lastExtendedPseudoClassName)) {
+        return POSSIBLE_MARKS_BEFORE_REGEXP.CONTAINS.includes(prevTokenValue);
+    }
+    if (prevTokenValue === SLASH
+        && lastExtendedPseudoClassName !== XPATH_PSEUDO_CLASS_MARKER) {
+        const rawArgDesc = bufferNodeValue
+            ? `in arg part: '${bufferNodeValue}'`
+            : 'arg';
+        throw new Error(`Invalid regexp pattern for :${lastExtendedPseudoClassName}() pseudo-class ${rawArgDesc}`);
+    }
+
+    // for other pseudo-classes regexp pattern can be either the whole arg or its part
+    return  POSSIBLE_MARKS_BEFORE_REGEXP.COMMON.includes(prevTokenValue);
 };
 
 /**
@@ -515,7 +581,11 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         // e.g. 'div:has(img).banner span'
                         // so we need to check whether the new ast node should be added (example above)
                         // or previous regular selector node should be updated
-                        if (bufferNode?.type === NodeType.RegularSelector) {
+                        if (bufferNode?.type === NodeType.RegularSelector
+                            // no need to update the buffer node if attribute value is being parsed
+                            // e.g. 'div:not([id])[style="position: absolute; z-index: 10000;"]'
+                            // parser position inside attribute    ↑
+                            && !context.isAttributeBracketsOpen) {
                             bufferNode = getUpdatedBufferNode(context);
                         }
                         if (bufferNode?.type === NodeType.RegularSelector) {
@@ -638,10 +708,19 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         } else if (bufferNode.type === NodeType.AbsolutePseudoClass) {
                             // collect the mark to the arg of AbsolutePseudoClass node
                             updateBufferNode(context, tokenValue);
+                            if (!bufferNode.value) {
+                                throw new Error('bufferNode should have value by now');
+                            }
                             // 'isRegexpOpen' flag is needed for brackets balancing inside extended pseudo-class arg
-                            if (tokenValue === SLASH && prevTokenValue !== BACKSLASH) {
-                                context.isRegexpOpen = context.extendedPseudoNamesStack.length > 0
-                                    && !context.isRegexpOpen;
+                            if (tokenValue === SLASH
+                                && prevTokenValue !== BACKSLASH
+                                && context.extendedPseudoNamesStack.length > 0) {
+                                if (isRegexpOpening(context, prevTokenValue, bufferNode.value)) {
+                                    context.isRegexpOpen = !context.isRegexpOpen;
+                                } else {
+                                    // otherwise force `isRegexpOpen` flag to `false`
+                                    context.isRegexpOpen = false;
+                                }
                             }
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             // add SelectorList to children of RelativePseudoClass node
@@ -668,6 +747,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // so we need to get last regular selector node and update its value
                                 bufferNode = getLastRegularSelectorNode(context);
                                 updateBufferNode(context, tokenValue);
+                                if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                    // handle attribute in compound selector after extended pseudo-class
+                                    // e.g. 'div:not(.top)[style="z-index: 10000;"]'
+                                    // parser position    ↑
+                                    context.isAttributeBracketsOpen = true;
+                                }
                             }
                         } else if (bufferNode.type === NodeType.SelectorList) {
                             // add Selector to SelectorList
@@ -974,13 +1059,24 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         }
                         break;
-                    case TAB:
                     case LINE_FEED:
                     case FORM_FEED:
                     case CARRIAGE_RETURN:
                         // such characters at start and end of selector should be trimmed
                         // so is there is one them among tokens, it is not valid selector
                         throw new Error(`'${selector}' is not a valid selector`);
+                    case TAB:
+                        // allow tab only inside attribute value
+                        // as there are such valid rules in filter lists
+                        // e.g. 'div[style^="margin-right: auto;	text-align: left;',
+                        // parser position                      ↑
+                        if (bufferNode?.type === NodeType.RegularSelector
+                            && context.isAttributeBracketsOpen) {
+                            updateBufferNode(context, tokenValue);
+                        } else {
+                            // otherwise not valid
+                            throw new Error(`'${selector}' is not a valid selector`);
+                        }
                 }
                 break;
                 // no default statement for Marks as they are limited to SUPPORTED_SELECTOR_MARKS

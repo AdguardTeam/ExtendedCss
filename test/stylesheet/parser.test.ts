@@ -5,7 +5,7 @@
 import { parse } from '../../src/stylesheet';
 import { ExtCssDocument } from '../../src/selector';
 
-import { STYLESHEET_ERROR_PREFIX } from '../../src/common/constants';
+import { REMOVE_ERROR_PREFIX, STYLESHEET_ERROR_PREFIX } from '../../src/common/constants';
 
 interface TestRuleData {
     selector: string,
@@ -577,8 +577,17 @@ describe('stylesheet parser', () => {
             test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
         });
 
+        describe('no selector for style declaration', () => {
+            const error = 'Selector should be defined before style declaration in stylesheet';
+            const invalidSelectors = [
+                '{ display: none }',
+                ' { display: none }',
+            ];
+            test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
+        });
+
         describe('invalid remove pseudo-class', () => {
-            const error = STYLESHEET_ERROR_PREFIX.INVALID_REMOVE;
+            const error = REMOVE_ERROR_PREFIX.INVALID_REMOVE;
             const invalidSelectors = [
                 ':remove()',
                 '.block:remove() > .banner:remove()',
@@ -610,7 +619,7 @@ describe('stylesheet parser', () => {
                 div:not(.header) { display: none; }
                 /* div:not(.header) { padding: 0; } */
             `;
-            const error = 'Comments in stylesheet are not supported';
+            const error = STYLESHEET_ERROR_PREFIX.NO_COMMENT;
             expectToThrowOnStylesheet({ stylesheet, error });
         });
 

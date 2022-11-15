@@ -1,5 +1,5 @@
 import { extCssDocument } from '../selector';
-import { parse as parseStylesheet } from '../stylesheet';
+import { parse as parseStylesheet, parseRemoveSelector } from '../stylesheet';
 
 import { ThrottleWrapper } from './helpers/throttle-wrapper';
 import { applyRules } from './helpers/rules-applier';
@@ -205,14 +205,19 @@ export class ExtendedCss {
     /**
      * Validates selector.
      *
-     * @param selector Selector text.
+     * @param inputSelector Selector text to validate.
      */
-    public static validate(selector: string): SelectorValidationResult {
+    public static validate(inputSelector: string): SelectorValidationResult {
         try {
+            // ExtendedCss in general supports :remove() in selector
+            // but ExtendedCss.query() does not support it as it should be parsed by stylesheet parser.
+            // so for validation we have to handle selectors with `:remove()` in it
+            const { selector } = parseRemoveSelector(inputSelector);
             ExtendedCss.query(selector);
             return { ok: true, error: null };
         } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            const error = `Selector is not valid: '${selector}' -- ${e.message}`;
+            // not valid input `selector` should be logged eventually
+            const error = `Selector is not valid: '${inputSelector}' -- ${e.message}`;
             return { ok: false, error };
         }
     }

@@ -2,6 +2,12 @@ import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
 
 import { TimingStats } from '../extended-css';
 
+import {
+    Style,
+    ParsedSelectorData,
+    parseRemoveSelector,
+} from './helpers';
+
 import { logger } from '../common/utils/logger';
 import { getObjectFromEntries } from '../common/utils/objects';
 
@@ -12,6 +18,7 @@ import {
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
     STYLESHEET_ERROR_PREFIX,
+    REMOVE_ERROR_PREFIX,
     SLASH,
     ASTERISK,
 } from '../common/constants';
@@ -25,11 +32,6 @@ const REGEXP_NON_WHITESPACE = /\S/g;
 // ExtendedCss does not support at-rules
 // https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
 const AT_RULE_MARKER = '@';
-
-interface Style {
-    property: string;
-    value: string;
-}
 
 interface RawCssRuleData {
     selector: string;
@@ -153,66 +155,6 @@ const restoreRuleAcc = (context: Context): void => {
     context.rawRuleData = initRawRuleData;
 };
 
-interface ParsedSelectorData {
-    selector: string,
-    stylesOfSelector: Style[],
-}
-
-/**
- * Checks the presence of :remove() pseudo-class and validates it while parsing the selector part of css rule.
- *
- * @param rawSelector Selector which may contain :remove() pseudo-class.
- *
- * @throws An error on invalid :remove() position.
- */
-const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
-    /**
-     * No error will be thrown on invalid selector as it will be validated later
-     * so it's better to explicitly specify 'any' selector for :remove() pseudo-class by '*',
-     * e.g. '.banner > *:remove()' instead of '.banner > :remove()'.
-     */
-
-    // ':remove()'
-    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`; // eslint-disable-line max-len
-    // ':remove(' - needed for validation rules like 'div:remove(2)'
-    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
-
-    let selector: string;
-    let shouldRemove = false;
-    const firstIndex = rawSelector.indexOf(VALID_REMOVE_MARKER);
-    if (firstIndex === 0) {
-        // e.g. ':remove()'
-        throw new Error(`Selector should be specified before :remove() pseudo-class: '${rawSelector}'`);
-    } else if (firstIndex > 0) {
-        if (firstIndex !== rawSelector.lastIndexOf(VALID_REMOVE_MARKER)) {
-            // rule with more than one :remove() pseudo-class is invalid
-            // e.g. '.block:remove() > .banner:remove()'
-            throw new Error(`Pseudo-class :remove() appears more than once in selector: '${rawSelector}'`);
-        } else if (firstIndex + VALID_REMOVE_MARKER.length < rawSelector.length) {
-            // remove pseudo-class should be last in the rule
-            // e.g. '.block:remove():upward(2)'
-            throw new Error(`Pseudo-class :remove() should be at the end of selector: '${rawSelector}'`);
-        } else {
-            // valid :remove() pseudo-class position
-            selector = rawSelector.substring(0, firstIndex);
-            shouldRemove = true;
-        }
-    } else if (rawSelector.includes(INVALID_REMOVE_MARKER)) {
-        // it is not valid if ':remove()' is absent in rule but just ':remove(' is present
-        // e.g. 'div:remove(0)'
-        throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_REMOVE}: '${rawSelector}'`);
-    } else {
-        // there is no :remove() pseudo-class is rule
-        selector = rawSelector;
-    }
-
-    const stylesOfSelector = shouldRemove
-        ? [{ property: REMOVE_PSEUDO_MARKER, value: String(shouldRemove) }]
-        : [];
-
-    return { selector, stylesOfSelector };
-};
-
 /**
  * Parses cropped selector part found before `{` previously.
  *
@@ -232,7 +174,7 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
         removeSelectorData = parseRemoveSelector(selector);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         logger.error(e.message);
-        throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+        throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
     }
 
     if (context.nextIndex === -1) {
@@ -485,7 +427,7 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
 export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();
     if (stylesheet.includes(`${SLASH}${ASTERISK}`) && stylesheet.includes(`${ASTERISK}${SLASH}`)) {
-        throw new Error(`Comments in stylesheet are not supported: '${stylesheet}'`);
+        throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_COMMENT}: '${stylesheet}'`);
     }
 
     const context: Context = {
@@ -511,9 +453,10 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
             // find index of first opening curly bracket
             // which may mean start of style part and end of selector one
             context.nextIndex = context.cssToParse.indexOf(BRACKETS.CURLY.LEFT);
-            // rule should not start with style, selector required
+            // rule should not start with style, selector is required
+            // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
-                throw new Error(`Selector should be defined before style declaration in stylesheet: '${context.cssToParse}'`); // eslint-disable-line max-len
+                throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_SELECTOR}: '${context.cssToParse}'`); // eslint-disable-line max-len
             }
             if (context.nextIndex === -1) {
                 // no style declaration in rule

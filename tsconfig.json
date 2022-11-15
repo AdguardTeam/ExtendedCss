@@ -17,6 +17,7 @@
     ],
     "types": [
       "qunit",
+      "jest",
       "./node_modules/user-agent-data-types"
     ],
   },

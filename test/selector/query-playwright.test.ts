@@ -13,7 +13,7 @@ let browser: Browser;
 let page: Page;
 
 // sometimes default 5 seconds are not enough
-const TESTS_RUN_TIMEOUT_MS = 10 * 1000;
+const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
 
 /**
  * Sets document.body.innerHTML with passed htmlContent.

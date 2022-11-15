@@ -25,6 +25,7 @@ import {
     MATCHES_CSS_PSEUDO,
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     MATCHES_PROPERTY_PSEUDO_CLASS_MARKER,
+    MATCHING_ELEMENT_ERROR_PREFIX,
 } from '../../common/constants';
 
 type MatcherCallback = (a: MatcherArgsInterface) => boolean;
@@ -51,6 +52,17 @@ const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterfac
 };
 
 /**
+ * Generates common error message to throw while matching element `propDesc`.
+ *
+ * @param propDesc Text to describe what element 'prop' pseudo-class is trying to match.
+ * @param pseudoName Pseudo-class name.
+ * @param pseudoArg Pseudo-class arg.
+ */
+const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg: string) => {
+    return `${MATCHING_ELEMENT_ERROR_PREFIX} ${propDesc}, may be invalid :${pseudoName}() pseudo-class arg: '${pseudoArg}'`; // eslint-disable-line max-len
+};
+
+/**
  * Checks whether the domElement is matched by absolute extended pseudo-class argument.
  *
  * @param domElement Page element.
@@ -70,24 +82,24 @@ export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: strin
         case ABP_CONTAINS_PSEUDO:
             callback = isTextMatched;
             argsData = { pseudoName, pseudoArg, domElement };
-            errorMessage = `Error while matching element text content by arg '${pseudoArg}'.`;
+            errorMessage = getAbsolutePseudoError('text content', pseudoName, pseudoArg);
             break;
         case MATCHES_CSS_PSEUDO:
         case MATCHES_CSS_AFTER_PSEUDO:
         case MATCHES_CSS_BEFORE_PSEUDO:
             callback = isStyleMatched;
             argsData = { pseudoName, pseudoArg, domElement };
-            errorMessage = `Error while matching element style by arg '${pseudoArg}'.`;
+            errorMessage = getAbsolutePseudoError('style', pseudoName, pseudoArg);
             break;
         case MATCHES_ATTR_PSEUDO_CLASS_MARKER:
             callback = isAttributeMatched;
             argsData = { domElement, pseudoName, pseudoArg };
-            errorMessage = `Error while matching element attributes by arg '${pseudoArg}'.`;
+            errorMessage = getAbsolutePseudoError('attributes', pseudoName, pseudoArg);
             break;
         case MATCHES_PROPERTY_PSEUDO_CLASS_MARKER:
             callback = isPropertyMatched;
             argsData = { domElement, pseudoName, pseudoArg };
-            errorMessage = `Error while matching element properties by arg '${pseudoArg}'.`;
+            errorMessage = getAbsolutePseudoError('properties', pseudoName, pseudoArg);
             break;
         default:
             throw new Error(`Unknown absolute pseudo-class :${pseudoName}()`);
@@ -136,7 +148,7 @@ export const findByAbsolutePseudoPseudo = {
                         rawPseudoArg,
                         domElement,
                         null,
-                        XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                        window.XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                         null,
                     );
                 } catch (e) {

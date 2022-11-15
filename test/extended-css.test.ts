@@ -12,7 +12,7 @@ const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
 
 interface TestPropElement extends Element {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    testProp: string | Object;
+    _testProp: string | Object;
 }
 
 /**
@@ -366,11 +366,36 @@ describe('extended css library', () => {
         expect(elements.length).toBe(1);
     });
 
-    it('test ExtendedCss.validate', () => {
-        expect(ExtendedCss.validate('div').ok).toBeTruthy();
-        expect(ExtendedCss.validate('#banner').ok).toBeTruthy();
-        expect(ExtendedCss.validate('#banner:has(div) > #banner:contains(test)').ok).toBeTruthy();
-        expect(ExtendedCss.validate('#banner:whatisthispseudo(div)').ok).toBeFalsy();
+    describe('test ExtendedCss.validate', () => {
+        const validSelectors = [
+            'div',
+            '#banner',
+            '[style*="border-bottom: none;"]',
+            'div[style^=" margin-right: auto; margin-left: auto;	text-align: left;	padding-bottom: 10px;"]',
+            '#banner:has(div) > #banner:contains(test)',
+            'div[id*="-ad-"]:remove()',
+            '#main div[id*="_containerWrap_"]:has(img[src$="Banner/ad.jpg"]):remove()',
+            'div[class*=" "]:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
+        ];
+        test.each(validSelectors)('%s', (selector) => {
+            expect(ExtendedCss.validate(selector).ok).toBeTruthy();
+        });
+
+        const invalidSelectors = [
+            '#13_3623',
+            '.4wNET',
+            'A.jumpWrap,DIV.left-game,DIV.right-game,DIV.games-op-wrap,DIV.right-op-wrap mb10,#j-top^Box',
+            '#__^HFa,DIV.box top_box',
+            'DIV.panel_bottom,LI.tl_shadow tl_shadow_new ^',
+            'div[id^="AS_O_LHS_"] > div:nth-child(15 + n)',
+            '#banner:invalidpseudo(div)',
+            '.text-left:has-text(/share/):others()',
+            '.modals.dimmer > .gdpr.visible:upward(1):watch-attr([class])',
+            'div[class*=" "]:has(> div[class] > a[href="/terms"]:not([rel])',
+        ];
+        test.each(invalidSelectors)('%s', (selector) => {
+            expect(ExtendedCss.validate(selector).ok).toBeFalsy();
+        });
     });
 
     it('style remove pseudo-property', (done) => {

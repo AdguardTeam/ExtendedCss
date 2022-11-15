@@ -23,7 +23,7 @@
     "prebuild": "rimraf dist && yarn build:types",
     "build:types": "tsc --declaration --emitDeclarationOnly --outdir dist/types",
     "increment": "yarn version --patch --no-git-tag-version",
-    "lint": "eslint . && tsc --noEmit",
+    "lint": "eslint . && tsc --project tsconfig.eslint.json --noEmit",
     "lint-staged": "lint-staged",
     "prepare": "husky install"
   },

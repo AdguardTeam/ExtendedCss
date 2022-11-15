@@ -20,7 +20,10 @@ const isEqual = <T extends Window>(obj1: T, obj2: T): boolean => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
     return keys1.length === keys2.length
-        && keys2.every((k2) => keys1.includes(k2) && keys1[k2] === keys2[k2]);
+        && keys2.every((k2) => {
+            return keys1.includes(k2)
+                && keys1[k2 as unknown as number] === keys2[k2 as unknown as number];
+        });
 };
 
 describe('global scope test', () => {

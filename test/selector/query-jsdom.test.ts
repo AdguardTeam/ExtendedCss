@@ -9,6 +9,8 @@ import {
     TestPropElement,
 } from '../helpers/selector-query-jsdom';
 
+import { MATCHING_ELEMENT_ERROR_PREFIX } from '../../src/common/constants';
+
 describe('regular selectors', () => {
     afterEach(() => {
         document.body.innerHTML = '';
@@ -480,6 +482,14 @@ describe('extended pseudo-classes', () => {
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
 
+        describe('matches-css - invalid args', () => {
+            const toThrowInputs = [
+                { selector: 'div:matches-css()', error: 'Missing arg for :matches-css() pseudo-class' },
+
+            ];
+            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+        });
+
         /**
          * Matches-css-before and matches-css-after tests located in selector-playwright.test.ts
          * because jsdom does not support pseudo-elements so it does not work.
@@ -536,16 +546,17 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('matches-attr - invalid args', () => {
-            const matchAttrErrorText = 'Error while matching element attributes by arg';
+            const matchAttrErrorText = `${MATCHING_ELEMENT_ERROR_PREFIX} attributes`;
+            const INVALID_REGEXP_ERROR_TEXT = 'Invalid regexp pattern';
             const toThrowInputs = [
                 { selector: 'div:matches-attr()', error: 'Missing arg for :matches-attr() pseudo-class' },
-                { selector: 'div:matches-attr("//")', error: matchAttrErrorText },
+                { selector: 'div:matches-attr("//")', error: INVALID_REGEXP_ERROR_TEXT },
+                { selector: 'div:matches-attr("//"="/./")', error: INVALID_REGEXP_ERROR_TEXT },
                 { selector: 'div:matches-attr(*)', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(")', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(> [track="true"])', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
-                { selector: 'div:matches-attr("//"="/./")', error: matchAttrErrorText },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -737,18 +748,17 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('matches-property - invalid args', () => {
-            const missingArgErrorText = 'Missing arg for :matches-property() pseudo-class';
-            const matchPropErrorText = 'Error while matching element properties by arg';
-            const unbalancedBracketsErrorText = 'Unbalanced brackets for extended pseudo-class';
+            const MISSING_ARG_ERROR_TEXT = 'Missing arg for :matches-property() pseudo-class';
+            const INVALID_REGEXP_ERROR_TEXT = 'Invalid regexp pattern';
+            const matchPropErrorText = `${MATCHING_ELEMENT_ERROR_PREFIX} properties`;
             const toThrowInputs = [
-                { selector: 'div:matches-property()', error: missingArgErrorText },
-                { selector: 'div:matches-property("//")', error: matchPropErrorText },
+                { selector: 'div:matches-property()', error: MISSING_ARG_ERROR_TEXT },
+                { selector: 'div:matches-property("//")', error: INVALID_REGEXP_ERROR_TEXT },
                 { selector: 'div:matches-property(".?"="/^[0-9]*$/")', error: matchPropErrorText },
                 { selector: 'div:matches-property(.prop.id)', error: matchPropErrorText },
-                // due to invalid regexp, closing `)` is considered as part of pseudo-class arg
-                { selector: 'div:matches-property(abc./aa.?+./test/)', error: unbalancedBracketsErrorText },
-                { selector: 'div:matches-property(abc..?+/.test)', error: unbalancedBracketsErrorText },
-                { selector: 'div:matches-property(abcd.?+/.test)', error: unbalancedBracketsErrorText },
+                { selector: 'div:matches-property(abc./aa.?+./test/)', error: matchPropErrorText },
+                { selector: 'div:matches-property(abc..?+/.test)', error: matchPropErrorText },
+                { selector: 'div:matches-property(abcd.?+/.test)', error: matchPropErrorText },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -849,7 +859,7 @@ describe('extended pseudo-classes', () => {
             const invalidArgErrorText = 'Invalid argument of :nth-ancestor pseudo-class';
             const toThrowInputs = [
                 { selector: 'div:nth-ancestor()', error: 'Missing arg for :nth-ancestor() pseudo-class' },
-                { selector: 'div:nth-ancestor("//")', error: invalidArgErrorText },
+                { selector: 'div:nth-ancestor("//")', error: 'Invalid regexp pattern' },
                 { selector: 'div:nth-ancestor(0)', error: invalidArgErrorText },
                 { selector: 'div:nth-ancestor(300)', error: invalidArgErrorText },
             ];
@@ -936,12 +946,11 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('upward selector - invalid args', () => {
-            const selectors = [
-                'div:upward(//)',
-                'div:upward(..class)',
+            const toThrowInputs = [
+                { selector: 'div:upward(//)', error: 'Invalid regexp pattern' },
+                { selector: 'div:upward(..class)', error: 'Invalid argument of :upward pseudo-class' },
             ];
-            const invalidArgErrorText = 'Invalid argument of :upward pseudo-class';
-            test.each(selectors)('%s', (selector) => expectToThrowInput({ selector, error: invalidArgErrorText }));
+            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
     });
 

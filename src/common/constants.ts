@@ -112,6 +112,12 @@ export const MATCHES_PROPERTY_PSEUDO_CLASS_MARKER = 'matches-property';
 export const XPATH_PSEUDO_CLASS_MARKER = 'xpath';
 export const NTH_ANCESTOR_PSEUDO_CLASS_MARKER = 'nth-ancestor';
 
+export const CONTAINS_PSEUDO_NAMES = [
+    CONTAINS_PSEUDO,
+    HAS_TEXT_PSEUDO,
+    ABP_CONTAINS_PSEUDO,
+];
+
 /**
  * Pseudo-class :upward() can get number or selector arg
  * and if the arg is selector it should be standard, not extended
@@ -203,12 +209,22 @@ export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
 
 export const STYLESHEET_ERROR_PREFIX = {
     NO_STYLE: 'No style declaration at stylesheet part',
+    NO_SELECTOR: 'Selector should be defined before style declaration in stylesheet',
     INVALID_STYLE: 'Invalid style declaration at stylesheet part',
     UNCLOSED_STYLE: 'Unclosed style declaration at stylesheet part',
     NO_PROPERTY: 'Missing style property in declaration at stylesheet part',
     NO_VALUE: 'Missing style value in declaration at stylesheet part',
-    INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
     NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
+    NO_COMMENT: 'Comments in stylesheet are not supported',
 };
+
+export const REMOVE_ERROR_PREFIX = {
+    INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
+    NO_TARGET_SELECTOR: 'Selector should be specified before :remove() pseudo-class',
+    MULTIPLE_USAGE: 'Pseudo-class :remove() appears more than once in selector',
+    INVALID_POSITION: 'Pseudo-class :remove() should be at the end of selector',
+};
+
+export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
 
 export const MAX_STYLE_PROTECTION_COUNT = 50;

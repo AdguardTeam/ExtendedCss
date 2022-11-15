@@ -176,7 +176,7 @@ const getComputedStylePropertyValue = (
     propertyName: string,
     regularPseudoElement: string | null,
 ): string => {
-    const style = getComputedStyle(domElement, regularPseudoElement);
+    const style = window.getComputedStyle(domElement, regularPseudoElement);
     const propertyValue = style.getPropertyValue(propertyName);
     return normalizePropertyValue(propertyName, propertyValue);
 };
