@@ -654,7 +654,7 @@ describe('extended css library', () => {
 
                 const selectors = Object.keys(loggedData);
                 expect(selectors.length).toEqual(1);
-                expect(selectors[0].includes('with-debug')).toBeTruthy();
+                expect(selectors[0] && selectors[0].includes('with-debug')).toBeTruthy();
 
                 // Cleanup
                 logger.info = loggerInfo;
@@ -720,7 +720,7 @@ describe('extended css library', () => {
 
                 const selectors = Object.keys(loggedData);
                 expect(selectors.length).toEqual(1);
-                expect(selectors[0].includes('with-debug')).toBeTruthy();
+                expect(selectors[0] && selectors[0].includes('with-debug')).toBeTruthy();
 
                 // Cleanup
                 logger.info = loggerInfo;

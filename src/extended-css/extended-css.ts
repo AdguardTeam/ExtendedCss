@@ -215,9 +215,10 @@ export class ExtendedCss {
             const { selector } = parseRemoveSelector(inputSelector);
             ExtendedCss.query(selector);
             return { ok: true, error: null };
-        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        } catch (e: unknown) {
+            const caughtErrorMessage = e instanceof Error ? e.message : e;
             // not valid input `selector` should be logged eventually
-            const error = `Selector is not valid: '${inputSelector}' -- ${e.message}`;
+            const error = `Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
             return { ok: false, error };
         }
     }

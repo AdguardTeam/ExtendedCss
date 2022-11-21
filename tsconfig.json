@@ -12,6 +12,7 @@
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
     "typeRoots": [
       "node_modules/@types",
     ],

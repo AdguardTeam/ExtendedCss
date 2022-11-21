@@ -19,6 +19,9 @@ const PROTECTION_OBSERVER_OPTIONS = {
  */
 const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => {
     const protectionCallback = (mutations: MutationRecord[], extObserver: ExtMutationObserver): void => {
+        if (!mutations[0]) {
+            return;
+        }
         const { target } = mutations[0];
         extObserver.disconnect();
         styles.forEach((style) => {

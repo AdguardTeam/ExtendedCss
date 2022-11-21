@@ -385,6 +385,9 @@ export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
     let i = 0;
     while (i < elementAttributes.length && !isMatched) {
         const attr = elementAttributes[i];
+        if (!attr) {
+            break;
+        }
 
         const isNameMatched = attrNameMatch instanceof RegExp
             ? attrNameMatch.test(attr.name)
@@ -434,6 +437,9 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
     let i = 0;
     while (i < chainChunks.length) {
         const chunk = chainChunks[i];
+        if (!chunk) {
+            throw new Error(`Invalid pseudo-class arg: '${input}'`);
+        }
         if (chunk.startsWith(SLASH) && chunk.endsWith(SLASH) && chunk.length > 2) {
             // regexp pattern with no dot in it, e.g. /propName/
             chainPatterns.push(chunk);
@@ -594,7 +600,7 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
 
         if (propValueMatch) {
             for (let i = 0; i < ownerObjArr.length; i += 1) {
-                const realValue = ownerObjArr[i].value;
+                const realValue = ownerObjArr[i]?.value;
 
                 if (propValueMatch instanceof RegExp) {
                     isMatched = propValueMatch.test(convertTypeIntoString(realValue));

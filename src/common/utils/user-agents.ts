@@ -82,7 +82,11 @@ const parseUserAgent = (): BrowserInfo | null => {
     const browserNames = Object.values(BrowserName);
 
     for (let i = 0; i < browserNames.length; i += 1) {
-        const match = SUPPORTED_BROWSERS_DATA[browserNames[i]].MASK.exec(navigator.userAgent);
+        let match = null;
+        const name = browserNames[i];
+        if (name) {
+            match = SUPPORTED_BROWSERS_DATA[name]?.MASK.exec(navigator.userAgent);
+        }
         if (match) {
             // for safari browser the order is different because of regexp
             if (match[3] === browserNames[i]) {
@@ -92,6 +96,9 @@ const parseUserAgent = (): BrowserInfo | null => {
                 // for others first is name and second is version
                 browserName = match[1];
                 currentVersion = Number(match[2]);
+            }
+            if (!browserName || !currentVersion) {
+                return null;
             }
             return { browserName, currentVersion };
         }
@@ -144,6 +151,13 @@ export const isBrowserSupported = (): boolean => {
     }
 
     const { browserName, currentVersion } = currentBrowserData;
+    if (!browserName || !currentVersion) {
+        return false;
+    }
+    const minVersion = SUPPORTED_BROWSERS_DATA[browserName]?.MIN_VERSION;
+    if (!minVersion) {
+        return false;
+    }
 
-    return currentVersion >= SUPPORTED_BROWSERS_DATA[browserName].MIN_VERSION;
+    return currentVersion >= minVersion;
 };

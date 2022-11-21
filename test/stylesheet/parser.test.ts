@@ -22,9 +22,9 @@ const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     const extCssDoc = new ExtCssDocument();
     const parsed = parse(actual, extCssDoc);
     expect(parsed.length).toEqual(1);
-    expect(parsed[0].selector).toEqual(expected.selector);
-    expect(parsed[0].style).toEqual(expected.style);
-    expect(parsed[0].debug).toEqual(expected.debug);
+    expect(parsed[0]?.selector).toEqual(expected.selector);
+    expect(parsed[0]?.style).toEqual(expected.style);
+    expect(parsed[0]?.debug).toEqual(expected.debug);
 };
 
 interface MultipleRuleInput {
@@ -36,9 +36,9 @@ const expectMultipleRulesParsed = (input: MultipleRuleInput): void => {
     const extCssDoc = new ExtCssDocument();
     const parsedRules = parse(actual, extCssDoc);
     parsedRules.forEach((parsed, i) => {
-        expect(parsed.selector).toEqual(expected[i].selector);
-        expect(parsed.style).toEqual(expected[i].style);
-        expect(parsed.debug).toEqual(expected[i].debug);
+        expect(parsed.selector).toEqual(expected[i]?.selector);
+        expect(parsed.style).toEqual(expected[i]?.style);
+        expect(parsed.debug).toEqual(expected[i]?.debug);
     });
 };
 

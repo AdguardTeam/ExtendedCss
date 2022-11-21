@@ -34,7 +34,7 @@ module.exports = {
             'ignoreComments': false
         }],
         'import/prefer-default-export': 'off',
-        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'error',
         'no-continue': 'off',
         'import/no-extraneous-dependencies': ['error', { 'devDependencies': true }],
         'no-restricted-syntax': ['error', 'LabeledStatement', 'WithStatement'],

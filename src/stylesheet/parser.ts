@@ -369,7 +369,7 @@ export const prepareRuleData = (
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object
         if (styles.length > 0) {
-            const stylesAsEntries = styles.map((style) => {
+            const stylesAsEntries: Array<[string, string]> = styles.map((style) => {
                 const { property, value } = style;
                 return [property, value];
             });

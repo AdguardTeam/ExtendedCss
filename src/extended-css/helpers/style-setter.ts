@@ -52,8 +52,11 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     Object.keys(style).forEach((prop) => {
         // Apply this style only to existing properties
         // We can't use hasOwnProperty here (does not work in FF)
-        if (typeof node.style.getPropertyValue(prop) !== 'undefined') {
+        if (typeof node.style.getPropertyValue(prop.toString()) !== 'undefined') {
             let value = style[prop];
+            if (!value) {
+                return;
+            }
             // First we should remove !important attribute (or it won't be applied')
             value = removeSuffix(value.trim(), '!important').trim();
             node.style.setProperty(prop, value, 'important');
@@ -84,7 +87,10 @@ export const applyStyle = (context: Context, affectedElement: AffectedElement): 
 
     const { node, rules } = affectedElement;
     for (let i = 0; i < rules.length; i += 1) {
-        const { selector, style, debug } = rules[i];
+        const rule = rules[i];
+        const selector = rule?.selector;
+        const style = rule?.style;
+        const debug = rule?.debug;
         // rule may not have style to apply
         // e.g. 'div:has(> a) { debug: true }' -> means no style to apply, and enable debug mode
         if (style) {

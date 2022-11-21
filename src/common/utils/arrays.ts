@@ -35,6 +35,6 @@ export const flatten = <T>(input: Array<T | T[]>): Array<T> => {
  *
  * @param array Input array.
  */
-export const getLast = <T>(array: Array<T>): T => {
+export const getLast = <T>(array: Array<T>): T | undefined => {
     return array[array.length - 1];
 };

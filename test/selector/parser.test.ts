@@ -2695,49 +2695,47 @@ describe('fail on white space which is before or after extended pseudo-class nam
 });
 
 describe('fail on invalid selector', () => {
-    describe('unbalanced brackets - extended pseudo-class', () => {
-        const error = 'Unbalanced brackets for extended pseudo-class';
-        const invalidSelectors = [
+    const toThrowInputs = [
+        {
             // part of 'head > style:contains(body{background: #410e13)' before opening `{`
-            'head > style:contains(body{',
-        ];
-        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
-    });
-
-    describe('unbalanced brackets - attributes is selector', () => {
-        const error = 'Unbalanced attribute brackets is selector';
-        const invalidSelectors = [
+            selector: 'head > style:contains(body{',
+            error: 'Unbalanced brackets for extended pseudo-class',
+        },
+        {
             // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
-            'a[href][data-item^=\'{',
-        ];
-        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
-    });
-
-    describe('non-closed old syntax', () => {
-        // if may happen while stylesheet parsing
-        const error = 'Invalid extended-css old syntax selector';
-        const invalidSelectors = [
+            selector: 'a[href][data-item^=\'{',
+            error: 'Unbalanced attribute brackets is selector',
+        },
+        {
+            // non-closed old syntax
             // part of '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']' before opening `{`
-            '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
-        ];
-        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
-    });
-
-    describe('upward with no specified selector before', () => {
-        const error = 'Selector should be specified before :upward() pseudo-class';
-        const invalidSelectors = [
-            ':upward(1)',
-            ':upward(p[class])',
-        ];
-        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
-    });
-
-    describe('nth-ancestor with no specified selector before', () => {
-        const error = 'Selector should be specified before :nth-ancestor() pseudo-class';
-        const invalidSelectors = [
-            ':nth-ancestor(1)',
-            ':nth-ancestor(p[class])',
-        ];
-        test.each(invalidSelectors)('%s', (selector) => expectToThrowInput({ selector, error }));
-    });
+            selector: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
+            error: 'Invalid extended-css old syntax selector',
+        },
+        {
+            selector: ':upward(1)',
+            error: 'Selector should be specified before :upward() pseudo-class',
+        },
+        {
+            selector: ':upward(p[class])',
+            error: 'Selector should be specified before :upward() pseudo-class',
+        },
+        {
+            selector: ':nth-ancestor(1)',
+            error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+        },
+        {
+            selector: ':nth-ancestor(p[class])',
+            error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+        },
+        {
+            selector: 'div:contains(text):',
+            error: "Invalid colon ':' at the end of selector",
+        },
+        {
+            selector: 'div:has(:',
+            error: 'Invalid pseudo-class arg at the end of selector',
+        },
+    ];
+    test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
 });

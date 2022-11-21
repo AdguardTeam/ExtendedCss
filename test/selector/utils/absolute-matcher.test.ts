@@ -73,7 +73,7 @@ describe('matcher-utils tests', () => {
         it('invalid arg pattern', () => {
             expect(() => {
                 parseRawPropChain('""');
-            }).toThrow(/Empty pattern .* invalid/);
+            }).toThrow('Invalid pseudo-class arg');
 
             expect(() => {
                 parseRawPropChain('"');
@@ -81,7 +81,7 @@ describe('matcher-utils tests', () => {
 
             expect(() => {
                 parseRawPropChain('.?');
-            }).toThrow(/Empty pattern .* invalid/);
+            }).toThrow('Invalid pseudo-class arg');
 
             expect(() => {
                 parseRawPropChain('//');
@@ -89,7 +89,7 @@ describe('matcher-utils tests', () => {
 
             expect(() => {
                 parseRawPropChain('nested..test');
-            }).toThrow(/Empty pattern .* invalid/);
+            }).toThrow('Invalid pseudo-class arg');
 
             expect(() => {
                 parseRawPropChain('abc.?+/.test');

@@ -97,6 +97,9 @@ export const applyRules = (context: Context): void => {
     // do nothing if there is no elements to process
     while (affLength) {
         const affectedElement = context.affectedElements[affLength - 1];
+        if (!affectedElement) {
+            break;
+        }
         if (!newSelectedElements.includes(affectedElement.node)) {
             // Time to revert style
             revertStyle(affectedElement);

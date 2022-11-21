@@ -6,14 +6,12 @@
  *
  * @param entries Array of pairs.
  */
-export const getObjectFromEntries = <T extends string>(entries: Array<Array<T>>): { [key: string]: T } => {
-    const initAcc: { [key: string]: T } = {};
-    const object = entries
-        .reduce((acc, el) => {
-            const key = el[0];
-            const value = el[1];
-            acc[key] = value;
-            return acc;
-        }, initAcc);
+export const getObjectFromEntries = <T extends string>(entries: Array<[T, T]>): { [key: string]: T } => {
+    const object: { [key: string]: T } = {};
+    entries.forEach((el) => {
+        const key = el[0];
+        const value = el[1];
+        object[key] = value;
+    });
     return object;
 };

@@ -73,7 +73,14 @@ const isSupportedExtendedPseudo = (tokenValue: string): boolean => SUPPORTED_PSE
  * @param nextTokenType Type of token next to current one.
  * @param nextTokenValue Value of token next to current one.
  */
-const doesRegularContinueAfterSpace = (nextTokenType: string, nextTokenValue: string): boolean => {
+const doesRegularContinueAfterSpace = (
+    nextTokenType: string | undefined,
+    nextTokenValue: string | undefined,
+): boolean => {
+    // regular selector does not continues after the current token
+    if (!nextTokenType || !nextTokenValue) {
+        return false;
+    }
     return COMBINATORS.includes(nextTokenValue)
         || nextTokenType === TokenType.Word
         // e.g. '#main *:has(> .ad)'
@@ -132,6 +139,9 @@ const POSSIBLE_MARKS_BEFORE_REGEXP = {
  */
 const isRegexpOpening = (context: Context, prevTokenValue: string, bufferNodeValue: string): boolean => {
     const lastExtendedPseudoClassName = getLast(context.extendedPseudoNamesStack);
+    if (!lastExtendedPseudoClassName) {
+        throw new Error('Regexp pattern allowed only in arg of extended pseudo-class');
+    }
     // for regexp pattens the slash should not be escaped
     // const isRegexpPatternSlash = prevTokenValue !== BACKSLASH;
     // regexp pattern can be set as arg of pseudo-class
@@ -209,7 +219,7 @@ const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
         return null;
     }
     // buffer node is always the last in the pathToBufferNode stack
-    return getLast(context.pathToBufferNode);
+    return getLast(context.pathToBufferNode) || null;
 };
 
 /**
@@ -232,10 +242,10 @@ const getLastRegularSelectorNode = (context: Context): AnySelectorNodeInterface 
         throw new Error('Unsupported bufferNode type');
     }
     const selectorRegularChildren = bufferNode.children.filter((node) => node.type === NodeType.RegularSelector);
-    if (selectorRegularChildren.length === 0) {
+    const lastRegularSelectorNode = getLast(selectorRegularChildren);
+    if (!lastRegularSelectorNode) {
         throw new Error('No RegularSelector node found');
     }
-    const lastRegularSelectorNode = getLast(selectorRegularChildren);
     context.pathToBufferNode.push(lastRegularSelectorNode);
     return lastRegularSelectorNode;
 };
@@ -341,7 +351,7 @@ const initRelativeSubtree = (context: Context, tokenValue = ''): void => {
  */
 const upToClosest = (context: Context, parentType: NodeType): void => {
     for (let i = context.pathToBufferNode.length - 1; i >= 0; i -= 1) {
-        if (context.pathToBufferNode[i].type === parentType) {
+        if (context.pathToBufferNode[i]?.type === parentType) {
             context.pathToBufferNode = context.pathToBufferNode.slice(0, i + 1);
             break;
         }
@@ -355,40 +365,44 @@ const upToClosest = (context: Context, parentType: NodeType): void => {
  *
  * @throws An error if there is no upper SelectorNode is ast.
  */
-const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface | null => {
+const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface => {
     upToClosest(context, NodeType.Selector);
     const selectorNode = getBufferNode(context);
     if (!selectorNode) {
         throw new Error('No SelectorNode, impossible to continue selector parsing by ExtendedCss');
     }
     const lastSelectorNodeChild = getLast(selectorNode.children);
-    const hasExtended = lastSelectorNodeChild.type === NodeType.ExtendedSelector
+    const hasExtended = lastSelectorNodeChild
+        && lastSelectorNodeChild.type === NodeType.ExtendedSelector
         // parser position might be inside standard pseudo-class brackets which has space
         // e.g. 'div:contains(/а/):nth-child(100n + 2)'
         && context.standardPseudoBracketsStack.length === 0;
-    const lastExtendedPseudoName = hasExtended
-        && lastSelectorNodeChild.children[0].name;
 
-    const isLastExtendedNameRelative = lastExtendedPseudoName
-        && RELATIVE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
-    const isLastExtendedNameAbsolute = lastExtendedPseudoName
-        && ABSOLUTE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
-
-    const hasRelativeExtended = isLastExtendedNameRelative
-        && context.extendedPseudoBracketsStack.length > 0
-        && context.extendedPseudoBracketsStack.length === context.extendedPseudoNamesStack.length;
-    const hasAbsoluteExtended = isLastExtendedNameAbsolute
-        && lastExtendedPseudoName === getLast(context.extendedPseudoNamesStack);
+    const supposedPseudoClassNode = hasExtended && lastSelectorNodeChild.children[0];
 
     let newNeededBufferNode = selectorNode;
-    if (hasRelativeExtended) {
-        // return relative selector node to update later
-        context.pathToBufferNode.push(lastSelectorNodeChild);
-        newNeededBufferNode = lastSelectorNodeChild.children[0];
-    } else if (hasAbsoluteExtended) {
-        // return absolute selector node to update later
-        context.pathToBufferNode.push(lastSelectorNodeChild);
-        newNeededBufferNode = lastSelectorNodeChild.children[0];
+    if (supposedPseudoClassNode) {
+        // name of pseudo-class for last extended-node child for Selector node
+        const lastExtendedPseudoName = hasExtended
+            && supposedPseudoClassNode.name;
+        const isLastExtendedNameRelative = lastExtendedPseudoName
+            && RELATIVE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
+        const isLastExtendedNameAbsolute = lastExtendedPseudoName
+            && ABSOLUTE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
+        const hasRelativeExtended = isLastExtendedNameRelative
+            && context.extendedPseudoBracketsStack.length > 0
+            && context.extendedPseudoBracketsStack.length === context.extendedPseudoNamesStack.length;
+        const hasAbsoluteExtended = isLastExtendedNameAbsolute
+            && lastExtendedPseudoName === getLast(context.extendedPseudoNamesStack);
+        if (hasRelativeExtended) {
+            // return relative selector node to update later
+            context.pathToBufferNode.push(lastSelectorNodeChild);
+            newNeededBufferNode = supposedPseudoClassNode;
+        } else if (hasAbsoluteExtended) {
+            // return absolute selector node to update later
+            context.pathToBufferNode.push(lastSelectorNodeChild);
+            newNeededBufferNode = supposedPseudoClassNode;
+        }
     } else if (hasExtended) {
         // return selector node to add new regular selector node later
         newNeededBufferNode = selectorNode;
@@ -396,6 +410,7 @@ const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface | null
         // otherwise return last regular selector node to update later
         newNeededBufferNode = getLastRegularSelectorNode(context);
     }
+    // update the path to buffer node properly
     context.pathToBufferNode.push(newNeededBufferNode);
     return newNeededBufferNode;
 };
@@ -419,9 +434,12 @@ const handleNextTokenOnColon = (
     context: Context,
     selector: string,
     tokenValue: string,
-    nextTokenValue: string,
-    nextToNextTokenValue: string,
+    nextTokenValue: string | undefined,
+    nextToNextTokenValue: string | undefined,
 ) => {
+    if (!nextTokenValue) {
+        throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
+    }
     if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
         if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
             // :remove() pseudo-class should be handled before
@@ -438,7 +456,8 @@ const handleNextTokenOnColon = (
         // no brackets balance needed for such case,
         // parser position is on first colon after the 'div':
         // e.g. 'div:last-child:has(button.privacy-policy__btn)'
-        if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT
+        if (nextToNextTokenValue
+            && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT
             // no brackets balance needed for parentheses inside attribute value
             // e.g. 'a[href="javascript:void(0)"]'   <-- parser position is on colon `:`
             // before `void`           ↑
@@ -486,31 +505,35 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
     let i = 0;
     while (i < tokens.length) {
         const token = tokens[i];
-
+        if (!token) {
+            break;
+        }
         // Token to process
         const { type: tokenType, value: tokenValue } = token;
 
         // needed for SPACE and COLON tokens checking
-        const nextToken = tokens[i + 1] || [];
-        const { type: nextTokenType, value: nextTokenValue } = nextToken;
+        const nextToken = tokens[i + 1];
+        const nextTokenType = nextToken?.type;
+        const nextTokenValue = nextToken?.value;
 
         // needed for limitations
         // - :not() and :is() root element
         // - :has() usage
         // - white space before and after pseudo-class name
-        const nextToNextToken = tokens[i + 2] || [];
-        const { value: nextToNextTokenValue } = nextToNextToken;
+        const nextToNextToken = tokens[i + 2];
+        const nextToNextTokenValue = nextToNextToken?.value;
 
         // needed for COLON token checking for none-specified regular selector before extended one
         // e.g. 'p, :hover'
         // or   '.banner, :contains(ads)'
-        const previousToken = tokens[i - 1] || [];
-        const { type: prevTokenType, value: prevTokenValue } = previousToken;
+        const previousToken = tokens[i - 1];
+        const prevTokenType = previousToken?.type;
+        const prevTokenValue = previousToken?.value;
 
         // needed for proper parsing of regexp pattern arg
         // e.g. ':matches-css(background-image: /^url\(https:\/\/example\.org\//)'
-        const previousToPreviousToken = tokens[i - 2] || [];
-        const { value: prevToPrevTokenValue } = previousToPreviousToken;
+        const previousToPreviousToken = tokens[i - 2];
+        const prevToPrevTokenValue = previousToPreviousToken?.value;
 
         let bufferNode = getBufferNode(context);
 
@@ -530,7 +553,8 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                     // and its opening parenthesis
                     // https://www.w3.org/TR/selectors-4/#pseudo-classes
                     // e.g. 'span:contains (text)'
-                    if (WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
+                    if (nextTokenValue
+                        && WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
                         && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
                         throw new Error(`No white space is allowed before or after extended pseudo-class name in selector: '${selector}'`); // eslint-disable-line max-len
                     }
@@ -637,7 +661,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         if (bufferNode?.type === NodeType.Selector) {
                             // do NOT add RegularSelector if parser position on space BEFORE the comma in selector list
                             // e.g. '.block:has(> img) , .banner)'
-                            if (nextTokenValue && doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)) {
+                            if (doesRegularContinueAfterSpace(nextTokenType, nextTokenValue)) {
                                 // regular selector might be after the extended one.
                                 // extra space before combinator or selector should not be collected
                                 // e.g. '.banner:upward(2) .block'
@@ -725,7 +749,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                     // e.g. ':matches-css(background-image: /^url\(https:\/\/example\.org\//)'
                                     // parser position is on final slash before `)`                        ↑
                                     context.isRegexpOpen = false;
-                                } else if (prevTokenValue !== BACKSLASH) {
+                                } else if (prevTokenValue && prevTokenValue !== BACKSLASH) {
                                     if (isRegexpOpening(context, prevTokenValue, bufferNode.value)) {
                                         context.isRegexpOpen = !context.isRegexpOpen;
                                     } else {
@@ -799,7 +823,9 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         // No white space is allowed between the colon and the following name of the pseudo-class
                         // https://www.w3.org/TR/selectors-4/#pseudo-classes
                         // e.g. 'span: contains(text)'
-                        if (WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
+                        if (nextTokenValue
+                            && WHITE_SPACE_CHARACTERS.includes(nextTokenValue)
+                            && nextToNextTokenValue
                             && SUPPORTED_PSEUDO_CLASSES.includes(nextToNextTokenValue)) {
                             throw new Error(`No white space is allowed before or after extended pseudo-class name in selector: '${selector}'`); // eslint-disable-line max-len
                         }
@@ -854,8 +880,9 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             // e.g. '#share, :contains(share it)'
                             // or   'div,:hover'
                             // of   'div:has(+:contains(text))'  // position is after '+'
-                            if (COMBINATORS.includes(prevTokenValue)
-                                || prevTokenValue === COMMA) {
+                            if ((prevTokenValue
+                                && COMBINATORS.includes(prevTokenValue))
+                                    || prevTokenValue === COMMA) {
                                 // case with colon at the start of string - e.g. ':contains(text)'
                                 // is covered by 'bufferNode === null' above at start of COLON checking
                                 updateBufferNode(context, ASTERISK);
@@ -863,6 +890,10 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             handleNextTokenOnColon(context, selector, tokenValue, nextTokenValue, nextToNextTokenValue);
                         }
                         if (bufferNode?.type === NodeType.Selector) {
+                            // e.g. 'div:contains(text):'
+                            if (!nextTokenValue) {
+                                throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
+                            }
                             // after the extended pseudo closing parentheses
                             // parser position is on Selector node
                             // and there is might be another extended selector.
@@ -889,8 +920,9 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         if (bufferNode?.type === NodeType.AbsolutePseudoClass) {
                             // :xpath() pseudo-class should be the last of extended pseudo-classes
                             if (bufferNode.name === XPATH_PSEUDO_CLASS_MARKER
-                                && SUPPORTED_PSEUDO_CLASSES.includes(nextToken.value)
-                                && nextToNextToken.value === BRACKETS.PARENTHESES.LEFT) {
+                                && nextTokenValue
+                                && SUPPORTED_PSEUDO_CLASSES.includes(nextTokenValue)
+                                && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
                                 throw new Error(`:xpath() pseudo-class should be at the end of selector: '${selector}'`); // eslint-disable-line max-len
                             }
                             // collecting arg for absolute pseudo-class
@@ -898,6 +930,10 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             updateBufferNode(context, tokenValue);
                         }
                         if (bufferNode?.type === NodeType.RelativePseudoClass) {
+                            if (!nextTokenValue) {
+                                // e.g. 'div:has(:'
+                                throw new Error(`Invalid pseudo-class arg at the end of selector: '${selector}'`);
+                            }
                             // make it more obvious if selector starts with pseudo with no tag specified
                             // parser position is on colon inside :has() arg
                             // e.g. 'div:has(:contains(text))'

@@ -20,28 +20,26 @@ export interface Token {
 export const tokenize = (rawSelector: string): Token[] => {
     const selector = convert(rawSelector);
 
-    // currently processed
-    let symbol;
-    // for words collecting while iterating
+    // buffer is needed for words collecting while iterating
     let buffer = '';
     // result collection
     const tokens: Token[] = [];
 
-    // iterate selector chars and collect tokens
-    for (let i = 0; i < selector.length; i += 1) {
-        symbol = selector[i];
+    const selectorSymbols = selector.split('');
+    // iterate through selector chars and collect tokens
+    selectorSymbols.forEach((symbol, i) => {
         if (SUPPORTED_SELECTOR_MARKS.includes(symbol)) {
             tokens.push({ type: TokenType.Mark, value: symbol });
-            continue;
+            return;
         }
         buffer += symbol;
-        const nextSymbol = selector[i + 1];
+        const nextSymbol = selectorSymbols[i + 1];
         // string end has been reached if nextSymbol is undefined
         if (!nextSymbol || SUPPORTED_SELECTOR_MARKS.includes(nextSymbol)) {
             tokens.push({ type: TokenType.Word, value: buffer });
             buffer = '';
         }
-    }
+    });
 
     return tokens;
 };

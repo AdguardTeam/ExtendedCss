@@ -282,6 +282,9 @@ export const getByExtendedSelector = (
     extendedSelectorNode: AnySelectorNodeInterface,
 ): HTMLElement[] => {
     let foundElements: HTMLElement[] = [];
+    if (!extendedSelectorNode.children[0]) {
+        throw new Error('Extended selector should be specified');
+    }
     const pseudoName = extendedSelectorNode.children[0].name;
     if (!pseudoName) {
         // extended pseudo-classes should have a name
@@ -327,6 +330,9 @@ export const getByExtendedSelector = (
             throw new Error(`Missing arg for :${pseudoName}() pseudo-class`);
         }
         const [relativeSelectorList] = relativeSelectorNodes;
+        if (!relativeSelectorList) {
+            throw new Error('Relative SelectorList node should be specified');
+        }
         let relativePredicate: (e: HTMLElement) => boolean;
         switch (pseudoName) {
             case HAS_PSEUDO_CLASS_MARKER:
@@ -443,6 +449,8 @@ export const getByFollowingRegularSelector = (
  * @param selectorNode Selector node.
  * @param root Root DOM element.
  * @param specifiedSelector Needed element specification.
+ *
+ * @throws An error if there is no selectorNodeChild.
  */
 export const getElementsForSelectorNode = (
     selectorNode: AnySelectorNodeInterface,
@@ -453,6 +461,9 @@ export const getElementsForSelectorNode = (
     let i = 0;
     while (i < selectorNode.children.length) {
         const selectorNodeChild = selectorNode.children[i];
+        if (!selectorNodeChild) {
+            throw new Error('selectorNodeChild should be specified.');
+        }
         if (i === 0) {
             // any selector always starts with regular selector
             selectedElements = getByRegularSelector(selectorNodeChild, root, specifiedSelector);
