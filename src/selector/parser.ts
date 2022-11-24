@@ -1,13 +1,25 @@
-import { TokenType, tokenize } from './tokenizer';
+import { TokenType, tokenizeSelector } from './tokenizer';
+import { NodeType, AnySelectorNodeInterface } from './nodes';
 
+import { Context } from './utils/parser-types';
 import {
-    NodeType,
-    AnySelectorNodeInterface,
-    AnySelectorNode,
-    RegularSelectorNode,
-    AbsolutePseudoClassNode,
-    RelativePseudoClassNode,
-} from './nodes';
+    isSupportedExtendedPseudo,
+    doesRegularContinueAfterSpace,
+    isRegexpOpening,
+    isAttributeOpening,
+    isAttributeClosing,
+} from './utils/parser-predicate-helpers';
+import {
+    initAst,
+    addAstNodeByType,
+    updateBufferNode,
+    getBufferNode,
+    getUpdatedBufferNode,
+    initRelativeSubtree,
+    upToClosest,
+    getLastRegularSelectorNode,
+    handleNextTokenOnColon,
+} from './utils/parser-ast-node-helpers';
 
 import { getLast } from '../common/utils/arrays';
 
@@ -38,7 +50,6 @@ import {
     WHITE_SPACE_CHARACTERS,
     SUPPORTED_PSEUDO_CLASSES,
     ABSOLUTE_PSEUDO_CLASSES,
-    RELATIVE_PSEUDO_CLASSES,
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKERS,
     IS_PSEUDO_CLASS_MARKER,
@@ -47,9 +58,6 @@ import {
     REGULAR_PSEUDO_ELEMENTS,
     UPWARD_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
-    EQUAL_SIGN,
-    DOT,
-    CONTAINS_PSEUDO_NAMES,
 } from '../common/constants';
 
 // limit applying of wildcard :is() and :not() pseudo-class only to html children
@@ -61,427 +69,6 @@ const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
 const XPATH_PSEUDO_SELECTING_ROOT = 'body';
 
 /**
- * Checks whether the passed token is supported extended pseudo-class.
- *
- * @param tokenValue Token value to check.
- */
-const isSupportedExtendedPseudo = (tokenValue: string): boolean => SUPPORTED_PSEUDO_CLASSES.includes(tokenValue);
-
-/**
- * Checks whether next token is a continuation of regular selector being processed.
- *
- * @param nextTokenType Type of token next to current one.
- * @param nextTokenValue Value of token next to current one.
- */
-const doesRegularContinueAfterSpace = (
-    nextTokenType: string | undefined,
-    nextTokenValue: string | undefined,
-): boolean => {
-    // regular selector does not continues after the current token
-    if (!nextTokenType || !nextTokenValue) {
-        return false;
-    }
-    return COMBINATORS.includes(nextTokenValue)
-        || nextTokenType === TokenType.Word
-        // e.g. '#main *:has(> .ad)'
-        || nextTokenValue === ASTERISK
-        || nextTokenValue === ID_MARKER
-        || nextTokenValue === CLASS_MARKER
-        // e.g. 'div :where(.content)'
-        || nextTokenValue === COLON
-        // e.g. "div[class*=' ']"
-        || nextTokenValue === SINGLE_QUOTE
-        // e.g. 'div[class*=" "]'
-        || nextTokenValue === DOUBLE_QUOTE
-        || nextTokenValue === BRACKETS.SQUARE.LEFT;
-};
-
-/**
- * Limited list of available symbols before slash `/`
- * to check whether it is valid regexp pattern opening.
- */
-const POSSIBLE_MARKS_BEFORE_REGEXP = {
-    COMMON: [
-        // e.g. ':matches-attr(/data-/)'
-        BRACKETS.PARENTHESES.LEFT,
-        // e.g. `:matches-attr('/data-/')`
-        SINGLE_QUOTE,
-        // e.g. ':matches-attr("/data-/")'
-        DOUBLE_QUOTE,
-        // e.g. ':matches-attr(check=/data-v-/)'
-        EQUAL_SIGN,
-        // e.g. ':matches-property(inner./_test/=null)'
-        DOT,
-        // e.g. ':matches-css(height:/20px/)'
-        COLON,
-        // ':matches-css-after( content  :   /(\\d+\\s)*me/  )'
-        SPACE,
-    ],
-    CONTAINS: [
-        // e.g. ':contains(/text/)'
-        BRACKETS.PARENTHESES.LEFT,
-        // e.g. `:contains('/text/')`
-        SINGLE_QUOTE,
-        // e.g. ':contains("/text/")'
-        DOUBLE_QUOTE,
-    ],
-};
-
-/**
- * Checks whether the regexp pattern for pseudo-class arg starts.
- * Needed for `context.isRegexpOpen` flag.
- *
- * @param context Selector parser context.
- * @param prevTokenValue Value of previous token.
- * @param bufferNodeValue Value of bufferNode.
- *
- * @throws An error on invalid regexp pattern.
- */
-const isRegexpOpening = (context: Context, prevTokenValue: string, bufferNodeValue: string): boolean => {
-    const lastExtendedPseudoClassName = getLast(context.extendedPseudoNamesStack);
-    if (!lastExtendedPseudoClassName) {
-        throw new Error('Regexp pattern allowed only in arg of extended pseudo-class');
-    }
-    // for regexp pattens the slash should not be escaped
-    // const isRegexpPatternSlash = prevTokenValue !== BACKSLASH;
-    // regexp pattern can be set as arg of pseudo-class
-    // which means limited list of available symbols before slash `/`;
-    // for :contains() pseudo-class regexp pattern should be at the beginning of arg
-    if (CONTAINS_PSEUDO_NAMES.includes(lastExtendedPseudoClassName)) {
-        return POSSIBLE_MARKS_BEFORE_REGEXP.CONTAINS.includes(prevTokenValue);
-    }
-    if (prevTokenValue === SLASH
-        && lastExtendedPseudoClassName !== XPATH_PSEUDO_CLASS_MARKER) {
-        const rawArgDesc = bufferNodeValue
-            ? `in arg part: '${bufferNodeValue}'`
-            : 'arg';
-        throw new Error(`Invalid regexp pattern for :${lastExtendedPseudoClassName}() pseudo-class ${rawArgDesc}`);
-    }
-
-    // for other pseudo-classes regexp pattern can be either the whole arg or its part
-    return  POSSIBLE_MARKS_BEFORE_REGEXP.COMMON.includes(prevTokenValue);
-};
-
-/**
- * Interface for selector parser context.
- */
-interface Context {
-    /**
-     * Collected result.
-     */
-    ast: AnySelectorNodeInterface | null;
-
-    /**
-     * Array of nodes as path to buffer node.
-     */
-    pathToBufferNode: AnySelectorNodeInterface[];
-
-    /**
-     * Array of extended pseudo-class names;
-     * needed for checking while going deep into extended selector.
-     */
-    extendedPseudoNamesStack: string[];
-
-    /**
-     * Array of brackets for proper extended selector args collecting.
-     */
-    extendedPseudoBracketsStack: string[];
-
-    /**
-     * Array of standard pseudo-class names.
-     */
-    standardPseudoNamesStack: string[];
-
-    /**
-     * Array of brackets for proper standard pseudo-class handling.
-     */
-    standardPseudoBracketsStack: string[];
-
-    /**
-     * Flag for processing comma inside attribute value.
-     */
-    isAttributeBracketsOpen: boolean;
-
-    /**
-     * Flag for extended pseudo-class arg regexp values.
-     */
-    isRegexpOpen: boolean;
-}
-
-/**
- * Gets the node which is being collected
- * or null if there is no such one.
- *
- * @param context Selector parser context.
- */
-const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
-    if (context.pathToBufferNode.length === 0) {
-        return null;
-    }
-    // buffer node is always the last in the pathToBufferNode stack
-    return getLast(context.pathToBufferNode) || null;
-};
-
-/**
- * Gets last RegularSelector ast node.
- * Needed for parsing of the complex selector with extended pseudo-class inside it.
- *
- * @param context Selector parser context.
- *
- * @throws An error if:
- * - bufferNode is absent;
- * - type of bufferNode is unsupported;
- * - no RegularSelector in bufferNode.
- */
-const getLastRegularSelectorNode = (context: Context): AnySelectorNodeInterface => {
-    const bufferNode = getBufferNode(context);
-    if (!bufferNode) {
-        throw new Error('No bufferNode found');
-    }
-    if (bufferNode.type !== NodeType.Selector) {
-        throw new Error('Unsupported bufferNode type');
-    }
-    const selectorRegularChildren = bufferNode.children.filter((node) => node.type === NodeType.RegularSelector);
-    const lastRegularSelectorNode = getLast(selectorRegularChildren);
-    if (!lastRegularSelectorNode) {
-        throw new Error('No RegularSelector node found');
-    }
-    context.pathToBufferNode.push(lastRegularSelectorNode);
-    return lastRegularSelectorNode;
-};
-
-/**
- * Updates needed buffer node value while tokens iterating.
- *
- * @param context Selector parser context.
- * @param tokenValue Value of current token.
- *
- * @throws An error if:
- * - no bufferNode;
- * - bufferNode.type is not RegularSelector or AbsolutePseudoClass.
- */
-const updateBufferNode = (context: Context, tokenValue: string): void => {
-    const bufferNode = getBufferNode(context);
-    if (bufferNode === null) {
-        throw new Error('No bufferNode to update');
-    }
-    const { type } = bufferNode;
-    if (type === NodeType.RegularSelector
-        || type === NodeType.AbsolutePseudoClass) {
-        bufferNode.value += tokenValue;
-    } else {
-        throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported`); // eslint-disable-line max-len
-    }
-};
-
-/**
- * Adds SelectorList node to context.ast at the start of ast collecting.
- *
- * @param context Selector parser context.
- */
-const addSelectorListNode = (context: Context): void => {
-    const selectorListNode = new AnySelectorNode(NodeType.SelectorList);
-    context.ast = selectorListNode;
-    context.pathToBufferNode.push(selectorListNode);
-};
-
-/**
- * Adds new node to buffer node children.
- * New added node will be considered as buffer node after it.
- *
- * @param context Selector parser context.
- * @param type Type of node to add.
- * @param tokenValue Optional, defaults to `''`, value of processing token.
- *
- * @throws An error if no bufferNode.
- */
-const addAstNodeByType = (context: Context, type: NodeType, tokenValue = ''): void => {
-    const bufferNode = getBufferNode(context);
-    if (bufferNode === null) {
-        throw new Error('No buffer node');
-    }
-
-    let node: AnySelectorNodeInterface;
-    if (type === NodeType.RegularSelector) {
-        node = new RegularSelectorNode(tokenValue);
-    } else if (type === NodeType.AbsolutePseudoClass) {
-        node = new AbsolutePseudoClassNode(tokenValue);
-    } else if (type === NodeType.RelativePseudoClass) {
-        node = new RelativePseudoClassNode(tokenValue);
-    } else {
-        // SelectorList || Selector || ExtendedSelector
-        node = new AnySelectorNode(type);
-    }
-
-    bufferNode.addChild(node);
-    context.pathToBufferNode.push(node);
-};
-
-/**
- * The very beginning of ast collecting.
- *
- * @param context Selector parser context.
- * @param tokenValue Value of regular selector.
- */
-const initAst = (context: Context, tokenValue: string): void => {
-    addSelectorListNode(context);
-    addAstNodeByType(context, NodeType.Selector);
-    // RegularSelector node is always the first child of Selector node
-    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
-};
-
-/**
- * Inits selector list subtree for relative extended pseudo-classes, e.g. :has(), :not().
- *
- * @param context Selector parser context.
- * @param tokenValue Optional, defaults to `''`, value of inner regular selector.
- */
-const initRelativeSubtree = (context: Context, tokenValue = ''): void => {
-    addAstNodeByType(context, NodeType.SelectorList);
-    addAstNodeByType(context, NodeType.Selector);
-    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
-};
-
-/**
- * Goes to closest parent specified by type.
- * Actually updates path to buffer node for proper ast collecting of selectors while parsing.
- *
- * @param context Selector parser context.
- * @param parentType Type of needed parent node in ast.
- */
-const upToClosest = (context: Context, parentType: NodeType): void => {
-    for (let i = context.pathToBufferNode.length - 1; i >= 0; i -= 1) {
-        if (context.pathToBufferNode[i]?.type === parentType) {
-            context.pathToBufferNode = context.pathToBufferNode.slice(0, i + 1);
-            break;
-        }
-    }
-};
-
-/**
- * Gets needed buffer node updated due to complex selector parsing.
- *
- * @param context Selector parser context.
- *
- * @throws An error if there is no upper SelectorNode is ast.
- */
-const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface => {
-    upToClosest(context, NodeType.Selector);
-    const selectorNode = getBufferNode(context);
-    if (!selectorNode) {
-        throw new Error('No SelectorNode, impossible to continue selector parsing by ExtendedCss');
-    }
-    const lastSelectorNodeChild = getLast(selectorNode.children);
-    const hasExtended = lastSelectorNodeChild
-        && lastSelectorNodeChild.type === NodeType.ExtendedSelector
-        // parser position might be inside standard pseudo-class brackets which has space
-        // e.g. 'div:contains(/а/):nth-child(100n + 2)'
-        && context.standardPseudoBracketsStack.length === 0;
-
-    const supposedPseudoClassNode = hasExtended && lastSelectorNodeChild.children[0];
-
-    let newNeededBufferNode = selectorNode;
-    if (supposedPseudoClassNode) {
-        // name of pseudo-class for last extended-node child for Selector node
-        const lastExtendedPseudoName = hasExtended
-            && supposedPseudoClassNode.name;
-        const isLastExtendedNameRelative = lastExtendedPseudoName
-            && RELATIVE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
-        const isLastExtendedNameAbsolute = lastExtendedPseudoName
-            && ABSOLUTE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
-        const hasRelativeExtended = isLastExtendedNameRelative
-            && context.extendedPseudoBracketsStack.length > 0
-            && context.extendedPseudoBracketsStack.length === context.extendedPseudoNamesStack.length;
-        const hasAbsoluteExtended = isLastExtendedNameAbsolute
-            && lastExtendedPseudoName === getLast(context.extendedPseudoNamesStack);
-        if (hasRelativeExtended) {
-            // return relative selector node to update later
-            context.pathToBufferNode.push(lastSelectorNodeChild);
-            newNeededBufferNode = supposedPseudoClassNode;
-        } else if (hasAbsoluteExtended) {
-            // return absolute selector node to update later
-            context.pathToBufferNode.push(lastSelectorNodeChild);
-            newNeededBufferNode = supposedPseudoClassNode;
-        }
-    } else if (hasExtended) {
-        // return selector node to add new regular selector node later
-        newNeededBufferNode = selectorNode;
-    } else {
-        // otherwise return last regular selector node to update later
-        newNeededBufferNode = getLastRegularSelectorNode(context);
-    }
-    // update the path to buffer node properly
-    context.pathToBufferNode.push(newNeededBufferNode);
-    return newNeededBufferNode;
-};
-
-/**
- * Checks values of few next tokens on colon token `:` and:
- *  - updates buffer node for following standard pseudo-class;
- *  - adds extended selector ast node for following extended pseudo-class;
- *  - validates some cases of `:remove()` and `:has()` usage.
- *
- * @param context Selector parser context.
- * @param selector Selector.
- * @param tokenValue Value of current token.
- * @param nextTokenValue Value of token next to current one.
- * @param nextToNextTokenValue Value of token next to next to current one.
- *
- * @throws An error on :remove() pseudo-class in selector
- * or :has() inside regular pseudo limitation.
- */
-const handleNextTokenOnColon = (
-    context: Context,
-    selector: string,
-    tokenValue: string,
-    nextTokenValue: string | undefined,
-    nextToNextTokenValue: string | undefined,
-) => {
-    if (!nextTokenValue) {
-        throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
-    }
-    if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
-        if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
-            // :remove() pseudo-class should be handled before
-            // as it is not about element selecting but actions with elements
-            // e.g. 'body > div:empty:remove()'
-            throw new Error(`Selector parser error: invalid :remove() pseudo-class in selector: '${selector}'`); // eslint-disable-line max-len
-        }
-        // if following token is not an extended pseudo
-        // the colon should be collected to value of RegularSelector
-        // e.g. '.entry_text:nth-child(2)'
-        updateBufferNode(context, tokenValue);
-        // check the token after the pseudo and do balance parentheses later
-        // only if it is functional pseudo-class (standard with brackets, e.g. ':lang()').
-        // no brackets balance needed for such case,
-        // parser position is on first colon after the 'div':
-        // e.g. 'div:last-child:has(button.privacy-policy__btn)'
-        if (nextToNextTokenValue
-            && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT
-            // no brackets balance needed for parentheses inside attribute value
-            // e.g. 'a[href="javascript:void(0)"]'   <-- parser position is on colon `:`
-            // before `void`           ↑
-            && !context.isAttributeBracketsOpen) {
-            context.standardPseudoNamesStack.push(nextTokenValue);
-        }
-    } else {
-        // it is supported extended pseudo-class.
-        // Disallow :has() inside the pseudos accepting only compound selectors
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54 [2]
-        if (HAS_PSEUDO_CLASS_MARKERS.includes(nextTokenValue)
-            && context.standardPseudoNamesStack.length > 0) {
-            // eslint-disable-next-line max-len
-            throw new Error(`Usage of :${nextTokenValue}() pseudo-class is not allowed inside regular pseudo: '${getLast(context.standardPseudoNamesStack)}'`);
-        } else {
-            // stop RegularSelector value collecting
-            upToClosest(context, NodeType.Selector);
-            // add ExtendedSelector to Selector children
-            addAstNodeByType(context, NodeType.ExtendedSelector);
-        }
-    }
-};
-
-/**
  * Parses selector into ast for following element selection.
  *
  * @param selector Selector to parse.
@@ -489,7 +76,7 @@ const handleNextTokenOnColon = (
  * @throws An error on invalid selector.
  */
 export const parse = (selector: string): AnySelectorNodeInterface => {
-    const tokens = tokenize(selector);
+    const tokens = tokenizeSelector(selector);
 
     const context: Context = {
         ast: null,
@@ -499,6 +86,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         standardPseudoNamesStack: [],
         standardPseudoBracketsStack: [],
         isAttributeBracketsOpen: false,
+        attributeBuffer: '',
         isRegexpOpen: false,
     };
 
@@ -721,7 +309,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // or   '#top > div.ad'
                                 // or   '[class][style][attr]'
                                 initAst(context, tokenValue);
-                                if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                if (isAttributeOpening(tokenValue, prevTokenValue)) {
                                     // e.g. '[class^="banner-"]'
                                     context.isAttributeBracketsOpen = true;
                                 }
@@ -729,7 +317,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         } else if (bufferNode.type === NodeType.RegularSelector) {
                             // collect the mark to the value of RegularSelector node
                             updateBufferNode(context, tokenValue);
-                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                            if (isAttributeOpening(tokenValue, prevTokenValue)) {
                                 // needed for proper handling element attribute value with comma
                                 // e.g. 'div[data-comma="0,1"]'
                                 context.isAttributeBracketsOpen = true;
@@ -761,7 +349,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         } else if (bufferNode.type === NodeType.RelativePseudoClass) {
                             // add SelectorList to children of RelativePseudoClass node
                             initRelativeSubtree(context, tokenValue);
-                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                            if (isAttributeOpening(tokenValue, prevTokenValue)) {
                                 // besides of creating the relative subtree
                                 // opening square bracket means start of attribute
                                 // e.g. 'div:not([class="content"])'
@@ -783,7 +371,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // so we need to get last regular selector node and update its value
                                 bufferNode = getLastRegularSelectorNode(context);
                                 updateBufferNode(context, tokenValue);
-                                if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                                if (isAttributeOpening(tokenValue, prevTokenValue)) {
                                     // handle attribute in compound selector after extended pseudo-class
                                     // e.g. 'div:not(.top)[style="z-index: 10000;"]'
                                     // parser position    ↑
@@ -795,7 +383,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             addAstNodeByType(context, NodeType.Selector);
                             // and RegularSelector as it is always the first child of Selector
                             addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
-                            if (tokenValue === BRACKETS.SQUARE.LEFT) {
+                            if (isAttributeOpening(tokenValue, prevTokenValue)) {
                                 // handle simple attribute selector in selector list
                                 // e.g. '.banner, [class^="ad-"]'
                                 context.isAttributeBracketsOpen = true;
@@ -804,11 +392,19 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         break;
                     case BRACKETS.SQUARE.RIGHT:
                         if (bufferNode?.type === NodeType.RegularSelector) {
+                            // unescaped `]` in regular selector allowed only inside attribute value
+                            if (!context.isAttributeBracketsOpen
+                                && prevTokenValue !== BACKSLASH) {
+                                // e.g. 'div]'
+                                throw new Error(`'${selector}' is not a valid selector due to '${tokenValue}' after '${bufferNode.value}'`); // eslint-disable-line max-len
+                            }
                             // needed for proper parsing regular selectors after the attributes with comma
                             // e.g. 'div[data-comma="0,1"] > img'
-                            // TODO: handle `]` inside attribute value
-                            // e.g. '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]'
-                            context.isAttributeBracketsOpen = false;
+                            if (isAttributeClosing(context)) {
+                                context.isAttributeBracketsOpen = false;
+                                // reset attribute buffer on closing `]`
+                                context.attributeBuffer = '';
+                            }
                             // collect the bracket to the value of RegularSelector node
                             updateBufferNode(context, tokenValue);
                         }

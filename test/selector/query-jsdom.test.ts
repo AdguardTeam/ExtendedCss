@@ -1715,7 +1715,6 @@ describe('check invalid selectors', () => {
             ':first-child(n)',
             ':last-child(n)',
             ':only-child(n)',
-            'input[name=]',
             'input[name=foo.baz]',
             'input[name=foo[baz]]',
             "input[name=''double-quoted'']",
@@ -1723,6 +1722,15 @@ describe('check invalid selectors', () => {
             ':lang(c++)',
         ];
         const error = 'is not a valid selector';
+        test.each(invalidInputs)('%s', (selector) => expectToThrowInput({ selector, error }));
+    });
+
+    describe('not a valid attribute', () => {
+        const invalidInputs = [
+            'input[name=]',
+            'div[="margin"]',
+        ];
+        const error = 'is not a valid attribute';
         test.each(invalidInputs)('%s', (selector) => expectToThrowInput({ selector, error }));
     });
 

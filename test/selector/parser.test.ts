@@ -2,10 +2,8 @@
  * @jest-environment jsdom
  */
 
-import {
-    NodeType,
-    parse,
-} from '../../src/selector';
+import { NodeType } from '../../src/selector/nodes';
+import { parse } from '../../src/selector/parser';
 
 import {
     getRegularSelector,
@@ -25,6 +23,13 @@ describe('regular selectors', () => {
         const selectors = [
             'div',
             '.banner',
+            '[foo]',
+            '[foo="bar"]',
+            '[foo~="bar"]',
+            '[foo^="bar"]',
+            '[foo$="bar"]',
+            '[foo*="bar"]',
+            '[foo|="en"]',
             '[style*="z-index: 100000000;"]',
             '[data-dfp-sizes="728x90,960x250,1260x110"]',
             '[style="background-color: #fff; padding: 6px; text-align: center"]',
@@ -34,9 +39,6 @@ describe('regular selectors', () => {
             '[style^="background-color: rgb(24, 28, 31);"]',
             '[href^="https://www.example.com/swiety-ogien-rzymu-wespazjan-tom-8-fabbri-robert,p1242140709,ksiazka-p"]',
             '[href^="/watch?v="]',
-            // TODO: handle `]` inside attribute value
-            // '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
-            // 'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
             'div[style^=" margin-right: auto; margin-left: auto;	text-align: left;	padding-bottom: 10px;"]',
         ];
         test.each(selectors)('%s', (selector) => {
@@ -56,8 +58,31 @@ describe('regular selectors', () => {
             'input[data-comma=\'0,1\']',
             'div[class*=" "]',
             'a[href="javascript:void(0)"]',
+            '[style*="z-index: 100000000;"][data-bind="visible: showCookieWarning"]',
             // eslint-disable-next-line max-len
             '[style^="font-size: 13px; border: 1px solid #ccc; margin-bottom: 15px; padding: 0px 7px;"][style$="-moz-border-radius: 3px; -webkit-border-radius:3px; border-radius:3px;"]',
+        ];
+        test.each(selectors)('%s', (selector) => {
+            const expectedAst = getAstWithSingleRegularSelector(selector);
+            expect(parse(selector)).toEqual(expectedAst);
+        });
+    });
+
+    describe('tricky attributes', () => {
+        const selectors = [
+            '#test\\.foo\\[5\\]bar',
+            'a[onclick*="arguments[0]"]',
+            'a[onclick*="arguments[0],"]',
+            '[onclick*="window.event,\'"]',
+            '[onclick*="arguments[0],\'"]',
+            '[onclick*="onEvent(arguments[0]||window.event,\'"]',
+            '[onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+            'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+            // extra space
+            'a[ title ]',
+            'a[ title = "bookmark" ]',
+            'a[href ^= "http://www"]',
+            'a[href *= "para"]',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -2521,6 +2546,11 @@ describe('check case-insensitive attributes parsing', () => {
             'div[class="case" i]',
             'div[class=case i]',
             'div[class=cAsE I]',
+            'div[class="cAsE" i]',
+            '.case[tracking*="ad-"][event*="-sticky" i]',
+            'div[data-st-area*="backTo" i]',
+            'img[alt^="slot online ad" i]',
+            'div[id*="TAR" i]',
             '.plus-banner[external-event-tracking*="Banner-"][external-event-tracking*="-sticky" i]',
             'div[id*="left" i] a[href][target="_blank"]:where([href*="1001track.com"]) > img',
             'div[id*=smart-banner i]',
@@ -2695,47 +2725,80 @@ describe('fail on white space which is before or after extended pseudo-class nam
 });
 
 describe('fail on invalid selector', () => {
-    const toThrowInputs = [
-        {
-            // part of 'head > style:contains(body{background: #410e13)' before opening `{`
-            selector: 'head > style:contains(body{',
-            error: 'Unbalanced brackets for extended pseudo-class',
-        },
-        {
-            // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
-            selector: 'a[href][data-item^=\'{',
-            error: 'Unbalanced attribute brackets is selector',
-        },
-        {
-            // non-closed old syntax
-            // part of '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']' before opening `{`
-            selector: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
-            error: 'Invalid extended-css old syntax selector',
-        },
-        {
-            selector: ':upward(1)',
-            error: 'Selector should be specified before :upward() pseudo-class',
-        },
-        {
-            selector: ':upward(p[class])',
-            error: 'Selector should be specified before :upward() pseudo-class',
-        },
-        {
-            selector: ':nth-ancestor(1)',
-            error: 'Selector should be specified before :nth-ancestor() pseudo-class',
-        },
-        {
-            selector: ':nth-ancestor(p[class])',
-            error: 'Selector should be specified before :nth-ancestor() pseudo-class',
-        },
-        {
-            selector: 'div:contains(text):',
-            error: "Invalid colon ':' at the end of selector",
-        },
-        {
-            selector: 'div:has(:',
-            error: 'Invalid pseudo-class arg at the end of selector',
-        },
-    ];
-    test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+    describe('standard', () => {
+        const toThrowInputs = [
+            {
+                selector: 'div]',
+                error: 'is not a valid selector',
+            },
+            {
+                selector: 'div[="margin"]',
+                error: 'is not a valid attribute',
+            },
+            {
+                selector: 'div[style=]',
+                error: 'is not a valid attribute',
+            },
+            {
+                selector: 'input[name=]',
+                error: 'is not a valid attribute',
+            },
+            {
+                selector: 'div[style][="margin"]',
+                error: 'is not a valid attribute',
+            },
+            {
+                selector: 'div[style*="color"][="margin"]',
+                error: 'is not a valid attribute',
+            },
+        ];
+        test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+    });
+
+    describe('extended', () => {
+        const toThrowInputs = [
+            {
+                // part of 'head > style:contains(body{background: #410e13)' before opening `{`
+                selector: 'head > style:contains(body{',
+                error: 'Unbalanced brackets for extended pseudo-class',
+            },
+            {
+                // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
+                selector: 'a[href][data-item^=\'{',
+                error: 'Unbalanced attribute brackets is selector',
+            },
+            {
+                // non-closed old syntax
+                // part of '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']' before opening `{`
+                selector: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
+                error: 'Invalid extended-css old syntax selector',
+            },
+            {
+                selector: ':upward(1)',
+                error: 'Selector should be specified before :upward() pseudo-class',
+            },
+            {
+                selector: ':upward(p[class])',
+                error: 'Selector should be specified before :upward() pseudo-class',
+            },
+            {
+                selector: ':nth-ancestor(1)',
+                error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+            },
+            {
+                selector: ':nth-ancestor(p[class])',
+                error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+            },
+            {
+                selector: 'div:contains(text):',
+                error: "Invalid colon ':' at the end of selector",
+            },
+            {
+                selector: 'div:has(:',
+                error: 'Invalid pseudo-class arg at the end of selector',
+            },
+        ];
+        test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+    });
+
 });

@@ -2,24 +2,24 @@
  * @jest-environment jsdom
  */
 
-import { tokenize } from '../../src/selector';
+import { tokenizeAttribute, tokenizeSelector } from '../../src/selector/tokenizer';
 
 describe('tokenizer', () => {
-    it('simple', () => {
+    it('selector tokenizer - simple', () => {
         let selector = 'div.banner';
         let expected = [
             { type: 'word', value: 'div' },
             { type: 'mark', value: '.' },
             { type: 'word', value: 'banner' },
         ];
-        expect(tokenize(selector)).toEqual(expected);
+        expect(tokenizeSelector(selector)).toEqual(expected);
 
         selector = '.banner';
         expected = [
             { type: 'mark', value: '.' },
             { type: 'word', value: 'banner' },
         ];
-        expect(tokenize(selector)).toEqual(expected);
+        expect(tokenizeSelector(selector)).toEqual(expected);
 
         selector = 'div[id][class] > .banner';
         expected = [
@@ -36,10 +36,22 @@ describe('tokenizer', () => {
             { type: 'mark', value: '.' },
             { type: 'word', value: 'banner' },
         ];
-        expect(tokenize(selector)).toEqual(expected);
+        expect(tokenizeSelector(selector)).toEqual(expected);
+
+        selector = 'div[class="banner"]';
+        expected = [
+            { type: 'word', value: 'div' },
+            { type: 'mark', value: '[' },
+            { type: 'word', value: 'class=' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'banner' },
+            { type: 'mark', value: '"' },
+            { type: 'mark', value: ']' },
+        ];
+        expect(tokenizeSelector(selector)).toEqual(expected);
     });
 
-    it('pseudo-class with regex', () => {
+    it('selector tokenizer - pseudo-class with regex', () => {
         const selector = 'div:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)';
         const expected = [
             { type: 'word', value: 'div' },
@@ -68,10 +80,10 @@ describe('tokenizer', () => {
             { type: 'mark', value: '/' },
             { type: 'mark', value: ')' },
         ];
-        expect(tokenize(selector)).toEqual(expected);
+        expect(tokenizeSelector(selector)).toEqual(expected);
     });
 
-    describe('trim selectors', () => {
+    describe('selector tokenizer - trim selectors', () => {
         const rawSelectors = [
             ' #test p',
             '   #test p',
@@ -96,7 +108,44 @@ describe('tokenizer', () => {
         test.each(
             rawSelectors.map((raw) => ({ raw })),
         )('%s', ({ raw }) => {
-            expect(tokenize(raw)).toEqual(expected);
+            expect(tokenizeSelector(raw)).toEqual(expected);
         });
+    });
+
+    it('attribute tokenizer', () => {
+        let attribute;
+        let expected;
+
+        attribute = 'class="banner"';
+        expected = [
+            { type: 'word', value: 'class' },
+            { type: 'mark', value: '=' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'banner' },
+            { type: 'mark', value: '"' },
+        ];
+        expect(tokenizeAttribute(attribute)).toEqual(expected);
+
+        attribute = 'class="case"i';
+        expected = [
+            { type: 'word', value: 'class' },
+            { type: 'mark', value: '=' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'case' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'i' },
+        ];
+        expect(tokenizeAttribute(attribute)).toEqual(expected);
+
+        attribute = 'alt-data^="slot"';
+        expected = [
+            { type: 'word', value: 'alt-data' },
+            { type: 'mark', value: '^' },
+            { type: 'mark', value: '=' },
+            { type: 'mark', value: '"' },
+            { type: 'word', value: 'slot' },
+            { type: 'mark', value: '"' },
+        ];
+        expect(tokenizeAttribute(attribute)).toEqual(expected);
     });
 });
