@@ -218,7 +218,7 @@ export class ExtendedCss {
         } catch (e: unknown) {
             const caughtErrorMessage = e instanceof Error ? e.message : e;
             // not valid input `selector` should be logged eventually
-            const error = `Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
+            const error = `Error: Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
             return { ok: false, error };
         }
     }
