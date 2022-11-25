@@ -377,6 +377,10 @@ describe('extended css library', () => {
             '#main div[id*="_containerWrap_"]:has(img[src$="Banner/ad.jpg"]):remove()',
             'div[class*=" "]:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
             'div[class*=" "]:matches-css(background-image: /^url\\(https:\\/\\/example\\.org\\//)',
+            // should be valid but there is an issue with `nwsapi` which is used in `jsdom`
+            // https://github.com/dperini/nwsapi/issues/34
+            // TODO: check later is it fixed
+            // 'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();
