@@ -164,8 +164,12 @@ export const isAttributeClosing = (context: Context): boolean => {
     const firstAttrToken = attrTokens[0];
     const firstAttrTokenType = firstAttrToken?.type;
     const firstAttrTokenValue = firstAttrToken?.value;
-    if (firstAttrTokenType !== TokenType.Word) {
-        // e.g. '[="margin"]'
+    // signal an error on any mark-type token except backslash
+    // e.g. '[="margin"]'
+    if (firstAttrTokenType === TokenType.Mark
+        // backslash is allowed at start of attribute
+        // e.g. '[\\:data-service-slot]'
+        && firstAttrTokenValue !== BACKSLASH) {
         throw new Error(`'[${context.attributeBuffer}]' is not a valid attribute due to '${firstAttrTokenValue}' at start of it`); // eslint-disable-line max-len
     }
 

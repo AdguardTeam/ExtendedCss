@@ -83,6 +83,9 @@ describe('regular selectors', () => {
             'a[ title = "bookmark" ]',
             'a[href ^= "http://www"]',
             'a[href *= "para"]',
+            // escaped colon at start of attribute name
+            'div[\\:data-service-slot][data-ac]',
+            '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
