@@ -505,7 +505,9 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
 
 <a id="extended-css-is-limitations"></a> **Limitations**
 
-> If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`.
+> Rules with `:is()` pseudo-class should use [native implementation of `:is()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:is) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:is()`, use `#?#`/`#$?#` marker obviously.
+
+> Due to the way how `:is()` pseudo-class is implemented in v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:is(...)` will not work. So if `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`.
 
 > [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed. Check examples below.
 
@@ -548,7 +550,9 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 
 <a id="extended-css-not-limitations"></a> **Limitations**
 
-> If `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
+> Rules with `:not()` pseudo-class should use [native implementation of `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:not()`, use `#?#`/`#$?#` marker obviously.
+
+> Due to the way how `:not()` pseudo-class is implemented in v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:not(...)` will not work. So if `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`.
 
 > Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
 
