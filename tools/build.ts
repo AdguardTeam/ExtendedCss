@@ -10,6 +10,7 @@ import { rollupRunner } from './rollup-runner';
 import {
     SRC_DIR_PATH,
     SRC_FILENAME,
+    SRC_DEFAULT_FILENAME,
     LIBRARY_NAME,
     LIB_FILE_NAME,
     DIST_DIR_PATH,
@@ -20,17 +21,17 @@ import {
 import { version } from '../package.json';
 
 const srcInputPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_FILENAME);
+const srcInputDefaultPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_DEFAULT_FILENAME);
+
 const prodOutputDir = path.resolve(__dirname, DIST_DIR_PATH);
 
-const prodConfig = {
+// public method `query()` will be available as
+//
+// import { ExtendedCss } from '@adguard/extended-css';
+// ExtendedCss.query();
+const namedProdConfig = {
     input: srcInputPath,
     output: [
-        {
-            file: `${prodOutputDir}/${LIB_FILE_NAME}.js`,
-            format: OutputFormat.IIFE,
-            name: LIBRARY_NAME,
-            banner: libOutputBanner,
-        },
         {
             file: `${prodOutputDir}/${LIB_FILE_NAME}.esm.js`,
             format: OutputFormat.ESM,
@@ -44,6 +45,21 @@ const prodConfig = {
             name: LIBRARY_NAME,
             banner: libOutputBanner,
         },
+    ],
+    plugins: commonPlugins,
+};
+
+// needed for debug purposes, check "Debugging extended selectors" in README.md
+const defaultProdConfig = {
+    input: srcInputDefaultPath,
+    output: [
+        {
+            file: `${prodOutputDir}/${LIB_FILE_NAME}.js`,
+            format: OutputFormat.IIFE,
+            name: LIBRARY_NAME,
+            banner: libOutputBanner,
+        },
+
         {
             file: `${prodOutputDir}/${LIB_FILE_NAME}.min.js`,
             format: OutputFormat.IIFE,
@@ -61,8 +77,10 @@ const prodConfig = {
 };
 
 const buildLib = async (): Promise<void> => {
-    const configName = 'extended-css prod build';
-    await rollupRunner(prodConfig, configName);
+    const namedConfigName = 'extended-css prod build for named export';
+    await rollupRunner(namedProdConfig, namedConfigName);
+    const defaultConfigName = 'extended-css prod build for default export for debugging';
+    await rollupRunner(defaultProdConfig, defaultConfigName);
 };
 
 const buildTxt = async (): Promise<void> => {
