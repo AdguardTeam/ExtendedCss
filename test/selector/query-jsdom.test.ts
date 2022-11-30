@@ -1739,7 +1739,7 @@ describe('check invalid selectors', () => {
             '[',
             '[id=012345678901234567890123456789',
         ];
-        const error = 'Unbalanced attribute brackets is selector:';
+        const error = 'Unbalanced attribute brackets in selector:';
         test.each(unknownPseudoInputs)('%s', (selector) => expectToThrowInput({ selector, error }));
     });
 

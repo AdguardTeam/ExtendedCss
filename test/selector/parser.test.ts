@@ -86,6 +86,8 @@ describe('regular selectors', () => {
             // escaped colon at start of attribute name
             'div[\\:data-service-slot][data-ac]',
             '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
+            '[class\\"ads-article\\"]',
+            "[class\\'ads-article\\']",
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -2768,7 +2770,7 @@ describe('fail on invalid selector', () => {
             {
                 // part of 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']'  before opening `{`
                 selector: 'a[href][data-item^=\'{',
-                error: 'Unbalanced attribute brackets is selector',
+                error: 'Unbalanced attribute brackets in selector',
             },
             {
                 // non-closed old syntax

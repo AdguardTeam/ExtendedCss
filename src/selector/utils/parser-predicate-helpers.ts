@@ -185,11 +185,21 @@ export const isAttributeClosing = (context: Context): boolean => {
         return token.type === TokenType.Mark
             && token.value === EQUAL_SIGN;
     });
-    // if there is no '=' inside attribute,
-    // it must be just attribute name which means the word-type token before closing bracket
-    // e.g. 'div[style]'
+    const prevToLastAttrToken = getLast(attrTokens.slice(0, -1));
+    const prevToLastAttrTokenValue = prevToLastAttrToken?.value;
     if (equalSignIndex === -1) {
-        return lastAttrTokenType === TokenType.Word;
+        // if there is no '=' inside attribute,
+        // it must be just attribute name which means the word-type token before closing bracket
+        // e.g. 'div[style]'
+        if (lastAttrTokenType === TokenType.Word) {
+            return true;
+        }
+        return prevToLastAttrTokenValue === BACKSLASH
+            // some weird attribute are valid too
+            // e.g. '[class\\"ads-article\\"]'
+            && (lastAttrTokenValue === DOUBLE_QUOTE
+                // e.g. "[class\\'ads-article\\']"
+                || lastAttrTokenValue === SINGLE_QUOTE);
     }
 
     // get the value of token next to `=`
@@ -211,8 +221,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     // e.g. 'div[style*="MARGIN" i]'
     if (lastAttrTokenType === TokenType.Word
         && lastAttrTokenValue?.toLocaleLowerCase() === ATTRIBUTE_CASE_INSENSITIVE_FLAG) {
-        const prevToLastAttrToken = getLast(attrTokens.slice(0, -1));
-        return prevToLastAttrToken?.value === nextToEqualSignTokenValue;
+        return prevToLastAttrTokenValue === nextToEqualSignTokenValue;
     }
 
     // eventually if there is quotes for attribute value and last token is not a word,

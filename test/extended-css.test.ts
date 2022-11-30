@@ -384,6 +384,8 @@ describe('extended css library', () => {
             // escaped colon in attribute name
             'div[\\:data-service-slot][data-ac]',
             '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
+            'div[class\\"ads-article\\"]',
+            "[class\\'ads-article\\']",
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();

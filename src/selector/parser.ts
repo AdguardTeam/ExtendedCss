@@ -744,7 +744,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
     }
 
     if (context.isAttributeBracketsOpen) {
-        throw new Error(`Unbalanced attribute brackets is selector: '${selector}'`);
+        throw new Error(`Unbalanced attribute brackets in selector: '${selector}'`);
     }
 
     return context.ast;
