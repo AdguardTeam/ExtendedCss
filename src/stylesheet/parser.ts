@@ -25,6 +25,8 @@ import {
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
 
+const CONTENT_CSS_PROPERTY = 'content';
+
 const REGEXP_DECLARATION_END = /[;}]/g;
 const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
 const REGEXP_NON_WHITESPACE = /\S/g;
@@ -365,6 +367,16 @@ export const prepareRuleData = (
         ruleData.style = {
             [REMOVE_PSEUDO_MARKER]: PSEUDO_PROPERTY_POSITIVE_VALUE,
         };
+
+        /**
+         * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().
+         *
+         * @see {@link BeforeStyleAppliedCallback}
+         */
+        const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
+        if (contentStyle) {
+            ruleData.style[CONTENT_CSS_PROPERTY] = contentStyle.value;
+        }
     } else {
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object

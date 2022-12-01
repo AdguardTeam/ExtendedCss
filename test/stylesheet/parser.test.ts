@@ -662,6 +662,16 @@ describe('stylesheet parser', () => {
                     debug: 'true',
                 },
             },
+            {
+                actual: "div:has(> .ad) { remove: true; content: 'testContentRuleText' !important }",
+                expected: {
+                    selector: 'div:has(> .ad)',
+                    style: {
+                        remove: 'true',
+                        content: "'testContentRuleText' !important",
+                    },
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });
