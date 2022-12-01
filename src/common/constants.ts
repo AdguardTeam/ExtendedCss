@@ -137,14 +137,11 @@ export const REMOVE_PSEUDO_MARKER = 'remove';
 
 // relative:
 export const HAS_PSEUDO_CLASS_MARKER = 'has';
-export const IF_PSEUDO_CLASS_MARKER = 'if';
 export const ABP_HAS_PSEUDO_CLASS_MARKER = '-abp-has';
 export const HAS_PSEUDO_CLASS_MARKERS = [
     HAS_PSEUDO_CLASS_MARKER,
-    IF_PSEUDO_CLASS_MARKER,
     ABP_HAS_PSEUDO_CLASS_MARKER,
 ];
-export const IF_NOT_PSEUDO_CLASS_MARKER = 'if-not';
 export const IS_PSEUDO_CLASS_MARKER = 'is';
 export const NOT_PSEUDO_CLASS_MARKER = 'not';
 
@@ -164,7 +161,6 @@ export const ABSOLUTE_PSEUDO_CLASSES = [
 
 export const RELATIVE_PSEUDO_CLASSES = [
     ...HAS_PSEUDO_CLASS_MARKERS,
-    IF_NOT_PSEUDO_CLASS_MARKER,
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
 ];

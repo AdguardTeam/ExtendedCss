@@ -576,31 +576,6 @@ describe('relative extended selectors', () => {
         });
     });
 
-    describe('if-not', () => {
-        const name = 'if-not';
-        const testsInputs = [
-            {
-                actual: 'div.banner:if-not(> span)',
-                expected: [
-                    { isRegular: true, value: 'div.banner' },
-                    { isRelative: true, name, value: '> span' },
-                ],
-            },
-            {
-                // eslint-disable-next-line max-len
-                actual: 'header[data-test-id="header"] ~ div[class]:last-child > div[class] > div[class]:if-not(a[data-test-id="logo-link"])',
-                expected: [
-                    {
-                        isRegular: true,
-                        value: 'header[data-test-id="header"] ~ div[class]:last-child > div[class] > div[class]',
-                    },
-                    { isRelative: true, name, value: 'a[data-test-id="logo-link"]' },
-                ],
-            },
-        ];
-        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
-    });
-
     it('is', () => {
         let actual;
         let expected;

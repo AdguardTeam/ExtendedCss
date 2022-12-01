@@ -7,7 +7,6 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 * [Extended capabilities](#extended-capabilities)
   * [Limitations](#extended-css-limitations)
   * [Pseudo-class :has()](#extended-css-has)
-  * [Pseudo-class :if-not()](#extended-css-if-not)
   * [Pseudo-class :contains()](#extended-css-contains)
   * [Pseudo-class :matches-css()](#extended-css-matches-css)
   * [Pseudo-class :matches-attr()](#extended-css-matches-attr)
@@ -53,7 +52,7 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/T
 
 > Rules with `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
 
-> Synonyms `:-abp-has` and `:if` are supported by ExtendedCss for better compatibility.
+> Synonym `:-abp-has` is supported by ExtendedCss for better compatibility.
 
 **Syntax**
 
@@ -125,12 +124,6 @@ Pseudo-class `:has()` selects the `target` elements that includes the elements t
 
 > [Backward compatible syntax for `:has()`](#old-syntax-has) is supported but not recommended.
 
-
-### <a id="extended-css-if-not"></a> Pseudo-class `:if-not()`
-
-Pseudo-class `:if-not()` is basically a shortcut for `:not(:has())`. It is supported by ExtendedCss for better compatibility with some other filter lists.
-
-> `:if-not()` is not recommended to use in AdGuard filters. The reason is that one day browsers will add `:has` native support, but it will never happen to this pseudo-class.
 
 ### <a id="extended-css-contains"></a> Pseudo-class `:contains()`
 

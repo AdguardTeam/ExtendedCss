@@ -21,7 +21,6 @@ import {
     ASTERISK,
     ABSOLUTE_PSEUDO_CLASSES,
     RELATIVE_PSEUDO_CLASSES,
-    IF_NOT_PSEUDO_CLASS_MARKER,
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
@@ -29,11 +28,10 @@ import {
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKER,
     ABP_HAS_PSEUDO_CLASS_MARKER,
-    IF_PSEUDO_CLASS_MARKER,
 } from '../../common/constants';
 
 /**
- * Calculated selector text which is needed to :has(), :if-not(), :is() and :not() pseudo-classes.
+ * Calculated selector text which is needed to :has(), :is() and :not() pseudo-classes.
  * Contains calculated part (depends on the processed element)
  * and value of RegularSelector which is next to selector by.
  *
@@ -68,7 +66,7 @@ interface RelativePredicateArgsInterface {
 
 /**
  * Checks whether the element has all relative elements specified by pseudo-class arg.
- * Used for :has() and :if-not() pseudo-classes.
+ * Used for :has() pseudo-class.
  *
  * @param argsData Relative pseudo-class helpers args data.
  */
@@ -104,7 +102,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
                  * e.g. 'a:has(> img)' -> `aNode.querySelectorAll(':scope > img')`.
                  *
                  * For 'any selector' as arg of relative simplicity should be set for all inner elements
-                 * e.g. 'div:if-not(*)' -> `divNode.querySelectorAll(':scope *')`
+                 * e.g. 'div:has(*)' -> `divNode.querySelectorAll(':scope *')`
                  * which means empty div with no child element.
                  */
                 rootElement = element;
@@ -336,16 +334,8 @@ export const getByExtendedSelector = (
         let relativePredicate: (e: HTMLElement) => boolean;
         switch (pseudoName) {
             case HAS_PSEUDO_CLASS_MARKER:
-            case IF_PSEUDO_CLASS_MARKER:
             case ABP_HAS_PSEUDO_CLASS_MARKER:
                 relativePredicate = (element: HTMLElement) => hasRelativesBySelectorList({
-                    element,
-                    relativeSelectorList,
-                    pseudoName,
-                });
-                break;
-            case IF_NOT_PSEUDO_CLASS_MARKER:
-                relativePredicate = (element: HTMLElement) => !hasRelativesBySelectorList({
                     element,
                     relativeSelectorList,
                     pseudoName,

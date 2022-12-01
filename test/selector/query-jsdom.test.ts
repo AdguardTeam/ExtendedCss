@@ -1045,70 +1045,6 @@ describe('extended pseudo-classes', () => {
         });
     });
 
-    describe('if-not pseudo-class', () => {
-        beforeEach(() => {
-            document.body.innerHTML = `
-                <div id="root" level="0">
-                    <div id="parent" level="1">
-                        <p id="paragraph">text</p>
-                        <a href="test_url"></a>
-                        <div id="child" class="base" level="2">
-                            <a href="/inner_url" id="anchor" class="banner"></a>
-                            <div id="inner" class="base" level="3"></div>
-                            <div id="inner2" class="base" level="3">
-                                <span id="innerSpan" class="span" level="4"></span>
-                                <p id="innerParagraph">text</p>
-                            </div>
-                        </div>
-                        <div id="child2" class="base2" level="2">
-                            <div class="base" level="3">
-                                <p id="child2InnerParagraph">text</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        afterEach(() => {
-            document.body.innerHTML = '';
-        });
-
-        describe('if-not - ok', () => {
-            const successInputs = [
-                { actual: '#parent > div:if-not(#innerParagraph)', expected: 'div#child2' },
-                { actual: '#parent > div:if-not(div > span)', expected: 'div#child2' },
-                // child combinator in arg
-                { actual: '#child div:if-not(> span)', expected: 'div#inner' },
-                { actual: '#parent > div:if-not(> a + div + div)', expected: 'div#child2' },
-                { actual: '#parent > div:if-not(> a ~ div[level="3"])', expected: 'div#child2' },
-                { actual: '#child > :if-not(> span)', expected: '#anchor, #inner' },
-                // next sibling combinator in arg
-                { actual: 'a:if-not(+ [level="2"])', expected: 'a#anchor' },
-                { actual: 'a:if-not(+ [level="2"] + [level="2"])', expected: 'a#anchor' },
-                // subsequent-sibling combinator in arg
-                { actual: 'a:if-not(~ .base2)', expected: 'a#anchor' },
-                { actual: 'a:if-not(~ * + div[id][class] > [level="3"])', expected: 'a#anchor' },
-                // selector list as arg
-                { actual: '#parent > div[id][class]:if-not(a, span)', expected: 'div#child2' },
-                // complex selector as base
-                { actual: '#root div > div:if-not(*)', expected: 'div#inner' },
-                { actual: '#root > * > #paragraph ~ div:if-not(a[href^="/inner"])', expected: 'div#child2' },
-            ];
-            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
-        });
-
-        describe('if-not - no arg or invalid selectors', () => {
-            const invalidArgErrorText = 'Invalid selector for :if-not() pseudo-class';
-            const toThrowInputs = [
-                { selector: 'div:if-not()', error: 'Missing arg for :if-not() pseudo-class' },
-                { selector: 'div:if-not(1)', error: invalidArgErrorText },
-                { selector: '#parent > :if-not(..banner)', error: invalidArgErrorText },
-                { selector: '#parent > :if-not(id="123") > .test-inner', error: invalidArgErrorText },
-            ];
-            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
-        });
-    });
-
     describe('is pseudo-class', () => {
         beforeEach(() => {
             document.body.innerHTML = `
@@ -1314,8 +1250,8 @@ describe('combined pseudo-classes', () => {
                 { actual: '#root > :is(div:not([class])):has(#paragraph)', expected: 'div#parent' },
                 // has-text xpath
                 { actual: 'p:has-text(/inner/):xpath(../../..)', expected: 'div#parent' },
-                // upward(number) if
-                { actual: 'div[level="2"]:upward(1):if(#disabledInput)', expected: 'div#parent2' },
+                // upward(number) has
+                { actual: 'div[level="2"]:upward(1):has(#disabledInput)', expected: 'div#parent2' },
                 // upward(selector) -abp-has
                 { actual: 'div[level="2"]:upward(div[id]):-abp-has(#disabledInput)', expected: 'div#parent2' },
                 // upward(not)
