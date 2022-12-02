@@ -21,11 +21,10 @@ import {
     REMOVE_ERROR_PREFIX,
     SLASH,
     ASTERISK,
+    CONTENT_CSS_PROPERTY,
 } from '../common/constants';
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
-
-const CONTENT_CSS_PROPERTY = 'content';
 
 const REGEXP_DECLARATION_END = /[;}]/g;
 const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;

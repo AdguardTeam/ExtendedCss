@@ -741,4 +741,31 @@ describe('extended css library', () => {
 
         extendedCss.apply();
     });
+
+    it("do not apply CssHitsCounter's 'content' style to selected element", () => {
+        document.body.innerHTML = `
+            <div id="case14">
+                <div id="case14-hidden-no-content"></div>
+            </div>
+        `;
+        const styleSheet = '#case14>div { display: none; content: "adguardTestContentRuleText" !important }';
+        const extendedCss = new ExtendedCss({ styleSheet });
+        extendedCss.apply();
+
+        const affectedElements = extendedCss.getAffectedElements();
+        // one element matched
+        expect(affectedElements.length).toBe(1);
+        // one rule applied
+        expect(affectedElements[0].rules.length).toBe(1);
+
+        const expectRuleStyle = {
+            display: 'none',
+            content: '"adguardTestContentRuleText" !important',
+        };
+        // 'content' in affectedElement is needed for CssHitsCounter
+        expect(affectedElements[0].rules[0].style).toEqual(expectRuleStyle);
+
+        // but it should not be set in matched element style
+        expectElementStyle('case14-hidden-no-content', { display: 'none', content: '' });
+    });
 });

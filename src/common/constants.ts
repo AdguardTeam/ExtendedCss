@@ -200,6 +200,8 @@ export const REGULAR_PSEUDO_ELEMENTS = {
     TARGET_TEXT: 'target-text',
 };
 
+export const CONTENT_CSS_PROPERTY = 'content';
+
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
 

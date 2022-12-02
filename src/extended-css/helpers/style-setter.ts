@@ -9,7 +9,11 @@ import {
     MAX_STYLE_PROTECTION_COUNT,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REMOVE_PSEUDO_MARKER,
+    CONTENT_CSS_PROPERTY,
 } from '../../common/constants';
+
+// added by tsurlfilter's CssHitsCounter
+const CONTENT_ATTR_PREFIX_REGEXP = /^("|')adguard.+?/;
 
 /**
  * Removes affectedElement.node from DOM.
@@ -55,6 +59,11 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
         if (typeof node.style.getPropertyValue(prop.toString()) !== 'undefined') {
             let value = style[prop];
             if (!value) {
+                return;
+            }
+            // do not apply 'content' style given by tsurlfilter
+            // which is needed only for BeforeStyleAppliedCallback
+            if (prop === CONTENT_CSS_PROPERTY && value.match(CONTENT_ATTR_PREFIX_REGEXP)) {
                 return;
             }
             // First we should remove !important attribute (or it won't be applied')
