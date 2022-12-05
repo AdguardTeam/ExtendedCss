@@ -29,11 +29,13 @@ jobs:
         run: yarn test local
 
       - name: deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: JamesIves/github-pages-deploy-action@v4
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist
+          folder: dist
+          branch: gh-pages
+          clean: true
 
   notify:
     needs:
