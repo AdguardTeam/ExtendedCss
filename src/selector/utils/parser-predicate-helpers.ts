@@ -209,11 +209,16 @@ export const isAttributeClosing = (context: Context): boolean => {
     const isAttrValueQuote = nextToEqualSignTokenValue === SINGLE_QUOTE
         || nextToEqualSignTokenValue === DOUBLE_QUOTE;
 
-    // for no quotes the last token before `]` should be a word-type one
+    // for no quotes after `=` the last token before `]` should be a word-type one
     // e.g. 'div[style*=margin]'
     //      'div[style*=MARGIN i]'
     if (!isAttrValueQuote) {
-        return lastAttrTokenType === TokenType.Word;
+        if (lastAttrTokenType === TokenType.Word) {
+            return true;
+        }
+        // otherwise signal an error
+        // e.g. 'table[style*=border: 0px"]'
+        throw new Error(`'[${context.attributeBuffer}]' is not a valid attribute`);
     }
 
     // otherwise if quotes for value are present

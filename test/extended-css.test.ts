@@ -402,6 +402,7 @@ describe('extended css library', () => {
             '.text-left:has-text(/share/):others()',
             '.modals.dimmer > .gdpr.visible:upward(1):watch-attr([class])',
             'div[class*=" "]:has(> div[class] > a[href="/terms"]:not([rel])',
+            'table[style*=border: 0px"]',
         ];
         test.each(invalidSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeFalsy();

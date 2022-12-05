@@ -2731,6 +2731,10 @@ describe('fail on invalid selector', () => {
                 selector: 'div[style*="color"][="margin"]',
                 error: 'is not a valid attribute',
             },
+            {
+                selector: 'table[style*=border: 0px"]',
+                error: 'is not a valid attribute',
+            },
         ];
         test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
     });
