@@ -21,6 +21,7 @@
     #case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }
     #case5>div[-ext-contains="Block this"] { display: none!important }
     #case6>div.banner[-ext-matches-css="opacity:0.9"] { display: none!important }
+    #case7>div[-ext-matches-css-before="content: sponsored"] { display: none!important }
     #case11 { display: none; }
   </style>
 
@@ -67,6 +68,15 @@
         <style>
           #case6-blocked {
             opacity:0.9
+          }
+        </style>
+      </div>
+    </div>
+    <div id="case7">
+      <div id="case7-blocked">
+        <style>
+          #case7-blocked::before {
+            content: "sponsored"
           }
         </style>
       </div>

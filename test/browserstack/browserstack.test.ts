@@ -116,6 +116,10 @@ QUnit.test('Modifier -ext-matches-css -- opacity property', (assert) => {
     assertElementStyle('case6-blocked', { display: 'none' }, assert);
 });
 
+QUnit.test('Modifier -ext-matches-css with pseudo-element', (assert) => {
+    assertElementStyle('case7-blocked', { display: 'none' }, assert);
+});
+
 QUnit.test('Protection from recurring style fixes', (assert) => {
     const done = assert.async();
 

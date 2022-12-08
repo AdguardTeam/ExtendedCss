@@ -169,7 +169,7 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
  *
  * @param domElement DOM element.
  * @param propertyName CSS property name.
- * @param regularPseudoElement Standard pseudo-element — :before, :after etc.
+ * @param regularPseudoElement Standard pseudo-element — '::before', '::after' etc.
  */
 const getComputedStylePropertyValue = (
     domElement: Element,
@@ -240,6 +240,14 @@ const parseStyleMatchArg = (pseudoName: string, rawArg: string): MatchesCssArgDa
 
     if (!styleMatchArg) {
         throw new Error(`Required style property argument part is missing in :${pseudoName}() arg: '${rawArg}'`);
+    }
+
+    // if regularPseudoElement is not `null`
+    if (regularPseudoElement) {
+        // pseudo-element should have two colon marks for Window.getComputedStyle() due to the syntax:
+        // https://www.w3.org/TR/selectors-4/#pseudo-element-syntax
+        // ':matches-css(before, content: ads)' ->> '::before'
+        regularPseudoElement = `${COLON}${COLON}${regularPseudoElement}`;
     }
 
     return { regularPseudoElement, styleMatchArg };
