@@ -4,6 +4,8 @@ enum BrowserName {
     Edge = 'Edg',
     Opera = 'Opera',
     Safari = 'Safari',
+    // for puppeteer headless mode
+    HeadlessChrome = 'HeadlessChrome',
 }
 
 const CHROMIUM_BRAND_NAME = 'Chromium';
@@ -45,22 +47,28 @@ const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
         MASK: /\sVersion\/(\d{2}\.\d)(.+\s|\s)(Safari)\//,
         MIN_VERSION: 11.1,
     },
+    [BrowserName.HeadlessChrome]: {
+        // support headless Chrome used by puppeteer
+        MASK: /\s(HeadlessChrome)\/(\d+)\..+\s(?!.*Edg\/)/,
+        MIN_VERSION: 55,
+    },
 };
 
 /**
- * Returns chromium brand object from navigator.userAgentData.brands or null if not supported.
+ * Returns chromium brand object or null if not supported.
  * Chromium because of all browsers based on it should be supported as well
  * and it is universal way to check it.
  *
+ * @param uaDataBrands Array of user agent brand information.
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands}
  */
-const getChromiumBrand = (): NavigatorUABrandVersion | null => {
-    const brandsData = navigator.userAgentData?.brands;
-    if (!brandsData) {
+const getChromiumBrand = (uaDataBrands: NavigatorUABrandVersion[] | undefined): NavigatorUABrandVersion | null => {
+    if (!uaDataBrands) {
         return null;
     }
     // for chromium-based browsers
-    const chromiumBrand = brandsData.find((brandData) => {
+    const chromiumBrand = uaDataBrands.find((brandData) => {
         return brandData.brand === CHROMIUM_BRAND_NAME
             || brandData.brand === GOOGLE_CHROME_BRAND_NAME;
     });
@@ -75,8 +83,10 @@ type BrowserInfo = {
 /**
  * Parses userAgent string and returns the data object for supported browsers;
  * otherwise returns null.
+ *
+ * @param userAgent User agent to parse.
  */
-const parseUserAgent = (): BrowserInfo | null => {
+const parseUserAgent = (userAgent: string): BrowserInfo | null => {
     let browserName;
     let currentVersion;
     const browserNames = Object.values(BrowserName);
@@ -85,7 +95,7 @@ const parseUserAgent = (): BrowserInfo | null => {
         let match = null;
         const name = browserNames[i];
         if (name) {
-            match = SUPPORTED_BROWSERS_DATA[name]?.MASK.exec(navigator.userAgent);
+            match = SUPPORTED_BROWSERS_DATA[name]?.MASK.exec(userAgent);
         }
         if (match) {
             // for safari browser the order is different because of regexp
@@ -108,12 +118,18 @@ const parseUserAgent = (): BrowserInfo | null => {
 };
 
 /**
- * Gets info about current browser.
+ * Gets info about browser.
+ *
+ * @param userAgent User agent of browser.
+ * @param uaDataBrands Array of user agent brand information if supported by browser.
  */
-const getCurrentBrowserInfoAsSupported = (): BrowserInfo | null => {
-    const brandData = getChromiumBrand();
+const getBrowserInfoAsSupported = (
+    userAgent: string,
+    uaDataBrands?: NavigatorUABrandVersion[],
+): BrowserInfo | null => {
+    const brandData = getChromiumBrand(uaDataBrands);
     if (!brandData) {
-        const uaInfo = parseUserAgent();
+        const uaInfo = parseUserAgent(userAgent);
         if (!uaInfo) {
             return null;
         }
@@ -131,26 +147,31 @@ const getCurrentBrowserInfoAsSupported = (): BrowserInfo | null => {
 };
 
 /**
- * Checks whether the current browser is supported.
+ * Checks whether the browser userAgent and userAgentData.brands is supported.
+ *
+ * @param userAgent User agent of browser.
+ * @param uaDataBrands Array of user agent brand information if supported by browser.
  */
-export const isBrowserSupported = (): boolean => {
-    const ua = navigator.userAgent;
+export const isUserAgentSupported = (
+    userAgent: string,
+    uaDataBrands?: NavigatorUABrandVersion[],
+): boolean => {
     // do not support Internet Explorer
-    if (ua.includes('MSIE') || ua.includes('Trident/')) {
+    if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) {
         return false;
     }
 
     // for local testing purposes
-    if (ua.includes('jsdom')) {
+    if (userAgent.includes('jsdom')) {
         return true;
     }
 
-    const currentBrowserData = getCurrentBrowserInfoAsSupported();
-    if (!currentBrowserData) {
+    const browserData = getBrowserInfoAsSupported(userAgent, uaDataBrands);
+    if (!browserData) {
         return false;
     }
 
-    const { browserName, currentVersion } = currentBrowserData;
+    const { browserName, currentVersion } = browserData;
     if (!browserName || !currentVersion) {
         return false;
     }
@@ -160,4 +181,11 @@ export const isBrowserSupported = (): boolean => {
     }
 
     return currentVersion >= minVersion;
+};
+
+/**
+ * Checks whether the current browser is supported.
+ */
+export const isBrowserSupported = (): boolean => {
+    return isUserAgentSupported(navigator.userAgent, navigator.userAgentData?.brands);
 };
