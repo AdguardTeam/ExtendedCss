@@ -312,7 +312,8 @@ describe('absolute extended selectors', () => {
                 actual: ':matches-css(    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    )',
                 expected: [
                     { isRegular: true, value: '*' },
-                    { isAbsolute: true, name, value: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' }, // eslint-disable-line max-len
+                    // eslint-disable-next-line max-len
+                    { isAbsolute: true, name, value: '    background-image: /^url\\((.)[a-z]{4}:[a-z]{2}\\1nk\\)$/    ' },
                 ],
             },
             {
@@ -576,169 +577,171 @@ describe('relative extended selectors', () => {
         });
     });
 
-    it('is', () => {
-        let actual;
-        let expected;
-
-        actual = ':is(.header, .footer)';
-        expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        getRegularSelector('html *'),
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'is',
-                                    children: [
-                                        getSelectorListOfRegularSelectors(['.header', '.footer']),
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(actual)).toEqual(expected);
-
-        actual = '#__next > :is(.header, .footer)';
-        expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        getRegularSelector('#__next > *'),
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'is',
-                                    children: [getSelectorListOfRegularSelectors(['.header', '.footer'])],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(actual)).toEqual(expected);
-
-        actual = 'h3 > :is(a[href$="/netflix-premium/"], a[href$="/spotify-premium/"], a[title="Disney Premium"])';
-        expected = {
-            type: NodeType.SelectorList,
-            children: [
-                {
-                    type: NodeType.Selector,
-                    children: [
-                        getRegularSelector('h3 > *'),
-                        {
-                            type: NodeType.ExtendedSelector,
-                            children: [
-                                {
-                                    type: NodeType.RelativePseudoClass,
-                                    name: 'is',
-                                    children: [
-                                        getSelectorListOfRegularSelectors([
-                                            'a[href$="/netflix-premium/"]',
-                                            'a[href$="/spotify-premium/"]',
-                                            'a[title="Disney Premium"]',
-                                        ]),
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(parse(actual)).toEqual(expected);
-    });
-
-    describe('not', () => {
-        const name = 'not';
+    describe('is', () => {
+        // for standard selector arg :is() pseudo-class is parsed as part standard selector
         const testsInputs = [
             {
-                actual: '.banner:not(.header)',
+                actual: '#__next > :is(.header, .footer)',
                 expected: [
-                    { isRegular: true, value: '.banner' },
-                    { isRelative: true, name, value: '.header' },
+                    { isRegular: true, value: '#__next > *:is(.header, .footer)' },
                 ],
             },
             {
-                actual: 'div.banner > div:not(> a[class^="ad"])',
+                actual: 'h3 > :is(a[href$="/netflix-"], a[href$="/spotify-"], a[title="Disney Premium"])',
                 expected: [
-                    { isRegular: true, value: 'div.banner > div' },
-                    { isRelative: true, name, value: '> a[class^="ad"]' },
+                    // eslint-disable-next-line max-len
+                    { isRegular: true, value: 'h3 > *:is(a[href$="/netflix-"], a[href$="/spotify-"], a[title="Disney Premium"])' },
                 ],
             },
             {
-                actual: '.detail-share-item > a:not([href*="window.print()"])',
+                actual: ':is(.header, .footer)',
                 expected: [
-                    { isRegular: true, value: '.detail-share-item > a' },
-                    { isRelative: true, name, value: '[href*="window.print()"]' },
+                    { isRegular: true, value: '*:is(.header, .footer)' },
+                ],
+            },
+            {
+                actual: ':is(.header, .footer) > .banner',
+                expected: [
+                    { isRegular: true, value: '*:is(.header, .footer) > .banner' },
+                ],
+            },
+            {
+                actual: 'html:is(.modal-active)',
+                expected: [
+                    { isRegular: true, value: 'html:is(.modal-active)' },
                 ],
             },
         ];
-        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
+    });
 
-        it('selector list as arg of not', () => {
-            let actual;
-            let expected;
+    describe('not', () => {
+        describe('not - single standard selector in arg', () => {
+            // for standard selector arg :not() pseudo-class is parsed as part standard selector
+            const testsInputs = [
+                {
+                    actual: '.banner:not(.header)',
+                    expected: [
+                        { isRegular: true, value: '.banner:not(.header)' },
+                    ],
+                },
+                {
+                    actual: 'div.banner > div:not(> a[class^="ad"])',
+                    expected: [
+                        { isRegular: true, value: 'div.banner > div:not(> a[class^="ad"])' },
+                    ],
+                },
+                {
+                    actual: '.detail-share-item > a:not([href*="window.print()"])',
+                    expected: [
+                        { isRegular: true, value: '.detail-share-item > a:not([href*="window.print()"])' },
+                    ],
+                },
+                {
+                    actual: '.yellow:not(:nth-child(3))',
+                    expected: [
+                        { isRegular: true, value: '.yellow:not(*:nth-child(3))' },
+                    ],
+                },
+                {
+                    actual: 'html:not(.modal-active)',
+                    expected: [
+                        { isRegular: true, value: 'html:not(.modal-active)' },
+                    ],
+                },
+            ];
+            test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        });
 
-            actual = '.banner > :not(span, p)';
-            expected = {
-                type: NodeType.SelectorList,
-                children: [
-                    {
-                        type: NodeType.Selector,
-                        children: [
-                            getRegularSelector('.banner > *'),
-                            {
-                                type: NodeType.ExtendedSelector,
-                                children: [
-                                    {
-                                        type: NodeType.RelativePseudoClass,
-                                        name: 'not',
-                                        children: [getSelectorListOfRegularSelectors(['span', 'p'])],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            };
-            expect(parse(actual)).toEqual(expected);
+        describe('not - selector list of standard selectors as arg', () => {
+            // for standard selector arg :not() pseudo-class is parsed as part standard selector
+            const testsInputs = [
+                {
+                    actual: '.banner > :not(span, p)',
+                    expected: [
+                        { isRegular: true, value: '.banner > *:not(span, p)' },
+                    ],
+                },
+                {
+                    actual: '#child *:not(a, span)',
+                    expected: [
+                        { isRegular: true, value: '#child *:not(a, span)' },
+                    ],
+                },
+                {
+                    actual: ':not(.header, .footer)',
+                    expected: [
+                        { isRegular: true, value: '*:not(.header, .footer)' },
+                    ],
+                },
+                {
+                    actual: 'div:not(.header, .footer) > .banner',
+                    expected: [
+                        { isRegular: true, value: 'div:not(.header, .footer) > .banner' },
+                    ],
+                },
+            ];
+            test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        });
 
-            actual = '#child *:not(a, span)';
-            expected = {
-                type: NodeType.SelectorList,
-                children: [
-                    {
-                        type: NodeType.Selector,
-                        children: [
-                            getRegularSelector('#child *'),
-                            {
-                                type: NodeType.ExtendedSelector,
-                                children: [
-                                    {
-                                        type: NodeType.RelativePseudoClass,
-                                        name: 'not',
-                                        children: [getSelectorListOfRegularSelectors(['a', 'span'])],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            };
-            expect(parse(actual)).toEqual(expected);
+        describe('not - multiple', () => {
+            // for standard selector arg :not() pseudo-class is parsed as part standard selector
+            const testsInputs = [
+                {
+                    actual: '.banner > :not(span):not(p)',
+                    expected: [
+                        { isRegular: true, value: '.banner > *:not(span):not(p)' },
+                    ],
+                },
+                {
+                    actual: '#child *:not(a):not(span):not(article)',
+                    expected: [
+                        { isRegular: true, value: '#child *:not(a):not(span):not(article)' },
+                    ],
+                },
+                {
+                    actual: '.banner > :not(span):not(p) > .banner',
+                    expected: [
+                        { isRegular: true, value: '.banner > *:not(span):not(p) > .banner' },
+                    ],
+                },
+                {
+                    actual: 'body > div[style^="z-index:"]:not([class]):not([id])',
+                    expected: [
+                        { isRegular: true, value: 'body > div[style^="z-index:"]:not([class]):not([id])' },
+                    ],
+                },
+                {
+                    actual: ':not(:empty):not(:hover)',
+                    expected: [
+                        { isRegular: true, value: '*:not(*:empty):not(*:hover)' },
+                    ],
+                },
+                {
+                    actual: 'div:not([style]) > div[id]:not([data-bem])',
+                    expected: [
+                        { isRegular: true, value: 'div:not([style]) > div[id]:not([data-bem])' },
+                    ],
+                },
+            ];
+            test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        });
+
+        describe('not - selector list', () => {
+            // for standard selector arg :not() pseudo-class is parsed as part standard selector
+            const testsInputs = [
+                {
+                    actual: '.banner > :not(span), .ad > :not(p)',
+                    expected: ['.banner > *:not(span)', '.ad > *:not(p)'],
+                },
+                {
+                    actual: '.banner > :not(span), .ad > :not(p) > .banner',
+                    expected: ['.banner > *:not(span)', '.ad > *:not(p) > .banner'],
+                },
+            ];
+            test.each(testsInputs)('$actual', ({ actual, expected }) => {
+                expect(parse(actual)).toEqual(getSelectorListOfRegularSelectors(expected));
+            });
         });
     });
 });
@@ -809,7 +812,8 @@ describe('old syntax', () => {
             ],
         },
         {
-            actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
+            // eslint-disable-next-line max-len
+            actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br',
             expected: [
                 { isRegular: true, value: 'div[style="text-align: center"] > b' },
                 { isAbsolute: true, name: 'contains', value: 'Ads:' },
@@ -1098,7 +1102,8 @@ describe('combined extended selectors', () => {
                                                                     children: [
                                                                         getSingleSelectorAstWithAnyChildren([
                                                                             { isRegular: true, value: '> span' },
-                                                                            { isAbsolute: true, name: 'contains', value: 'inner text' },  // eslint-disable-line max-len
+                                                                            // eslint-disable-next-line max-len
+                                                                            { isAbsolute: true, name: 'contains', value: 'inner text' },
                                                                         ]),
                                                                     ],
                                                                 },
@@ -1119,8 +1124,43 @@ describe('combined extended selectors', () => {
         expect(parse(actual)).toEqual(expected);
     });
 
+    // for non-extended arg :is() pseudo-class is parsed as standard
     it('is(selector list) contains', () => {
         const actual = '#__next > :is(.header, .footer):contains(ads)';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('#__next > *:is(.header, .footer)'),
+                        getAbsoluteExtendedSelector('contains', 'ads'),
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    // for non-extended arg :is() pseudo-class is parsed as standard
+    it('is(not)', () => {
+        const actual = '#main > :is(div:not([class]))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('#main > *:is(div:not([class]))'),
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    it('is(has)', () => {
+        const actual = '#__next > :is(.banner:has(> img))';
         const expected = {
             type: NodeType.SelectorList,
             children: [
@@ -1134,11 +1174,69 @@ describe('combined extended selectors', () => {
                                 {
                                     type: NodeType.RelativePseudoClass,
                                     name: 'is',
-                                    children: [getSelectorListOfRegularSelectors(['.header', '.footer'])],
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('.banner'),
+                                                        getRelativeExtendedWithSingleRegular('has', '> img'),
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
                                 },
                             ],
                         },
-                        getAbsoluteExtendedSelector('contains', 'ads'),
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    it('is(has, has)', () => {
+        const actual = '#__next > li:is(:has(> img), :has(> span > img))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('#__next > li'),
+                        {
+                            type: NodeType.ExtendedSelector,
+                            children: [
+                                {
+                                    type: NodeType.RelativePseudoClass,
+                                    name: 'is',
+                                    children: [
+                                        {
+                                            type: NodeType.SelectorList,
+                                            children: [
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('*'),
+                                                        getRelativeExtendedWithSingleRegular('has', '> img'),
+                                                    ],
+                                                },
+                                                {
+                                                    type: NodeType.Selector,
+                                                    children: [
+                                                        getRegularSelector('*'),
+                                                        getRelativeExtendedWithSingleRegular('has', '> span > img'),
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
                     ],
                 },
             ],
@@ -1212,7 +1310,7 @@ describe('combined extended selectors', () => {
 
     it('has(matches-css-before)', () => {
         // eslint-disable-next-line max-len
-        const actual = 'body.zen .zen-lib div.feed__item:has(> div > div > div[class*="__label"] > span:matches-css-before(content:*Яндекс.Директ))';
+        const actual = 'body.zen .zen-lib div.feed__item:has(> div > div > div[class*="__label"] > span:matches-css-before(content:*ADS))';
         const expected = {
             type: NodeType.SelectorList,
             children: [
@@ -1229,7 +1327,8 @@ describe('combined extended selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '> div > div > div[class*="__label"] > span' },
-                                            { isAbsolute: true, name: 'matches-css', value: 'before,content:*Яндекс.Директ' }, // eslint-disable-line max-len
+                                            // eslint-disable-next-line max-len
+                                            { isAbsolute: true, name: 'matches-css', value: 'before,content:*ADS' },
                                         ],
                                         )],
                                 },
@@ -1242,12 +1341,11 @@ describe('combined extended selectors', () => {
         expect(parse(actual)).toEqual(expected);
     });
 
-    it('upward not', () => {
+    it('extended upward and single not as standard', () => {
         const actual = 'div[style="width:640px;height:360px"][id="video-player"]:upward(div):not([class])';
         const expected = [
-            { isRegular: true, value: 'div[style="width:640px;height:360px"][id="video-player"]' },
+            { isRegular: true, value: 'div[style="width:640px;height:360px"][id="video-player"]:not([class])' },
             { isAbsolute: true, name: 'upward', value: 'div' },
-            { isRelative: true, name: 'not', value: '[class]' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -1283,13 +1381,27 @@ describe('combined extended selectors', () => {
         expect(parse(actual)).toEqual(expected);
     });
 
-    it('upward not not', () => {
+    it('not(not) - as standard', () => {
+        const actual = '#main > *:not(:not(div))';
+        const expected = {
+            type: NodeType.SelectorList,
+            children: [
+                {
+                    type: NodeType.Selector,
+                    children: [
+                        getRegularSelector('#main > *:not(*:not(div))'),
+                    ],
+                },
+            ],
+        };
+        expect(parse(actual)).toEqual(expected);
+    });
+
+    it('extended upward + and few standard not', () => {
         const actual = 'a[href^="https://example."]:upward(1):not(section):not(div[class^="article"])';
         const expected = [
-            { isRegular: true, value: 'a[href^="https://example."]' },
+            { isRegular: true, value: 'a[href^="https://example."]:not(section):not(div[class^="article"])' },
             { isAbsolute: true, name: 'upward', value: '1' },
-            { isRelative: true, name: 'not', value: 'section' },
-            { isRelative: true, name: 'not', value: 'div[class^="article"]' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -1340,8 +1452,7 @@ describe('combined extended selectors', () => {
                                     name: 'has',
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
-                                            { isRegular: true, value: '*' },
-                                            { isRelative: true, name: 'not', value: 'span' },
+                                            { isRegular: true, value: '*:not(span)' },
                                         ]),
                                     ],
                                 },
@@ -1417,6 +1528,8 @@ describe('combined extended selectors', () => {
     });
 
     it('not(has(not))', () => {
+        // first :not is extended pseudo-class
+        // but :not() inside :has() should be parsed as standard
         const actual = 'div:not(:has(:not(img)))';
         const expected = {
             type: NodeType.SelectorList,
@@ -1446,18 +1559,9 @@ describe('combined extended selectors', () => {
                                                                     type: NodeType.RelativePseudoClass,
                                                                     name: 'has',
                                                                     children: [
-                                                                        {
-                                                                            type: NodeType.SelectorList,
-                                                                            children: [
-                                                                                {
-                                                                                    type: NodeType.Selector,
-                                                                                    children: [
-                                                                                        getRegularSelector('*'),
-                                                                                        getRelativeExtendedWithSingleRegular('not', 'img'), // eslint-disable-line max-len
-                                                                                    ],
-                                                                                },
-                                                                            ],
-                                                                        },
+                                                                        getSingleSelectorAstWithAnyChildren([
+                                                                            { isRegular: true, value: '*:not(img)' },
+                                                                        ]),
                                                                     ],
                                                                 },
                                                             ],
@@ -1475,16 +1579,6 @@ describe('combined extended selectors', () => {
             ],
         };
         expect(parse(actual)).toEqual(expected);
-    });
-
-    it('two not with simple selector next to each other', () => {
-        const actual = ':not(span):not(p)';
-        const expected = [
-            { isRegular: true, value: 'html *' },
-            { isRelative: true, name: 'not', value: 'span' },
-            { isRelative: true, name: 'not', value: 'p' },
-        ];
-        expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
 });
 
@@ -1580,20 +1674,21 @@ describe('combined selectors', () => {
             {
                 actual: 'body > div:not([id])[style="position: absolute; z-index: 10000;"]',
                 expected: [
-                    { isRegular: true, value: 'body > div[style="position: absolute; z-index: 10000;"]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
+                    // :not() without extended selector in arg is considered as standard.
+                    // the order of compound selector parts differ from input selector due to ast optimization
+                    { isRegular: true, value: 'body > div[style="position: absolute; z-index: 10000;"]:not([id])' },
                 ],
             },
         ];
-        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
 
     describe('selectors with standard pseudos', () => {
+        // :not() is parsed as standard pseudo-class if there is no extended selector in arg
         it(':not::selection', () => {
             const actual = '*:not(input)::selection';
             const expected = [
-                { isRegular: true, value: 'html *::selection' },
-                { isRelative: true, name: 'not', value: 'input' },
+                { isRegular: true, value: '*::selection:not(input)' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
@@ -1601,9 +1696,7 @@ describe('combined selectors', () => {
         it(':not():not()::selection', () => {
             const actual = 'html > body *:not(input):not(textarea)::selection';
             const expected = [
-                { isRegular: true, value: 'html > body *::selection' },
-                { isRelative: true, name: 'not', value: 'input' },
-                { isRelative: true, name: 'not', value: 'textarea' },
+                { isRegular: true, value: 'html > body *::selection:not(input):not(textarea)' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
@@ -1621,8 +1714,7 @@ describe('combined selectors', () => {
             // eslint-disable-next-line max-len
             const actual = '#snippet-list-posts > .item:not([id]):has(> .box-responsive:only-child > div[id]:only-child)';
             const expected = [
-                { isRegular: true, value: '#snippet-list-posts > .item' },
-                { isRelative: true, name: 'not', value: '[id]' },
+                { isRegular: true, value: '#snippet-list-posts > .item:not([id])' },
                 { isRelative: true, name: 'has', value: '> .box-responsive:only-child > div[id]:only-child' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
@@ -1637,30 +1729,11 @@ describe('combined selectors', () => {
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
 
-        it(':not(:nth-child())', () => {
-            const actual = '.yellow:not(:nth-child(3))';
-            const expected = [
-                { isRegular: true, value: '.yellow' },
-                { isRelative: true, name: 'not', value: '*:nth-child(3)' },
-            ];
-            expectSingleSelectorAstWithAnyChildren({ actual, expected });
-        });
-
         it(':nth-child():has()', () => {
             const actual = '.entry_text:nth-child(2):has(> #ninja-blog-inactive)';
             const expected = [
                 { isRegular: true, value: '.entry_text:nth-child(2)' },
                 { isRelative: true, name: 'has', value: '> #ninja-blog-inactive' },
-            ];
-            expectSingleSelectorAstWithAnyChildren({ actual, expected });
-        });
-
-        it('two not with standard pseudo next to each other', () => {
-            const actual = ':not(:empty):not(:hover)';
-            const expected = [
-                { isRegular: true, value: 'html *' },
-                { isRelative: true, name: 'not', value: '*:empty' },
-                { isRelative: true, name: 'not', value: '*:hover' },
             ];
             expectSingleSelectorAstWithAnyChildren({ actual, expected });
         });
@@ -1702,7 +1775,8 @@ describe('combined selectors', () => {
                                     children: [
                                         getSingleSelectorAstWithAnyChildren([
                                             { isRegular: true, value: '+*' },
-                                            { isAbsolute: true, name: 'matches-css', value: 'after, content  :   /(\\d+\\s)*me/  ' }, // eslint-disable-line max-len
+                                            // eslint-disable-next-line max-len
+                                            { isAbsolute: true, name: 'matches-css', value: 'after, content  :   /(\\d+\\s)*me/  ' },
                                         ]),
                                     ],
                                 },
@@ -1946,9 +2020,7 @@ describe('combined selectors', () => {
                 {
                     type: NodeType.Selector,
                     children: [
-                        getRegularSelector('*'),
-                        getRelativeExtendedWithSingleRegular('not', '*:empty'),
-                        getRelativeExtendedWithSingleRegular('not', '*:parent'),
+                        getRegularSelector('*:not(*:empty):not(*:parent)'),
                     ],
                 },
             ],
@@ -1970,6 +2042,119 @@ describe('combined selectors', () => {
             },
         ];
         test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+    });
+
+    describe('not and is pseudo-classes limitation', () => {
+        // :not() as extended for any selector should be limited to children of the root dom element
+        // except the root element
+        it('* not(has)', () => {
+            const selector = '*:not(:has(span))';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('html *'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'not',
+                                        children: [
+                                            getSingleSelectorAstWithAnyChildren([
+                                                { isRegular: true, value: '*' },
+                                                { isRelative: true, name: 'has', value: 'span' },
+                                            ]),
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        it('* is(has, contains)', () => {
+            const selector = '*:is(:has(span), :contains(text))';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('html *'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'is',
+                                        children: [
+                                            {
+                                                type: NodeType.SelectorList,
+                                                children: [
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            getRegularSelector('*'),
+                                                            getRelativeExtendedWithSingleRegular('has', 'span'),
+                                                        ],
+                                                    },
+                                                    {
+                                                        type: NodeType.Selector,
+                                                        children: [
+                                                            getRegularSelector('*'),
+                                                            getAbsoluteExtendedSelector('contains', 'text'),
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
+
+        // `*` should not be changed to `html *` for pseudo-classes other than :not() and :is()
+        it('* has(has)', () => {
+            const selector = '*:has(:has(span))';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('*'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            getSingleSelectorAstWithAnyChildren([
+                                                { isRegular: true, value: '*' },
+                                                { isRelative: true, name: 'has', value: 'span' },
+                                            ]),
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(selector)).toEqual(expected);
+        });
     });
 
     describe('regular selector AFTER extended absolute selector', () => {
@@ -2061,35 +2246,11 @@ describe('combined selectors', () => {
                 ],
             },
             {
-                actual: ':not([class^="Navigation__subscribe"]) > div[data-cm-unit="show-failsafe"]',
-                expected: [
-                    { isRegular: true, value: 'html *' },
-                    { isRelative: true, name: 'not', value: '[class^="Navigation__subscribe"]' },
-                    { isRegular: true, value: '> div[data-cm-unit="show-failsafe"]' },
-                ],
-            },
-            {
-                actual: '.header > header + [id*="-"]:not([class]) > a[href*="adblock"]',
-                expected: [
-                    { isRegular: true, value: '.header > header + [id*="-"]' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRegular: true, value: '> a[href*="adblock"]' },
-                ],
-            },
-            {
                 actual: 'html:has(> body) > body.no_scroll',
                 expected: [
                     { isRegular: true, value: 'html' },
                     { isRelative: true, name: 'has', value: '> body' },
                     { isRegular: true, value: '> body.no_scroll' },
-                ],
-            },
-            {
-                actual: 'td[align="left"]:not([width]) > a > img',
-                expected: [
-                    { isRegular: true, value: 'td[align="left"]' },
-                    { isRelative: true, name: 'not', value: '[width]' },
-                    { isRegular: true, value: '> a > img' },
                 ],
             },
             {
@@ -2100,28 +2261,70 @@ describe('combined selectors', () => {
                     { isRegular: true, value: '> .inner' },
                 ],
             },
+            // :not() is parsed as standard pseudo-class if there is no extended selector in arg
+            {
+                actual: '.header > header + [id*="-"]:not([class]) > a[href*="adblock"]',
+                expected: [
+                    { isRegular: true, value: '.header > header + [id*="-"]:not([class]) > a[href*="adblock"]' },
+                ],
+            },
+            {
+                actual: ':not([class^="Navigation__subscribe"]) > div[data-cm-unit="show-failsafe"]',
+                expected: [
+                    // eslint-disable-next-line max-len
+                    { isRegular: true, value: '*:not([class^="Navigation__subscribe"]) > div[data-cm-unit="show-failsafe"]' },
+                ],
+            },
+            {
+                actual: 'td[align="left"]:not([width]) > a > img',
+                expected: [
+                    { isRegular: true, value: 'td[align="left"]:not([width]) > a > img' },
+                ],
+            },
             {
                 actual: 'td[align="left"]:not([width])+ a > img',
                 expected: [
-                    { isRegular: true, value: 'td[align="left"]' },
-                    { isRelative: true, name: 'not', value: '[width]' },
-                    { isRegular: true, value: '+ a > img' },
+                    { isRegular: true, value: 'td[align="left"]:not([width]) + a > img' },
                 ],
             },
             {
                 actual: 'div:not(.clear) > a[href="javascript:void(0)"]',
                 expected: [
-                    { isRegular: true, value: 'div' },
-                    { isRelative: true, name: 'not', value: '.clear' },
-                    { isRegular: true, value: '> a[href="javascript:void(0)"]' },
+                    { isRegular: true, value: 'div:not(.clear) > a[href="javascript:void(0)"]' },
                 ],
             },
         ];
-        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
 
     describe('combined after combined with any combinator between', () => {
         const testsInputs = [
+            // :not() can be parsed as standard selector
+            /* eslint-disable max-len */
+            {
+                actual: 'body > script + div:empty:not([class]):not([id]) ~ div:empty:not([class]):not([id]) + div:empty:not([class]):not([id]) + [id]:not([class])',
+                expected: [
+                    { isRegular: true, value: 'body > script + div:empty:not([class]):not([id]) ~ div:empty:not([class]):not([id]) + div:empty:not([class]):not([id]) + [id]:not([class])' },
+                ],
+            },
+            {
+                actual: 'article>div[id]:not([class])~div[class]:not([id])',
+                expected: [
+                    { isRegular: true, value: 'article>div[id]:not([class]) ~div[class]:not([id])' },
+                ],
+            },
+            {
+                actual: 'body > div[id="root"] ~ script +div:not([class]):not([id]) > div[class*=" "]',
+                expected: [
+                    { isRegular: true, value: 'body > div[id="root"] ~ script +div:not([class]):not([id]) > div[class*=" "]' },
+                ],
+            },
+            {
+                actual: '#peek > div:not([class]):not([id]) > div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]:not([class]):not([id])',
+                expected: [
+                    { isRegular: true, value: '#peek > div:not([class]):not([id]) > div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]:not([class]):not([id])' },
+                ],
+            },
             {
                 actual: 'div:contains(base) + .paragraph:contains(text)',
                 expected: [
@@ -2134,14 +2337,11 @@ describe('combined selectors', () => {
             {
                 actual: '#root > div:not([class]) > div:contains(PRIVACY)',
                 expected: [
-                    { isRegular: true, value: '#root > div' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRegular: true, value: '> div' },
+                    { isRegular: true, value: '#root > div:not([class]) > div' },
                     { isAbsolute: true, name: 'contains', value: 'PRIVACY' },
                 ],
             },
             {
-                // eslint-disable-next-line max-len
                 actual: '#app > div[class]:matches-attr("/data-v-/") > div > div:has(> a[href="https://example.com"])',
                 expected: [
                     { isRegular: true, value: '#app > div[class]' },
@@ -2151,62 +2351,27 @@ describe('combined selectors', () => {
                 ],
             },
             {
-                // eslint-disable-next-line max-len
                 actual: 'tr[data-id]:not([class]):not([id]) > td[class] > div[class*=" "]:has(> div[class*=" "] > iframe[src^="https://example.org/"])',
                 expected: [
-                    { isRegular: true, value: 'tr[data-id]' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    { isRegular: true, value: '> td[class] > div[class*=" "]' },
+                    { isRegular: true, value: 'tr[data-id]:not([class]):not([id]) > td[class] > div[class*=" "]' },
                     { isRelative: true, name: 'has', value: '> div[class*=" "] > iframe[src^="https://example.org/"]' },
                 ],
             },
             {
-                // eslint-disable-next-line max-len
                 actual: 'div:not([style^="min-height:"]) > div[id][data-id^="toolkit-"]:not([data-bem]):not([data-m]):has(a[href^="https://example."]>img)',
                 expected: [
-                    { isRegular: true, value: 'div' },
-                    { isRelative: true, name: 'not', value: '[style^="min-height:"]' },
-                    { isRegular: true, value: '> div[id][data-id^="toolkit-"]' },
-                    { isRelative: true, name: 'not', value: '[data-bem]' },
-                    { isRelative: true, name: 'not', value: '[data-m]' },
+                    { isRegular: true, value: 'div:not([style^="min-height:"]) > div[id][data-id^="toolkit-"]:not([data-bem]):not([data-m])' },
                     { isRelative: true, name: 'has', value: 'a[href^="https://example."]>img' },
                 ],
             },
             {
-                // eslint-disable-next-line max-len
                 actual: '#root > div:not([class])> div[class] > div[class] > span[class] + a[href="https://example.org/test"]:upward(2)',
                 expected: [
-                    { isRegular: true, value: '#root > div' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRegular: true, value: '> div[class] > div[class] > span[class] + a[href="https://example.org/test"]' }, // eslint-disable-line max-len
+                    { isRegular: true, value: '#root > div:not([class]) > div[class] > div[class] > span[class] + a[href="https://example.org/test"]' },
                     { isAbsolute: true, name: 'upward', value: '2' },
                 ],
             },
             {
-                actual: 'body > div[id="root"] ~ script +div:not([class]):not([id]) > div[class*=" "]',
-                expected: [
-                    { isRegular: true, value: 'body > div[id="root"] ~ script +div' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    { isRegular: true, value: '> div[class*=" "]' },
-                ],
-            },
-            {
-                // eslint-disable-next-line max-len
-                actual: '#peek > div:not([class]):not([id]) > div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]:not([class]):not([id])',
-                expected: [
-                    { isRegular: true, value: '#peek > div' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    // eslint-disable-next-line max-len
-                    { isRegular: true, value: '> div[data-root][style*="position: fixed; bottom: 0px; z-index: 1000; display: flex; min-width: 50%; margin: 8px;"]' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                ],
-            },
-            {
-                // eslint-disable-next-line max-len
                 actual: '#content-container > div[class] > div[class]:matches-css(z-index: 10) > div[class] > div[class] > h4:contains(cookies):upward(4)',
                 expected: [
                     { isRegular: true, value: '#content-container > div[class] > div[class]' },
@@ -2217,42 +2382,14 @@ describe('combined selectors', () => {
                 ],
             },
             {
-                // eslint-disable-next-line max-len
                 actual: '.content > .block.rel ~ div[class*=" "]:not(.clear) > a[href="javascript:void(0)"]:only-child:contains(/^Open app$/):upward(1)',
                 expected: [
-                    { isRegular: true, value: '.content > .block.rel ~ div[class*=" "]' },
-                    { isRelative: true, name: 'not', value: '.clear' },
-                    { isRegular: true, value: '> a[href="javascript:void(0)"]:only-child' },
+                    { isRegular: true, value: '.content > .block.rel ~ div[class*=" "]:not(.clear) > a[href="javascript:void(0)"]:only-child' },
                     { isAbsolute: true, name: 'contains', value: '/^Open app$/' },
                     { isAbsolute: true, name: 'upward', value: '1' },
                 ],
             },
-            {
-                actual: 'article>div[id]:not([class])~div[class]:not([id])',
-                expected: [
-                    { isRegular: true, value: 'article>div[id]' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRegular: true, value: '~div[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                ],
-            },
-            {
-                // eslint-disable-next-line max-len
-                actual: 'body > script + div:empty:not([class]):not([id]) ~ div:empty:not([class]):not([id]) + div:empty:not([class]):not([id]) + [id]:not([class])',
-                expected: [
-                    { isRegular: true, value: 'body > script + div:empty' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    { isRegular: true, value: '~ div:empty' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    { isRegular: true, value: '+ div:empty' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                    { isRelative: true, name: 'not', value: '[id]' },
-                    { isRegular: true, value: '+ [id]' },
-                    { isRelative: true, name: 'not', value: '[class]' },
-                ],
-            },
+            /* eslint-enable max-len */
             // complex selectors with extended pseudo-class inside as part before combinator
             {
                 actual: 'div:upward(3).banner .inner',
@@ -2313,7 +2450,7 @@ describe('combined selectors', () => {
                 ],
             },
         ];
-        test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+        test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
 
         it('has(has) + has', () => {
             const actual = 'div:has(> .banner:has(> a > img)) + .ad:has(> img)';
@@ -2365,9 +2502,7 @@ describe('combined selectors', () => {
                     {
                         type: NodeType.Selector,
                         children: [
-                            getRegularSelector('body > div'),
-                            getRelativeExtendedWithSingleRegular('not', '[class]'),
-                            getRegularSelector('> div[class]'),
+                            getRegularSelector('body > div:not([class]) > div[class]'),
                             {
                                 type: NodeType.ExtendedSelector,
                                 children: [
@@ -2381,9 +2516,8 @@ describe('combined selectors', () => {
                                                     {
                                                         type: NodeType.Selector,
                                                         children: [
-                                                            getRegularSelector('> div'),
-                                                            getRelativeExtendedWithSingleRegular('not', '[class]'),
-                                                            getRegularSelector('> .branch-journeys-top a[target="_blank"][href^="/policy/"]'), // eslint-disable-line max-len
+                                                            // eslint-disable-next-line max-len
+                                                            getRegularSelector('> div:not([class]) > .branch-journeys-top a[target="_blank"][href^="/policy/"]'),
                                                         ],
                                                     },
                                                 ],
@@ -2621,24 +2755,22 @@ describe('check pseudo-class names case-insensitivity', () => {
         {
             actual: '#parent *:NOT([class])',
             expected: [
-                { isRegular: true, value: '#parent *' },
-                { isRelative: true, name: 'not', value: '[class]' },
+                { isRegular: true, value: '#parent *:not([class])' },
             ],
         },
         {
             actual: '#parent *:NOT([CLASS]):CONTAINS(text)',
             expected: [
-                { isRegular: true, value: '#parent *' },
-                { isRelative: true, name: 'not', value: '[CLASS]' },
+                { isRegular: true, value: '#parent *:not([CLASS])' },
                 { isAbsolute: true, name: 'contains', value: 'text' },
             ],
         },
     ];
-    test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
+    test.each(testsInputs)('$actual', (input) => expectSingleSelectorAstWithAnyChildren(input));
 });
 
 describe('remove pseudo-class is invalid for selector parser', () => {
-    const error = 'Selector parser error: invalid :remove() pseudo-class in selector:';
+    const error = 'Invalid :remove() pseudo-class in selector:';
     const toThrowInputs = [
         {
             selector: 'div[id][class][style]:remove()',
@@ -2759,19 +2891,19 @@ describe('fail on invalid selector', () => {
             },
             {
                 selector: ':upward(1)',
-                error: 'Selector should be specified before :upward() pseudo-class',
+                error: 'Selector should be defined before :upward() pseudo-class',
             },
             {
                 selector: ':upward(p[class])',
-                error: 'Selector should be specified before :upward() pseudo-class',
+                error: 'Selector should be defined before :upward() pseudo-class',
             },
             {
                 selector: ':nth-ancestor(1)',
-                error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+                error: 'Selector should be defined before :nth-ancestor() pseudo-class',
             },
             {
                 selector: ':nth-ancestor(p[class])',
-                error: 'Selector should be specified before :nth-ancestor() pseudo-class',
+                error: 'Selector should be defined before :nth-ancestor() pseudo-class',
             },
             {
                 selector: 'div:contains(text):',

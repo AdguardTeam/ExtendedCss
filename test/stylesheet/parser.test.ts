@@ -141,14 +141,16 @@ describe('stylesheet parser', () => {
                     },
                 },
                 {
-                    actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'] { display :none !important; }', // eslint-disable-line max-len
+                    // eslint-disable-next-line max-len
+                    actual: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \'] { display :none !important; }',
                     expected: {
                         selector: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
                         style: { display: 'none !important' },
                     },
                 },
                 {
-                    actual: 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\'] { display: none !important; }', // eslint-disable-line max-len
+                    // eslint-disable-next-line max-len
+                    actual: 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\'] { display: none !important; }',
                     expected: {
                         selector: 'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']',
                         style: { display: 'none !important' },
@@ -186,7 +188,8 @@ describe('stylesheet parser', () => {
                     },
                 },
                 {
-                    actual: '.con > .related[data-desc] > li { margin-right: 0!important; margin-left: 20px!important; }', // eslint-disable-line max-len
+                    // eslint-disable-next-line max-len
+                    actual: '.con > .related[data-desc] > li { margin-right: 0!important; margin-left: 20px!important; }',
                     expected: {
                         selector: '.con > .related[data-desc] > li',
                         style: { 'margin-right': '0!important', 'margin-left': '20px!important' },

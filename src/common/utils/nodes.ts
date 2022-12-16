@@ -75,3 +75,19 @@ export const getElementSelectorPath = (inputEl: Element): string => {
 export const isHtmlElement = (element: HTMLElement | Node | null): element is HTMLElement => {
     return element instanceof HTMLElement;
 };
+
+/**
+ * Takes `element` and returns its parent element.
+ *
+ * @param element Element.
+ * @param errorMessage Optional error message to throw.
+ *
+ * @throws An error if element has no parent element.
+ */
+export const getParent = (element: HTMLElement, errorMessage?: string): HTMLElement => {
+    const { parentElement } = element;
+    if (!parentElement) {
+        throw new Error(errorMessage || 'Element does no have parent element');
+    }
+    return parentElement;
+};

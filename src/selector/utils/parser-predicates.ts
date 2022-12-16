@@ -3,7 +3,7 @@ import { Context } from './parser-types';
 
 import { TokenType, tokenizeAttribute } from '../tokenizer';
 
-import { getLast } from '../../common/utils/arrays';
+import { getFirst, getLast, getItemByIndex } from '../../common/utils/arrays';
 import {
     SPACE,
     EQUAL_SIGN,
@@ -21,6 +21,8 @@ import {
     CONTAINS_PSEUDO_NAMES,
     XPATH_PSEUDO_CLASS_MARKER,
     SUPPORTED_PSEUDO_CLASSES,
+    OPTIMIZATION_PSEUDO_CLASSES,
+    WHITE_SPACE_CHARACTERS,
 } from '../../common/constants';
 
 const ATTRIBUTE_CASE_INSENSITIVE_FLAG = 'i';
@@ -61,8 +63,18 @@ const POSSIBLE_MARKS_BEFORE_REGEXP = {
  *
  * @param tokenValue Token value to check.
  */
-export const isSupportedExtendedPseudo = (tokenValue: string): boolean => {
+export const isSupportedPseudoClass = (tokenValue: string): boolean => {
     return SUPPORTED_PSEUDO_CLASSES.includes(tokenValue);
+};
+
+/**
+ * Checks whether the passed pseudo-class `name` should be optimized,
+ * i.e. :not() and :is().
+ *
+ * @param name Pseudo-class name.
+ */
+export const isOptimizationPseudoClass = (name: string): boolean => {
+    return OPTIMIZATION_PSEUDO_CLASSES.includes(name);
 };
 
 /**
@@ -161,7 +173,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     // tokenize the prepared attribute string
     const attrTokens = tokenizeAttribute(noSpaceAttr);
 
-    const firstAttrToken = attrTokens[0];
+    const firstAttrToken = getFirst(attrTokens);
     const firstAttrTokenType = firstAttrToken?.type;
     const firstAttrTokenValue = firstAttrToken?.value;
     // signal an error on any mark-type token except backslash
@@ -170,7 +182,8 @@ export const isAttributeClosing = (context: Context): boolean => {
         // backslash is allowed at start of attribute
         // e.g. '[\\:data-service-slot]'
         && firstAttrTokenValue !== BACKSLASH) {
-        throw new Error(`'[${context.attributeBuffer}]' is not a valid attribute due to '${firstAttrTokenValue}' at start of it`); // eslint-disable-line max-len
+        // eslint-disable-next-line max-len
+        throw new Error(`'[${context.attributeBuffer}]' is not a valid attribute due to '${firstAttrTokenValue}' at start of it`);
     }
 
     const lastAttrToken = getLast(attrTokens);
@@ -203,8 +216,8 @@ export const isAttributeClosing = (context: Context): boolean => {
     }
 
     // get the value of token next to `=`
-    const nextToEqualSignToken = attrTokens[equalSignIndex + 1];
-    const nextToEqualSignTokenValue = nextToEqualSignToken?.value;
+    const nextToEqualSignToken = getItemByIndex(attrTokens, equalSignIndex + 1);
+    const nextToEqualSignTokenValue = nextToEqualSignToken.value;
     // check whether the attribute value wrapper in quotes
     const isAttrValueQuote = nextToEqualSignTokenValue === SINGLE_QUOTE
         || nextToEqualSignTokenValue === DOUBLE_QUOTE;
@@ -232,4 +245,16 @@ export const isAttributeClosing = (context: Context): boolean => {
     // eventually if there is quotes for attribute value and last token is not a word,
     // the closing mark should be the same quote as opening one
     return lastAttrTokenValue === nextToEqualSignTokenValue;
+};
+
+/**
+ * Checks whether the `tokenValue` is a whitespace character.
+ *
+ * @param tokenValue Token value.
+ */
+export const isWhiteSpaceChar = (tokenValue: string | undefined): boolean => {
+    if (!tokenValue) {
+        return false;
+    }
+    return WHITE_SPACE_CHARACTERS.includes(tokenValue);
 };

@@ -181,7 +181,7 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
     if (context.nextIndex === -1) {
         if (selector === removeSelectorData.selector) {
             // rule should have style or pseudo-class :remove()
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`); // eslint-disable-line max-len
+            throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
         }
         // stop parsing as there is no style declaration and selector parsed fine
         context.cssToParse = '';
@@ -467,7 +467,7 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
-                throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_SELECTOR}: '${context.cssToParse}'`); // eslint-disable-line max-len
+                throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_SELECTOR}: '${context.cssToParse}'`);
             }
             if (context.nextIndex === -1) {
                 // no style declaration in rule

@@ -103,8 +103,10 @@ describe('converter', () => {
                 expected: 'a[target="_blank"]:contains(Advertisement)',
             },
             {
-                actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
-                expected: 'div[style="text-align: center"] > b:contains(Ads:)+a[href^="http://example.com/test.html?id="]+br', // eslint-disable-line max-len
+                /* eslint-disable max-len */
+                actual:  'div[style="text-align: center"] > b[-ext-contains="Ads:"]+a[href^="http://example.com/test.html?id="]+br',
+                expected: 'div[style="text-align: center"] > b:contains(Ads:)+a[href^="http://example.com/test.html?id="]+br',
+                /* eslint-enable max-len */
             },
             // matches-css
             {

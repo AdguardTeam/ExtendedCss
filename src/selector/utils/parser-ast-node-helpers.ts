@@ -1,5 +1,13 @@
 import { Context } from './parser-types';
-import { isSupportedExtendedPseudo } from './parser-predicate-helpers';
+import {
+    getLastRegularChild,
+    isSelectorNode,
+    isRegularSelectorNode,
+    isAbsolutePseudoClassNode,
+    isExtendedSelectorNode,
+} from './ast-node-helpers';
+import { isSupportedPseudoClass } from './parser-predicates';
+import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
 import {
     NodeType,
@@ -10,15 +18,13 @@ import {
     RelativePseudoClassNode,
 } from '../nodes';
 
-import { getLast } from '../../common/utils/arrays';
+import { getFirst, getLast } from '../../common/utils/arrays';
 import {
     BRACKETS,
     HAS_PSEUDO_CLASS_MARKERS,
     REMOVE_PSEUDO_MARKER,
-    RELATIVE_PSEUDO_CLASSES,
-    ABSOLUTE_PSEUDO_CLASSES,
+    REMOVE_ERROR_PREFIX,
 } from '../../common/constants';
-
 
 /**
  * Gets the node which is being collected
@@ -45,19 +51,15 @@ export const getBufferNode = (context: Context): AnySelectorNodeInterface | null
  * - type of bufferNode is unsupported;
  * - no RegularSelector in bufferNode.
  */
-export const getLastRegularSelectorNode = (context: Context): AnySelectorNodeInterface => {
+export const getContextLastRegularSelectorNode = (context: Context): AnySelectorNodeInterface => {
     const bufferNode = getBufferNode(context);
     if (!bufferNode) {
         throw new Error('No bufferNode found');
     }
-    if (bufferNode.type !== NodeType.Selector) {
+    if (!isSelectorNode(bufferNode)) {
         throw new Error('Unsupported bufferNode type');
     }
-    const selectorRegularChildren = bufferNode.children.filter((node) => node.type === NodeType.RegularSelector);
-    const lastRegularSelectorNode = getLast(selectorRegularChildren);
-    if (!lastRegularSelectorNode) {
-        throw new Error('No RegularSelector node found');
-    }
+    const lastRegularSelectorNode = getLastRegularChild(bufferNode.children);
     context.pathToBufferNode.push(lastRegularSelectorNode);
     return lastRegularSelectorNode;
 };
@@ -79,16 +81,16 @@ export const updateBufferNode = (context: Context, tokenValue: string): void => 
     if (bufferNode === null) {
         throw new Error('No bufferNode to update');
     }
-    const { type } = bufferNode;
-    if (type === NodeType.AbsolutePseudoClass) {
+    if (isAbsolutePseudoClassNode(bufferNode)) {
         bufferNode.value += tokenValue;
-    } else if (type === NodeType.RegularSelector) {
+    } else if (isRegularSelectorNode(bufferNode)) {
         bufferNode.value += tokenValue;
         if (context.isAttributeBracketsOpen) {
             context.attributeBuffer += tokenValue;
         }
     } else {
-        throw new Error(`${bufferNode.type} node can not be updated. Only RegularSelector and AbsolutePseudoClass are supported`); // eslint-disable-line max-len
+        // eslint-disable-next-line max-len
+        throw new Error(`${bufferNode.type} node cannot be updated. Only RegularSelector and AbsolutePseudoClass are supported`);
     }
 };
 
@@ -191,12 +193,12 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
     }
     const lastSelectorNodeChild = getLast(selectorNode.children);
     const hasExtended = lastSelectorNodeChild
-        && lastSelectorNodeChild.type === NodeType.ExtendedSelector
+        && isExtendedSelectorNode(lastSelectorNodeChild)
         // parser position might be inside standard pseudo-class brackets which has space
         // e.g. 'div:contains(/а/):nth-child(100n + 2)'
         && context.standardPseudoBracketsStack.length === 0;
 
-    const supposedPseudoClassNode = hasExtended && lastSelectorNodeChild.children[0];
+    const supposedPseudoClassNode = hasExtended && getFirst(lastSelectorNodeChild.children);
 
     let newNeededBufferNode = selectorNode;
     if (supposedPseudoClassNode) {
@@ -204,9 +206,9 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
         const lastExtendedPseudoName = hasExtended
             && supposedPseudoClassNode.name;
         const isLastExtendedNameRelative = lastExtendedPseudoName
-            && RELATIVE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
+            && isRelativePseudoClass(lastExtendedPseudoName);
         const isLastExtendedNameAbsolute = lastExtendedPseudoName
-            && ABSOLUTE_PSEUDO_CLASSES.includes(lastExtendedPseudoName);
+            && isAbsolutePseudoClass(lastExtendedPseudoName);
         const hasRelativeExtended = isLastExtendedNameRelative
             && context.extendedPseudoBracketsStack.length > 0
             && context.extendedPseudoBracketsStack.length === context.extendedPseudoNamesStack.length;
@@ -226,7 +228,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
         newNeededBufferNode = selectorNode;
     } else {
         // otherwise return last regular selector node to update later
-        newNeededBufferNode = getLastRegularSelectorNode(context);
+        newNeededBufferNode = getContextLastRegularSelectorNode(context);
     }
     // update the path to buffer node properly
     context.pathToBufferNode.push(newNeededBufferNode);
@@ -258,12 +260,12 @@ export const handleNextTokenOnColon = (
     if (!nextTokenValue) {
         throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
     }
-    if (!isSupportedExtendedPseudo(nextTokenValue.toLowerCase())) {
+    if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
         if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
             // :remove() pseudo-class should be handled before
             // as it is not about element selecting but actions with elements
             // e.g. 'body > div:empty:remove()'
-            throw new Error(`Selector parser error: invalid :remove() pseudo-class in selector: '${selector}'`); // eslint-disable-line max-len
+            throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
         }
         // if following token is not an extended pseudo
         // the colon should be collected to value of RegularSelector

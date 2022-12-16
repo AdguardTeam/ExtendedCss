@@ -30,7 +30,8 @@ export const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => 
      */
 
     // ':remove()'
-    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`; // eslint-disable-line max-len
+    // eslint-disable-next-line max-len
+    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`;
     // ':remove(' - needed for validation rules like 'div:remove(2)'
     const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
 

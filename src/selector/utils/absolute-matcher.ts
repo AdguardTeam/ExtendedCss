@@ -4,6 +4,7 @@ import {
     replaceAll,
     toRegExp,
 } from '../../common/utils/strings';
+import { getFirst, getItemByIndex } from '../../common/utils/arrays';
 import { logger } from '../../common/utils/logger';
 import { isSafariBrowser } from '../../common/utils/user-agents';
 import { getNodeTextContent } from '../../common/utils/nodes';
@@ -444,10 +445,7 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
     let isRegexpPattern = false;
     let i = 0;
     while (i < chainChunks.length) {
-        const chunk = chainChunks[i];
-        if (!chunk) {
-            throw new Error(`Invalid pseudo-class arg: '${input}'`);
-        }
+        const chunk = getItemByIndex(chainChunks, i, `Invalid pseudo-class arg: '${input}'`);
         if (chunk.startsWith(SLASH) && chunk.endsWith(SLASH) && chunk.length > 2) {
             // regexp pattern with no dot in it, e.g. /propName/
             chainPatterns.push(chunk);
@@ -512,7 +510,7 @@ interface Chain {
  * @param [output=[]] Result acc.
  */
 const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], output: Chain[] = []): Chain[] => {
-    const tempProp = chain[0];
+    const tempProp = getFirst(chain);
 
     if (chain.length === 1) {
         let key: keyof Element;
@@ -575,7 +573,7 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
     const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
 
-    // chained property name can not include '/' or '.'
+    // chained property name cannot include '/' or '.'
     // so regex prop names with such escaped characters are invalid
     if (rawPropertyName.includes('\\/')
         || rawPropertyName.includes('\\.')) {

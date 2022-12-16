@@ -29,7 +29,7 @@ export const getNthAncestor = (domElement: HTMLElement, nth: number, pseudoName:
     while (i < nth) {
         ancestor = domElement.parentElement;
         if (!ancestor) {
-            throw new Error(`Argument of :${pseudoName}() pseudo-class is too big — '${nth}', out of DOM elements root.`); // eslint-disable-line max-len
+            throw new Error(`Out of DOM: Argument of :${pseudoName}() pseudo-class is too big — '${nth}'.`);
         }
         domElement = ancestor;
         i += 1;

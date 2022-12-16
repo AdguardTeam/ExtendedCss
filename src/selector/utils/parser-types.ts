@@ -49,4 +49,11 @@ export interface Context {
      * Flag for extended pseudo-class arg regexp values.
      */
     isRegexpOpen: boolean;
+
+    /**
+     * Flag for optimizing ast before return.
+     * Needed for :not() and :is() pseudo-classes
+     * which should be parsed as standard if arg has no extended selector.
+     */
+    shouldOptimize: boolean;
 }

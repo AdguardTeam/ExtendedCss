@@ -55,7 +55,7 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     }
     Object.keys(style).forEach((prop) => {
         // Apply this style only to existing properties
-        // We can't use hasOwnProperty here (does not work in FF)
+        // We cannot use hasOwnProperty here (does not work in FF)
         if (typeof node.style.getPropertyValue(prop.toString()) !== 'undefined') {
             let value = style[prop];
             if (!value) {

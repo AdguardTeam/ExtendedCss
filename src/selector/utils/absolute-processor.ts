@@ -59,7 +59,8 @@ const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterfac
  * @param pseudoArg Pseudo-class arg.
  */
 const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg: string) => {
-    return `${MATCHING_ELEMENT_ERROR_PREFIX} ${propDesc}, may be invalid :${pseudoName}() pseudo-class arg: '${pseudoArg}'`; // eslint-disable-line max-len
+    // eslint-disable-next-line max-len
+    return `${MATCHING_ELEMENT_ERROR_PREFIX} ${propDesc}, may be invalid :${pseudoName}() pseudo-class arg: '${pseudoArg}'`;
 };
 
 /**

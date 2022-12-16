@@ -9,8 +9,7 @@
 export const getObjectFromEntries = <T extends string>(entries: Array<[T, T]>): { [key: string]: T } => {
     const object: { [key: string]: T } = {};
     entries.forEach((el) => {
-        const key = el[0];
-        const value = el[1];
+        const [key, value] = el;
         object[key] = value;
     });
     return object;

@@ -386,6 +386,8 @@ describe('extended css library', () => {
             '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
             'div[class\\"ads-article\\"]',
             "[class\\'ads-article\\']",
+            // `*:not(<arg>)` with standard selector `arg`
+            'html:not([class*="block"]) .container',
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();
@@ -403,6 +405,8 @@ describe('extended css library', () => {
             '.modals.dimmer > .gdpr.visible:upward(1):watch-attr([class])',
             'div[class*=" "]:has(> div[class] > a[href="/terms"]:not([rel])',
             'table[style*=border: 0px"]',
+            // `*:not(<arg>)` with extended selector `arg`
+            'html:not(:has(span))',
         ];
         test.each(invalidSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeFalsy();
@@ -640,7 +644,7 @@ describe('extended css library', () => {
                 <div id="case19-property-null" style="display: block;"></div>
             </div>
         `;
-        const styleSheet = '#case19 > div:matches-property("firstChild.assignedSlot.test") { display: none!important; }';  // eslint-disable-line max-len
+        const styleSheet = '#case19 > div:matches-property("firstChild.slot.test") { display: none!important; }';
         applyExtCss(styleSheet);
 
         expectElementStyle('case19-property-null', { display: 'block' });
@@ -756,6 +760,9 @@ describe('extended css library', () => {
         const affectedElements = extendedCss.getAffectedElements();
         // one element matched
         expect(affectedElements.length).toBe(1);
+        if (!affectedElements[0]) {
+            throw new Error('One affectedElements should be present for case14');
+        }
         // one rule applied
         expect(affectedElements[0].rules.length).toBe(1);
 
@@ -763,6 +770,10 @@ describe('extended css library', () => {
             display: 'none',
             content: '"adguardTestContentRuleText" !important',
         };
+
+        if (!affectedElements[0].rules[0]) {
+            throw new Error('One rule for affected elements should be present for case14');
+        }
         // 'content' in affectedElement is needed for CssHitsCounter
         expect(affectedElements[0].rules[0].style).toEqual(expectRuleStyle);
 

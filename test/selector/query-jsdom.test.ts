@@ -812,7 +812,7 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('xpath - invalid position in selector', () => {
-            const invalidXpathPositionErrorText = ':xpath() pseudo-class should be at the end of selector';
+            const invalidXpathPositionErrorText = ':xpath() pseudo-class should be the last in selector';
             const toThrowInputs = [
                 {
                     selector: 'div:xpath(../../..):has-text(/test-xpath-content/)',
@@ -1086,11 +1086,13 @@ describe('extended pseudo-classes', () => {
 
         describe('is - invalid selector — no fail, just skip', () => {
             const invalidSelectors = [
-                '#test-is :is(1) > .test-inner',
-                '#parent > :is(id="123") > .test-inner',
-                '#parent > :is(..banner) > .test-inner',
-                // ':has(..banner)' is invalid but it is wrapped in :is() so no error
                 '#parent > :is(div:has(..banner))',
+                // rest of selectors should not fail as well but there is a bug
+                // https://github.com/dperini/nwsapi/issues/70
+                // TODO: uncomment later
+                // '#test-is :is() > .test-inner',
+                // '#parent > :is(id="123") > .test-inner',
+                // '#parent > :is(..banner) > .test-inner',
             ];
             test.each(invalidSelectors)('%s', (selector) => expectNoMatchInput({ selector }));
         });
@@ -1098,7 +1100,6 @@ describe('extended pseudo-classes', () => {
         describe('is - invalid args', () => {
             const toThrowInputs = [
                 { selector: 'div:is()', error: 'Missing arg for :is() pseudo-class' },
-                { selector: 'html:is(.modal-active)', error: 'Selection by :is() pseudo-class is not possible' },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
         });
@@ -1155,16 +1156,10 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('not - invalid args', () => {
-            const invalidArgErrorText = 'Invalid selector for :not() pseudo-class';
             const toThrowInputs = [
                 { selector: 'div:not()', error: 'Missing arg for :not() pseudo-class' },
-                { selector: 'div:not(1)', error: invalidArgErrorText },
-                { selector: '#parent > :not(id="123") > .test-inner', error: invalidArgErrorText },
-                { selector: '#parent > :not(..banner) > .test-inner', error: invalidArgErrorText },
-                // there is no parentElement for html-node
-                { selector: 'html:not(.modal-active)', error: 'Selection by :not() pseudo-class is not possible' },
             ];
-            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+            test.each(toThrowInputs)('$selector - $error', (input) => expectToThrowInput(input));
         });
     });
 });
@@ -1219,7 +1214,8 @@ describe('combined pseudo-classes', () => {
                 // selector list with nonexistent class
                 { actual: '#nonexistent:has(*), #inner:has(*)', expected: '#inner' },
                 // selector list with :not() and few regular selectors
-                { actual: '#root > div:not(:contains(span2 text)),#deepDiv,:disabled', expected: '#parent, #deepDiv, #disabledInput' }, // eslint-disable-line max-len
+                // eslint-disable-next-line max-len
+                { actual: '#root > div:not(:contains(span2 text)),#deepDiv,:disabled', expected: '#parent, #deepDiv, #disabledInput' },
                 // not(contains, regular selector)
                 { actual: '#inner2 > :not(:contains(span2 text),#deepDiv)', expected: '#innerParagraph2' },
                 // not not not
@@ -1229,7 +1225,8 @@ describe('combined pseudo-classes', () => {
                 // has(contains)
                 { actual: 'div[id^="inn"][class]:has(p:contains(inner))', expected: 'div#inner' },
                 // has(contains) has contains
-                { actual: '#root div:has(:contains(text)):has(#paragraph):contains(inner paragraph)', expected: '#parent' }, // eslint-disable-line max-len
+                // eslint-disable-next-line max-len
+                { actual: '#root div:has(:contains(text)):has(#paragraph):contains(inner paragraph)', expected: '#parent' },
                 // has(has)
                 { actual: '#parent div:has(div:has(> p))', expected: '#child' },
                 // has(has contains)
@@ -1237,7 +1234,8 @@ describe('combined pseudo-classes', () => {
                 // has(has(contains))
                 { actual: '#parent div:has(div:has(> p:contains(inner)))', expected: '#child' },
                 // matches-attr matches-attr upward
-                { actual: '#root *[id^="p"][random] > *:matches-attr("/class/"="/base/"):matches-attr("/level$/"="/^[0-9]$/"):upward(1)', expected: '#parent' }, // eslint-disable-line max-len
+                // eslint-disable-next-line max-len
+                { actual: '#root *[id^="p"][random] > *:matches-attr("/class/"="/base/"):matches-attr("/level$/"="/^[0-9]$/"):upward(1)', expected: '#parent' },
                 // matches-attr contains xpath
                 { actual: '#parent2 div:matches-attr("/random/"):contains(text):xpath(../..)', expected: '#parent2' },
                 // is(has, has)
@@ -1656,6 +1654,9 @@ describe('check invalid selectors', () => {
             "input[name=''double-quoted'']",
             "input[name='apostrophe'd']",
             ':lang(c++)',
+            'div > *:not(123)',
+            '#parent > :not(id="123") > .test-inner',
+            '#parent > :not(..banner) > .test-inner',
         ];
         const error = 'is not a valid selector';
         test.each(invalidInputs)('%s', (selector) => expectToThrowInput({ selector, error }));

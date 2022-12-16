@@ -1,15 +1,22 @@
-import {
-    NodeType,
-    AnySelectorNodeInterface,
-} from '../nodes';
+import { AnySelectorNodeInterface } from '../nodes';
 
+import {
+    getNodeName,
+    getNodeValue,
+    getPseudoClassNode,
+    getFirstRegularChild,
+    getRelativeSelectorListNode,
+    isRegularSelectorNode,
+    isExtendedSelectorNode,
+} from './ast-node-helpers';
 import {
     findByAbsolutePseudoPseudo,
     isMatchedByAbsolutePseudo,
 } from './absolute-processor';
+import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
-import { getElementSelectorDesc } from '../../common/utils/nodes';
-import { flatten } from '../../common/utils/arrays';
+import { getElementSelectorDesc, getParent } from '../../common/utils/nodes';
+import { flatten, getItemByIndex } from '../../common/utils/arrays';
 import { logger } from '../../common/utils/logger';
 
 import {
@@ -19,8 +26,6 @@ import {
     SUBSEQUENT_SIBLING_COMBINATOR,
     SCOPE_CSS_PSEUDO_CLASS,
     ASTERISK,
-    ABSOLUTE_PSEUDO_CLASSES,
-    RELATIVE_PSEUDO_CLASSES,
     IS_PSEUDO_CLASS_MARKER,
     NOT_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
@@ -45,6 +50,16 @@ import {
 export type SpecifiedSelector = string;
 
 /**
+ * Combined `:scope` pseudo-class and **child** combinator — `:scope>`.
+ */
+const scopeDirectChildren = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}`;
+
+/**
+ * Combined `:scope` pseudo-class and **descendant** combinator — `:scope `.
+ */
+const scopeAnyChildren = `${SCOPE_CSS_PSEUDO_CLASS}${DESCENDANT_COMBINATOR}`;
+
+/**
  * Interface for relative pseudo-class helpers args.
  */
 interface RelativePredicateArgsInterface {
@@ -65,6 +80,22 @@ interface RelativePredicateArgsInterface {
 }
 
 /**
+ * Returns the first of RegularSelector child node for `selectorNode`.
+ *
+ * @param selectorNode Ast Selector node.
+ * @param pseudoName Name of relative pseudo-class.
+ */
+const getFirstInnerRegularChild = (
+    selectorNode: AnySelectorNodeInterface,
+    pseudoName: string,
+): AnySelectorNodeInterface => {
+    return getFirstRegularChild(
+        selectorNode.children,
+        `RegularSelector is missing for :${pseudoName}() pseudo-class`,
+    );
+};
+
+/**
  * Checks whether the element has all relative elements specified by pseudo-class arg.
  * Used for :has() pseudo-class.
  *
@@ -74,17 +105,15 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.every() is used here as each Selector node from SelectorList should exist on page
-        .every((selector) => {
+        .every((selectorNode) => {
             // selectorList.children always starts with regular selector as any selector generally
-            const [relativeRegularSelector] = selector.children;
-            if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
-            }
+            const relativeRegularSelector = getFirstInnerRegularChild(selectorNode, pseudoName);
 
             let specifiedSelector: SpecifiedSelector = '';
             let rootElement: HTMLElement | null = null;
-            if (relativeRegularSelector.value?.startsWith(NEXT_SIBLING_COMBINATOR)
-                || relativeRegularSelector.value?.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
+            const regularSelector = getNodeValue(relativeRegularSelector);
+            if (regularSelector.startsWith(NEXT_SIBLING_COMBINATOR)
+                || regularSelector.startsWith(SUBSEQUENT_SIBLING_COMBINATOR)) {
                 /**
                  * For matching the element by "element:has(+ next-sibling)" and "element:has(~ sibling)"
                  * we check whether the element's parentElement has specific direct child combination,
@@ -94,8 +123,8 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
                  */
                 rootElement = element.parentElement;
                 const elementSelectorText = getElementSelectorDesc(element);
-                specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}${elementSelectorText}${relativeRegularSelector.value}`; // eslint-disable-line max-len
-            } else if (relativeRegularSelector.value === ASTERISK) {
+                specifiedSelector = `${scopeDirectChildren}${elementSelectorText}${regularSelector}`;
+            } else if (regularSelector === ASTERISK) {
                 /**
                  * :scope specification is needed for proper descendants selection
                  * as native element.querySelectorAll() does not select exact element descendants
@@ -106,14 +135,14 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
                  * which means empty div with no child element.
                  */
                 rootElement = element;
-                specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${DESCENDANT_COMBINATOR}${ASTERISK}`;
+                specifiedSelector = `${scopeAnyChildren}${ASTERISK}`;
             } else {
                 /**
                  * As it described above, inner elements should be found using `:scope` pseudo-class
                  * e.g. 'a:has(> img)' -> `aNode.querySelectorAll(':scope > img')`
                  * OR '.block(div > span)' -> `blockClassNode.querySelectorAll(':scope div > span')`.
                  */
-                specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${DESCENDANT_COMBINATOR}${relativeRegularSelector.value}`; // eslint-disable-line max-len
+                specifiedSelector = `${scopeAnyChildren}${regularSelector}`;
                 rootElement = element;
             }
 
@@ -124,11 +153,11 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
             let relativeElements: HTMLElement[];
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                relativeElements = getElementsForSelectorNode(selector, rootElement, specifiedSelector);
+                relativeElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
             } catch (e) {
                 logger.error(e);
                 // fail for invalid selector
-                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
+                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${regularSelector}'`);
             }
             return relativeElements.length > 0;
         });
@@ -144,33 +173,27 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.some() is used here as any selector from selector list should exist on page
-        .some((selector) => {
+        .some((selectorNode) => {
             // selectorList.children always starts with regular selector
-            const [relativeRegularSelector] = selector.children;
-            if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
-            }
+            const relativeRegularSelector = getFirstInnerRegularChild(selectorNode, pseudoName);
 
             /**
              * For checking the element by 'div:is(.banner)'
              * we check whether the element's parentElement has any specific direct child.
              */
-            const rootElement = element.parentElement;
-            if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName}() pseudo-class is not possible`);
-            }
+            const rootElement = getParent(element, `Selection by :${pseudoName}() pseudo-class is not possible`);
 
             /**
              * So we calculate the element "description" by it's tagname and attributes for targeting
              * and use it to specify the selection
              * e.g. `div:is(.banner)` --> `divNode.parentElement.querySelectorAll(':scope > .banner')`.
              */
-            const specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}${relativeRegularSelector.value}`; // eslint-disable-line max-len
+            const specifiedSelector = `${scopeDirectChildren}${getNodeValue(relativeRegularSelector)}`;
 
             let anyElements: HTMLElement[];
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                anyElements = getElementsForSelectorNode(selector, rootElement, specifiedSelector);
+                anyElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
             } catch (e) {
                 // do not fail on invalid selectors for :is()
                 return false;
@@ -193,37 +216,32 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.every() is used here as element should not be selected by any selector from selector list
-        .every((selector) => {
+        .every((selectorNode) => {
             // selectorList.children always starts with regular selector
-            const [relativeRegularSelector] = selector.children;
-            if (!relativeRegularSelector) {
-                throw new Error(`RegularSelector is missing for :${pseudoName}() pseudo-class`);
-            }
+            const relativeRegularSelector = getFirstInnerRegularChild(selectorNode, pseudoName);
 
             /**
              * For checking the element by 'div:not([data="content"])
              * we check whether the element's parentElement has any specific direct child.
              */
-            const rootElement = element.parentElement;
-            if (!rootElement) {
-                throw new Error(`Selection by :${pseudoName}() pseudo-class is not possible`);
-            }
+            const rootElement = getParent(element, `Selection by :${pseudoName}() pseudo-class is not possible`);
 
             /**
              * So we calculate the element "description" by it's tagname and attributes for targeting
              * and use it to specify the selection
              * e.g. `div:not(.banner)` --> `divNode.parentElement.querySelectorAll(':scope > .banner')`.
              */
-            const specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}${relativeRegularSelector.value}`; // eslint-disable-line max-len
+            const specifiedSelector = `${scopeDirectChildren}${getNodeValue(relativeRegularSelector)}`;
 
             let anyElements: HTMLElement[];
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                anyElements = getElementsForSelectorNode(selector, rootElement, specifiedSelector);
+                anyElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
             } catch (e) {
                 // fail on invalid selectors for :not()
                 logger.error(e);
-                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${relativeRegularSelector.value}'`); // eslint-disable-line max-len
+                // eslint-disable-next-line max-len
+                throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${getNodeValue(relativeRegularSelector)}'`);
             }
 
             // TODO: figure out how to handle up-looking pseudo-classes inside :not()
@@ -240,21 +258,16 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
  * @param root Root DOM element.
  * @param specifiedSelector @see {@link SpecifiedSelector}.
  *
- * @throws An error if RegularSelector has no value
- * or RegularSelector.value is invalid selector.
+ * @throws An error if RegularSelector node value is an invalid selector.
  */
 export const getByRegularSelector = (
     regularSelectorNode: AnySelectorNodeInterface,
     root: Document | Element,
     specifiedSelector?: SpecifiedSelector,
 ): HTMLElement[] => {
-    if (!regularSelectorNode.value) {
-        throw new Error('RegularSelector value should be specified');
-    }
-
     const selectorText = specifiedSelector
         ? specifiedSelector
-        : regularSelectorNode.value;
+        : getNodeValue(regularSelectorNode);
 
     let selectedElements: HTMLElement[] = [];
     try {
@@ -280,21 +293,14 @@ export const getByExtendedSelector = (
     extendedSelectorNode: AnySelectorNodeInterface,
 ): HTMLElement[] => {
     let foundElements: HTMLElement[] = [];
-    if (!extendedSelectorNode.children[0]) {
-        throw new Error('Extended selector should be specified');
-    }
-    const pseudoName = extendedSelectorNode.children[0].name;
-    if (!pseudoName) {
-        // extended pseudo-classes should have a name
-        throw new Error('Extended pseudo-class should have a name');
-    }
-
-    if (ABSOLUTE_PSEUDO_CLASSES.includes(pseudoName)) {
-        const absolutePseudoArg = extendedSelectorNode.children[0].value;
-        if (!absolutePseudoArg) {
-            // absolute extended pseudo-classes should have an argument
-            throw new Error(`Missing arg for :${pseudoName}() pseudo-class`);
-        }
+    const extendedPseudoClassNode = getPseudoClassNode(extendedSelectorNode);
+    const pseudoName = getNodeName(extendedPseudoClassNode);
+    if (isAbsolutePseudoClass(pseudoName)) {
+        // absolute extended pseudo-classes should have an argument
+        const absolutePseudoArg = getNodeValue(
+            extendedPseudoClassNode,
+            `Missing arg for :${pseudoName}() pseudo-class`,
+        );
         if (pseudoName === NTH_ANCESTOR_PSEUDO_CLASS_MARKER) {
             // :nth-ancestor()
             foundElements = findByAbsolutePseudoPseudo.nthAncestor(domElements, absolutePseudoArg, pseudoName);
@@ -321,16 +327,8 @@ export const getByExtendedSelector = (
                 return isMatchedByAbsolutePseudo(element, pseudoName, absolutePseudoArg);
             });
         }
-    } else if (RELATIVE_PSEUDO_CLASSES.includes(pseudoName)) {
-        const relativeSelectorNodes = extendedSelectorNode.children[0].children;
-        if (relativeSelectorNodes.length === 0) {
-            // extended relative pseudo-classes should have an argument as well
-            throw new Error(`Missing arg for :${pseudoName}() pseudo-class`);
-        }
-        const [relativeSelectorList] = relativeSelectorNodes;
-        if (!relativeSelectorList) {
-            throw new Error('Relative SelectorList node should be specified');
-        }
+    } else if (isRelativePseudoClass(pseudoName)) {
+        const relativeSelectorList = getRelativeSelectorListNode(extendedPseudoClassNode);
         let relativePredicate: (e: HTMLElement) => boolean;
         switch (pseudoName) {
             case HAS_PSEUDO_CLASS_MARKER:
@@ -381,11 +379,7 @@ export const getByFollowingRegularSelector = (
 ): HTMLElement[] => {
     // array of arrays because of Array.map() later
     let foundElements: HTMLElement[][] = [];
-    const { value } = regularSelectorNode;
-    if (!value) {
-        throw new Error('RegularSelector should have a value.');
-    }
-
+    const value = getNodeValue(regularSelectorNode);
     if (value.startsWith(CHILD_COMBINATOR)) {
         // e.g. div:has(> img) > .banner
         foundElements = domElements
@@ -406,7 +400,7 @@ export const getByFollowingRegularSelector = (
                     return [];
                 }
                 const elementSelectorText = getElementSelectorDesc(element);
-                const specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}${elementSelectorText}${value}`; // eslint-disable-line max-len
+                const specifiedSelector = `${scopeDirectChildren}${elementSelectorText}${value}`;
                 const selected = getByRegularSelector(regularSelectorNode, rootElement, specifiedSelector);
                 return selected;
             });
@@ -415,7 +409,7 @@ export const getByFollowingRegularSelector = (
         // e.g. div:has(> img) .banner
         foundElements = domElements
             .map((root) => {
-                const specifiedSelector = `${SCOPE_CSS_PSEUDO_CLASS}${DESCENDANT_COMBINATOR}${regularSelectorNode.value}`; // eslint-disable-line max-len
+                const specifiedSelector = `${scopeAnyChildren}${getNodeValue(regularSelectorNode)}`;
                 return getByRegularSelector(regularSelectorNode, root, specifiedSelector);
             });
     }
@@ -450,17 +444,14 @@ export const getElementsForSelectorNode = (
     let selectedElements: HTMLElement[] = [];
     let i = 0;
     while (i < selectorNode.children.length) {
-        const selectorNodeChild = selectorNode.children[i];
-        if (!selectorNodeChild) {
-            throw new Error('selectorNodeChild should be specified.');
-        }
+        const selectorNodeChild = getItemByIndex(selectorNode.children, i, 'selectorNodeChild should be specified');
         if (i === 0) {
             // any selector always starts with regular selector
             selectedElements = getByRegularSelector(selectorNodeChild, root, specifiedSelector);
-        } else if (selectorNodeChild.type === NodeType.ExtendedSelector) {
+        } else if (isExtendedSelectorNode(selectorNodeChild)) {
             // filter previously selected elements by next selector nodes
             selectedElements = getByExtendedSelector(selectedElements, selectorNodeChild);
-        } else if (selectorNodeChild.type === NodeType.RegularSelector) {
+        } else if (isRegularSelectorNode(selectorNodeChild)) {
             selectedElements = getByFollowingRegularSelector(selectedElements, selectorNodeChild);
         }
         i += 1;

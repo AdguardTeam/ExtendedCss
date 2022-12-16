@@ -130,7 +130,8 @@ export class ExtendedCss {
         this.context.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
 
         if (this.context.beforeStyleApplied && typeof this.context.beforeStyleApplied !== 'function') {
-            throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`); // eslint-disable-line max-len
+            // eslint-disable-next-line max-len
+            throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`);
         }
 
         this.applyRulesCallbackListener = () => {

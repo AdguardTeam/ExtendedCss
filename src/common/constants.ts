@@ -170,6 +170,14 @@ export const SUPPORTED_PSEUDO_CLASSES = [
     ...RELATIVE_PSEUDO_CLASSES,
 ];
 
+// these pseudo-classes should be part of RegularSelector value
+// if its arg does not contain extended selectors.
+// the ast will be checked after the selector is completely parsed
+export const OPTIMIZATION_PSEUDO_CLASSES = [
+    NOT_PSEUDO_CLASS_MARKER,
+    IS_PSEUDO_CLASS_MARKER,
+];
+
 /**
  * ':scope' is used for extended pseudo-class :has(), if-not(), :is() and :not().
  */
@@ -205,9 +213,11 @@ export const CONTENT_CSS_PROPERTY = 'content';
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
 
+export const NO_SELECTOR_ERROR_PREFIX = 'Selector should be defined before';
+
 export const STYLESHEET_ERROR_PREFIX = {
     NO_STYLE: 'No style declaration at stylesheet part',
-    NO_SELECTOR: 'Selector should be defined before style declaration in stylesheet',
+    NO_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} style declaration in stylesheet`,
     INVALID_STYLE: 'Invalid style declaration at stylesheet part',
     UNCLOSED_STYLE: 'Unclosed style declaration at stylesheet part',
     NO_PROPERTY: 'Missing style property in declaration at stylesheet part',
@@ -218,7 +228,7 @@ export const STYLESHEET_ERROR_PREFIX = {
 
 export const REMOVE_ERROR_PREFIX = {
     INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
-    NO_TARGET_SELECTOR: 'Selector should be specified before :remove() pseudo-class',
+    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} :remove() pseudo-class`,
     MULTIPLE_USAGE: 'Pseudo-class :remove() appears more than once in selector',
     INVALID_POSITION: 'Pseudo-class :remove() should be at the end of selector',
 };
