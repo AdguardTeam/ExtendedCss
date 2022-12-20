@@ -388,6 +388,7 @@ describe('extended css library', () => {
             "[class\\'ads-article\\']",
             // `*:not(<arg>)` with standard selector `arg`
             'html:not([class*="block"]) .container',
+            '.banner:has(~ .right_bx, ~ div[class^="aside"])',
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();

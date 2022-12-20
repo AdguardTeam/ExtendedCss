@@ -118,7 +118,7 @@ const parseUserAgent = (userAgent: string): BrowserInfo | null => {
 };
 
 /**
- * Gets info about browser.
+ * Returns info about browser.
  *
  * @param userAgent User agent of browser.
  * @param uaDataBrands Array of user agent brand information if supported by browser.

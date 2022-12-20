@@ -30,6 +30,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
   * [Debugging extended selectors](#debugging-extended-selectors)
 * [Projects using ExtendedCss](#projects-using-extended-css)
 * [Browser compatibility](#browser-compatibility)
+* [Known issues](#known-issues)
 
 
 ## Extended capabilities
@@ -62,7 +63,9 @@ Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/T
 - `target` — optional, standard or extended css selector, can be missed for checking *any* element
 - `selector` — required, standard or extended css selector
 
-Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator. Selector list can be set in `selector` as well.
+Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator.
+
+Selector list can be set in `selector` as well. In this case **all** selectors in the list are being matched for now. It is [one of known issues](#known-issues) and will be fixed for `<forgiving-relative-selector-list>` as argument.
 
 <a id="extended-css-has-limitations"></a> **Limitations and notes**
 
@@ -373,7 +376,7 @@ subject:nth-ancestor(n)
 
 <a id="extended-css-nth-ancestor-limitations"></a> **Limitations**
 
-> Pseudo-class `:nth-ancestor()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument.
+> Pseudo-class `:nth-ancestor()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument. It is [one of known issues](#known-issues).
 
 **Examples**
 
@@ -413,13 +416,13 @@ subject:upward(ancestor)
 
 <a id="extended-css-upward-limitations"></a> **Limitations**
 
-> Pseudo-class `:upward()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument.
+> Pseudo-class `:upward()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument. It is [one of known issues](#known-issues).
 
 **Examples**
 
 ```
 div.child:upward(div[id])
-div:contains(test):upward(div[class^="parent-wrapper-")
+div:contains(test):upward(div[class^="parent-wrapper-"])
 
 div.test:upward(4)
 div:has-text(/test/):upward(2)
@@ -502,7 +505,7 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
 
 > If `:is()` pseudo-class arg `selectors` is an extended selectors, due to the way how `:is()` pseudo-class is implemented in v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:is(<extended-selectors>)` will not work. So if `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`. Please note that there is no such limitation for standard selector arg, i.e. `#?#html:is(.locked)`.
 
-> [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed. Check examples below.
+> [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed.  It is [one of known issues](#known-issues). Check examples below for more details.
 
 **Examples**
 
@@ -549,7 +552,7 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 
 > Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
 
-> "Up-looking" pseudo-classes which are [`:nth-ancestor()`](#extended-css-nth-ancestor) and [`:upward()`](#extended-css-upward)  are not supported inside `selectors` argument for `:not()` pseudo-class.
+> "Up-looking" pseudo-classes which are [`:nth-ancestor()`](#extended-css-nth-ancestor) and [`:upward()`](#extended-css-upward)  are not supported inside `selectors` argument for `:not()` pseudo-class. It is [one of known issues](#known-issues).
 
 **Examples**
 
@@ -847,3 +850,10 @@ ExtendedCss.query(selector);
 | Opera                 | ✅ 80     |
 | Safari                | ✅ 11.1   |
 | Internet Explorer     | ❌        |
+
+
+### <a id="known-issues"></a> Known issues
+
+- `:has()` pseudo-class should take [`<forgiving-relative-selector-list>` as argument](https://github.com/AdguardTeam/ExtendedCss/issues/154)
+- `:nth-ancestor()` and `:upward()` are not supported [inside of `:not()` pseudo-class argument](https://github.com/AdguardTeam/ExtendedCss/issues/155)
+- `:is()` pseudo-class does not support [complex selectors](https://github.com/AdguardTeam/ExtendedCss/issues/156)

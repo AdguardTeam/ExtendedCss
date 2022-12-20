@@ -542,6 +542,34 @@ describe('relative extended selectors', () => {
             expect(parse(actual)).toEqual(expected);
         });
 
+        it('has selector list arg — more complicated case', () => {
+            const actual = '.banner:has(~ .right_bx, ~ div[class^="aside"])';
+            const expected = {
+                type: NodeType.SelectorList,
+                children: [
+                    {
+                        type: NodeType.Selector,
+                        children: [
+                            getRegularSelector('.banner'),
+                            {
+                                type: NodeType.ExtendedSelector,
+                                children: [
+                                    {
+                                        type: NodeType.RelativePseudoClass,
+                                        name: 'has',
+                                        children: [
+                                            getSelectorListOfRegularSelectors(['~ .right_bx', '~ div[class^="aside"]']),
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+
         it('selector list: has with selector list as arg + regular selector', () => {
             const actual = '.banner > :has(span, p), a img.ad';
             const expected = {

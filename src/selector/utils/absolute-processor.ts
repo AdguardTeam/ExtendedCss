@@ -111,7 +111,7 @@ export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: strin
 
 export const findByAbsolutePseudoPseudo = {
     /**
-     * Gets list of nth ancestors relative to every dom node from domElements list.
+     * Returns list of nth ancestors relative to every dom node from domElements list.
      *
      * @param domElements DOM elements.
      * @param rawPseudoArg Number arg of :nth-ancestor() or :upward() pseudo-class.
@@ -134,7 +134,7 @@ export const findByAbsolutePseudoPseudo = {
     },
 
     /**
-     * Gets list of elements by xpath expression, evaluated on every dom node from domElements list.
+     * Returns list of elements by xpath expression, evaluated on every dom node from domElements list.
      *
      * @param domElements DOM elements.
      * @param rawPseudoArg Arg of :xpath() pseudo-class.
@@ -170,7 +170,7 @@ export const findByAbsolutePseudoPseudo = {
     },
 
     /**
-     * Gets list of closest ancestors relative to every dom node from domElements list.
+     * Returns list of closest ancestors relative to every dom node from domElements list.
      *
      * @param domElements DOM elements.
      * @param rawPseudoArg Standard selector arg of :upward() pseudo-class.

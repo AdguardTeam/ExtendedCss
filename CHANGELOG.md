@@ -7,6 +7,10 @@
 
 - parse `:not()` and `:is()` pseudo-class with no extended selector arg as standard
 
+### Fixed
+
+- parsing of `:has()` pseudo-class selector list argument
+
 
 ## v2.0.26
 

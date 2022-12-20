@@ -165,7 +165,7 @@ const normalizePropertyValue = (propertyName: string, propertyValue: string): st
 };
 
 /**
- * Gets domElement style property value
+ * Returns domElement style property value
  * by css property name and standard pseudo-element.
  *
  * @param domElement DOM element.

@@ -3,7 +3,7 @@ import { Context } from './parser-types';
 
 import { TokenType, tokenizeAttribute } from '../tokenizer';
 
-import { getFirst, getLast, getItemByIndex } from '../../common/utils/arrays';
+import { getFirst, getLast, getItemByIndex, getPrevToLast } from '../../common/utils/arrays';
 import {
     SPACE,
     EQUAL_SIGN,
@@ -198,8 +198,7 @@ export const isAttributeClosing = (context: Context): boolean => {
         return token.type === TokenType.Mark
             && token.value === EQUAL_SIGN;
     });
-    const prevToLastAttrToken = getLast(attrTokens.slice(0, -1));
-    const prevToLastAttrTokenValue = prevToLastAttrToken?.value;
+    const prevToLastAttrTokenValue = getPrevToLast(attrTokens)?.value;
     if (equalSignIndex === -1) {
         // if there is no '=' inside attribute,
         // it must be just attribute name which means the word-type token before closing bracket

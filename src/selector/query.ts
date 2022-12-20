@@ -62,7 +62,7 @@ export class ExtCssDocument {
     }
 
     /**
-     * Gets ast from cache for given selector.
+     * Returns ast from cache for given selector.
      *
      * @param selector Standard or extended selector.
      */
@@ -72,7 +72,7 @@ export class ExtCssDocument {
     }
 
     /**
-     * Gets selector ast:
+     * Returns selector ast:
      * - if cached ast exists — returns it;
      * - if no cached ast — saves newly parsed ast to cache and returns it.
      *

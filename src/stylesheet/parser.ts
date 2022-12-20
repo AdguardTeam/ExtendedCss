@@ -320,7 +320,7 @@ const isRemoveSetInStyles = (styles: Style[]): boolean => {
 };
 
 /**
- * Gets valid 'debug' property value set in styles
+ * Returns valid 'debug' property value set in styles
  * where possible values are 'true' and 'global'.
  *
  * @param styles Array of styles.

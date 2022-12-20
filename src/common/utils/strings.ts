@@ -1,7 +1,7 @@
 import { SLASH } from '../constants';
 
 /**
- * Gets string without suffix.
+ * Returns string without suffix.
  *
  * @param str Input string.
  * @param suffix Needed to remove.

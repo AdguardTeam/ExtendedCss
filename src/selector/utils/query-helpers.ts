@@ -419,7 +419,7 @@ export const getByFollowingRegularSelector = (
 };
 
 /**
- * Gets elements nodes for Selector node.
+ * Returns elements nodes for Selector node.
  * As far as any selector always starts with regular part,
  * it selects by RegularSelector first and checks found elements later.
  *

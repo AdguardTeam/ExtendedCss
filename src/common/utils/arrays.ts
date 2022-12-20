@@ -49,6 +49,16 @@ export const getLast = <T>(array: Array<T>): T | undefined => {
 };
 
 /**
+ * Returns array item which is previous to the last one
+ * e.g. for `[5, 6, 7, 8]` returns `7`.
+ *
+ * @param array Input array.
+ */
+export const getPrevToLast = <T>(array: Array<T>): T | undefined => {
+    return array[array.length - 2];
+};
+
+/**
  * Takes array of ast node `children` and returns the child by the `index`.
  *
  * @param array Array of ast node children.

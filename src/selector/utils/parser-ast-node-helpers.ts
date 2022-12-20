@@ -1,10 +1,12 @@
 import { Context } from './parser-types';
 import {
     getLastRegularChild,
+    isSelectorListNode,
     isSelectorNode,
     isRegularSelectorNode,
-    isAbsolutePseudoClassNode,
     isExtendedSelectorNode,
+    isAbsolutePseudoClassNode,
+    isRelativePseudoClassNode,
 } from './ast-node-helpers';
 import { isSupportedPseudoClass } from './parser-predicates';
 import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
@@ -18,7 +20,7 @@ import {
     RelativePseudoClassNode,
 } from '../nodes';
 
-import { getFirst, getLast } from '../../common/utils/arrays';
+import { getFirst, getLast, getPrevToLast } from '../../common/utils/arrays';
 import {
     BRACKETS,
     HAS_PSEUDO_CLASS_MARKERS,
@@ -27,7 +29,7 @@ import {
 } from '../../common/constants';
 
 /**
- * Gets the node which is being collected
+ * Returns the node which is being collected
  * or null if there is no such one.
  *
  * @param context Selector parser context.
@@ -41,7 +43,24 @@ export const getBufferNode = (context: Context): AnySelectorNodeInterface | null
 };
 
 /**
- * Gets last RegularSelector ast node.
+ * Returns the parent node to the 'buffer node' — which is the one being collected —
+ * or null if there is no such one.
+ *
+ * @param context Selector parser context.
+ */
+export const getBufferNodeParent = (context: Context): AnySelectorNodeInterface | null => {
+    // at least two nodes should exist — the buffer node and its parent
+    // otherwise return null
+    if (context.pathToBufferNode.length < 2) {
+        return null;
+    }
+    // since the buffer node is always the last in the pathToBufferNode stack
+    // its parent is previous to it in the stack
+    return getPrevToLast(context.pathToBufferNode) || null;
+};
+
+/**
+ * Returns last RegularSelector ast node.
  * Needed for parsing of the complex selector with extended pseudo-class inside it.
  *
  * @param context Selector parser context.
@@ -179,13 +198,26 @@ export const upToClosest = (context: Context, parentType: NodeType): void => {
 };
 
 /**
- * Gets needed buffer node updated due to complex selector parsing.
+ * Returns needed buffer node updated due to complex selector parsing.
  *
  * @param context Selector parser context.
  *
  * @throws An error if there is no upper SelectorNode is ast.
  */
 export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface => {
+    // it may happen during the parsing of selector list
+    // which is an argument of relative pseudo-class
+    // e.g. '.banner:has(~span, ~p)'
+    // parser position is here  ↑
+    // so if after the comma the buffer node type is SelectorList and parent type is RelativePseudoClass
+    // we should simply return the current buffer node
+    const bufferNode = getBufferNode(context);
+    if (bufferNode
+        && isSelectorListNode(bufferNode)
+        && isRelativePseudoClassNode(getBufferNodeParent(context))) {
+        return bufferNode;
+    }
+
     upToClosest(context, NodeType.Selector);
     const selectorNode = getBufferNode(context);
     if (!selectorNode) {
