@@ -32,7 +32,7 @@
 
 ### Removed
 
-- `:if()` and `:if-not()` pseudo-classes [#151]
+- `:if()` and `:if-not()` pseudo-classes [#151](https://github.com/AdguardTeam/ExtendedCss/issues/151)
 
 
 ## v2.0.18
@@ -92,18 +92,18 @@
 
 ### Fixed
 
-- selectors with case-insensitive attribute [#104]
-- parsing of `:xpath()` pseudo-class argument [#106]
-- `:upward()` and `:nth-ancestor()` pseudo-classes are no longer supposed to be the last on selector [#111]
-- applying of `:not(:has(...))` combination [#141]
-- performance for some pseudo-class combinations [#136]
+- selectors with case-insensitive attribute [#104](https://github.com/AdguardTeam/ExtendedCss/issues/104)
+- parsing of `:xpath()` pseudo-class argument [#106](https://github.com/AdguardTeam/ExtendedCss/issues/106)
+- `:upward()` and `:nth-ancestor()` pseudo-classes are no longer supposed to be the last on selector [#111](https://github.com/AdguardTeam/ExtendedCss/issues/111)
+- applying of `:not(:has(...))` combination [#141](https://github.com/AdguardTeam/ExtendedCss/issues/141)
+- performance for some pseudo-class combinations [#136](https://github.com/AdguardTeam/ExtendedCss/issues/136)
 
 ### Added
 
-- `::first-line` and other pseudo-element support by `:matches-css()` pseudo-class [#150]
+- `::first-line` and other pseudo-element support by `:matches-css()` pseudo-class [#150](https://github.com/AdguardTeam/ExtendedCss/issues/150)
 
 ### Changed
 
-- whole approach to selector parsing [#110]
+- whole approach to selector parsing [#110](https://github.com/AdguardTeam/ExtendedCss/issues/110)
 - syntax of `:matches-css()` pseudo-class due to various pseudo-elements support
-- browser console output for debug mode [#128]
+- browser console output for debug mode [#128](https://github.com/AdguardTeam/ExtendedCss/issues/128)
