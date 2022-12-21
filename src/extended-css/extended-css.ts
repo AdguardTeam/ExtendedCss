@@ -49,11 +49,11 @@ const backupValidate = (selector: string, originalError: string): SelectorValida
     let error = null;
     try {
         // check if the selector matched be specific regexp
-        const isBugNotIsArg = VALID_PSEUDO_CLASS_COMBINATOR_ARG_REGEXP.test(selector);
+        const isValidArgBugRelated = VALID_PSEUDO_CLASS_COMBINATOR_ARG_REGEXP.test(selector);
         // original validate error should be thrown
         // if selector is not matched by the regexp specific to the nwsapi bug
         // https://github.com/dperini/nwsapi/issues/55
-        if (!isBugNotIsArg) {
+        if (!isValidArgBugRelated) {
             throw new Error(originalError);
         }
         // check if there is any error during ast parsing
