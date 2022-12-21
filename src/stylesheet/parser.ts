@@ -439,11 +439,13 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  *
  * @param rawStylesheet Raw stylesheet as string.
  * @param extCssDoc ExtCssDocument which uses cache while selectors parsing.
- * @throws An error on unsupported CSS features, e.g. comments, or invalid stylesheet syntax.
+ *
  * @returns Array of rules data which contains:
  * - selector as string;
  * - ast to query elements by;
  * - map of styles to apply.
+ *
+ * @throws An error on unsupported CSS features, e.g. comments, or invalid stylesheet syntax.
  */
 export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();
