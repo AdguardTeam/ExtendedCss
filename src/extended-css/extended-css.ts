@@ -48,9 +48,7 @@ const backupValidate = (selector: string, originalError: string): SelectorValida
     let ok = false;
     let error = null;
     try {
-        // check if there is error while ast parsing first
-        extCssDocument.getSelectorAst(selector);
-        // if ast is parsed with no error, check if the selector matched be specific regexp
+        // check if the selector matched be specific regexp
         const isBugNotIsArg = VALID_PSEUDO_CLASS_COMBINATOR_ARG_REGEXP.test(selector);
         // original validate error should be thrown
         // if selector is not matched by the regexp specific to the nwsapi bug
@@ -58,7 +56,9 @@ const backupValidate = (selector: string, originalError: string): SelectorValida
         if (!isBugNotIsArg) {
             throw new Error(originalError);
         }
-        // otherwise selector is valid
+        // check if there is any error during ast parsing
+        extCssDocument.getSelectorAst(selector);
+        // selector is valid if no error thrown previously
         ok = true;
     } catch (e: unknown) {
         // error may be thrown by getSelectorAst() during ast parsing
