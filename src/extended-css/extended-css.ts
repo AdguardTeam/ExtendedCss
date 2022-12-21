@@ -29,6 +29,45 @@ export type SelectorValidationResult = {
     error: string | null,
 };
 
+// related to the nwsapi bug
+// https://github.com/dperini/nwsapi/issues/55
+const NOT_IS_COMBINATOR_ARG_REGEXP = /(.+)?:(not|is)\((.+)?(~|>|\+)(.+)?\)(.+)?/;
+
+/**
+ * Validates `selector` by parsing its ast and its matching with specific regexp
+ * due to the nwsapi bug @see {@link https://github.com/dperini/nwsapi/issues/55}.
+ *
+ * @param selector Selector to validate.
+ * @param originalError Previously thrown error.
+ *
+ * @returns Validation result data.
+ * @throws An error if selector ast cannot be parsed,
+ * or `originalError` if selector is not related to the nwsapi bug.
+ */
+const backupValidate = (selector: string, originalError: string): SelectorValidationResult => {
+    let ok = false;
+    let error = null;
+    try {
+        // check if there is error while ast parsing first
+        extCssDocument.getSelectorAst(selector);
+        // if ast is parsed with no error, check if the selector matched be specific regexp
+        const isBugNotIsArg = NOT_IS_COMBINATOR_ARG_REGEXP.test(selector);
+        // original validate error should be thrown
+        // if selector is not matched by the regexp specific to the nwsapi bug
+        // https://github.com/dperini/nwsapi/issues/55
+        if (!isBugNotIsArg) {
+            throw new Error(originalError);
+        }
+        // otherwise selector is valid
+        ok = true;
+    } catch (e: unknown) {
+        // error may be thrown by getSelectorAst() during ast parsing
+        const caughtErrorMessage = e instanceof Error ? e.message : e;
+        error = `Error: Invalid selector: '${selector}' -- ${caughtErrorMessage}`;
+    }
+    return { ok, error };
+};
+
 /**
  * Interface for ExtendedCss constructor argument. Needed to create the instance of ExtendedCss.
  *
@@ -71,7 +110,6 @@ export interface ExtCssConfiguration {
      */
     debug?: boolean;
 }
-
 
 /**
  * Main class of ExtendedCss lib.
@@ -211,20 +249,41 @@ export class ExtendedCss {
      * @param inputSelector Selector text to validate.
      *
      * @returns Result of selector validation.
+     * @throws An error on unexpected behaviour.
      */
     public static validate(inputSelector: string): SelectorValidationResult {
+        let ok = false;
+        let error = null;
         try {
             // ExtendedCss in general supports :remove() in selector
             // but ExtendedCss.query() does not support it as it should be parsed by stylesheet parser.
             // so for validation we have to handle selectors with `:remove()` in it
             const { selector } = parseRemoveSelector(inputSelector);
-            ExtendedCss.query(selector);
-            return { ok: true, error: null };
+            try {
+                ExtendedCss.query(selector);
+                ok = true;
+            } catch (e: unknown) {
+                // TODO: backupValidate() should be removed after the nwsapi bug is fixed,
+                // ExtendedCss.query() should be enough for selector validation
+                // https://github.com/dperini/nwsapi/issues/55
+                const caughtErrorMessage = e instanceof Error ? e.message : e as string;
+                // circumvent nwsapi bug for selectors which should be valid
+                // e.g. 'div:not(div > span)'
+                // if selector is not related to the bug, original error is thrown
+                const backupValidation = backupValidate(selector, caughtErrorMessage);
+                ok = backupValidation.ok;
+                error = backupValidation.error;
+            }
         } catch (e: unknown) {
             const caughtErrorMessage = e instanceof Error ? e.message : e;
+            ok = false;
             // not valid input `selector` should be logged eventually
-            const error = `Error: Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
-            return { ok: false, error };
+            error = `Error: Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
         }
+        // signal an error when selector not valid but error is not specified
+        if (ok === false && error === null) {
+            throw new Error(`ExtendedCss.validate() unable to check selector: '${inputSelector}'`);
+        }
+        return { ok, error };
     }
 }

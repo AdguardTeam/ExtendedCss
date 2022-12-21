@@ -389,6 +389,11 @@ describe('extended css library', () => {
             // `*:not(<arg>)` with standard selector `arg`
             'html:not([class*="block"]) .container',
             '.banner:has(~ .right_bx, ~ div[class^="aside"])',
+            // considered invalid by nwsapi due to bug
+            // https://github.com/dperini/nwsapi/issues/55
+            // but it should be valid
+            'div:not(div > span)',
+            'div:not(h1 + p)',
         ];
         test.each(validSelectors)('%s', (selector) => {
             expect(ExtendedCss.validate(selector).ok).toBeTruthy();
