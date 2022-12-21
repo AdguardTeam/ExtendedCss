@@ -31,7 +31,7 @@ export type SelectorValidationResult = {
 
 // related to the nwsapi bug
 // https://github.com/dperini/nwsapi/issues/55
-const NOT_IS_COMBINATOR_ARG_REGEXP = /(.+)?:(not|is)\((.+)?(~|>|\+)(.+)?\)(.+)?/;
+const VALID_PSEUDO_CLASS_COMBINATOR_ARG_REGEXP = /(.+)?:(not|is)\((.+)?(~|>|\+)(.+)?\)(.+)?/;
 
 /**
  * Validates `selector` by parsing its ast and its matching with specific regexp
@@ -51,7 +51,7 @@ const backupValidate = (selector: string, originalError: string): SelectorValida
         // check if there is error while ast parsing first
         extCssDocument.getSelectorAst(selector);
         // if ast is parsed with no error, check if the selector matched be specific regexp
-        const isBugNotIsArg = NOT_IS_COMBINATOR_ARG_REGEXP.test(selector);
+        const isBugNotIsArg = VALID_PSEUDO_CLASS_COMBINATOR_ARG_REGEXP.test(selector);
         // original validate error should be thrown
         // if selector is not matched by the regexp specific to the nwsapi bug
         // https://github.com/dperini/nwsapi/issues/55
