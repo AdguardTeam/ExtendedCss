@@ -30,6 +30,8 @@ export const IS_OR_NOT_PSEUDO_SELECTING_ROOT = `html ${ASTERISK}`;
  * Checks if there are any ExtendedSelector node in selector list.
  *
  * @param selectorList Ast SelectorList node.
+ *
+ * @returns True if `selectorList` has any inner ExtendedSelector node.
  */
 const hasExtendedSelector = (selectorList: AnySelectorNodeInterface): boolean => {
     return selectorList.children.some((selectorNode) => {
@@ -43,6 +45,8 @@ const hasExtendedSelector = (selectorList: AnySelectorNodeInterface): boolean =>
  * Converts selector list of RegularSelector nodes to string.
  *
  * @param selectorList Ast SelectorList node.
+ *
+ * @returns String representation for selector list of regular selectors.
  */
 const selectorListOfRegularsToString = (selectorList: AnySelectorNodeInterface): string => {
     // if there is no ExtendedSelector in relative SelectorList
@@ -57,9 +61,12 @@ const selectorListOfRegularsToString = (selectorList: AnySelectorNodeInterface):
 
 /**
  * Updates children of `node` replacing them with `newChildren`.
+ * Important: modifies input `node` which is passed by reference.
  *
  * @param node Ast node to update.
  * @param newChildren Array of new children for ast node.
+ *
+ * @returns Updated ast node.
  */
 const updateNodeChildren = (
     node: AnySelectorNodeInterface,
@@ -74,6 +81,8 @@ const updateNodeChildren = (
  * It has to be recursive because RelativePseudoClass has inner SelectorList node.
  *
  * @param currExtendedSelectorNode Ast ExtendedSelector node.
+ *
+ * @returns True is ExtendedSelector should be optimized.
  */
 const shouldOptimizeExtendedSelector = (currExtendedSelectorNode: AnySelectorNodeInterface | null): boolean => {
     if (currExtendedSelectorNode === null) {
@@ -126,6 +135,8 @@ const shouldOptimizeExtendedSelector = (currExtendedSelectorNode: AnySelectorNod
  *
  * @param currExtendedSelectorNode Current ExtendedSelector node to optimize.
  * @param prevRegularSelectorNode Previous RegularSelector node.
+ *
+ * @returns Ast node or null.
  */
 const getOptimizedExtendedSelector = (
     currExtendedSelectorNode: AnySelectorNodeInterface | null,
@@ -179,6 +190,7 @@ const optimizeCurrentRegularSelector = (
  *
  * @param selectorNode Ast Selector node.
  *
+ * @returns Optimized ast node.
  * @throws An error while collecting optimized nodes.
  */
 const optimizeSelectorNode = (selectorNode: AnySelectorNodeInterface): AnySelectorNodeInterface => {
@@ -271,6 +283,8 @@ const optimizeSelectorNode = (selectorNode: AnySelectorNodeInterface): AnySelect
  * Optimizes ast SelectorList node.
  *
  * @param selectorListNode SelectorList node.
+ *
+ * @returns Optimized ast node.
  */
 const optimizeSelectorListNode = (selectorListNode: AnySelectorNodeInterface): AnySelectorNodeInterface => {
     return updateNodeChildren(
@@ -287,6 +301,8 @@ const optimizeSelectorListNode = (selectorListNode: AnySelectorNodeInterface): A
  * and value of relevant RegularSelector node should be updated accordingly.
  *
  * @param ast Non-optimized ast.
+ *
+ * @returns Optimized ast.
  */
 export const optimizeAst = (ast: AnySelectorNodeInterface): AnySelectorNodeInterface => {
     // ast is basically the selector list of selectors

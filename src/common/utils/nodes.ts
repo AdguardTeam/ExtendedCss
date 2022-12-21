@@ -4,6 +4,8 @@ import { nodeTextContentGetter } from './natives';
  * Returns textContent of passed domElement.
  *
  * @param domElement DOM element.
+ *
+ * @returns DOM element textContent.
  */
 export const getNodeTextContent = (domElement: Node): string => {
     return nodeTextContentGetter?.apply(domElement) || '';
@@ -13,6 +15,8 @@ export const getNodeTextContent = (domElement: Node): string => {
  * Returns element selector text based on it's tagName and attributes.
  *
  * @param element DOM element.
+ *
+ * @returns String representation of `element`.
  */
 export const getElementSelectorDesc = (element: Element): string => {
     let selectorText = element.tagName.toLowerCase();
@@ -29,6 +33,7 @@ export const getElementSelectorDesc = (element: Element): string => {
  *
  * @param inputEl Input element.
  *
+ * @returns String path to a DOM element.
  * @throws An error if `inputEl` in not instance of `Element`.
  */
 export const getElementSelectorPath = (inputEl: Element): string => {
@@ -71,6 +76,8 @@ export const getElementSelectorPath = (inputEl: Element): string => {
  * Checks whether the element is instance of HTMLElement.
  *
  * @param element Element to check.
+ *
+ * @returns True if `element` is HTMLElement.
  */
 export const isHtmlElement = (element: HTMLElement | Node | null): element is HTMLElement => {
     return element instanceof HTMLElement;
@@ -82,6 +89,7 @@ export const isHtmlElement = (element: HTMLElement | Node | null): element is HT
  * @param element Element.
  * @param errorMessage Optional error message to throw.
  *
+ * @returns Parent of `element`.
  * @throws An error if element has no parent element.
  */
 export const getParent = (element: HTMLElement, errorMessage?: string): HTMLElement => {

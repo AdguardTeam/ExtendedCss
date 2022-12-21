@@ -59,9 +59,11 @@ const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
  * Chromium because of all browsers based on it should be supported as well
  * and it is universal way to check it.
  *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands}
+ *
  * @param uaDataBrands Array of user agent brand information.
  *
- * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands}
+ * @returns Chromium brand data object or null if it is not supported.
  */
 const getChromiumBrand = (uaDataBrands: NavigatorUABrandVersion[] | undefined): NavigatorUABrandVersion | null => {
     if (!uaDataBrands) {
@@ -85,6 +87,8 @@ type BrowserInfo = {
  * otherwise returns null.
  *
  * @param userAgent User agent to parse.
+ *
+ * @returns Parsed userAgent data object if browser is supported, otherwise null.
  */
 const parseUserAgent = (userAgent: string): BrowserInfo | null => {
     let browserName;
@@ -122,6 +126,8 @@ const parseUserAgent = (userAgent: string): BrowserInfo | null => {
  *
  * @param userAgent User agent of browser.
  * @param uaDataBrands Array of user agent brand information if supported by browser.
+ *
+ * @returns Data object if browser is supported, otherwise null.
  */
 const getBrowserInfoAsSupported = (
     userAgent: string,
@@ -151,6 +157,8 @@ const getBrowserInfoAsSupported = (
  *
  * @param userAgent User agent of browser.
  * @param uaDataBrands Array of user agent brand information if supported by browser.
+ *
+ * @returns True if browser is supported.
  */
 export const isUserAgentSupported = (
     userAgent: string,
@@ -185,6 +193,8 @@ export const isUserAgentSupported = (
 
 /**
  * Checks whether the current browser is supported.
+ *
+ * @returns True if *current* browser is supported.
  */
 export const isBrowserSupported = (): boolean => {
     return isUserAgentSupported(navigator.userAgent, navigator.userAgentData?.brands);

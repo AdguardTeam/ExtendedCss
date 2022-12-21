@@ -18,6 +18,8 @@ const INVALID_OLD_SYNTAX_MARKER = '[-ext-';
  * @param name      Group 1.
  * @param quoteChar Group 2.
  * @param rawValue  Group 3.
+ *
+ * @returns Converted string.
  */
 const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue: string): string => {
     // Unescape quotes
@@ -43,6 +45,7 @@ const convertMatchesCss = (match: string, extendedPseudoClass: string, regularPs
  *
  * @param selector Trimmed selector to normalize.
  *
+ * @returns Normalized selector.
  * @throws An error on invalid old extended syntax selector.
  */
 const normalize = (selector: string): string => {

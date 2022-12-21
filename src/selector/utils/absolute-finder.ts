@@ -4,6 +4,7 @@
  * @param rawArg Raw arg of pseudo-class.
  * @param pseudoName Pseudo-class name.
  *
+ * @returns Valid number arg for :nth-ancestor() and :upward().
  * @throws An error on invalid `rawArg`.
  */
 export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): number => {
@@ -21,6 +22,7 @@ export const getValidNumberAncestorArg = (rawArg: string, pseudoName: string): n
  * @param nth Depth up to needed ancestor.
  * @param pseudoName Pseudo-class name.
  *
+ * @returns Ancestor element found in DOM, or null if not found.
  * @throws An error on invalid `nth` arg.
  */
 export const getNthAncestor = (domElement: HTMLElement, nth: number, pseudoName: string): HTMLElement | null => {
@@ -41,6 +43,8 @@ export const getNthAncestor = (domElement: HTMLElement, nth: number, pseudoName:
  * Validates standard CSS selector.
  *
  * @param selector Standard selector.
+ *
+ * @returns True if standard CSS selector is valid.
  */
 export const validateStandardSelector = (selector: string): boolean => {
     let isValid: boolean;

@@ -16,6 +16,8 @@ const PROTECTION_OBSERVER_OPTIONS = {
  * Creates MutationObserver protection callback.
  *
  * @param styles Styles data object.
+ *
+ * @returns Callback for styles protection.
  */
 const createProtectionCallback = (styles: CssStyleMap[]): ProtectionCallback => {
     const protectionCallback = (mutations: MutationRecord[], extObserver: ExtMutationObserver): void => {

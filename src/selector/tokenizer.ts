@@ -18,6 +18,8 @@ export interface Token {
  * @param input Input string to tokenize.
  * @param supportedMarks Array of supported marks to considered as `TokenType.Mark`;
  * all other will be considered as `TokenType.Word`.
+ *
+ * @returns Array of tokens.
  */
 const tokenize = (input: string, supportedMarks: string[]): Token[] => {
     // buffer is needed for words collecting while iterating
@@ -48,6 +50,8 @@ const tokenize = (input: string, supportedMarks: string[]): Token[] => {
  * Prepares `rawSelector` and splits it into tokens.
  *
  * @param rawSelector Raw css selector.
+ *
+ * @returns Array of tokens supported for selector.
  */
 export const tokenizeSelector = (rawSelector: string): Token[] => {
     const selector = convert(rawSelector);
@@ -58,6 +62,8 @@ export const tokenizeSelector = (rawSelector: string): Token[] => {
  * Splits `attribute` into tokens.
  *
  * @param attribute Input attribute.
+ *
+ * @returns Array of tokens supported for attribute.
  */
 export const tokenizeAttribute = (attribute: string): Token[] => {
     // equal sigh `=` in attribute is considered as `TokenType.Mark`

@@ -162,6 +162,7 @@ const restoreRuleAcc = (context: Context): void => {
  * @param context Stylesheet parser context.
  * @param extCssDoc Needed for caching of selector ast.
  *
+ * @returns Parsed validation data for cropped part of stylesheet which may be a selector.
  * @throws An error on unsupported CSS features, e.g. at-rules.
  */
 const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): SelectorPartData => {
@@ -286,6 +287,8 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
  * Parses next style declaration part in stylesheet.
  *
  * @param context Stylesheet parser context.
+ *
+ * @returns Array of style data objects.
  */
 const parseNextStyle = (context: Context): Style[] => {
     const styles: Style[] = [];
@@ -311,6 +314,8 @@ const parseNextStyle = (context: Context): Style[] => {
  * with only one positive value - 'true'.
  *
  * @param styles Array of styles.
+ *
+ * @returns True if there is 'remove' property with 'true' value in `styles`.
  */
 const isRemoveSetInStyles = (styles: Style[]): boolean => {
     return styles.some((s) => {
@@ -324,6 +329,9 @@ const isRemoveSetInStyles = (styles: Style[]): boolean => {
  * where possible values are 'true' and 'global'.
  *
  * @param styles Array of styles.
+ *
+ * @returns Value of 'debug' property if it is set in `styles`,
+ * or `undefined` if the property is not found.
  */
 const getDebugStyleValue = (styles: Style[]): string | undefined => {
     const debugStyle = styles.find((s) => {
@@ -338,6 +346,8 @@ const getDebugStyleValue = (styles: Style[]): string | undefined => {
  * @param selector String selector.
  * @param ast Parsed ast.
  * @param rawStyles Array of previously collected styles which may contain 'remove' and 'debug'.
+ *
+ * @returns Parsed ExtendedCss rule data.
  */
 export const prepareRuleData = (
     selector: string,

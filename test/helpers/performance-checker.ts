@@ -26,6 +26,8 @@ const MAX_ELAPSED_VALUE = 15 * 1000;
  * Runs ExtendedCSS v2 query for selector.
  *
  * @param selector Css selector - standard or extended.
+ *
+ * @returns Performance result data.
  */
 const checkPerformanceV2 = (selector: string): PerformanceResult  => {
     const startTime = new Date().getTime();
@@ -55,6 +57,8 @@ const checkPerformanceV2 = (selector: string): PerformanceResult  => {
  * Runs ExtendedCSS v1 query for selector.
  *
  * @param selector Css selector - standard or extended.
+ *
+ * @returns Performance result data.
  */
 const checkPerformanceV1 = (selector: string): PerformanceResult => {
     const startTime = new Date().getTime();

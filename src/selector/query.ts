@@ -11,6 +11,8 @@ import { flatten } from '../common/utils/arrays';
  *
  * @param ast Ast of parsed selector.
  * @param doc Document.
+ *
+ * @returns Array of DOM elements.
  */
 export const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = document): HTMLElement[] => {
     const selectedElements: HTMLElement[] = [];
@@ -28,6 +30,8 @@ export const selectElementsByAst = (ast: AnySelectorNodeInterface, doc = documen
  * Selects elements by selector.
  *
  * @param selector Standard or extended selector.
+ *
+ * @returns Array of DOM elements.
  */
 export const querySelectorAll = (selector: string): HTMLElement[] => {
     const ast = parse(selector);
@@ -65,6 +69,8 @@ export class ExtCssDocument {
      * Returns ast from cache for given selector.
      *
      * @param selector Standard or extended selector.
+     *
+     * @returns Previously parsed ast found in cache, or null if not found.
      */
     private getAstFromCache(selector: string): AnySelectorNodeInterface | null {
         const cachedAst = this.astCache.get(selector) || null;
@@ -77,6 +83,8 @@ export class ExtCssDocument {
      * - if no cached ast — saves newly parsed ast to cache and returns it.
      *
      * @param selector Standard or extended selector.
+     *
+     * @returns Ast for `selector`.
      */
     getSelectorAst(selector: string): AnySelectorNodeInterface {
         let ast = this.getAstFromCache(selector);
@@ -91,6 +99,8 @@ export class ExtCssDocument {
      * Selects elements by selector.
      *
      * @param selector Standard or extended selector.
+     *
+     * @returns Array of DOM elements.
      */
     querySelectorAll(selector: string): HTMLElement[] {
         const ast = this.getSelectorAst(selector);

@@ -38,6 +38,7 @@ type MatcherCallback = (a: MatcherArgsInterface) => boolean;
  * @param argsData Args needed for matcher callback.
  * @param errorMessage Error message.
  *
+ * @returns True if `callback` returns true.
  * @throws An error if `callback` fails.
  */
 const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterface, errorMessage: string): boolean => {
@@ -57,8 +58,10 @@ const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterfac
  * @param propDesc Text to describe what element 'prop' pseudo-class is trying to match.
  * @param pseudoName Pseudo-class name.
  * @param pseudoArg Pseudo-class arg.
+ *
+ * @returns Generated error message string.
  */
-const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg: string) => {
+const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg: string): string => {
     // eslint-disable-next-line max-len
     return `${MATCHING_ELEMENT_ERROR_PREFIX} ${propDesc}, may be invalid :${pseudoName}() pseudo-class arg: '${pseudoArg}'`;
 };
@@ -70,6 +73,7 @@ const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg:
  * @param pseudoName Pseudo-class name.
  * @param pseudoArg Pseudo-class arg.
  *
+ * @returns True if `domElement` is matched by absolute pseudo-class.
  * @throws An error on unknown absolute pseudo-class.
  */
 export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
@@ -116,6 +120,8 @@ export const findByAbsolutePseudoPseudo = {
      * @param domElements DOM elements.
      * @param rawPseudoArg Number arg of :nth-ancestor() or :upward() pseudo-class.
      * @param pseudoName Pseudo-class name.
+     *
+     * @returns Array of ancestor DOM elements.
      */
     nthAncestor: (domElements: HTMLElement[], rawPseudoArg: string, pseudoName: string): HTMLElement[] => {
         const deep = getValidNumberAncestorArg(rawPseudoArg, pseudoName);
@@ -138,6 +144,8 @@ export const findByAbsolutePseudoPseudo = {
      *
      * @param domElements DOM elements.
      * @param rawPseudoArg Arg of :xpath() pseudo-class.
+     *
+     * @returns Array of DOM elements matched by xpath expression.
      */
     xpath: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {
         const foundElements = domElements
@@ -175,6 +183,7 @@ export const findByAbsolutePseudoPseudo = {
      * @param domElements DOM elements.
      * @param rawPseudoArg Standard selector arg of :upward() pseudo-class.
      *
+     * @returns Array of closest ancestor DOM elements.
      * @throws An error if `rawPseudoArg` is not a valid standard selector.
      */
     upward: (domElements: HTMLElement[], rawPseudoArg: string): HTMLElement[] => {

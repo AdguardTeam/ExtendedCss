@@ -82,6 +82,8 @@ export class ThrottleWrapper {
 
     /**
      * Indicates whether there is a scheduled callback.
+     *
+     * @returns True if scheduled callback exists.
      */
     private hasPendingCallback(): boolean {
         return isNumber(this.timeoutId) || isNumber(this.timerId);
@@ -114,6 +116,8 @@ export class ThrottleWrapper {
 
     /**
      * Returns timestamp for 'now'.
+     *
+     * @returns Timestamp.
      */
     public static now(): number {
         return perf.now();

@@ -171,6 +171,8 @@ export class ExtendedCss {
 
     /**
      * Exposed for testing purposes only.
+     *
+     * @returns Array of AffectedElement data objects.
      */
     getAffectedElements(): AffectedElement[] {
         return this.context.affectedElements;
@@ -207,6 +209,8 @@ export class ExtendedCss {
      * Validates selector.
      *
      * @param inputSelector Selector text to validate.
+     *
+     * @returns Result of selector validation.
      */
     public static validate(inputSelector: string): SelectorValidationResult {
         try {

@@ -5,6 +5,8 @@ import { SLASH } from '../constants';
  *
  * @param str Input string.
  * @param suffix Needed to remove.
+ *
+ * @returns String without suffix.
  */
 export const removeSuffix = (str: string, suffix: string): string => {
     const index = str.indexOf(suffix, str.length - suffix.length);
@@ -23,6 +25,8 @@ export const removeSuffix = (str: string, suffix: string): string => {
  * @param input Input string to process.
  * @param pattern Find in the input string.
  * @param replacement Replace the pattern with.
+ *
+ * @returns Modified string.
  */
 export const replaceAll = (input: string, pattern: string, replacement: string): string => {
     if (!input) {
@@ -35,6 +39,8 @@ export const replaceAll = (input: string, pattern: string, replacement: string):
  * Converts string pattern to regular expression.
  *
  * @param str String to convert.
+ *
+ * @returns Regular expression converted from pattern `str`.
  */
 export const toRegExp = (str: string): RegExp => {
     if (str.startsWith(SLASH) && str.endsWith(SLASH)) {
@@ -49,6 +55,8 @@ export const toRegExp = (str: string): RegExp => {
  * e.g. `undefined` -> `'undefined'`.
  *
  * @param value Any type value.
+ *
+ * @returns String representation of `value`.
  */
 export const convertTypeIntoString = (value?: Element[keyof Element]): string => {
     let output;
@@ -70,6 +78,8 @@ export const convertTypeIntoString = (value?: Element[keyof Element]): string =>
  * e.g. `'null'` -> `null`, `'true'` -> `true`.
  *
  * @param value String-type value.
+ *
+ * @returns Its own type representation of string-type `value`.
  */
 export const convertTypeFromString = (value: string): undefined | null | boolean | number | string => {
     const numValue = Number(value);

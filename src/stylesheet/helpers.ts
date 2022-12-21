@@ -20,6 +20,7 @@ export interface ParsedSelectorData {
  *
  * @param rawSelector Selector which may contain :remove() pseudo-class.
  *
+ * @returns Parsed selector data with selector and styles.
  * @throws An error on invalid :remove() position.
  */
 export const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {

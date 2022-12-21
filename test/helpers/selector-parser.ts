@@ -9,9 +9,11 @@ interface TestAnySelectorNodeInterface {
 }
 
 /**
- * Returns RegularSelector with specified value.
+ * Returns RegularSelector node with specified value.
  *
  * @param regularValue String value for RegularSelector.
+ *
+ * @returns Ast RegularSelector node for tests.
  */
 export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInterface => {
     return {
@@ -26,6 +28,8 @@ export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInt
  *
  * @param name Extended pseudo-class name.
  * @param value Value of pseudo-class.
+ *
+ * @returns Ast AbsolutePseudoClass node for tests.
  */
 export const getAbsoluteExtendedSelector = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
@@ -45,6 +49,8 @@ export const getAbsoluteExtendedSelector = (name: string, value: string): TestAn
  * Returns Selector node with RegularSelector as single child.
  *
  * @param regularValue String value for RegularSelector.
+ *
+ * @returns Ast Selector node for tests.
  */
 export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeInterface => {
     const selectorNode = {
@@ -59,6 +65,8 @@ export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeI
  *
  * @param name Extended pseudo-class name.
  * @param value Value of it's inner regular selector.
+ *
+ * @returns Ast RelativePseudoClass node for tests.
  */
 export const getRelativeExtendedWithSingleRegular = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
@@ -93,6 +101,8 @@ export const getRelativeExtendedWithSingleRegular = (name: string, value: string
  * Returns SelectorList with multiple Selector nodes which have single RegularSelector node with specified value.
  *
  * @param regularValues Array of RegularSelector values.
+ *
+ * @returns Ast SelectorList node for tests.
  */
 export const getSelectorListOfRegularSelectors = (regularValues: string[]): TestAnySelectorNodeInterface => {
     const selectorNodes = regularValues.map((value) => {
@@ -108,6 +118,8 @@ export const getSelectorListOfRegularSelectors = (regularValues: string[]): Test
  * Returns SelectorList with single Selector node which has single RegularSelector node with specified value.
  *
  * @param regularValue String value for RegularSelector.
+ *
+ * @returns Ast SelectorList node for tests.
  */
 export const getAstWithSingleRegularSelector = (regularValue: string): TestAnySelectorNodeInterface => {
     return getSelectorListOfRegularSelectors([regularValue]);
@@ -132,6 +144,8 @@ interface AnyChildOfSelectorRaw {
  * Returns SelectorList with single Selector node which with any ast node.
  *
  * @param expected Simplified data for Selector child to expect.
+ *
+ * @returns Ast SelectorList node for tests.
  */
 export const getSingleSelectorAstWithAnyChildren = (
     expected: AnyChildOfSelectorRaw[],

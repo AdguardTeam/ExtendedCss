@@ -84,6 +84,8 @@ interface RelativePredicateArgsInterface {
  *
  * @param selectorNode Ast Selector node.
  * @param pseudoName Name of relative pseudo-class.
+ *
+ * @returns Ast RegularSelector node.
  */
 const getFirstInnerRegularChild = (
     selectorNode: AnySelectorNodeInterface,
@@ -95,11 +97,15 @@ const getFirstInnerRegularChild = (
     );
 };
 
+// TODO: fix for <forgiving-relative-selector-list>
+// https://github.com/AdguardTeam/ExtendedCss/issues/154
 /**
  * Checks whether the element has all relative elements specified by pseudo-class arg.
  * Used for :has() pseudo-class.
  *
  * @param argsData Relative pseudo-class helpers args data.
+ *
+ * @returns True if **all selectors** from argsData.relativeSelectorList is **matched** for argsData.element.
  */
 const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
@@ -168,6 +174,8 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
  * Used for :is() pseudo-class.
  *
  * @param argsData Relative pseudo-class helpers args data.
+ *
+ * @returns True if **any selector** from argsData.relativeSelectorList is **matched** for argsData.element.
  */
 const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
@@ -211,6 +219,8 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
  * Used for :not() pseudo-class.
  *
  * @param argsData Relative pseudo-class helpers args data.
+ *
+ * @returns True if **any selector** from argsData.relativeSelectorList is **not matched** for argsData.element.
  */
 const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
@@ -258,6 +268,7 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
  * @param root Root DOM element.
  * @param specifiedSelector @see {@link SpecifiedSelector}.
  *
+ * @returns Array of DOM elements.
  * @throws An error if RegularSelector node value is an invalid selector.
  */
 export const getByRegularSelector = (
@@ -284,9 +295,9 @@ export const getByRegularSelector = (
  * @param domElements Array of DOM elements.
  * @param extendedSelectorNode ExtendedSelector node.
  *
+ * @returns Array of DOM elements.
  * @throws An error on unknown pseudo-class,
  * absent or invalid arg of extended pseudo-class, etc.
- * @returns Array of DOM elements.
  */
 export const getByExtendedSelector = (
     domElements: HTMLElement[],
@@ -370,8 +381,8 @@ export const getByExtendedSelector = (
  * @param domElements Array of DOM elements.
  * @param regularSelectorNode RegularSelector node.
  *
- * @throws An error if RegularSelector has not value.
  * @returns Array of DOM elements.
+ * @throws An error if RegularSelector has not value.
  */
 export const getByFollowingRegularSelector = (
     domElements: HTMLElement[],
@@ -434,6 +445,7 @@ export const getByFollowingRegularSelector = (
  * @param root Root DOM element.
  * @param specifiedSelector Needed element specification.
  *
+ * @returns Array of DOM elements.
  * @throws An error if there is no selectorNodeChild.
  */
 export const getElementsForSelectorNode = (

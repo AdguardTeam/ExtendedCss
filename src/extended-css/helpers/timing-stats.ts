@@ -74,6 +74,8 @@ type LogStatData = {
  * Makes the timestamps more readable.
  *
  * @param timestamp Raw timestamp.
+ *
+ * @returns Fine-looking timestamps.
  */
 const beautifyTimingNumber = (timestamp: number): number => {
     return Number(timestamp.toFixed(STATS_DECIMAL_DIGITS_COUNT));
@@ -83,6 +85,8 @@ const beautifyTimingNumber = (timestamp: number): number => {
  * Improves timing stats readability.
  *
  * @param rawTimings Collected timings with raw timestamp.
+ *
+ * @returns Fine-looking timing stats.
  */
 const beautifyTimings = (rawTimings: TimingStatsInterface): TimingStatsInterface => {
     return {

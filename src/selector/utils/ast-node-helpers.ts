@@ -8,6 +8,8 @@ const NO_REGULAR_SELECTOR_ERROR = 'At least one of Selector node children should
  * Checks whether the type of `astNode` is SelectorList.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === SelectorList.
  */
 export const isSelectorListNode = (astNode: AnySelectorNodeInterface | null): boolean => {
     return astNode?.type === NodeType.SelectorList;
@@ -17,6 +19,8 @@ export const isSelectorListNode = (astNode: AnySelectorNodeInterface | null): bo
  * Checks whether the type of `astNode` is Selector.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === Selector.
  */
 export const isSelectorNode = (astNode: AnySelectorNodeInterface | null): boolean => {
     return astNode?.type === NodeType.Selector;
@@ -26,6 +30,8 @@ export const isSelectorNode = (astNode: AnySelectorNodeInterface | null): boolea
  * Checks whether the type of `astNode` is RegularSelector.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === RegularSelector.
  */
 export const isRegularSelectorNode = (astNode: AnySelectorNodeInterface | null): boolean => {
     return astNode?.type === NodeType.RegularSelector;
@@ -35,6 +41,8 @@ export const isRegularSelectorNode = (astNode: AnySelectorNodeInterface | null):
  * Checks whether the type of `astNode` is ExtendedSelector.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === ExtendedSelector.
  */
 export const isExtendedSelectorNode = (astNode: AnySelectorNodeInterface): boolean => {
     return astNode.type === NodeType.ExtendedSelector;
@@ -44,6 +52,8 @@ export const isExtendedSelectorNode = (astNode: AnySelectorNodeInterface): boole
  * Checks whether the type of `astNode` is AbsolutePseudoClass.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === AbsolutePseudoClass.
  */
 export const isAbsolutePseudoClassNode = (astNode: AnySelectorNodeInterface | null): boolean => {
     return astNode?.type === NodeType.AbsolutePseudoClass;
@@ -53,6 +63,8 @@ export const isAbsolutePseudoClassNode = (astNode: AnySelectorNodeInterface | nu
  * Checks whether the type of `astNode` is RelativePseudoClass.
  *
  * @param astNode Ast node.
+ *
+ * @returns True if astNode.type === RelativePseudoClass.
  */
 export const isRelativePseudoClassNode = (astNode: AnySelectorNodeInterface | null): boolean => {
     return astNode?.type === NodeType.RelativePseudoClass;
@@ -63,6 +75,7 @@ export const isRelativePseudoClassNode = (astNode: AnySelectorNodeInterface | nu
  *
  * @param astNode AbsolutePseudoClass or RelativePseudoClass node.
  *
+ * @returns Name of `astNode`.
  * @throws An error on unsupported ast node or no name found.
  */
 export const getNodeName = (astNode: AnySelectorNodeInterface | null): string => {
@@ -84,6 +97,7 @@ export const getNodeName = (astNode: AnySelectorNodeInterface | null): string =>
  * @param astNode RegularSelector or AbsolutePseudoClass node.
  * @param errorMessage Optional error message if no value found.
  *
+ * @returns Value of `astNode`.
  * @throws An error on unsupported ast node or no value found.
  */
 export const getNodeValue = (astNode: AnySelectorNodeInterface | null, errorMessage?: string): string => {
@@ -103,6 +117,8 @@ export const getNodeValue = (astNode: AnySelectorNodeInterface | null, errorMess
  * Returns only RegularSelector nodes from `children`.
  *
  * @param children Array of ast node children.
+ *
+ * @returns Array of RegularSelector nodes.
  */
 const getRegularSelectorNodes = (children: AnySelectorNodeInterface[]): AnySelectorNodeInterface[] => {
     return children.filter(isRegularSelectorNode);
@@ -114,6 +130,7 @@ const getRegularSelectorNodes = (children: AnySelectorNodeInterface[]): AnySelec
  * @param children Array of ast node children.
  * @param errorMessage Optional error message if no value found.
  *
+ * @returns Ast RegularSelector node.
  * @throws An error if no RegularSelector node found.
  */
 export const getFirstRegularChild = (
@@ -133,6 +150,7 @@ export const getFirstRegularChild = (
  *
  * @param children Array of ast node children.
  *
+ * @returns Ast RegularSelector node.
  * @throws An error if no RegularSelector node found.
  */
 export const getLastRegularChild = (children: AnySelectorNodeInterface[]): AnySelectorNodeInterface => {
@@ -145,11 +163,12 @@ export const getLastRegularChild = (children: AnySelectorNodeInterface[]): AnySe
 };
 
 /**
- * Returns the only child for ast node.
+ * Returns the only child of `node`.
  *
  * @param node Ast node.
  * @param errorMessage Error message.
  *
+ * @returns The only child of ast node.
  * @throws An error if none or more than one child found.
  */
 export const getNodeOnlyChild = (node: AnySelectorNodeInterface, errorMessage: string): AnySelectorNodeInterface => {
@@ -169,7 +188,6 @@ export const getNodeOnlyChild = (node: AnySelectorNodeInterface, errorMessage: s
  * @param extendedSelectorNode ExtendedSelector ast node.
  *
  * @returns AbsolutePseudoClass or RelativePseudoClass.
- *
  * @throws An error if there is no specific pseudo-class ast node.
  */
 export const getPseudoClassNode = (extendedSelectorNode: AnySelectorNodeInterface): AnySelectorNodeInterface => {
@@ -182,6 +200,7 @@ export const getPseudoClassNode = (extendedSelectorNode: AnySelectorNodeInterfac
  *
  * @param pseudoClassNode RelativePseudoClass.
  *
+ * @returns Relative SelectorList node.
  * @throws An error if no selector list found.
  */
 export const getRelativeSelectorListNode = (pseudoClassNode: AnySelectorNodeInterface): AnySelectorNodeInterface => {

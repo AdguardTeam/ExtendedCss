@@ -83,6 +83,7 @@ const NO_WHITESPACE_ERROR_PREFIX = 'No white space is allowed before or after ex
  *
  * @param selector Selector to parse.
  *
+ * @returns Parsed ast.
  * @throws An error on invalid selector.
  */
 export const parse = (selector: string): AnySelectorNodeInterface => {

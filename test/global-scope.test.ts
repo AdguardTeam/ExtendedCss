@@ -15,6 +15,8 @@ const { expectElementStyle } = require('./extended-css.test'); // eslint-disable
  *
  * @param obj1 First object.
  * @param obj2 Second object.
+ *
+ * @returns True if objects are equal.
  */
 const isEqual = <T extends Window>(obj1: T, obj2: T): boolean => {
     const keys1 = Object.keys(obj1);

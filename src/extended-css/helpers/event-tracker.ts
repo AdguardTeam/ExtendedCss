@@ -63,6 +63,8 @@ export class EventTracker {
 
     /**
      * Checks whether the last caught event should be ignored.
+     *
+     * @returns True if event should be ignored.
      */
     isIgnoredEventType(): boolean {
         const lastEventType = this.getLastEventType();

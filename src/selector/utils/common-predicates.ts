@@ -5,6 +5,8 @@ import { ABSOLUTE_PSEUDO_CLASSES, RELATIVE_PSEUDO_CLASSES } from '../../common/c
  * e.g. :contains(), :matches-css() etc.
  *
  * @param str Token value to check.
+ *
+ * @returns True if `str` is one of absolute extended pseudo-class names.
  */
 export const isAbsolutePseudoClass = (str: string): boolean => {
     return ABSOLUTE_PSEUDO_CLASSES.includes(str);
@@ -15,6 +17,8 @@ export const isAbsolutePseudoClass = (str: string): boolean => {
  * e.g. :has(), :not() etc.
  *
  * @param str Token value to check.
+ *
+ * @returns True if `str` is one of relative extended pseudo-class names.
  */
 export const isRelativePseudoClass = (str: string): boolean => {
     return RELATIVE_PSEUDO_CLASSES.includes(str);

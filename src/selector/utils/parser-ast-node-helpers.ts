@@ -33,6 +33,8 @@ import {
  * or null if there is no such one.
  *
  * @param context Selector parser context.
+ *
+ * @returns Buffer node or null.
  */
 export const getBufferNode = (context: Context): AnySelectorNodeInterface | null => {
     if (context.pathToBufferNode.length === 0) {
@@ -47,6 +49,8 @@ export const getBufferNode = (context: Context): AnySelectorNodeInterface | null
  * or null if there is no such one.
  *
  * @param context Selector parser context.
+ *
+ * @returns Parent node of buffer node or null.
  */
 export const getBufferNodeParent = (context: Context): AnySelectorNodeInterface | null => {
     // at least two nodes should exist — the buffer node and its parent
@@ -65,6 +69,7 @@ export const getBufferNodeParent = (context: Context): AnySelectorNodeInterface 
  *
  * @param context Selector parser context.
  *
+ * @returns Ast RegularSelector node.
  * @throws An error if:
  * - bufferNode is absent;
  * - type of bufferNode is unsupported;
@@ -202,6 +207,7 @@ export const upToClosest = (context: Context, parentType: NodeType): void => {
  *
  * @param context Selector parser context.
  *
+ * @returns Ast node for following selector parsing.
  * @throws An error if there is no upper SelectorNode is ast.
  */
 export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface => {

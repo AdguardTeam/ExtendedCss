@@ -62,6 +62,8 @@ const POSSIBLE_MARKS_BEFORE_REGEXP = {
  * Checks whether the passed token is supported extended pseudo-class.
  *
  * @param tokenValue Token value to check.
+ *
+ * @returns True if `tokenValue` is one of supported extended pseudo-class names.
  */
 export const isSupportedPseudoClass = (tokenValue: string): boolean => {
     return SUPPORTED_PSEUDO_CLASSES.includes(tokenValue);
@@ -72,16 +74,20 @@ export const isSupportedPseudoClass = (tokenValue: string): boolean => {
  * i.e. :not() and :is().
  *
  * @param name Pseudo-class name.
+ *
+ * @returns True if `name` is one if pseudo-class which should be optimized.
  */
 export const isOptimizationPseudoClass = (name: string): boolean => {
     return OPTIMIZATION_PSEUDO_CLASSES.includes(name);
 };
 
 /**
- * Checks whether next token is a continuation of regular selector being processed.
+ * Checks whether next to "space" token is a continuation of regular selector being processed.
  *
  * @param nextTokenType Type of token next to current one.
  * @param nextTokenValue Value of token next to current one.
+ *
+ * @returns True if next token seems to be a part of current regular selector.
  */
 export const doesRegularContinueAfterSpace = (
     nextTokenType: string | undefined,
@@ -114,6 +120,7 @@ export const doesRegularContinueAfterSpace = (
  * @param prevTokenValue Value of previous token.
  * @param bufferNodeValue Value of bufferNode.
  *
+ * @returns True if current token seems to be a start of regexp pseudo-class arg pattern.
  * @throws An error on invalid regexp pattern.
  */
 export const isRegexpOpening = (context: Context, prevTokenValue: string, bufferNodeValue: string): boolean => {
@@ -146,6 +153,8 @@ export const isRegexpOpening = (context: Context, prevTokenValue: string, buffer
  *
  * @param tokenValue Value of current token.
  * @param prevTokenValue Previous token value.
+ *
+ * @returns True if combination of current and previous token seems to be **a start** of attribute.
  */
 export const isAttributeOpening = (tokenValue: string, prevTokenValue: string | undefined) => {
     return tokenValue === BRACKETS.SQUARE.LEFT
@@ -157,6 +166,7 @@ export const isAttributeOpening = (tokenValue: string, prevTokenValue: string | 
  *
  * @param context Selector parser context.
  *
+ * @returns True if combination of current and previous token seems to be **an end** of attribute.
  * @throws An error on invalid attribute.
  */
 export const isAttributeClosing = (context: Context): boolean => {
@@ -250,6 +260,8 @@ export const isAttributeClosing = (context: Context): boolean => {
  * Checks whether the `tokenValue` is a whitespace character.
  *
  * @param tokenValue Token value.
+ *
+ * @returns True if `tokenValue` is a whitespace character.
  */
 export const isWhiteSpaceChar = (tokenValue: string | undefined): boolean => {
     if (!tokenValue) {

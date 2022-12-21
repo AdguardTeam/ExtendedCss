@@ -71,9 +71,10 @@ module.exports = {
         ],
         'jsdoc/require-throws': 'error',
         'jsdoc/tag-lines': 'off',
+        // signal error if @returns is missed
+        'jsdoc/require-returns': ['error'],
         // disabled as types are described in typescript
         'jsdoc/require-param-type': 'off',
-        'jsdoc/require-returns': 'off',
         'jsdoc/require-returns-type': 'off',
         // for jest tests
         'jsdoc/check-tag-names': ['error', {
