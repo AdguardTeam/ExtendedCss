@@ -1,4 +1,8 @@
-import { AffectedElement, Context, IAffectedElement } from './types';
+import {
+    AffectedElement,
+    Context,
+    IAffectedElement,
+} from './types';
 import { CssStyleMap } from '../../stylesheet';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';

@@ -3,7 +3,12 @@ import { Context } from './parser-types';
 
 import { TokenType, tokenizeAttribute } from '../tokenizer';
 
-import { getFirst, getLast, getItemByIndex, getPrevToLast } from '../../common/utils/arrays';
+import {
+    getFirst,
+    getLast,
+    getItemByIndex,
+    getPrevToLast,
+} from '../../common/utils/arrays';
 import {
     SPACE,
     EQUAL_SIGN,

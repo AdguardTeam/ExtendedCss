@@ -9,10 +9,7 @@ import {
     isRegularSelectorNode,
     isExtendedSelectorNode,
 } from './ast-node-helpers';
-import {
-    findByAbsolutePseudoPseudo,
-    isMatchedByAbsolutePseudo,
-} from './absolute-processor';
+import { findByAbsolutePseudoPseudo, isMatchedByAbsolutePseudo } from './absolute-processor';
 import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
 import { getElementSelectorDesc, getParent } from '../../common/utils/nodes';

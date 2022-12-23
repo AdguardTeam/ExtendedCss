@@ -18,6 +18,9 @@ module.exports = {
         'airbnb-typescript/base',
         'plugin:jsdoc/recommended',
     ],
+    plugins: [
+        'import-newlines',
+    ],
     rules: {
         'indent': ['error', 4, {
             'SwitchCase': 1,
@@ -36,7 +39,9 @@ module.exports = {
         'import/prefer-default-export': 'off',
         '@typescript-eslint/no-non-null-assertion': 'error',
         'no-continue': 'off',
-        'import/no-extraneous-dependencies': ['error', { 'devDependencies': true }],
+        'import/no-extraneous-dependencies': 'off',
+        'import/extensions': 'off',
+        'import-newlines/enforce': ['error', 2, 120],
         'no-restricted-syntax': ['error', 'LabeledStatement', 'WithStatement'],
         'no-constant-condition': ['error', { 'checkLoops': false }],
         '@typescript-eslint/interface-name-prefix': 'off',

@@ -5,7 +5,11 @@
  * @see {@link https://github.com/jsdom/jsdom/issues/1928}
  */
 
-import { chromium, Browser, Page } from 'playwright';
+import {
+    chromium,
+    Browser,
+    Page,
+} from 'playwright';
 
 import server from '../helpers/server';
 

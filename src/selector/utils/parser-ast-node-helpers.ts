@@ -20,7 +20,11 @@ import {
     RelativePseudoClassNode,
 } from '../nodes';
 
-import { getFirst, getLast, getPrevToLast } from '../../common/utils/arrays';
+import {
+    getFirst,
+    getLast,
+    getPrevToLast,
+} from '../../common/utils/arrays';
 import {
     BRACKETS,
     HAS_PSEUDO_CLASS_MARKERS,

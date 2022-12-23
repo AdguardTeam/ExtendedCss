@@ -1,4 +1,8 @@
-import { chromium, Browser, Page } from 'playwright';
+import {
+    chromium,
+    Browser,
+    Page,
+} from 'playwright';
 
 import server from './helpers/server';
 
