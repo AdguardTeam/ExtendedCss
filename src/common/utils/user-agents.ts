@@ -28,16 +28,17 @@ type SupportedBrowsersData = {
 const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
     [BrowserName.Chrome]: {
         // avoid Chromium-based Edge browser
-        MASK: /\s(Chrome)\/(\d+)\..+\s(?!.*Edg\/)/,
-        MIN_VERSION: 55,
+        // 'EdgA' for android version
+        MASK: /\s(Chrome)\/(\d+)\..+\s(?!.*(Edg|EdgA)\/)/,
+        MIN_VERSION: 88,
     },
     [BrowserName.Firefox]: {
         MASK: /\s(Firefox)\/(\d+)\./,
-        MIN_VERSION: 52,
+        MIN_VERSION: 84,
     },
     [BrowserName.Edge]: {
         MASK: /\s(Edg)\/(\d+)\./,
-        MIN_VERSION: 80,
+        MIN_VERSION: 88,
     },
     [BrowserName.Opera]: {
         MASK: /\s(OPR)\/(\d+)\./,
@@ -45,12 +46,13 @@ const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
     },
     [BrowserName.Safari]: {
         MASK: /\sVersion\/(\d{2}\.\d)(.+\s|\s)(Safari)\//,
-        MIN_VERSION: 11.1,
+        MIN_VERSION: 14,
     },
     [BrowserName.HeadlessChrome]: {
         // support headless Chrome used by puppeteer
         MASK: /\s(HeadlessChrome)\/(\d+)\..+\s(?!.*Edg\/)/,
-        MIN_VERSION: 55,
+        // version should be the same as for BrowserName.Chrome
+        MIN_VERSION: 88,
     },
 };
 

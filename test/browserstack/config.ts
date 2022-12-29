@@ -8,21 +8,21 @@ export const rawConfig = {
     browsers: [
         {
             browser: 'Chrome',
-            browser_version: '55',
+            browser_version: '88',
             device: null,
             os: 'Windows',
             os_version: '10',
         },
         {
             browser: 'Firefox',
-            browser_version: '52',
+            browser_version: '84',
             device: null,
             os: 'Windows',
             os_version: '10',
         },
         {
             browser: 'Edge',
-            browser_version: '80',
+            browser_version: '88',
             device: null,
             os: 'Windows',
             os_version: '10',
@@ -36,7 +36,7 @@ export const rawConfig = {
         },
         {
             browser: 'Safari',
-            browser_version: '11.1',
+            browser_version: '14',
             device: null,
             os: 'OS X',
             os_version: 'High Sierra',

@@ -8,20 +8,21 @@ import { isUserAgentSupported } from '../../../src/common/utils/user-agents';
 describe('check user-agents', () => {
     describe('check user-agents', () => {
         const supportedUserAgents = [
-            // chrome 55
-            'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-            // firefox 52
-            'Mozilla/5.0 (Windows NT 5.1; rv:52.0) Gecko/20100101 Firefox/52.0',
-            // edge 80
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3971.0 Safari/537.36 Edg/80.0.341.0',
+            // chrome 88
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36',
+            // firefox 84
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0',
+            // edge 88
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.50',
             // opera 80
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 OPR/80.0.4170.63',
-            // safari 11.1
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1 Safari/605.1.15',
+            // safari 14
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/608.33 (KHTML, like Gecko) Version/14.5 Safari/608.33',
             // user-agent of jsdom
             'Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/20.0.3',
-            // headless chrome which is used in puppeteer (for corelibs-test-runner)
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/80.0.3987.0 Safari/537.36',
+            // headless chrome 88
+            // corelibs-test-runner uses puppeteer which uses "headless chrome", not just "chrome"
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_0) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/88.0.4298.0 Safari/537.36',
         ];
         test.each(supportedUserAgents)('%s', (userAgent) => {
             expect(isUserAgentSupported(userAgent)).toBeTruthy();
@@ -30,14 +31,14 @@ describe('check user-agents', () => {
 
     describe('not supported', () => {
         const unsupportedUserAgents = [
-            // chrome 54
-            'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36',
-            // firefox 51
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:51.0) Gecko/20100101 Firefox/51.0',
-            // edge 79
-            'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.74 Safari/537.36 Edg/79.0.309.43',
-            // safari 11.0
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 11.0) AppleWebKit/602.1.50 (KHTML, like Gecko) Version/11.0 Safari/602.1.50',
+            // chrome 87
+            'Mozilla/5.0 (Linux; Android 11; SM-A526R4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Mobile Safari/537.36',
+            // firefox 83
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15; rv:83.0) Gecko/20100101 Firefox/83.0',
+            // edge 87
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36 Edg/87.0.664.75',
+            // safari 13
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Safari/605.1.15',
             // internet explorer
             // https://www.whatismybrowser.com/guides/the-latest-user-agent/internet-explorer
             'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)',

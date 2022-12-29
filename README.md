@@ -844,11 +844,11 @@ ExtendedCss.query(selector);
 
 | Browser               | Version   |
 |-----------------------|:----------|
-| Chrome                | ✅ 55     |
-| Firefox               | ✅ 52     |
-| Edge                  | ✅ 80     |
+| Chrome                | ✅ 88     |
+| Firefox               | ✅ 84     |
+| Edge                  | ✅ 88     |
 | Opera                 | ✅ 80     |
-| Safari                | ✅ 11.1   |
+| Safari                | ✅ 14     |
 | Internet Explorer     | ❌        |
 
 

@@ -1,5 +1,15 @@
 # ExtendedCss Changelog
 
+## Unreleased
+
+### Changed
+
+- increase versions of supported browsers
+    - Chrome — 88
+    - Firefox — 84
+    - Edge — 88
+    - Safari — 14
+
 
 ## v2.0.33
 
