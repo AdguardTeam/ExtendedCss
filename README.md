@@ -6,18 +6,19 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 * [Extended capabilities](#extended-capabilities)
   * [Limitations](#extended-css-limitations)
-  * [Pseudo-class :has()](#extended-css-has)
-  * [Pseudo-class :contains()](#extended-css-contains)
-  * [Pseudo-class :matches-css()](#extended-css-matches-css)
-  * [Pseudo-class :matches-attr()](#extended-css-matches-attr)
-  * [Pseudo-class :matches-property()](#extended-css-matches-property)
-  * [Pseudo-class :xpath()](#extended-css-xpath)
-  * [Pseudo-class :nth-ancestor()](#extended-css-nth-ancestor)
-  * [Pseudo-class :upward()](#extended-css-upward)
-  * [Pseudo-class :remove() and pseudo-property `remove`](#remove-pseudos)
-  * [Pseudo-class :is()](#extended-css-is)
-  * [Pseudo-class :not()](#extended-css-not)
-  * [Selectors debug mode](#selectors-debug-mode)
+  * [Pseudo-class `:has()`](#extended-css-has)
+  * [Pseudo-class `:contains()`](#extended-css-contains)
+  * [Pseudo-class `:matches-css()`](#extended-css-matches-css)
+  * [Pseudo-class `:matches-attr()`](#extended-css-matches-attr)
+  * [Pseudo-class `:matches-property()`](#extended-css-matches-property)
+  * [Pseudo-class `:xpath()`](#extended-css-xpath)
+  * [Pseudo-class `:nth-ancestor()`](#extended-css-nth-ancestor)
+  * [Pseudo-class `:upward()`](#extended-css-upward)
+  * [Pseudo-class `:remove()` and pseudo-property `remove`](#remove-pseudos)
+  * [Pseudo-class `:is()`](#extended-css-is)
+  * [Pseudo-class `:not()`](#extended-css-not)
+  * [Pseudo-class `:if-not()` (deprecated)](#extended-css-if-not)
+  * [Selectors debugging mode](#selectors-debug-mode)
   * [Backward compatible syntax](#extended-css-old-syntax)
 * [How to build](#how-to-build)
 * [How to test](#how-to-test)
@@ -35,9 +36,9 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 ## Extended capabilities
 
-> Some pseudo-classes does not require selector before it. Still adding a [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` makes an extended selector easier to read, even though it has no effect on the matching behavior. So selector `#block :has(> .inner)` works exactly like `#block *:has(> .inner)` but second one is more obvious.
+> Some pseudo-classes does not require a selector before them. Still adding a [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` makes an extended selector easier to read, even though it has no effect on the matching behavior. So the selector `#block :has(> .inner)` works exactly like `#block *:has(> .inner)` but second one is more obvious.
 
-> Pseudo-class names are case-insensitive, e.g. `:HAS()` will work as `:has()`.
+> Pseudo-class names are case-insensitive, e.g. `:HAS()` works as `:has()`. Still the lower-case names are used commonly.
 
 ### <a id="extended-css-limitations"></a> Limitations
 
@@ -49,37 +50,39 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 ### <a id="extended-css-has"></a> Pseudo-class `:has()`
 
-Draft CSS 4.0 specification describes [pseudo-class `:has`](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, it is not yet [supported by all popular browsers](https://caniuse.com/css-has).
+Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, [it is not yet supported](https://caniuse.com/css-has) by all popular browsers.
 
-> Rules with `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:has()`, use `#?#`/`#$?#` marker obviously.
+> Rules with the `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) if they use `##` marker and if it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:has()`, use `#?#`/`#$?#` marker explicitly.
 
 > Synonym `:-abp-has` is supported by ExtendedCss for better compatibility.
+
+> `:if()` is no longer supported as a synonym for `:has()`.
 
 **Syntax**
 
 ```
 [target]:has(selector)
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
-- `selector` — required, standard or extended css selector
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
+- `selector` — required, standard or extended CSS selector
 
-Pseudo-class `:has()` selects the `target` elements that includes the elements that fit to the `selector`. Also `selector` can start with a combinator.
+The pseudo-class `:has()` selects the `target` elements that fit to the `selector`. Also the `selector` can start with a combinator.
 
-Selector list can be set in `selector` as well. In this case **all** selectors in the list are being matched for now. It is [one of known issues](#known-issues) and will be fixed for `<forgiving-relative-selector-list>` as argument.
+A selector list can be set in `selector` as well. In this case **all** selectors in the list are being matched for now. It is [one of the known issues](#known-issues) and will be fixed for `<forgiving-relative-selector-list>` as argument.
 
 <a id="extended-css-has-limitations"></a> **Limitations and notes**
 
-> Usage of `:has()` pseudo-class is [restricted for some cases (2, 3)](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
+> Usage of the `:has()` pseudo-class is [restricted for some cases (2, 3)](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
 > - disallow `:has()` inside the pseudos accepting only compound selectors;
 > - disallow `:has()` after regular pseudo-elements.
 
-> Native `:has()` pseudo-class does not allow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the `:has()` invalidation complexity ([case 1](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54)). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we will not add this limitation in ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
+> Native `:has()` pseudo-class does not allow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the `:has()` invalidation complexity ([case 1](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54)). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we have not added this limitation to ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
 
-> Native implementation does not allow any usage of `:scope` inside `:has()` argument ([[1]](https://github.com/w3c/csswg-drafts/issues/7211), [[2]](https://github.com/w3c/csswg-drafts/issues/6399)). Still there some such rules in filter lists: `div:has(:scope > a)` which we will continue to support simply converting them to `div:has(> a)` as it was earlier.
+> Native implementation does not allow any usage of `:scope` inside `:has()` argument ([[1]](https://github.com/w3c/csswg-drafts/issues/7211), [[2]](https://github.com/w3c/csswg-drafts/issues/6399)). Still, there are some such rules in filter lists: `div:has(:scope > a)` which we continue to support by simply converting them to `div:has(> a)`, as it used to be done previously.
 
 **Examples**
 
-`div:has(.banner)` will select all `div` elements, which **includes** an element with the `banner` class:
+`div:has(.banner)` selects all `div` elements which **include** an element with the `banner` class:
 ```html
 <!-- HTML code -->
 <div>Not selected</div>
@@ -88,7 +91,7 @@ Selector list can be set in `selector` as well. In this case **all** selectors i
 </div>
 ```
 
-`div:has(> .banner)` will select all `div` elements, which **includes** an `banner` class element as a *direct child* of `div`:
+`div:has(> .banner)` selects all `div` elements which **include** an `banner` class element as a *direct child* of `div`:
 ```html
 <!-- HTML code -->
 <div>Not selected</div>
@@ -97,7 +100,7 @@ Selector list can be set in `selector` as well. In this case **all** selectors i
 </div>
 ```
 
-`div:has(+ .banner)` will select all `div` elements **preceding** `banner` class element which *immediately follows* the `div` and both are children of the same parent:
+`div:has(+ .banner)` selects all `div` elements **preceding** `banner` class element which *immediately follows* the `div` and both are children of the same parent:
 ```html
 <!-- HTML code -->
 <div>Not selected</div>
@@ -106,7 +109,7 @@ Selector list can be set in `selector` as well. In this case **all** selectors i
 <span>Not selected</span>
 ```
 
-`div:has(~ .banner)` will select all `div` elements **preceding** `banner` class element which *follows* the `div` but *not necessarily immediately* and both are children of the same parent:
+`div:has(~ .banner)` selects all `div` elements **preceding** `banner` class element which *follows* the `div` but *not necessarily immediately* and both are children of the same parent:
 ```html
 <!-- HTML code -->
 <div>Not selected</div>
@@ -115,7 +118,7 @@ Selector list can be set in `selector` as well. In this case **all** selectors i
 <p class="banner">general sibling</p>
 ```
 
-`div:has(span, .banner)` will select all `div` elements, which **includes both** `span` element and `banner` class element:
+`div:has(span, .banner)` selects all `div` elements which **include both** `span` element and `banner` class element:
 ```html
 <!-- HTML code -->
 <div>Not selected</div>
@@ -141,7 +144,7 @@ This pseudo-class principle is very simple: it allows to select the elements tha
 ```
 [target]:contains(match)
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `match` — required, string or regular expression for matching element textContent
 
 > Regexp flags are supported for `match`.
@@ -168,7 +171,7 @@ div:contains(/as .* banner/)
 div:contains(/it .* banner/gi)
 ```
 
-> Only a `div` with `id=match` will be selected because the next element does not contain any text, and `banner` is a part of code, not a text.
+> Only the `div` with `id=match` is selected because the next element does not contain any text, and `banner` is a part of code, not a text.
 
 > [Backward compatible syntax for `:contains()`](#old-syntax-contains) is supported but not recommended.
 
@@ -182,17 +185,17 @@ Pseudo-class `:matches-css()` allows to match the element by its current style p
 ```
 [target]:matches-css([pseudo-element, ] property: pattern)
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `pseudo-element` — optional, valid standard pseudo-element, e.g. `before`, `after`, `first-line`, etc.
 - `property` — required, a name of CSS property to check the element for
-- `pattern` —  required, a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case insensitive manner. In the case of a regular expression, the pattern looks like `/regexp/`.
+- `pattern` —  required, a value pattern that is using the same simple wildcard matching as in the basic url filtering rules OR a regular expression. For this type of matching, AdGuard always does matching in a case-insensitive manner. In the case of a regular expression, the pattern looks like `/regexp/`.
 
 > For **non-regexp** patterns `(`,`)`,`[`,`]` must be **unescaped**, e.g. `:matches-css(background-image:url(data:*))`.
 
 > For **regexp** patterns `\` should be **escaped**, e.g. `:matches-css(background-image: /^url\\("data:image\\/gif;base64.+/)`.
 
 <!-- TODO: https://github.com/AdguardTeam/ExtendedCss/issues/138 -->
-> Regexp patterns does not support flags.
+> Regexp patterns **do not support** flags.
 
 **Examples**
 
@@ -234,37 +237,39 @@ Pseudo-class `:matches-attr()` allows to select an element by its attributes, es
 ```
 [target]:matches-attr("name"[="value"])
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `name` — required, simple string *or* string with wildcard *or* regular expression for attribute name matching
 - `value` — optional, simple string *or* string with wildcard *or* regular expression for attribute value matching
 
 > For **regexp** patterns `"` and `\` should be **escaped**, e.g. `div:matches-attr(class=/[\\w]{5}/)`.
 
+> Regexp patterns **do not support** flags.
+
 **Examples**
 
-`div:matches-attr("ad-link")` will select `div#target1`:
+`div:matches-attr("ad-link")` selects the element `div#target1`:
 ```html
 <!-- HTML code -->
-<div id="target1" ad-link="ssdgsg-banner_240x400"></div>
+<div id="target1" ad-link="1random23-banner_240x400"></div>
 ```
 
-`div:matches-attr("data-*"="adBanner")` will select `div#target2`:
+`div:matches-attr("data-*"="adBanner")` selects the element `div#target2`:
 ```html
 <!-- HTML code -->
-<div id="target2" data-sdfghlhw="adBanner"></div>
+<div id="target2" data-1random23="adBanner"></div>
 ```
 
-`div:matches-attr(*unit*=/^click$/)` will select `div#target3`:
+`div:matches-attr(*unit*=/^click$/)` selects the element `div#target3`:
 ```html
 <!-- HTML code -->
-<div id="target3" hrewq-unit094="click"></div>
+<div id="target3" random123-unit094="click"></div>
 ```
 
-`*:matches-attr("/.{5,}delay$/"="/^[0-9]*$/")` will select `#target4`:
+`*:matches-attr("/.{5,}delay$/"="/^[0-9]*$/")` selects the element `#target4`:
 ```html
 <!-- HTML code -->
 <div>
-  <inner-afhhw id="target4" nt4f5be90delay="1000"></inner-afhhw>
+  <inner-random23 id="target4" nt4f5be90delay="1000"></inner-random23>
 </div>
 ```
 
@@ -278,32 +283,34 @@ Pseudo-class `:matches-property()` allows to select an element by matching its p
 ```
 [target]:matches-property("name"[="value"])
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `name` — required, simple string *or* string with wildcard *or* regular expression for element property name matching
 - `value` — optional, simple string *or* string with wildcard *or* regular expression for element property value matching
 
 > For **regexp** patterns `"` and `\` should be escaped, e.g. `div:matches-property(prop=/[\\w]{4}/)`.
 
-> `name` supports regexp for property in chain, e.g. `prop./^unit[\\d]{4}$/.type`.
+> Regexp patterns are supported in `name` for any property in chain, e.g. `prop./^unit[\\d]{4}$/.type`.
+
+> Regexp patterns **do not support** flags.
 
 **Examples**
 
-Element with such properties:
+An element with such properties:
 ```javascript
 divProperties = {
-    id: 1,
-    check: {
-        track: true,
-        unit_2ksdf1: true,
+  id: 1,
+  check: {
+    track: true,
+    unit_2random1: true,
+  },
+  memoizedProps: {
+    key: null,
+    tag: 12,
+    _owner: {
+      effectTag: 1,
+      src: 'ad.com',
     },
-    memoizedProps: {
-        key: null,
-        tag: 12,
-        _owner: {
-            effectTag: 1,
-            src: 'ad.com',
-        },
-    },
+  },
 };
 ```
 
@@ -311,7 +318,7 @@ can be selected by any of these extended selectors:
 ```
 div:matches-property(check.track)
 
-div:matches-property("check./^unit_.{4,6}$/")
+div:matches-property("check./^unit_.{4,8}$/")
 
 div:matches-property("check.unit_*"=true)
 
@@ -320,40 +327,40 @@ div:matches-property(memoizedProps.key="null")
 div:matches-property(memoizedProps._owner.src=/ad/)
 ```
 
-> **For filters maintainers:** To check properties of specific element, you should do:
-> 1. Inspect the needed page element or select it in `Elements` tab of browser DevTools.
+> **For filters maintainers:** To check properties of a specific element, do the following:
+> 1. Inspect the page element or select it in `Elements` tab of browser DevTools.
 > 2. Run `console.dir($0)` in `Console` tab.
 
 
 ### <a id="extended-css-xpath"></a> Pseudo-class `:xpath()`
 
-Pseudo-class `:xpath()` allows to select an element by evaluating a XPath expression.
+The `:xpath()` pseudo-class allows to select an element by evaluating an XPath expression.
 
 **Syntax**
 
 ```
 [target]:xpath(expression)
 ```
-- `target`- optional, standard or extended css selector
+- `target`- optional, standard or extended CSS selector
 - `expression` — required, valid XPath expression
 
 <a id="extended-css-xpath-limitations"></a> **Limitations**
 
-> `target` can be omitted so it is optional. For any other pseudo-class that would mean "apply to *all* DOM nodes", but in case of `:xpath()` it just means "apply to the *whole* document", and such applying slows elements selecting significantly. That's why rules like `#?#:xpath(expression)` are limited for looking inside the `body` tag. For example, rule `#?#:xpath(//div[@data-st-area=\'Advert\'])` is parsed as `#?#body:xpath(//div[@data-st-area=\'Advert\'])`.
+> `target` can be omitted so it is optional. For any other pseudo-class that would mean "apply to *all* DOM nodes", but in case of `:xpath()` it just means "apply to the *whole* document", and such applying slows elements selecting significantly. That's why rules like `#?#:xpath(expression)` are limited to looking inside the `body` tag. For example, rule `#?#:xpath(//div[@data-st-area=\'Advert\'])` is parsed as `#?#body:xpath(//div[@data-st-area=\'Advert\'])`.
 
 > Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not recommended, so `target` should be specified instead.
 
-> Works properly only at the end of selector, except of [pseudo-class :remove()](#remove-pseudos).
+> Works properly only at the end of selector, except for [pseudo-class :remove()](#remove-pseudos).
 
 **Examples**
 
-`:xpath(//*[@class="banner"])` will select `div#target1`:
+`:xpath(//*[@class="banner"])` selects the element `div#target1`:
 ```html
 <!-- HTML code -->
 <div id="target1" class="banner"></div>
 ```
 
-`:xpath(//*[@class="inner"]/..)` will select `div#target2`:
+`:xpath(//*[@class="inner"]/..)` selects the element `div#target2`:
 ```html
 <!-- HTML code -->
 <div id="target2">
@@ -364,19 +371,19 @@ Pseudo-class `:xpath()` allows to select an element by evaluating a XPath expres
 
 ### <a id="extended-css-nth-ancestor"></a> Pseudo-class `:nth-ancestor()`
 
-Pseudo-class `:nth-ancestor()` allows to lookup the *nth* ancestor relative to the previously selected element.
+The `:nth-ancestor()` pseudo-class allows to lookup the *nth* ancestor relative to the previously selected element.
 
 **Syntax**
 
 ```
 subject:nth-ancestor(n)
 ```
-- `subject` — required, standard or extended css selector
+- `subject` — required, standard or extended CSS selector
 - `n` — required, number >= 1 and < 256, distance to the needed ancestor from the element selected by `subject`
 
 <a id="extended-css-nth-ancestor-limitations"></a> **Limitations**
 
-> Pseudo-class `:nth-ancestor()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument. It is [one of known issues](#known-issues).
+> Pseudo-class `:nth-ancestor()` is not supported inside the argument of the [`:not()` pseudo-class](#extended-css-not). It is [one of the known issues](#known-issues).
 
 **Examples**
 
@@ -396,37 +403,29 @@ For such DOM:
 </div>
 ```
 
-`.child:nth-ancestor(1)` will select `div#target1`
-`div[class="inner"]:nth-ancestor(3)` will select `div#target2`
+`.child:nth-ancestor(1)` selects the element `div#target1`,
+`div[class="inner"]:nth-ancestor(3)` selects the element `div#target2`.
 
 
 ### <a id="extended-css-upward"></a> Pseudo-class `:upward()`
 
-Pseudo-class `:upward()` allows to lookup the ancestor relative to the previously selected element.
+The `:upward()` pseudo-class allows to lookup the ancestor relative to the previously selected element.
 
 **Syntax**
 
 ```
 subject:upward(ancestor)
 ```
-- `subject` — required, standard or extended css selector
+- `subject` — required, standard or extended CSS selector
 - `ancestor` — required, specification for the ancestor of the element selected by `subject`, can be set as:
   - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
-  - *standard css selector* for matching closest ancestor
+  - *standard CSS selector* for matching closest ancestor
 
 <a id="extended-css-upward-limitations"></a> **Limitations**
 
-> Pseudo-class `:upward()` is not supported inside [`:not()` pseudo-class](#extended-css-not) argument. It is [one of known issues](#known-issues).
+> Pseudo-class `:upward()` is not supported inside the argument of the [`:not()` pseudo-class](#extended-css-not) argument. It is [one of the known issues](#known-issues).
 
 **Examples**
-
-```
-div.child:upward(div[id])
-div:contains(test):upward(div[class^="parent-wrapper-"])
-
-div.test:upward(4)
-div:has-text(/test/):upward(2)
-```
 
 For such DOM:
 ```html
@@ -444,16 +443,15 @@ For such DOM:
 </div>
 ```
 
-`.inner:upward(div[data])` will select `div#target1`
-`.inner:upward(div[id])` will select `div#target2`
-
-`.child:upward(1)` will select `div#target1`
-`.inner:upward(3)` will select `div#target2`
+`.inner:upward(div[data])` selects the element `div#target1`,
+`.inner:upward(div[id])` selects the element `div#target2`,
+`.child:upward(1)` selects the element `div#target1`,
+`.inner:upward(3)` selects the element `div#target2`.
 
 
 ### <a id="remove-pseudos"></a> Pseudo-class `:remove()` and pseudo-property `remove`
 
-Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use pseudo-class `:remove()` as well as pseudo-property `remove`.
+Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use the `:remove()` pseudo-class as well as the `remove` pseudo-property.
 
 **Syntax**
 
@@ -464,15 +462,15 @@ selector:remove()
 ! pseudo-property
 selector { remove: true; }
 ```
-- `selector` — required, standard or extended css selector
+- `selector` — required, standard or extended CSS selector
 
 <a id="extended-css-remove-limitations"></a> **Limitations**
 
-> Pseudo-class `:remove()` is limited to work properly only at the end of selector.
+> The `:remove()` pseudo-class is limited to work properly only at the end of selector.
 
-> For applying `:remove()` pseudo-class to any element [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` should be used. Otherwise extended selector may be considered as invalid, e.g. `.banner > :remove()` is not valid for removing any child element of `banner` class element, so it should look like `.banner > *:remove()`.
+> For applying the `:remove()` pseudo-class to any element [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*` should be used. Otherwise such extended selector may be considered as invalid, e.g. `.banner > :remove()` is not valid for removing any child element of `banner` class element, so it should look like `.banner > *:remove()`.
 
-> If `:remove()` pseudo-class or `remove` pseudo-property is used, all style properties will be ignored except of [`debug` pseudo-property](#selectors-debug-mode).
+> If the `:remove()` pseudo-class or the `remove` pseudo-property is used, all style properties are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
 
 **Examples**
 
@@ -484,32 +482,32 @@ div:contains(advertisement) { remove: true; }
 div[class]:has(> a > img) { remove: true; }
 ```
 
-> Rules with `remove` pseudo-property should use `#$?#` marker: `$` for CSS style rules syntax, `?` for ExtendedCss syntax.
+> Rules with the `remove` pseudo-property should use `#$?#` marker: `$` for CSS style rules syntax, `?` for ExtendedCss syntax.
 
 
 ### <a id="extended-css-is"></a> Pseudo-class `:is()`
 
-Pseudo-class `:is()` allows to match any element that can be selected by any of selectors passed to it. Invalid selectors passed as arg will be skipped and pseudo-class will deal with valid ones with no error. Our implementation of [`:is() (:matches(), :any())` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:is).
+The `:is()` pseudo-class allows to match any element that can be selected by any of selectors passed to it. Invalid selectors are skipped and the pseudo-class deals with valid ones with no error thrown. Our implementation of the [native `:is()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:is).
 
 **Syntax**
 
 ```
 [target]:is(selectors)
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors. For extended selectors only compound selectors are supported, not complex.
 
 <a id="extended-css-is-limitations"></a> **Limitations**
 
-> Rules with `:is()` pseudo-class should use [native implementation of `:is()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:is) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:is()`, use `#?#`/`#$?#` marker obviously.
+> Rules with the `:is()` pseudo-class should use the [native implementation of `:is()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:is) if rules use `##` marker and it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:is()`, use `#?#`/`#$?#` marker explicitly.
 
-> If `:is()` pseudo-class arg `selectors` is an extended selectors, due to the way how `:is()` pseudo-class is implemented in v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:is(<extended-selectors>)` will not work. So if `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:is()` applying will be limited to `html` children, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`. Please note that there is no such limitation for standard selector arg, i.e. `#?#html:is(.locked)`.
+> If the `:is()` pseudo-class argument `selectors` is an extended selector, due to the way how the `:is()` pseudo-class is implemented in ExtendedCss v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:is(<extended-selectors>)` does not work. So if `target` is not defined or defined as an [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, the extended pseudo-class applying is limited to **`html`'s children**, e.g. rules `#?#:is(...)` and `#?#*:is(...)` are parsed as `#?#html *:is(...)`. Please note that there is no such limitation for a standard selector argument, i.e. `#?#html:is(.locked)` works fine.
 
-> [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed.  It is [one of known issues](#known-issues). Check examples below for more details.
+> [Complex selectors](https://www.w3.org/TR/selectors-4/#complex) with extended pseudo-classes are not supported as `selectors` argument for `:is()` pseudo-class, only [compound ones](https://www.w3.org/TR/selectors-4/#compound) are allowed. It is [one of the known issues](#known-issues). Check examples below for more details.
 
 **Examples**
 
-`#container *:is(.inner, .footer)` will select only `div#target1`:
+`#container *:is(.inner, .footer)` selects only the element `div#target1`:
 ```html
 <!-- HTML code -->
 <div id="container">
@@ -521,8 +519,8 @@ Pseudo-class `:is()` allows to match any element that can be selected by any of 
 </div>
 ```
 
-Due to limitations `:is(*:not([class]) > .banner)'` will not work
-but `:is(*:not([class]):has(> .banner))` can be used instead of it to select `div#target2`:
+Due to limitations `:is(*:not([class]) > .banner)'` does not work
+but `:is(*:not([class]):has(> .banner))` can be used instead of it to select the element `div#target2`:
 ```html
 <!-- HTML code -->
 <span class="span">text</span>
@@ -534,29 +532,29 @@ but `:is(*:not([class]):has(> .banner))` can be used instead of it to select `di
 
 ### <a id="extended-css-not"></a> Pseudo-class `:not()`
 
-Pseudo-class `:not()` allows to select elements which are *not matched* by selectors passed as arg. Invalid selectors in arg are not allowed and error will be thrown. Our implementation of [`:not()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:not).
+The `:not()` pseudo-class allows to select elements which are *not matched* by selectors passed as argument. Invalid argument selectors are not allowed and error is to be thrown. Our implementation of the [`:not()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:not).
 
 **Syntax**
 
 ```
 [target]:not(selectors)
 ```
-- `target` — optional, standard or extended css selector, can be missed for checking *any* element
-- `selectors` — selector list of standard or extended selectors
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
+- `selectors` — list of standard or extended selectors
 
 <a id="extended-css-not-limitations"></a> **Limitations**
 
-> Rules with `:not()` pseudo-class should use [native implementation of `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not) if rules use `##` marker and it is possible, i.e. with no other extended pseudo-classes inside. To force ExtendedCss applying of rules with `:not()`, use `#?#`/`#$?#` marker obviously.
+> Rules with the `:not()` pseudo-class should use the [native implementation of `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not) if rules use `##` marker and it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:not()`, use `#?#`/`#$?#` marker explicitly.
 
-> If `:not()` pseudo-class arg `selectors` is an extended selectors, due to the way how `:not()` pseudo-class is implemented in v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:not(<extended-selectors>)` will not work. So if `target` is not defined or defined as [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, pseudo-class `:not()` applying will be limited to `html` children, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`. Please note that there is no such limitation for standard selector arg, i.e. `#?#html:not(.locked)`.
+> If the `:not()` pseudo-class argument `selectors` is an extended selector, due to the way how the `:not()` pseudo-class is implemented in ExtendedCss v2.0, it is impossible to apply it to the top DOM node which is `html`, i.e. `#?#html:not(<extended-selectors>)` does not work. So if `target` is not defined or defined as an [universal selector](https://www.w3.org/TR/selectors-4/#the-universal-selector) `*`, the extended pseudo-class applying is limited to **`html`'s children**, e.g. rules `#?#:not(...)` and `#?#*:not(...)` are parsed as `#?#html *:not(...)`. Please note that there is no such limitation for a standard selector argument, i.e. `#?#html:not(.locked)` works fine.
 
-> Inside [`:upward()` pseudo-class](#extended-css-upward) argument `:not()` is considered as a standard CSS pseudo-class because `:upward()` supports only standard selectors.
+> The `:not()` is considered as a standard CSS pseudo-class inside argument of the [`:upward()` pseudo-class](#extended-css-upward) because `:upward()` supports only standard selectors.
 
-> "Up-looking" pseudo-classes which are [`:nth-ancestor()`](#extended-css-nth-ancestor) and [`:upward()`](#extended-css-upward)  are not supported inside `selectors` argument for `:not()` pseudo-class. It is [one of known issues](#known-issues).
+> "Up-looking" pseudo-classes which are [`:nth-ancestor()`](#extended-css-nth-ancestor) and [`:upward()`](#extended-css-upward) are not supported inside `selectors` argument for `:not()` pseudo-class. It is [one of the known issues](#known-issues).
 
 **Examples**
 
-`#container > *:not(h2, .text)` will select only `div#target1`
+`#container > *:not(h2, .text)` selects only the element `div#target1`:
 ```html
 <!-- HTML code -->
 <div id="container">
@@ -567,18 +565,53 @@ Pseudo-class `:not()` allows to select elements which are *not matched* by selec
 ```
 
 
-### Selectors debug mode
+### <a id="extended-css-if-not"></a> Pseudo-class `:if-not()` (deprecated)
 
-Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with javascript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables debug mode either for a single selector or for all selectors depending on the `debug` value.
+> The `:if-not()` pseudo-class is deprecated and is no longer supported. Rules with it are considered as invalid.
 
-**Debugging a single selector**
+This pseudo-class was basically a shortcut for `:not(:has())`. It was supported by ExtendedCss for better compatibility with some filters subscriptions.
+
+
+### <a id="selectors-debug-mode"></a> Selectors debugging mode
+
+Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with JavaScript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables the debugging mode either for a single selector or for all selectors, depending on the `debug` value.
+
+Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with JavaScript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables the debugging mode either for a single selector or for all selectors, depending on the `debug` value.
+
+Open the browser console while on a web page to see the timing statistics for selector(s) that were applied there. Debugging mode displays the following stats as object where each of the debugged selectors are keys, and value is an object with such properties:
+
+**Always printed:**
+* `selectorParsed` — text of eventually parsed selector
+* `timings` — list of DOM nodes matched by the selector
+  * `appliesCount` — total number of times that the selector has been applied on the page
+  * `appliesTimings` — time that it took to apply the selector on the page, for each of the instances that it has been applied (in milliseconds)
+  * `meanTiming` — mean time that it took to apply the selector on the page
+  * `standardDeviation` — standard deviation
+  * `timingsSum` — total time it took to apply the selector on the page across all instances
+
+**Printed only for remove pseudos:**
+* `removed` — flag to signal if elements we removed
+
+**Printed if elements are not removed:**
+* `matchedElements` — list of DOM nodes matched by the selector
+* `styleApplied` — parsed rule style declaration related to the selector
+
+**Examples**
+
+**Debugging a single selector:**
+
+When the value of the `debug` property is `true`, only information about this selector will be shown in the browser console.
+
 ```
-.banner { display: none; debug: true; }
+#$?#.banner { display: none; debug: true; }
 ```
 
-**Enabling global debug**
+**Enabling global debug:**
+
+When the value of the `debug` property is `global`, the console will display information about all extended CSS selectors that have matches on the current page, for all the rules from any of the enabled filters.
+
 ```
-.banner { display: none; debug: global; }
+#$?#.banner { display: none; debug: global; }
 ```
 
 > Global debugging mode also can be enabled by positive `debug` property in [`ExtCssConfiguration`](#ext-css-configuration-interface):
@@ -760,7 +793,7 @@ interface IAffectedElement {
 
 <a id="extended-css-apply-dispose"></a>
 
-After instance of ExtendedCss is created, it can be applied on page by `apply()` method. Its applying also can be stopped and styles will be restored by `dispose()` method.
+After the instance of ExtendedCss is created, it can be applied on the page by the `apply()` method. Its applying also can be stopped and styles are to be restored by the `dispose()` method.
 
 ```js
 (function() {
@@ -821,11 +854,14 @@ ExtendedCss can be executed on any page without using any AdGuard product. In or
 
 Alternatively, install the [`ExtendedCssDebugger` userscript](https://github.com/AdguardTeam/Userscripts/blob/master/extendedCssDebugger/extended-css.debugger.user.js).
 
-Now you can now use the `ExtendedCss` from global scope, and run its method [`query()`](#extended-css-query) as `Document.querySelectorAll()`.
-```js
-const selector = 'div.block:has=(.header:matches-css-after(content: Ads))';
+Now you can now use the `ExtendedCss` from global scope, and run its method [`query()`](#extended-css-query) as `Document.querySelectorAll()`
 
-// array of HTMLElement matched the `selector` will be returned
+**Examples**
+
+```js
+const selector = 'div.block:has=(.header:matches-css(after, content: Ads))';
+
+// array of HTMLElements matched the `selector` is to be returned
 ExtendedCss.query(selector);
 ```
 
