@@ -4,6 +4,9 @@ import browserstackRunner from 'browserstack-runner';
 import dotenv from 'dotenv';
 import { rawConfig } from './config';
 
+// limit for each worker
+const TIMEOUT_PER_WORKER_SEC = 50;
+
 interface BrowserConfig {
     [key: string]: string | null;
 }
@@ -18,16 +21,30 @@ const config: BrowserstackConfig = {
     ...rawConfig,
     username: process.env.BROWSERSTACK_USER,
     key: process.env.BROWSERSTACK_KEY,
-    // limit each runner with 60 seconds
-    // if not set defaults to 5 min (300 s)
-    timeout: 60,
+    // if not limited, default timeout is used
+    // which is 5 min (300 s)
+    timeout: TIMEOUT_PER_WORKER_SEC,
 };
 
 export const runBrowserstack = async () => {
-    browserstackRunner.run(config, (error: any): void => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // for invalid config.browsers capability the error is thrown
+    // but there is no exit on fail.
+    // that's why we need workaround with `report` checking
+    let launchedWorkersCount = 0;
+
+    browserstackRunner.run(config, (error: unknown, report: unknown[]): void => {
         if (error) {
             throw error;
         }
+        if (report) {
+            launchedWorkersCount = report.length;
+        }
         console.log('Test Finished');
     });
+
+    setTimeout(() => {
+        if (launchedWorkersCount !== rawConfig.browsers.length) {
+            throw new Error('Some browsers were not launched');
+        }
+    }, rawConfig.browsers.length * TIMEOUT_PER_WORKER_SEC * 1000);
 };

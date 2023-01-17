@@ -39,7 +39,7 @@ export const rawConfig = {
             browser_version: '14',
             device: null,
             os: 'OS X',
-            os_version: 'High Sierra',
+            os_version: 'Big Sur',
         },
     ],
 };
