@@ -9,6 +9,7 @@
     - Firefox — 84
     - Edge — 88
     - Safari — 14
+- instead of throwing the error in unsupported browser, log it
 
 
 ## v2.0.33

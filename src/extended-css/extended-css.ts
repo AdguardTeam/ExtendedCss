@@ -102,7 +102,7 @@ export class ExtendedCss {
      */
     constructor(configuration: ExtCssConfiguration) {
         if (!isBrowserSupported()) {
-            throw new Error('Browser is not supported by ExtendedCss.');
+            logger.error('Browser is not supported by ExtendedCss');
         }
 
         if (!configuration) {
