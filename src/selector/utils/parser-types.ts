@@ -3,7 +3,7 @@ import { AnySelectorNodeInterface } from '../nodes';
 /**
  * Interface for selector parser context.
  */
-export interface Context {
+export type Context = {
     /**
      * Collected result.
      */
@@ -56,4 +56,4 @@ export interface Context {
      * which should be parsed as standard if arg has no extended selector.
      */
     shouldOptimize: boolean;
-}
+};

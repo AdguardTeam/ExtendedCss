@@ -7,13 +7,13 @@ import { rawConfig } from './config';
 // limit for each worker
 const TIMEOUT_PER_WORKER_SEC = 50;
 
-interface BrowserConfig {
+type BrowserConfig = {
     [key: string]: string | null;
-}
+};
 
-interface BrowserstackConfig {
+type BrowserstackConfig = {
     [key: string]: string | number | boolean | undefined | string[] | BrowserConfig[];
-}
+};
 
 dotenv.config();
 

@@ -1,11 +1,11 @@
-interface TestExtCssConfig {
+type TestExtCssConfig = {
     styleSheet: string;
-}
+};
 
-interface ExtendedCssInstance {
+type ExtendedCssInstance = {
     apply(): void;
     dispose(): void;
-}
+};
 
 // Needed to avoid declare global error:
 // Augmentations for the global scope can only be directly nested in external modules or ambient module declarations
@@ -28,9 +28,9 @@ if (!cssText) {
 const extCss = new BrowserstackTest.ExtendedCss({ styleSheet: cssText });
 extCss.apply();
 
-interface TestExpectedStyle {
+type TestExpectedStyle = {
     [key: string]: string;
-}
+};
 
 /**
  * Asserts that specified function has specified expected styles.

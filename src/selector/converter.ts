@@ -1,4 +1,4 @@
-import { BRACKETS, COMMA } from '../common/constants';
+import { BRACKET, COMMA } from '../common/constants';
 
 /**
  * Regexp that matches backward compatible syntaxes.
@@ -37,7 +37,7 @@ const MATCHES_CSS_PSEUDO_ELEMENT_REGEXP = /(:matches-css)-(before|after)\(/g;
 const convertMatchesCss = (match: string, extendedPseudoClass: string, regularPseudoElement: string): string => {
     // ':matches-css-before('  -->  ':matches-css(before, '
     // ':matches-css-after('   -->  ':matches-css(after, '
-    return `${extendedPseudoClass}${BRACKETS.PARENTHESES.LEFT}${regularPseudoElement}${COMMA}`;
+    return `${extendedPseudoClass}${BRACKET.PARENTHESES.LEFT}${regularPseudoElement}${COMMA}`;
 };
 
 /**

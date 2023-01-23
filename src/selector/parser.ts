@@ -40,7 +40,7 @@ import { TokenType } from '../common/tokenizer';
 import { getLast } from '../common/utils/arrays';
 
 import {
-    BRACKETS,
+    BRACKET,
     COLON,
     SEMICOLON,
     DESCENDANT_COMBINATOR,
@@ -156,7 +156,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                     // https://www.w3.org/TR/selectors-4/#pseudo-classes
                     // e.g. 'span:contains (text)'
                     if (isWhiteSpaceChar(nextTokenValue)
-                        && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
+                        && nextToNextTokenValue === BRACKET.PARENTHESES.LEFT) {
                         throw new Error(`${NO_WHITESPACE_ERROR_PREFIX}: '${selector}'`);
                     }
                     const lowerCaseTokenValue = tokenValue.toLowerCase();
@@ -237,7 +237,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                     // or after the pseudo and before the opening parenthesis
                                     // e.g. '.block:nth-child (2)
                                     || (prevTokenType === TokenType.Word
-                                        && nextTokenValue === BRACKETS.PARENTHESES.LEFT))
+                                        && nextTokenValue === BRACKET.PARENTHESES.LEFT))
                             ) {
                                 throw new Error(`'${selector}' is not a valid selector`);
                             }
@@ -288,12 +288,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                     case DOUBLE_QUOTE:
                     case CARET:
                     case DOLLAR_SIGN:
-                    case BRACKETS.CURLY.LEFT:
-                    case BRACKETS.CURLY.RIGHT:
+                    case BRACKET.CURLY.LEFT:
+                    case BRACKET.CURLY.RIGHT:
                     case ASTERISK:
                     case ID_MARKER:
                     case CLASS_MARKER:
-                    case BRACKETS.SQUARE.LEFT:
+                    case BRACKET.SQUARE.LEFT:
                         // it might be complex selector with extended pseudo-class inside it
                         // and the space is between that complex selector and following regular selector
                         // e.g. 'div:has(img).banner'   // parser position is on `.` before `banner` now
@@ -324,7 +324,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         } else if (isRegularSelectorNode(bufferNode)) {
                             if (
-                                tokenValue === BRACKETS.CURLY.LEFT
+                                tokenValue === BRACKET.CURLY.LEFT
                                 && !(context.isAttributeBracketsOpen || context.isRegexpOpen)
                             ) {
                                 // e.g. 'div { content: "'
@@ -402,7 +402,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         }
                         break;
-                    case BRACKETS.SQUARE.RIGHT:
+                    case BRACKET.SQUARE.RIGHT:
                         if (isRegularSelectorNode(bufferNode)) {
                             // unescaped `]` in regular selector allowed only inside attribute value
                             if (!context.isAttributeBracketsOpen
@@ -524,7 +524,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             if (getNodeName(bufferNode) === XPATH_PSEUDO_CLASS_MARKER
                                 && nextTokenValue
                                 && SUPPORTED_PSEUDO_CLASSES.includes(nextTokenValue)
-                                && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
+                                && nextToNextTokenValue === BRACKET.PARENTHESES.LEFT) {
                                 throw new Error(`:xpath() pseudo-class should be the last in selector: '${selector}'`);
                             }
                             // collecting arg for absolute pseudo-class
@@ -547,7 +547,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 updateBufferNode(context, tokenValue);
                                 // parentheses should be balanced only for functional pseudo-classes
                                 // e.g. '.yellow:not(:nth-child(3))'
-                                if (nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT) {
+                                if (nextToNextTokenValue === BRACKET.PARENTHESES.LEFT) {
                                     context.standardPseudoNamesStack.push(nextTokenValue);
                                 }
                             } else {
@@ -558,7 +558,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             }
                         }
                         break;
-                    case BRACKETS.PARENTHESES.LEFT:
+                    case BRACKET.PARENTHESES.LEFT:
                         // start of pseudo-class arg
                         if (isAbsolutePseudoClassNode(bufferNode)) {
                             // no brackets balancing needed inside
@@ -599,7 +599,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             context.extendedPseudoBracketsStack.push(tokenValue);
                         }
                         break;
-                    case BRACKETS.PARENTHESES.RIGHT:
+                    case BRACKET.PARENTHESES.RIGHT:
                         if (isAbsolutePseudoClassNode(bufferNode)) {
                             // no brackets balancing needed inside
                             // 1. :xpath() extended pseudo-class arg

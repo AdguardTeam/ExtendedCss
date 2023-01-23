@@ -35,14 +35,14 @@ const applyExtCssRules = (cssRules: string[]): void => {
     extendedCss.apply();
 };
 
-interface TestStyleMap {
+type TestStyleMap = {
     [key: string]: string;
-}
+};
 
-interface TestLoggedStats {
+type TestLoggedStats = {
     selectorParsed: string,
     timings: TimingStats,
-}
+};
 
 /**
  * Asserts that specified function has specified expected styles.

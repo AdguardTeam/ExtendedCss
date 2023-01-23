@@ -6,6 +6,13 @@ export type MainCallback = () => void;
 
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
+/**
+ * Prototype interface for:
+ *  - `AffectedElement` for internal lib usage
+ *     where no required style properties in rules;
+ *  - `IAffectedElement` for export
+ *     where 'content' style property should be defined in every rule.
+ */
 interface AffectedElementProto {
     node: HTMLElement;
     originalStyle: string;
@@ -47,9 +54,9 @@ export interface IAffectedElement extends Partial<AffectedElementProto> {
  * Data pairs for selector and number of times the element was removed by ExtendedCss.
  * Needed to avoid infinite loop of re-setting styles.
  */
-interface RemovalsStatistic {
+type RemovalsStatistic = {
     [key: string]: number;
-}
+};
 
 /**
  * Needed for getting affected node elements and handle style properties
@@ -58,12 +65,12 @@ interface RemovalsStatistic {
  * Used by AdGuard Browser extension to display rules in Filtering log
  * and `collect-hits-count` (via tsurlfilter's CssHitsCounter).
  */
-export type BeforeStyleAppliedCallback = (x:IAffectedElement) => AffectedElement;
+export type BeforeStyleAppliedCallback = (x: IAffectedElement) => IAffectedElement;
 
 /**
  * Interface for ExtendedCss context. Needed to store affected elements, collect removal stats, etc.
  */
-export interface Context {
+export type Context = {
     /**
      * Callback that handles affected elements.
      */
@@ -114,4 +121,4 @@ export interface Context {
      * Flag for printing information about applied rules.
      */
     areTimingsPrinted?: boolean;
-}
+};

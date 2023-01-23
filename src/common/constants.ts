@@ -5,8 +5,7 @@ const RIGHT_PARENTHESIS = ')';
 const LEFT_CURLY_BRACKET = '{';
 const RIGHT_CURLY_BRACKET = '}';
 
-// TODO: rename to 'BRACKET'
-export const BRACKETS = {
+export const BRACKET = {
     SQUARE: {
         LEFT: LEFT_SQUARE_BRACKET,
         RIGHT: RIGHT_SQUARE_BRACKET,

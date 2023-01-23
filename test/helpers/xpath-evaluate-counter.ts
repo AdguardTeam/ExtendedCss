@@ -1,9 +1,9 @@
 import { ExtCssDocument } from '../../src/selector';
 
-export interface XpathEvaluationResult {
+export type XpathEvaluationResult = {
     counter: number,
     elements: Element[],
-}
+};
 
 export const checkXpathEvaluation = (selector: string, document: Document): XpathEvaluationResult => {
     let counter = 0;

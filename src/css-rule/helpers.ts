@@ -16,7 +16,7 @@ import { logger } from '../common/utils/logger';
 
 import {
     COLON,
-    BRACKETS,
+    BRACKET,
     REMOVE_PSEUDO_MARKER,
     REMOVE_ERROR_PREFIX,
     CONTENT_CSS_PROPERTY,
@@ -46,9 +46,9 @@ export const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => 
 
     // ':remove()'
     // eslint-disable-next-line max-len
-    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}${BRACKETS.PARENTHESES.RIGHT}`;
+    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKET.PARENTHESES.LEFT}${BRACKET.PARENTHESES.RIGHT}`;
     // ':remove(' - needed for validation rules like 'div:remove(2)'
-    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKETS.PARENTHESES.LEFT}`;
+    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKET.PARENTHESES.LEFT}`;
 
     let selector: string;
     let shouldRemove = false;

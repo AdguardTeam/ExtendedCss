@@ -21,7 +21,7 @@ import {
     ID_MARKER,
     CLASS_MARKER,
     COLON,
-    BRACKETS,
+    BRACKET,
     SLASH,
     BACKSLASH,
     DOT,
@@ -41,7 +41,7 @@ const ATTRIBUTE_CASE_INSENSITIVE_FLAG = 'i';
 const POSSIBLE_MARKS_BEFORE_REGEXP = {
     COMMON: [
         // e.g. ':matches-attr(/data-/)'
-        BRACKETS.PARENTHESES.LEFT,
+        BRACKET.PARENTHESES.LEFT,
         // e.g. `:matches-attr('/data-/')`
         SINGLE_QUOTE,
         // e.g. ':matches-attr("/data-/")'
@@ -57,7 +57,7 @@ const POSSIBLE_MARKS_BEFORE_REGEXP = {
     ],
     CONTAINS: [
         // e.g. ':contains(/text/)'
-        BRACKETS.PARENTHESES.LEFT,
+        BRACKET.PARENTHESES.LEFT,
         // e.g. `:contains('/text/')`
         SINGLE_QUOTE,
         // e.g. ':contains("/text/")'
@@ -116,7 +116,7 @@ export const doesRegularContinueAfterSpace = (
         || nextTokenValue === SINGLE_QUOTE
         // e.g. 'div[class*=" "]'
         || nextTokenValue === DOUBLE_QUOTE
-        || nextTokenValue === BRACKETS.SQUARE.LEFT;
+        || nextTokenValue === BRACKET.SQUARE.LEFT;
 };
 
 /**
@@ -164,7 +164,7 @@ export const isRegexpOpening = (context: Context, prevTokenValue: string, buffer
  * @returns True if combination of current and previous token seems to be **a start** of attribute.
  */
 export const isAttributeOpening = (tokenValue: string, prevTokenValue: string | undefined) => {
-    return tokenValue === BRACKETS.SQUARE.LEFT
+    return tokenValue === BRACKET.SQUARE.LEFT
         && prevTokenValue !== BACKSLASH;
 };
 

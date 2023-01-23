@@ -78,24 +78,70 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
 };
 
 /**
+ * Checks whether the `affectedElement` arg has APIs `IAffectedElement` type
+ * before `beforeStyleApplied()` execution.
+ *
+ * @param affectedElement Affected element.
+ *
+ * @returns False if any rule of affectedElement.rules has no defined 'content' style property
+ * which is needed for `beforeStyleApplied()`.
+ */
+const isIAffectedElement = (
+    affectedElement: AffectedElement | IAffectedElement,
+): affectedElement is IAffectedElement => {
+    return !affectedElement.rules.some((rule) => {
+        return !rule.style
+            || !rule.style[CONTENT_CSS_PROPERTY];
+    });
+};
+
+/**
+ * Checks whether the `affectedElement` arg has `AffectedElement` type
+ * after `beforeStyleApplied()` execution.
+ * Needed for proper internal usage.
+ *
+ * @param affectedElement Affected element.
+ *
+ * @returns False if any style in affectedElement.rules has non-empty 'content' property.
+ */
+const isAffectedElement = (
+    affectedElement: AffectedElement | IAffectedElement,
+): affectedElement is AffectedElement => {
+    return !affectedElement.rules.some((rule) => {
+        return rule.style
+            // after beforeStyleApplied() is executed
+            // 'content' style property should be an empty string
+            && rule.style[CONTENT_CSS_PROPERTY] !== '';
+    });
+};
+
+/**
  * Applies style to the specified DOM node.
  *
  * @param context ExtendedCss context.
- * @param affectedElement Object containing DOM node and rule to be applied.
+ * @param rawAffectedElement Object containing DOM node and rule to be applied.
  *
  * @throws An error if affectedElement has no style to apply.
  */
-export const applyStyle = (context: Context, affectedElement: AffectedElement): void => {
-    if (affectedElement.protectionObserver) {
+export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): void => {
+    if (rawAffectedElement.protectionObserver) {
         // style is already applied and protected by the observer
         return;
     }
-
+    let affectedElement: AffectedElement | IAffectedElement;
     if (context.beforeStyleApplied) {
-        affectedElement = context.beforeStyleApplied(affectedElement as IAffectedElement);
-        if (!affectedElement) {
-            return;
+        if (!isIAffectedElement(rawAffectedElement)) {
+            throw new Error("Rule style property 'content' should be defined");
         }
+        affectedElement = context.beforeStyleApplied(rawAffectedElement);
+        if (!affectedElement) {
+            throw new Error("Callback 'beforeStyleApplied' should return IAffectedElement");
+        }
+        if (!isAffectedElement(affectedElement)) {
+            throw new Error("Rules should have empty string as 'content' style value");
+        }
+    } else {
+        affectedElement = rawAffectedElement;
     }
 
     const { node, rules } = affectedElement;

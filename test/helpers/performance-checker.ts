@@ -10,14 +10,14 @@ declare global {
     };
 }
 
-export interface PerformanceResult {
+export type PerformanceResult = {
     selector: string,
     status: boolean,
     elapsed: number,
     count: number,
     average: number,
     result?: string,
-}
+};
 
 const LOOP_COUNT = 10 * 1000;
 const MAX_ELAPSED_VALUE = 15 * 1000;

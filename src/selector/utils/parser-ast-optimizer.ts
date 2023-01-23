@@ -19,7 +19,7 @@ import {
     COMMA,
     SPACE,
     COLON,
-    BRACKETS,
+    BRACKET,
 } from '../../common/constants';
 
 // limit applying of wildcard :is() and :not() pseudo-class only to html children
@@ -154,7 +154,7 @@ const getOptimizedExtendedSelector = (
         const relativeSelectorListStr = selectorListOfRegularsToString(relativeSelectorList);
         const pseudoName = getNodeName(extendedPseudoClassNode);
         // eslint-disable-next-line max-len
-        const optimizedExtendedStr = `${COLON}${pseudoName}${BRACKETS.PARENTHESES.LEFT}${relativeSelectorListStr}${BRACKETS.PARENTHESES.RIGHT}`;
+        const optimizedExtendedStr = `${COLON}${pseudoName}${BRACKET.PARENTHESES.LEFT}${relativeSelectorListStr}${BRACKET.PARENTHESES.RIGHT}`;
         prevRegularSelectorNode.value = `${getNodeValue(prevRegularSelectorNode)}${optimizedExtendedStr}`;
         return null;
     }

@@ -3,10 +3,10 @@ export enum TokenType {
     Word = 'word',
 }
 
-export interface Token {
+export type Token = {
     type: TokenType;
     value: string;
-}
+};
 
 /**
  * Splits `input` string into tokens.

@@ -31,7 +31,7 @@ type QuoteMark = '"' | "'";
 /**
  * Interface for style declaration parser context.
  */
-export interface Context {
+export type Context = {
     /**
      * Collection of parsed style declarations.
      */
@@ -57,7 +57,7 @@ export interface Context {
      * Needed for proper quoter balancing.
      */
     valueQuoteMark: QuoteMark | null;
-}
+};
 
 /**
  * Checks whether the quotes has been opened for style value.

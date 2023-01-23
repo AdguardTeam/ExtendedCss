@@ -1,6 +1,6 @@
 import { parseStyleBlock } from '../../src/style-block/parser';
 
-interface ThrowInput {
+type ThrowInput = {
     /**
      * Style block to parse.
      */
@@ -10,7 +10,7 @@ interface ThrowInput {
      * Error text to match.
      */
     error: string,
-}
+};
 
 const expectToThrowInput = (input: ThrowInput): void => {
     const { actual, error } = input;

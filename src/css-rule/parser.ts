@@ -18,7 +18,7 @@ import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
 
 import {
-    BRACKETS,
+    BRACKET,
     SLASH,
     ASTERISK,
     STYLE_ERROR_PREFIX,
@@ -35,7 +35,7 @@ import {
 const getLeftCurlyBracketIndexes = (cssRule: string): number[] => {
     const indexes: number[] = [];
     for (let i = 0; i < cssRule.length; i += 1) {
-        if (cssRule[i] === BRACKETS.CURLY.LEFT) {
+        if (cssRule[i] === BRACKET.CURLY.LEFT) {
             indexes.push(i);
         }
     }
@@ -82,7 +82,7 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
     // if rule has `{` but there is no `}`
     if (
         leftCurlyBracketIndexes.length > 0
-        && !cssRule.includes(BRACKETS.CURLY.RIGHT)
+        && !cssRule.includes(BRACKET.CURLY.RIGHT)
     ) {
         throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE} OR ${STYLE_ERROR_PREFIX.UNCLOSED_STYLE}`);
     }
@@ -91,7 +91,7 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
         // if rule has no `{`
         leftCurlyBracketIndexes.length === 0
         // or `}`
-        || !cssRule.includes(BRACKETS.CURLY.RIGHT)
+        || !cssRule.includes(BRACKET.CURLY.RIGHT)
     ) {
         try {
             // the whole css rule considered as "selector part"

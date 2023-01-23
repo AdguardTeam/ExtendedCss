@@ -1,12 +1,12 @@
 import { parse } from '../../src/selector/parser';
 import { NodeType } from '../../src/selector/nodes';
 
-interface TestAnySelectorNodeInterface {
+type TestAnySelectorNodeInterface = {
     type: string,
     children: TestAnySelectorNodeInterface[],
     value?: string,
     name?: string,
-}
+};
 
 /**
  * Returns RegularSelector node with specified value.
@@ -132,13 +132,13 @@ export const getAstWithSingleRegularSelector = (regularValue: string): TestAnySe
  *   - isRegular: value;
  *   - isAbsolute or isRelative: name, value.
  */
-interface AnyChildOfSelectorRaw {
+type AnyChildOfSelectorRaw = {
     isRegular?: boolean,
     isAbsolute?: boolean,
     isRelative?: boolean
     value?: string,
     name?: string,
-}
+};
 
 /**
  * Returns SelectorList with single Selector node which with any ast node.
@@ -188,7 +188,7 @@ export const getSingleSelectorAstWithAnyChildren = (
     };
 };
 
-interface SelectorListOfRegularsInput {
+type SelectorListOfRegularsInput = {
     /**
      * Selector for parsing.
      */
@@ -198,7 +198,7 @@ interface SelectorListOfRegularsInput {
      * Array of expected values for RegularSelector nodes.
      */
     expected: string[],
-}
+};
 
 /**
  * Checks whether the passed selector is parsed into proper SelectorList.
@@ -211,7 +211,7 @@ export const expectSelectorListOfRegularSelectors = ({ actual, expected }: Selec
     expect(parse(actual)).toEqual(getSelectorListOfRegularSelectors(expected));
 };
 
-interface SelectorListOfAnyChildrenInput {
+type SelectorListOfAnyChildrenInput = {
     /**
      * Selector for parsing.
      */
@@ -221,7 +221,7 @@ interface SelectorListOfAnyChildrenInput {
      * Array of data for building ast.
      */
     expected: AnyChildOfSelectorRaw[],
-}
+};
 
 /**
  * Checks whether the 'actual' is parsed into AST with specified parameters.
@@ -234,7 +234,7 @@ export const expectSingleSelectorAstWithAnyChildren = ({ actual, expected }: Sel
     expect(parse(actual)).toEqual(getSingleSelectorAstWithAnyChildren(expected));
 };
 
-interface ToThrowSelectorInput {
+type ToThrowSelectorInput = {
     /**
      * Selector for extCss querySelectorAll().
      */
@@ -244,7 +244,7 @@ interface ToThrowSelectorInput {
      * Error text to match.
      */
     error: string,
-}
+};
 
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;

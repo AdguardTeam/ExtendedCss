@@ -22,7 +22,7 @@ export const expectNoMatch = (selectedElements: HTMLElement[]) => {
     expect(selectedElements.length).toEqual(0);
 };
 
-interface SuccessSelectorInput {
+type SuccessSelectorInput = {
     /**
      * Selector for extCss querySelectorAll().
      */
@@ -32,7 +32,7 @@ interface SuccessSelectorInput {
      * Target selector for checking.
      */
     expected: string,
-}
+};
 export const expectSuccessInput = (input: SuccessSelectorInput): void => {
     const { actual, expected } = input;
     const extCssDoc = new ExtCssDocument();
@@ -41,12 +41,12 @@ export const expectSuccessInput = (input: SuccessSelectorInput): void => {
     expectTheSameElements(selectedElements, expectedElements);
 };
 
-interface NoMatchSelectorInput {
+type NoMatchSelectorInput = {
     /**
      * Selector for extCss querySelectorAll().
      */
     selector: string,
-}
+};
 export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
     const { selector } = input;
     const extCssDoc = new ExtCssDocument();
@@ -54,7 +54,7 @@ export const expectNoMatchInput = (input: NoMatchSelectorInput): void => {
     expectNoMatch(selectedElements);
 };
 
-interface ToThrowSelectorInput {
+type ToThrowSelectorInput = {
     /**
      * Selector for extCss querySelectorAll().
      */
@@ -64,7 +64,7 @@ interface ToThrowSelectorInput {
      * Error text to match.
      */
     error: string,
-}
+};
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;
     const extCssDoc = new ExtCssDocument();

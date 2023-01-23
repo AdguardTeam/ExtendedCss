@@ -26,7 +26,7 @@ import {
     getPrevToLast,
 } from '../../common/utils/arrays';
 import {
-    BRACKETS,
+    BRACKET,
     HAS_PSEUDO_CLASS_MARKERS,
     REMOVE_PSEUDO_MARKER,
     REMOVE_ERROR_PREFIX,
@@ -319,7 +319,7 @@ export const handleNextTokenOnColon = (
         // parser position is on first colon after the 'div':
         // e.g. 'div:last-child:has(button.privacy-policy__btn)'
         if (nextToNextTokenValue
-            && nextToNextTokenValue === BRACKETS.PARENTHESES.LEFT
+            && nextToNextTokenValue === BRACKET.PARENTHESES.LEFT
             // no brackets balance needed for parentheses inside attribute value
             // e.g. 'a[href="javascript:void(0)"]'   <-- parser position is on colon `:`
             // before `void`           ↑

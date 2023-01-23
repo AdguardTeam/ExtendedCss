@@ -8,7 +8,7 @@ import {
     isStyleMatched,
     isAttributeMatched,
     isPropertyMatched,
-    MatcherArgsInterface,
+    MatcherArgsData,
 } from './absolute-matcher';
 
 import {
@@ -29,7 +29,7 @@ import {
     MATCHING_ELEMENT_ERROR_PREFIX,
 } from '../../common/constants';
 
-type MatcherCallback = (a: MatcherArgsInterface) => boolean;
+type MatcherCallback = (a: MatcherArgsData) => boolean;
 
 /**
  * Wrapper to run matcher `callback` with `args`
@@ -42,7 +42,7 @@ type MatcherCallback = (a: MatcherArgsInterface) => boolean;
  * @returns True if `callback` returns true.
  * @throws An error if `callback` fails.
  */
-const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterface, errorMessage: string): boolean => {
+const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsData, errorMessage: string): boolean => {
     let isMatched: boolean;
     try {
         isMatched = callback(argsData);
@@ -78,7 +78,7 @@ const getAbsolutePseudoError = (propDesc: string, pseudoName: string, pseudoArg:
  * @throws An error on unknown absolute pseudo-class.
  */
 export const isMatchedByAbsolutePseudo = (domElement: Element, pseudoName: string, pseudoArg: string): boolean => {
-    let argsData: MatcherArgsInterface;
+    let argsData: MatcherArgsData;
     let errorMessage: string;
     let callback: MatcherCallback;
 

@@ -58,9 +58,9 @@ const scopeDirectChildren = `${SCOPE_CSS_PSEUDO_CLASS}${CHILD_COMBINATOR}`;
 const scopeAnyChildren = `${SCOPE_CSS_PSEUDO_CLASS}${DESCENDANT_COMBINATOR}`;
 
 /**
- * Interface for relative pseudo-class helpers args.
+ * Type for relative pseudo-class helpers args.
  */
-interface RelativePredicateArgsInterface {
+type RelativePredicateArgsData = {
     /**
      * Dom element to check relatives.
      */
@@ -75,7 +75,7 @@ interface RelativePredicateArgsInterface {
      * Extended pseudo-class name.
      */
     pseudoName: string;
-}
+};
 
 /**
  * Returns the first of RegularSelector child node for `selectorNode`.
@@ -105,7 +105,7 @@ const getFirstInnerRegularChild = (
  *
  * @returns True if **all selectors** from argsData.relativeSelectorList is **matched** for argsData.element.
  */
-const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
+const hasRelativesBySelectorList = (argsData: RelativePredicateArgsData): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.every() is used here as each Selector node from SelectorList should exist on page
@@ -175,7 +175,7 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
  *
  * @returns True if **any selector** from argsData.relativeSelectorList is **matched** for argsData.element.
  */
-const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
+const isAnyElementBySelectorList = (argsData: RelativePredicateArgsData): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.some() is used here as any selector from selector list should exist on page
@@ -220,7 +220,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
  *
  * @returns True if **any selector** from argsData.relativeSelectorList is **not matched** for argsData.element.
  */
-const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boolean => {
+const notElementBySelectorList = (argsData: RelativePredicateArgsData): boolean => {
     const { element, relativeSelectorList, pseudoName } = argsData;
     return relativeSelectorList.children
         // Array.every() is used here as element should not be selected by any selector from selector list

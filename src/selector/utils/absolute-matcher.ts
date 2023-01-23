@@ -32,7 +32,7 @@ const REGEXP_ANY_SYMBOL = '.*';
 
 const REGEXP_WITH_FLAGS_REGEXP = /^\s*\/.*\/[gmisuy]*\s*$/;
 
-export interface MatcherArgsInterface {
+export type MatcherArgsData = {
     /**
      * Extended pseudo-class name.
      */
@@ -47,7 +47,7 @@ export interface MatcherArgsInterface {
      * Dom element to check.
      */
     domElement: Element;
-}
+};
 
 /**
  * Removes quotes for specified content value.
@@ -196,10 +196,10 @@ const getComputedStylePropertyValue = (
     return normalizePropertyValue(propertyName, propertyValue);
 };
 
-interface PseudoArgData {
+type PseudoArgData = {
     name: string;
     value?: string;
-}
+};
 
 /**
  * Parses arg of absolute pseudo-class into 'name' and 'value' if set.
@@ -227,10 +227,10 @@ const getPseudoArgData = (pseudoArg: string, separator: string): PseudoArgData =
     return { name, value };
 };
 
-interface MatchesCssArgData {
+type MatchesCssArgData = {
     regularPseudoElement: string | null;
     styleMatchArg: string;
-}
+};
 
 /**
  * Parses :matches-css() pseudo-class arg
@@ -279,7 +279,7 @@ const parseStyleMatchArg = (pseudoName: string, rawArg: string): MatchesCssArgDa
  @returns True if DOM element is matched.
  * @throws An error on invalid pseudo-class arg.
  */
-export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
+export const isStyleMatched = (argsData: MatcherArgsData): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
 
     const { regularPseudoElement, styleMatchArg } = parseStyleMatchArg(pseudoName, pseudoArg);
@@ -365,10 +365,10 @@ export const getValidMatcherArg = (rawArg: string, isWildcardAllowed = false): s
     return arg;
 };
 
-interface RawMatchingArgData {
+type RawMatchingArgData = {
     rawName: string;
     rawValue?: string;
-}
+};
 
 /**
  * Parses pseudo-class argument and returns parsed data.
@@ -395,7 +395,7 @@ export const getRawMatchingData = (pseudoName: string, pseudoArg: string): RawMa
  @returns True if DOM element is matched.
  * @throws An error on invalid arg of pseudo-class.
  */
-export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
+export const isAttributeMatched = (argsData: MatcherArgsData): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
     const elementAttributes = domElement.attributes;
     // no match if dom element has no attributes
@@ -522,11 +522,11 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
     return chainMatchPatterns;
 };
 
-interface Chain {
+type Chain = {
     base: Element;
     prop: string;
     value?: Element[keyof Element];
-}
+};
 
 /**
  * Checks if the property exists in the base object (recursively).
@@ -598,7 +598,7 @@ const filterRootsByRegexpChain = (base: Element, chain: (string | RegExp)[], out
  @returns True if DOM element is matched.
  * @throws An error on invalid prop in chain.
  */
-export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
+export const isPropertyMatched = (argsData: MatcherArgsData): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
     const { rawName: rawPropertyName, rawValue: rawPropertyValue } = getRawMatchingData(pseudoName, pseudoArg);
 
@@ -668,7 +668,7 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
  @returns True if DOM element is matched.
  * @throws An error on invalid arg of pseudo-class.
  */
-export const isTextMatched = (argsData: MatcherArgsInterface): boolean => {
+export const isTextMatched = (argsData: MatcherArgsData): boolean => {
     const { pseudoName, pseudoArg, domElement } = argsData;
     const textContent = getNodeTextContent(domElement);
     let isTextContentMatched;

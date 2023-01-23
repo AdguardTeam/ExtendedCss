@@ -17,7 +17,7 @@ import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
 
 import {
-    BRACKETS,
+    BRACKET,
     COLON,
     SLASH,
     ASTERISK,
@@ -34,7 +34,7 @@ const REGEXP_NON_WHITESPACE = /\S/g;
 /**
  * Interface for stylesheet parser context.
  */
-interface Context {
+type Context = {
     /**
      * Flag for parsing rules parts.
      */
@@ -59,7 +59,7 @@ interface Context {
      * Buffer for rule data collecting.
      */
     rawRuleData: RawCssRuleData;
-}
+};
 
 /**
  * Resets rule data buffer to init value after rule successfully collected.
@@ -147,7 +147,7 @@ const parseUntilClosingBracket = (context: Context, styles: StyleDeclaration[]):
     let matchPos = match.index;
     let matched = match[0];
 
-    if (matched === BRACKETS.CURLY.RIGHT) {
+    if (matched === BRACKET.CURLY.RIGHT) {
         const declarationChunk = context.cssToParse.slice(context.nextIndex, matchPos);
         if (declarationChunk.trim().length === 0) {
             // empty style declaration
@@ -188,7 +188,7 @@ const parseUntilClosingBracket = (context: Context, styles: StyleDeclaration[]):
         styles.push({ property, value });
         // finish style parsing if '}' is found
         // e.g. '{ display: none }' -- no ';' at the end of declaration
-        if (matched === BRACKETS.CURLY.RIGHT) {
+        if (matched === BRACKET.CURLY.RIGHT) {
             return matchPos;
         }
     }
@@ -270,7 +270,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
         if (context.isSelector) {
             // find index of first opening curly bracket
             // which may mean start of style part and end of selector one
-            context.nextIndex = context.cssToParse.indexOf(BRACKETS.CURLY.LEFT);
+            context.nextIndex = context.cssToParse.indexOf(BRACKET.CURLY.LEFT);
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
@@ -306,7 +306,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
             } else {
                 // if selector was not successfully parsed parseSelectorPart(), continue stylesheet parsing:
                 // save the found bracket to buffer and proceed to next loop iteration
-                context.selectorBuffer += BRACKETS.CURLY.LEFT;
+                context.selectorBuffer += BRACKET.CURLY.LEFT;
                 // delete `{` from cssToParse
                 context.cssToParse = context.cssToParse.slice(1);
             }
