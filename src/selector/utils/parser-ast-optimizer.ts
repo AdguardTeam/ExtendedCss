@@ -107,7 +107,7 @@ const shouldOptimizeExtendedSelector = (currExtendedSelectorNode: AnySelectorNod
                     );
                     // it means that the only child is RegularSelector and it can be optimized
                     return isRegularSelectorNode(selectorOnlyChild);
-                } catch (e) {
+                } catch (e: unknown) {
                     return false;
                 }
             });

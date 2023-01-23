@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `cssRules` property to `ExtCssConfiguration` for array of separated CSS rules
+
 ### Changed
 
 - increase versions of supported browsers

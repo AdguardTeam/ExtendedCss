@@ -51,7 +51,7 @@ export const validateStandardSelector = (selector: string): boolean => {
     try {
         document.querySelectorAll(selector);
         isValid = true;
-    } catch (e) {
+    } catch (e: unknown) {
         isValid = false;
     }
     return isValid;

@@ -30,7 +30,7 @@ const evaluateMatch = (match: string, name: string, quoteChar: string, rawValue:
 
 // ':scope' pseudo may be at start of :has() argument
 // but ExtCssDocument.querySelectorAll() already use it for selecting exact element descendants
-const reScope = /\(:scope >/g;
+const SCOPE_MARKER_REGEXP = /\(:scope >/g;
 const SCOPE_REPLACER = '(>';
 
 const MATCHES_CSS_PSEUDO_ELEMENT_REGEXP = /(:matches-css)-(before|after)\(/g;
@@ -51,7 +51,7 @@ const convertMatchesCss = (match: string, extendedPseudoClass: string, regularPs
 const normalize = (selector: string): string => {
     const normalizedSelector = selector
         .replace(REGEXP_VALID_OLD_SYNTAX, evaluateMatch)
-        .replace(reScope, SCOPE_REPLACER)
+        .replace(SCOPE_MARKER_REGEXP, SCOPE_REPLACER)
         .replace(MATCHES_CSS_PSEUDO_ELEMENT_REGEXP, convertMatchesCss);
 
     // validate old syntax after normalizing

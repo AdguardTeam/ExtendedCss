@@ -801,14 +801,14 @@ describe('extended pseudo-classes', () => {
         });
 
         describe('xpath - invalid args', () => {
-            const invalidArgErrorText = 'Invalid argument of :xpath pseudo-class';
+            const invalidArgErrorText = 'Invalid argument of :xpath() pseudo-class';
             const toThrowInputs = [
                 { selector: 'div:xpath()', error: 'Missing arg for :xpath() pseudo-class' },
                 { selector: 'div:xpath("//")', error: invalidArgErrorText },
                 { selector: 'div:xpath(2)', error: invalidArgErrorText },
                 { selector: 'div:xpath(300)', error: invalidArgErrorText },
             ];
-            test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+            test.each(toThrowInputs)('$selector', (input) => expectToThrowInput(input));
         });
 
         describe('xpath - invalid position in selector', () => {

@@ -14,6 +14,7 @@ import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicate
 
 import { getElementSelectorDesc, getParent } from '../../common/utils/nodes';
 import { flatten, getItemByIndex } from '../../common/utils/arrays';
+import { getErrorMessage } from '../../common/utils/error';
 import { logger } from '../../common/utils/logger';
 
 import {
@@ -157,8 +158,8 @@ const hasRelativesBySelectorList = (argsData: RelativePredicateArgsInterface): b
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 relativeElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
-            } catch (e) {
-                logger.error(e);
+            } catch (e: unknown) {
+                logger.error(getErrorMessage(e));
                 // fail for invalid selector
                 throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${regularSelector}'`);
             }
@@ -199,7 +200,7 @@ const isAnyElementBySelectorList = (argsData: RelativePredicateArgsInterface): b
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 anyElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
-            } catch (e) {
+            } catch (e: unknown) {
                 // do not fail on invalid selectors for :is()
                 return false;
             }
@@ -244,9 +245,9 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsInterface): boo
             try {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 anyElements = getElementsForSelectorNode(selectorNode, rootElement, specifiedSelector);
-            } catch (e) {
+            } catch (e: unknown) {
                 // fail on invalid selectors for :not()
-                logger.error(e);
+                logger.error(getErrorMessage(e));
                 // eslint-disable-next-line max-len
                 throw new Error(`Invalid selector for :${pseudoName}() pseudo-class: '${getNodeValue(relativeRegularSelector)}'`);
             }
@@ -280,8 +281,8 @@ export const getByRegularSelector = (
     let selectedElements: HTMLElement[] = [];
     try {
         selectedElements = Array.from(root.querySelectorAll(selectorText));
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        throw new Error(`Error: unable to select by '${selectorText}' — ${e.message}`);
+    } catch (e: unknown) {
+        throw new Error(`Error: unable to select by '${selectorText}' — ${getErrorMessage(e)}`);
     }
     return selectedElements;
 };
@@ -316,7 +317,7 @@ export const getByExtendedSelector = (
             // :xpath()
             try {
                 document.createExpression(absolutePseudoArg, null);
-            } catch (e) {
+            } catch (e: unknown) {
                 throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${absolutePseudoArg}'`);
             }
             foundElements = findByAbsolutePseudoPseudo.xpath(domElements, absolutePseudoArg);

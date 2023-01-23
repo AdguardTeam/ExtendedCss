@@ -5,8 +5,11 @@ import { protectStyleAttribute } from './style-protector';
 import { TimingStats, printTimingInfo } from './timing-stats';
 import { AffectedElement, Context } from './types';
 
-import { ExtCssRuleData } from '../../stylesheet';
+import { ExtCssRuleData } from '../../css-rule';
 import { selectElementsByAst } from '../../selector';
+
+import { getErrorMessage } from '../../common/utils/error';
+import { logger } from '../../common/utils/logger';
 
 /**
  * Finds affectedElement object for the specified DOM node.
@@ -39,7 +42,18 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     }
 
     const { ast } = ruleData;
-    const nodes = selectElementsByAst(ast);
+    const nodes: HTMLElement[] = [];
+    // selector can be successfully parser into ast with no error
+    // but its applying by native Document.querySelectorAll() still may throw an error
+    // e.g. 'div[..banner]'
+    try {
+        nodes.push(...selectElementsByAst(ast));
+    } catch (e: unknown) {
+        // log the error only in debug mode
+        if (context.debug) {
+            logger.error(getErrorMessage(e));
+        }
+    }
 
     nodes.forEach((node) => {
         let affectedElement = findAffectedElement(context.affectedElements, node);

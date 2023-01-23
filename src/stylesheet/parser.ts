@@ -1,116 +1,35 @@
 import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
 
-import { TimingStats } from '../extended-css';
+import { StyleDeclaration } from '../style-block';
 
 import {
-    Style,
-    ParsedSelectorData,
     parseRemoveSelector,
-} from './helpers';
+    createRawResultsMap,
+    saveToRawResults,
+    combineRulesData,
+    ExtCssRuleData,
+    ParsedSelectorData,
+    RawCssRuleData,
+    SelectorPartData,
+} from '../css-rule';
 
+import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
-import { getObjectFromEntries } from '../common/utils/objects';
 
 import {
     BRACKETS,
     COLON,
-    REMOVE_PSEUDO_MARKER,
-    PSEUDO_PROPERTY_POSITIVE_VALUE,
-    DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
-    STYLESHEET_ERROR_PREFIX,
-    REMOVE_ERROR_PREFIX,
     SLASH,
     ASTERISK,
-    CONTENT_CSS_PROPERTY,
+    AT_RULE_MARKER,
+    STYLE_ERROR_PREFIX,
+    REMOVE_ERROR_PREFIX,
+    NO_AT_RULE_ERROR_PREFIX,
 } from '../common/constants';
-
-const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
 
 const REGEXP_DECLARATION_END = /[;}]/g;
 const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
 const REGEXP_NON_WHITESPACE = /\S/g;
-
-// ExtendedCss does not support at-rules
-// https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
-const AT_RULE_MARKER = '@';
-
-interface RawCssRuleData {
-    selector: string;
-    ast?: AnySelectorNodeInterface;
-    styles?: Style[];
-}
-
-interface RawResultValue {
-    ast: AnySelectorNodeInterface;
-    styles: Style[];
-}
-type RawResults = Map<string, RawResultValue>;
-
-export interface CssStyleMap {
-    [key: string]: string;
-}
-
-/**
- * Interface for rules data parsed from passed styleSheet.
- */
-export interface ExtCssRuleData {
-    /**
-     * Selector text.
-     */
-    selector: string;
-
-    /**
-     * Selector ast to query dom elements.
-     */
-    ast: AnySelectorNodeInterface;
-
-    /**
-     * Styles to apply to matched dom elements.
-     */
-    style?: CssStyleMap;
-
-    /**
-     * Flag for specific rule debugging mode.
-     */
-    debug?: string;
-
-    /**
-     * Log data, available only for debugging mode.
-     */
-    timingStats?: TimingStats;
-
-    /**
-     * Dom elements matched by rule, available only for debugging mode.
-     */
-    matchedElements?: HTMLElement[];
-}
-
-/**
- * Interface for storing data parsed from selector rule part.
- */
-interface SelectorPartData {
-    /**
-     * Success status.
-     */
-    success: boolean;
-
-    /**
-     * Parsed selector.
-     */
-    selector: string;
-
-    /**
-     * Selector ast to query elements by,
-     * might be not defined if selector is not valid.
-     */
-    ast?: AnySelectorNodeInterface;
-
-    /**
-     * Styles parsed from selector rule part,
-     * relevant to rules with `:remove()` pseudo-class which may not have actual style declaration.
-     */
-    stylesOfSelector?: Style[];
-}
 
 /**
  * Interface for stylesheet parser context.
@@ -143,17 +62,14 @@ interface Context {
 }
 
 /**
- * Init value for rawRuleData.
- */
-const initRawRuleData = { selector: '' };
-
-/**
  * Resets rule data buffer to init value after rule successfully collected.
  *
  * @param context Stylesheet parser context.
  */
 const restoreRuleAcc = (context: Context): void => {
-    context.rawRuleData = initRawRuleData;
+    context.rawRuleData = {
+        selector: '',
+    };
 };
 
 /**
@@ -168,27 +84,27 @@ const restoreRuleAcc = (context: Context): void => {
 const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): SelectorPartData => {
     let selector = context.selectorBuffer.trim();
     if (selector.startsWith(AT_RULE_MARKER)) {
-        throw new Error(`At-rules are not supported: '${selector}'.`);
+        throw new Error(`${NO_AT_RULE_ERROR_PREFIX}: '${selector}'.`);
     }
 
     let removeSelectorData: ParsedSelectorData;
     try {
         removeSelectorData = parseRemoveSelector(selector);
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        logger.error(e.message);
+    } catch (e: unknown) {
+        logger.error(getErrorMessage(e));
         throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
     }
 
     if (context.nextIndex === -1) {
         if (selector === removeSelectorData.selector) {
             // rule should have style or pseudo-class :remove()
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
+            throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
         }
         // stop parsing as there is no style declaration and selector parsed fine
         context.cssToParse = '';
     }
 
-    let stylesOfSelector: Style[] = [];
+    let stylesOfSelector: StyleDeclaration[] = [];
     let success = false;
     let ast: AnySelectorNodeInterface | undefined;
 
@@ -199,7 +115,7 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
         // so if it is invalid error will be thrown
         ast = extCssDoc.getSelectorAst(selector);
         success = true;
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (e: unknown) {
         success = false;
     }
 
@@ -221,12 +137,12 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
  * @throws An error on invalid style declaration.
  * @returns A number index of the next `}` in `this.cssToParse`.
  */
-const parseUntilClosingBracket = (context: Context, styles: Style[]): number => {
+const parseUntilClosingBracket = (context: Context, styles: StyleDeclaration[]): number => {
     // Expects ":", ";", and "}".
     REGEXP_DECLARATION_DIVIDER.lastIndex = context.nextIndex;
     let match = REGEXP_DECLARATION_DIVIDER.exec(context.cssToParse);
     if (match === null) {
-        throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_STYLE}: '${context.cssToParse}'`);
+        throw new Error(`${STYLE_ERROR_PREFIX.INVALID_STYLE}: '${context.cssToParse}'`);
     }
     let matchPos = match.index;
     let matched = match[0];
@@ -237,7 +153,7 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
             // empty style declaration
             // e.g. 'div { }'
             if (styles.length === 0) {
-                throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_STYLE}: '${context.cssToParse}'`);
+                throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE}: '${context.cssToParse}'`);
             }
             // else valid style parsed before it
             // e.g. '{ display: none; }' -- position is after ';'
@@ -245,7 +161,7 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
             // closing curly bracket '}' is matched before colon ':'
             // trimmed declarationChunk is not a space, between ';' and '}',
             // e.g. 'visible }' in style '{ display: none; visible }' after part before ';' is parsed
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.INVALID_STYLE}: '${context.cssToParse}'`);
+            throw new Error(`${STYLE_ERROR_PREFIX.INVALID_STYLE}: '${context.cssToParse}'`);
         }
         return matchPos;
     }
@@ -256,18 +172,18 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
         REGEXP_DECLARATION_END.lastIndex = colonIndex;
         match = REGEXP_DECLARATION_END.exec(context.cssToParse);
         if (match === null) {
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.UNCLOSED_STYLE}: '${context.cssToParse}'`);
+            throw new Error(`${STYLE_ERROR_PREFIX.UNCLOSED_STYLE}: '${context.cssToParse}'`);
         }
         matchPos = match.index;
         matched = match[0];
         // Populates the `styleMap` key-value map.
         const property = context.cssToParse.slice(context.nextIndex, colonIndex).trim();
         if (property.length === 0) {
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_PROPERTY}: '${context.cssToParse}'`);
+            throw new Error(`${STYLE_ERROR_PREFIX.NO_PROPERTY}: '${context.cssToParse}'`);
         }
         const value = context.cssToParse.slice(colonIndex + 1, matchPos).trim();
         if (value.length === 0) {
-            throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_VALUE}: '${context.cssToParse}'`);
+            throw new Error(`${STYLE_ERROR_PREFIX.NO_VALUE}: '${context.cssToParse}'`);
         }
         styles.push({ property, value });
         // finish style parsing if '}' is found
@@ -290,8 +206,8 @@ const parseUntilClosingBracket = (context: Context, styles: Style[]): number => 
  *
  * @returns Array of style data objects.
  */
-const parseNextStyle = (context: Context): Style[] => {
-    const styles: Style[] = [];
+const parseNextStyle = (context: Context): StyleDeclaration[] => {
+    const styles: StyleDeclaration[] = [];
 
     const styleEndPos = parseUntilClosingBracket(context, styles);
 
@@ -310,125 +226,6 @@ const parseNextStyle = (context: Context): Style[] => {
 };
 
 /**
- * Checks whether the 'remove' property positively set in styles
- * with only one positive value - 'true'.
- *
- * @param styles Array of styles.
- *
- * @returns True if there is 'remove' property with 'true' value in `styles`.
- */
-const isRemoveSetInStyles = (styles: Style[]): boolean => {
-    return styles.some((s) => {
-        return s.property === REMOVE_PSEUDO_MARKER
-            && s.value === PSEUDO_PROPERTY_POSITIVE_VALUE;
-    });
-};
-
-/**
- * Returns valid 'debug' property value set in styles
- * where possible values are 'true' and 'global'.
- *
- * @param styles Array of styles.
- *
- * @returns Value of 'debug' property if it is set in `styles`,
- * or `undefined` if the property is not found.
- */
-const getDebugStyleValue = (styles: Style[]): string | undefined => {
-    const debugStyle = styles.find((s) => {
-        return s.property === DEBUG_PSEUDO_PROPERTY_KEY;
-    });
-    return debugStyle?.value;
-};
-
-/**
- * Prepares final RuleData.
- *
- * @param selector String selector.
- * @param ast Parsed ast.
- * @param rawStyles Array of previously collected styles which may contain 'remove' and 'debug'.
- *
- * @returns Parsed ExtendedCss rule data.
- */
-export const prepareRuleData = (
-    selector: string,
-    ast: AnySelectorNodeInterface,
-    rawStyles: Style[],
-): ExtCssRuleData => {
-    const ruleData: ExtCssRuleData = { selector, ast };
-
-    const debugValue = getDebugStyleValue(rawStyles);
-
-    const shouldRemove = isRemoveSetInStyles(rawStyles);
-
-    let styles = rawStyles;
-    if (debugValue) {
-        // get rid of 'debug' from styles
-        styles = rawStyles.filter((s) => s.property !== DEBUG_PSEUDO_PROPERTY_KEY);
-        // and set it as separate property only if its value is valid
-        // which is 'true' or 'global'
-        if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
-            || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
-            ruleData.debug = debugValue;
-        }
-    }
-    if (shouldRemove) {
-        // no other styles are needed to apply if 'remove' is set
-        ruleData.style = {
-            [REMOVE_PSEUDO_MARKER]: PSEUDO_PROPERTY_POSITIVE_VALUE,
-        };
-
-        /**
-         * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().
-         *
-         * @see {@link BeforeStyleAppliedCallback}
-         */
-        const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
-        if (contentStyle) {
-            ruleData.style[CONTENT_CSS_PROPERTY] = contentStyle.value;
-        }
-    } else {
-        // otherwise all styles should be applied.
-        // every style property will be unique because of their converting into object
-        if (styles.length > 0) {
-            const stylesAsEntries: Array<[string, string]> = styles.map((style) => {
-                const { property, value } = style;
-                return [property, value];
-            });
-            const preparedStyleData = getObjectFromEntries(stylesAsEntries);
-            ruleData.style = preparedStyleData;
-        }
-    }
-
-    return ruleData;
-};
-
-/**
- * Saves rules data for unique selectors.
- *
- * @param rawResults Previously collected results of parsing.
- * @param rawRuleData Parsed rule data.
- *
- * @throws An error if there is no rawRuleData.styles or rawRuleData.ast.
- */
-const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): void => {
-    const { selector, ast, styles } = rawRuleData;
-
-    if (!styles) {
-        throw new Error(`No style declaration for selector: '${selector}'`);
-    }
-    if (!ast) {
-        throw new Error(`No ast parsed for selector: '${selector}'`);
-    }
-
-    const storedRuleData = rawResults.get(selector);
-    if (!storedRuleData) {
-        rawResults.set(selector, { ast, styles });
-    } else {
-        storedRuleData.styles.push(...styles);
-    }
-};
-
-/**
  * Parses stylesheet of rules into rules data objects (non-recursively):
  * 1. Iterates through stylesheet string.
  * 2. Finds first `{` which can be style declaration start or part of selector.
@@ -439,16 +236,16 @@ const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): 
  *
  * @param rawStylesheet Raw stylesheet as string.
  * @param extCssDoc ExtCssDocument which uses cache while selectors parsing.
- * @throws An error on unsupported CSS features, e.g. comments, or invalid stylesheet syntax.
+ * @throws An error on unsupported CSS features, e.g. comments or invalid stylesheet syntax.
  * @returns Array of rules data which contains:
  * - selector as string;
  * - ast to query elements by;
  * - map of styles to apply.
  */
-export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
+export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssRuleData[] => {
     const stylesheet = rawStylesheet.trim();
     if (stylesheet.includes(`${SLASH}${ASTERISK}`) && stylesheet.includes(`${ASTERISK}${SLASH}`)) {
-        throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_COMMENT}: '${stylesheet}'`);
+        throw new Error(`${STYLE_ERROR_PREFIX.NO_COMMENT} in stylesheet: '${stylesheet}'`);
     }
 
     const context: Context = {
@@ -461,10 +258,10 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
         // buffer for collecting selector part
         selectorBuffer: '',
         // accumulator for rules
-        rawRuleData: initRawRuleData,
+        rawRuleData: { selector: '' },
     };
 
-    const rawResults: RawResults = new Map<string, RawResultValue>();
+    const rawResults = createRawResultsMap();
 
     let selectorData: SelectorPartData;
 
@@ -477,7 +274,7 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
-                throw new Error(`${STYLESHEET_ERROR_PREFIX.NO_SELECTOR}: '${context.cssToParse}'`);
+                throw new Error(`${STYLE_ERROR_PREFIX.NO_SELECTOR}: '${context.cssToParse}'`);
             }
             if (context.nextIndex === -1) {
                 // no style declaration in rule
@@ -494,7 +291,7 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
                 // selector successfully parsed
                 context.rawRuleData.selector = selectorData.selector.trim();
                 context.rawRuleData.ast = selectorData.ast;
-                context.rawRuleData.styles = selectorData.stylesOfSelector;
+                context.rawRuleData.rawStyles = selectorData.stylesOfSelector;
                 context.isSelector = false;
                 // save rule data if there is no style declaration
                 if (context.nextIndex === -1) {
@@ -519,7 +316,7 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
 
             // styles can be parsed from selector part if it has :remove() pseudo-class
             // e.g. '.banner:remove() { debug: true; }'
-            context.rawRuleData.styles?.push(...parsedStyles);
+            context.rawRuleData.rawStyles?.push(...parsedStyles);
 
             // save rule data to results
             saveToRawResults(rawResults, context.rawRuleData);
@@ -534,11 +331,5 @@ export const parse = (rawStylesheet: string, extCssDoc: ExtCssDocument): ExtCssR
         }
     }
 
-    const results: ExtCssRuleData[] = [];
-    rawResults.forEach((value, key) => {
-        const selector = key;
-        const { ast, styles: rawStyles } = value;
-        results.push(prepareRuleData(selector, ast, rawStyles));
-    });
-    return results;
+    return combineRulesData(rawResults);
 };

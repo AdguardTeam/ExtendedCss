@@ -16,12 +16,22 @@ interface TestPropElement extends Element {
 }
 
 /**
- * Applies extended css stylesheet.
+ * Applies extended CSS stylesheet.
  *
- * @param styleSheet Extended css stylesheet.
+ * @param styleSheet Extended CSS stylesheet.
  */
-const applyExtCss = (styleSheet: string): void => {
+const applyExtCssStyleSheet = (styleSheet: string): void => {
     const extendedCss = new ExtendedCss({ styleSheet });
+    extendedCss.apply();
+};
+
+/**
+ * Applies extended CSS rules.
+ *
+ * @param cssRules Array of extended CSS rules.
+ */
+const applyExtCssRules = (cssRules: string[]): void => {
+    const extendedCss = new ExtendedCss({ cssRules });
     extendedCss.apply();
 };
 
@@ -87,7 +97,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case1 > div[-ext-has=".banner"] { display:none !important; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
         expectElementStyle('case1-blocked', { display: 'none' });
     });
 
@@ -100,7 +110,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case2 > div[-ext-contains="Block this"] { display: none!important }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case2-blocked1', { display: 'none' });
         expectElementStyle('case2-blocked2', { display: 'none' });
@@ -116,7 +126,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case3>div[-ext-has=".banner"] { visibility: hidden; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
         expectElementStyle('case3-modified', { display: 'block', visibility: 'hidden' });
     });
 
@@ -134,7 +144,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case4 div[-ext-has=".banner:contains(Banner)"] { display: none; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
         expectElementStyle('case4-blocked', { 'display': 'none' });
         expectElementStyle('case4-not-blocked', { 'display': '' });
     });
@@ -148,7 +158,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case5 > div[-ext-contains="Block this"] { display: none!important }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
         // style should be set by rule
         expectElementStyle('case5-blocked', { display: 'none' });
         const el = document.getElementById('case5-blocked');
@@ -260,7 +270,7 @@ describe('extended css library', () => {
             </style>
         `;
         const styleSheet = '#case8>div[-ext-has=":matches-css(height: 20px)"] { display: none; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case8-blocked', { display: 'none' });
     });
@@ -272,7 +282,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case9>div[-ext-contains="Another text"] { font-size: 16px; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case9-not-blocked', { display: '', 'font-size': '16px' });
     });
@@ -284,7 +294,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case10>div[-ext-contains="Block this"] { display: none; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case10-blocked', { display: 'none' });
 
@@ -312,7 +322,7 @@ describe('extended css library', () => {
     it('protection from recurring style fixes', (done) => {
         document.body.innerHTML = '<div id="case11"></div>';
         const styleSheet = '#case11 { display: none; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         const testNode = document.getElementById('case11');
         if (!testNode) {
@@ -417,7 +427,7 @@ describe('extended css library', () => {
     it('style remove pseudo-property', (done) => {
         document.body.innerHTML = '<div id="case-remove-property"></div>';
         const styleSheet = '#case-remove-property { remove: true }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         let targetElement = document.querySelector('#case-remove-property');
         // no such element after rule applying
@@ -451,7 +461,7 @@ describe('extended css library', () => {
             #case15>div[-ext-has=".banner"] { color:red; }
             #case15>div[-ext-has=".banner"] { background:white; }
         `;
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case15-inner', { color: 'red', background: 'white' });
     });
@@ -465,7 +475,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case16>div[-ext-has=".banner"] { color:red; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case16-inner', { color: 'red', background: 'white' });
 
@@ -517,7 +527,7 @@ describe('extended css library', () => {
         observer.observe(protectorNode, { childList: true });
 
         const styleSheet = `#${id} { remove: true }`;
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         setTimeout(() => {
             try {
@@ -544,7 +554,7 @@ describe('extended css library', () => {
         `;
         const selector = 'div[class="test_item"][style="padding-bottom: 16px;"]:has(> a > img[width="50"])';
         const styleSheet = `${selector} { display: none!important; }`;
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case17-inner', { 'padding-bottom': '16px', display: 'none' });
 
@@ -586,7 +596,7 @@ describe('extended css library', () => {
         expect(targetEl).toBeDefined();
 
         const styleSheet = '#case18 div:matches-css(height:/20px/) { remove: true; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         parentEl = document.querySelector('div[case18-parent]');
         childEl = document.querySelector('div[case18-child]');
@@ -613,7 +623,7 @@ describe('extended css library', () => {
         testEl[testPropName] = 'abc';
 
         const styleSheet = '#case19 > div:matches-property(_testProp=/[\\w]{3}/) { display: none!important; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case19-property-match', { display: 'none' });
         expectElementStyle('case19-property-no-match', { display: 'block' });
@@ -633,7 +643,7 @@ describe('extended css library', () => {
         testEl[propFirst] = propInner;
 
         const styleSheet = '#case19 > div:matches-property(/_test/.inner=null) { display: none!important; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case19-chain-property-match', { display: 'none' });
         expectElementStyle('case19-chain-property-no-match', { display: 'block' });
@@ -646,7 +656,7 @@ describe('extended css library', () => {
             </div>
         `;
         const styleSheet = '#case19 > div:matches-property("firstChild.slot.test") { display: none!important; }';
-        applyExtCss(styleSheet);
+        applyExtCssStyleSheet(styleSheet);
 
         expectElementStyle('case19-property-null', { display: 'block' });
     });
@@ -780,5 +790,97 @@ describe('extended css library', () => {
 
         // but it should not be set in matched element style
         expectElementStyle('case14-hidden-no-content', { display: 'none', content: '' });
+    });
+
+    describe('some invalid selector are passed to apply', () => {
+        it('stylesheet -- fail', () => {
+            document.body.innerHTML = `
+                <div id="case20">
+                    <div id="case201" random="12345" style="display: block;"></div>
+                    <div id="case202" class="banner" style="display: block;"></div>
+                    <div id="case203" style="display: block;">inner text</div>
+                </div>
+            `;
+
+            const stylesheet = `#case20 > div:matches-attr(random=/[0-9]{5}/) { display: none!important; }
+                #case20 > div[..banner] { content: "";  display: none!important; }
+                #case20 > div:contains(text) { display: none!important; }`;
+            const error = 'Pass the rules as configuration.cssRules since configuration.styleSheet cannot be parsed';
+
+            expect(() => {
+                applyExtCssStyleSheet(stylesheet);
+            }).toThrow(error);
+
+            // styles have not been applied
+            expectElementStyle('case201', { display: 'block' });
+            expectElementStyle('case202', { display: 'block' });
+            expectElementStyle('case203', { display: 'block' });
+        });
+
+        it('separated css rules - ok', () => {
+            document.body.innerHTML = `
+                <div id="case21">
+                    <div id="case211" random="12345" style="display: block;"></div>
+                    <div id="case212" class="banner" style="display: block;"></div>
+                    <div id="case213" style="display: block;">inner text</div>
+                </div>
+            `;
+
+            const cssRules = [
+                '#case21 > div:matches-attr(random=/[0-9]{5}/) { display: none!important; }',
+                '#case21 > div[..banner] { content: "";  display: none!important; }',
+                '#case21 > div:contains(text) { display: none!important; }',
+            ];
+            applyExtCssRules(cssRules);
+
+            // invalid selector style should not be applied - #case212 -
+            // but all others should be applied
+            expectElementStyle('case211', { display: 'none' });
+            expectElementStyle('case212', { display: 'block' });
+            expectElementStyle('case213', { display: 'none' });
+        });
+    });
+
+    it('both styleSheet and cssRules are set in configuration', () => {
+        document.body.innerHTML = `
+            <div id="case22">
+                <div id="case221" random="12345" style="display: block;"></div>
+                <div id="case222" style="display: block;">inner text</div>
+            </div>
+        `;
+
+        const styleSheet = '#case22 > div:matches-attr(random=/[0-9]{5}/) { display: none!important; }';
+        const cssRules = ['#case22 > div:contains(text) { display: none!important; }'];
+
+        const extendedCss = new ExtendedCss({ styleSheet, cssRules });
+        extendedCss.apply();
+
+        // styles have been applied
+        expectElementStyle('case221', { display: 'none' });
+        expectElementStyle('case222', { display: 'none' });
+    });
+
+    it('log invalid css rule', (done) => {
+        expect.assertions(1);
+        document.body.innerHTML = '<div id="case23"></div>';
+        const invalidRule = '#case23[..banner] { display: none!important; }';
+        const cssRules = [invalidRule];
+
+        const loggerInfo = logger.info;
+        logger.info = function (...args) {
+            if (args.length === 1
+                && typeof args[0] === 'string'
+                && args[0].includes('Invalid rules:')
+            ) {
+                expect(args[0].includes(invalidRule)).toBeTruthy();
+                // Cleanup
+                logger.info = loggerInfo;
+                done();
+            }
+            return loggerInfo.apply(this, args);
+        };
+
+        // invalid rules are skipped in ExtendedCss constructor during the rules parsing
+        new ExtendedCss({ cssRules, debug: true });
     });
 });

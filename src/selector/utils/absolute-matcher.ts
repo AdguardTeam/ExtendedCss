@@ -5,6 +5,7 @@ import {
     toRegExp,
 } from '../../common/utils/strings';
 import { getFirst, getItemByIndex } from '../../common/utils/arrays';
+import { getErrorMessage } from '../../common/utils/error';
 import { logger } from '../../common/utils/logger';
 import { isSafariBrowser } from '../../common/utils/user-agents';
 import { getNodeTextContent } from '../../common/utils/nodes';
@@ -291,8 +292,8 @@ export const isStyleMatched = (argsData: MatcherArgsInterface): boolean => {
     let valueRegexp: RegExp;
     try {
         valueRegexp = convertStyleMatchValueToRegexp(matchValue);
-    } catch (e) {
-        logger.error(e);
+    } catch (e: unknown) {
+        logger.error(getErrorMessage(e));
         throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: '${styleMatchArg}'`);
     }
 
@@ -407,9 +408,10 @@ export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
     let attrNameMatch: string | RegExp;
     try {
         attrNameMatch = getValidMatcherArg(rawAttrName);
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        logger.error(e);
-        throw new SyntaxError(e.message);
+    } catch (e: unknown) {
+        const errorMessage = getErrorMessage(e);
+        logger.error(errorMessage);
+        throw new SyntaxError(errorMessage);
     }
 
     let isMatched = false;
@@ -432,9 +434,10 @@ export const isAttributeMatched = (argsData: MatcherArgsInterface): boolean => {
             let attrValueMatch: string | RegExp;
             try {
                 attrValueMatch = getValidMatcherArg(rawAttrValue);
-            } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-                logger.error(e);
-                throw new SyntaxError(e.message);
+            } catch (e: unknown) {
+                const errorMessage = getErrorMessage(e);
+                logger.error(errorMessage);
+                throw new SyntaxError(errorMessage);
             }
             const isValueMatched = attrValueMatch instanceof RegExp
                 ? attrValueMatch.test(attr.value)
@@ -509,8 +512,8 @@ export const parseRawPropChain = (input: string): (string | RegExp)[] => {
             let validPattern: string | RegExp;
             try {
                 validPattern = getValidMatcherArg(pattern, true);
-            } catch (e) {
-                logger.error(e);
+            } catch (e: unknown) {
+                logger.error(getErrorMessage(e));
                 throw new Error(`Invalid property pattern '${pattern}' in property chain '${input}'`);
             }
             return validPattern;
@@ -609,9 +612,10 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
     let propChainMatches: (string | RegExp)[];
     try {
         propChainMatches = parseRawPropChain(rawPropertyName);
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        logger.error(e);
-        throw new SyntaxError(e.message);
+    } catch (e: unknown) {
+        const errorMessage = getErrorMessage(e);
+        logger.error(errorMessage);
+        throw new SyntaxError(errorMessage);
     }
 
     const ownerObjArr = filterRootsByRegexpChain(domElement, propChainMatches);
@@ -625,9 +629,10 @@ export const isPropertyMatched = (argsData: MatcherArgsInterface): boolean => {
         let propValueMatch: string | RegExp;
         try {
             propValueMatch = getValidMatcherArg(rawPropertyValue);
-        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            logger.error(e);
-            throw new SyntaxError(e.message);
+        } catch (e: unknown) {
+            const errorMessage = getErrorMessage(e);
+            logger.error(errorMessage);
+            throw new SyntaxError(errorMessage);
         }
 
         if (propValueMatch) {
@@ -682,7 +687,7 @@ export const isTextMatched = (argsData: MatcherArgsInterface): boolean => {
         let regex: RegExp;
         try {
             regex = new RegExp(pseudoArgToMatch, flagsStr);
-        } catch (e) {
+        } catch (e: unknown) {
             throw new Error(`Invalid argument of :${pseudoName}() pseudo-class: ${pseudoArg}`);
         }
         isTextContentMatched = regex.test(textContent);

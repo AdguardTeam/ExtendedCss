@@ -1,7 +1,9 @@
 
 import { Context } from './parser-types';
 
-import { TokenType, tokenizeAttribute } from '../tokenizer';
+import { tokenizeAttribute } from '../tokenizer';
+
+import { TokenType } from '../../common/tokenizer';
 
 import {
     getFirst,

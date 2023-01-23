@@ -2,24 +2,26 @@
  * @jest-environment jsdom
  */
 
-import { parseRemoveSelector } from '../../src/stylesheet';
+import { parseRemoveSelector } from '../../src/css-rule';
 
 import { REMOVE_ERROR_PREFIX } from '../../src/common/constants';
 
-interface TestStyle {
+type TestStyle = {
     property: string;
     value: string;
-}
+};
 
-interface TestSelectorData {
+type TestSelectorData = {
     selector: string,
     stylesOfSelector: TestStyle[],
-}
+};
 
-interface SingleRuleInput {
-    actual: string,             // input selector to parser
-    expected: TestSelectorData, // expected parsed data
-}
+type SingleRuleInput = {
+    // input selector to parser
+    actual: string,
+    // expected parsed data
+    expected: TestSelectorData,
+};
 
 const expectParsedSelectorData = (input: SingleRuleInput): void => {
     const { actual, expected } = input;
@@ -27,10 +29,13 @@ const expectParsedSelectorData = (input: SingleRuleInput): void => {
     expect(parsed).toEqual(expected);
 };
 
-interface ToThrowOnSelectorInput {
-    selector: string,   // selector for extCss querySelectorAll()
-    error: string,      // error text to match
-}
+type ToThrowOnSelectorInput = {
+    // selector for extCss querySelectorAll()
+    selector: string,
+    // error text to match
+    error: string,
+};
+
 const expectToThrowOnSelector = (input: ToThrowOnSelectorInput): void => {
     const { selector, error } = input;
     expect(() => {

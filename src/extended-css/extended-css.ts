@@ -1,5 +1,6 @@
 import { extCssDocument } from '../selector';
-import { parse as parseStylesheet, parseRemoveSelector } from '../stylesheet';
+import { parseStylesheet } from '../stylesheet';
+import { parseRemoveSelector, parseRules } from '../css-rule';
 
 import { ThrottleWrapper } from './helpers/throttle-wrapper';
 import { applyRules } from './helpers/rules-applier';
@@ -11,6 +12,7 @@ import {
     Context,
 } from './helpers/types';
 
+import { getErrorMessage } from '../common/utils/error';
 import { isBrowserSupported } from '../common/utils/user-agents';
 import { logger } from '../common/utils/logger';
 
@@ -32,15 +34,23 @@ export type SelectorValidationResult = {
 /**
  * Interface for ExtendedCss constructor argument. Needed to create the instance of ExtendedCss.
  *
- * ExtendedCss configuration should contain:
- * - CSS stylesheet of rules to apply
- * - the callback for matched elements
- * and also may contain a flag for global logging which is useful for selectors debugging.
+ * ExtendedCss configuration may contain:
+ * - `styleSheet` — CSS stylesheet of rules to apply;
+ * - `cssRules` — list of separated CSS rules instead of or additionally to the CSS stylesheet;
+ * - `beforeStyleApplied` — the callback for matched elements;
+ * - `debug` — flag for global logging which is useful for selectors debugging.
  *
- * Stylesheet can contain not just extended selectors, and all of them will be applied by the lib.
- * Stylesheet does not support CSS comments and at-rules.
+ * > Both `styleSheet` and `cssRules` are optional but at least one of them should be set.
+ *
+ * > If both `styleSheet` and `cssRules` are set, both of them are to be applied.
+ *
+ * CSS stylesheet and list of CSS rules can contain not just extended selectors
+ * but standard ones, and all of them will be applied by the lib.
+ *
+ * CSS comments and at-rules are not supported.
  */
 export interface ExtCssConfiguration {
+    // TODO: deprecate `styleSheet` after the release of version with `cssRules`
     /**
      * Standard CSS stylesheet — a set of CSS rules
      * which generally consists of selector and style (except `:remove()` pseudo-class).
@@ -49,7 +59,20 @@ export interface ExtCssConfiguration {
      * but there are some limitations - for example, CSS comments and at-rules are not supported;
      * learn more about the Limitations in README.md.
      */
-    styleSheet: string;
+    styleSheet?: string;
+
+    /**
+     * Array of CSS rules which consist of selector and style.
+     * In fact it is similar to `styleSheet` but it is needed
+     * for more convenient and flexible parsing of selectors and styles.
+     *
+     * As an advantage of such approach, invalid rules are skipped
+     * in contradistinction to `styleSheet` which might cause its total failure
+     * during the applying with some tricky invalid selector in it.
+     *
+     * Invalid rules reasons are to be logged.
+     */
+    cssRules?: string[];
 
     /**
      * The callback that handles affected elements.
@@ -67,7 +90,7 @@ export interface ExtCssConfiguration {
      *
      * Alternatively can be set by extended pseudo-property `debug: global` in styleSheet rules.
      *
-     * Learn more about Selectors debug mode in README.md.
+     * Learn more about Selectors debugging mode in README.md.
      */
     debug?: boolean;
 }
@@ -115,9 +138,31 @@ export class ExtendedCss {
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
-            parsedRules: parseStylesheet(configuration.styleSheet, extCssDocument),
+            parsedRules: [],
             mainCallback: () => {},
         };
+
+        // at least 'styleSheet' or 'cssRules' should be provided
+        if (!configuration.styleSheet
+            && !configuration.cssRules) {
+            throw new Error("ExtendedCss configuration should have 'styleSheet' or 'cssRules' defined.");
+        }
+
+        // 'styleSheet' and 'cssRules' are optional
+        // and both can be provided at the same time
+        // so both should be parsed and applied in such case
+        if (configuration.styleSheet) {
+            // stylesheet parsing can fail on some invalid selectors
+            try {
+                this.context.parsedRules.push(...parseStylesheet(configuration.styleSheet, extCssDocument));
+            } catch (e: unknown) {
+                // eslint-disable-next-line max-len
+                throw new Error(`Pass the rules as configuration.cssRules since configuration.styleSheet cannot be parsed because of: '${getErrorMessage(e)}'`);
+            }
+        }
+        if (configuration.cssRules) {
+            this.context.parsedRules.push(...parseRules(configuration.cssRules, extCssDocument));
+        }
 
         // true if set in configuration
         // or any rule in styleSheet has `debug: global`
@@ -221,9 +266,8 @@ export class ExtendedCss {
             ExtendedCss.query(selector);
             return { ok: true, error: null };
         } catch (e: unknown) {
-            const caughtErrorMessage = e instanceof Error ? e.message : e;
             // not valid input `selector` should be logged eventually
-            const error = `Error: Invalid selector: '${inputSelector}' -- ${caughtErrorMessage}`;
+            const error = `Error: Invalid selector: '${inputSelector}' -- ${getErrorMessage(e)}`;
             return { ok: false, error };
         }
     }

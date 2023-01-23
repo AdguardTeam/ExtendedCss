@@ -88,6 +88,7 @@ describe('regular selectors', () => {
             '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
             '[class\\"ads-article\\"]',
             "[class\\'ads-article\\']",
+            'a[href][data-item^=\'{"sources":[\'][data-item*=\'Video Ad\']',
         ];
         test.each(selectors)('%s', (selector) => {
             const expectedAst = getAstWithSingleRegularSelector(selector);
@@ -2872,6 +2873,10 @@ describe('fail on invalid selector', () => {
                 error: 'is not a valid selector',
             },
             {
+                selector: 'div { content: "',
+                error: 'is not a valid selector',
+            },
+            {
                 selector: 'div[="margin"]',
                 error: 'is not a valid attribute',
             },
@@ -2942,7 +2947,6 @@ describe('fail on invalid selector', () => {
                 error: 'Invalid pseudo-class arg at the end of selector',
             },
         ];
-        test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+        test.each(toThrowInputs)('$selector', (input) => expectToThrowInput(input));
     });
-
 });

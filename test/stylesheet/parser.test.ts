@@ -2,67 +2,67 @@
  * @jest-environment jsdom
  */
 
-import { parse } from '../../src/stylesheet';
+import { parseStylesheet } from '../../src/stylesheet';
 import { ExtCssDocument } from '../../src/selector';
 
-import { REMOVE_ERROR_PREFIX, STYLESHEET_ERROR_PREFIX } from '../../src/common/constants';
+import { REMOVE_ERROR_PREFIX, STYLE_ERROR_PREFIX } from '../../src/common/constants';
 
-interface TestRuleData {
-    selector: string,
-    style?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    debug?: string,
-}
+import { TestCssRuleData, expectSameParsedRules } from '../helpers/common';
 
-interface SingleRuleInput {
-    actual: string, // css rule
-    expected: TestRuleData, // rule data
-}
+type SingleRuleInput = {
+    // css stylesheet to parse
+    actual: string,
+    // single rule data object
+    expected: TestCssRuleData,
+};
+
 const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     const { actual, expected } = input;
     const extCssDoc = new ExtCssDocument();
-    const parsed = parse(actual, extCssDoc);
+    const parsed = parseStylesheet(actual, extCssDoc);
     expect(parsed.length).toEqual(1);
     expect(parsed[0]?.selector).toEqual(expected.selector);
     expect(parsed[0]?.style).toEqual(expected.style);
     expect(parsed[0]?.debug).toEqual(expected.debug);
 };
 
-interface MultipleRuleInput {
-    actual: string, // css rule
-    expected: TestRuleData[], // array of rule data objects
-}
-const expectMultipleRulesParsed = (input: MultipleRuleInput): void => {
-    const { actual, expected } = input;
-    const extCssDoc = new ExtCssDocument();
-    const parsedRules = parse(actual, extCssDoc);
-    parsedRules.forEach((parsed, i) => {
-        expect(parsed.selector).toEqual(expected[i]?.selector);
-        expect(parsed.style).toEqual(expected[i]?.style);
-        expect(parsed.debug).toEqual(expected[i]?.debug);
-    });
+type MultipleRulesInput = {
+    // css stylesheet to parse
+    actual: string,
+    // array of rule data objects
+    expected: TestCssRuleData[],
 };
 
-interface ToThrowOnSelectorInput {
+const expectMultipleRulesParsed = (input: MultipleRulesInput): void => {
+    const { actual, expected } = input;
+    const extCssDoc = new ExtCssDocument();
+    const parsedRules = parseStylesheet(actual, extCssDoc);
+    expectSameParsedRules(parsedRules, expected);
+};
+
+type ToThrowOnSelectorInput = {
     selector: string,   // selector for extCss querySelectorAll()
     error: string,      // error text to match
-}
+};
+
 const expectToThrowOnSelector = (input: ToThrowOnSelectorInput): void => {
     const { selector, error } = input;
     expect(() => {
         const extCssDoc = new ExtCssDocument();
-        parse(selector, extCssDoc);
+        parseStylesheet(selector, extCssDoc);
     }).toThrow(error);
 };
 
-interface ToThrowOnStylesheetInput {
-    stylesheet: string,   // selector for extCss querySelectorAll()
+type ToThrowOnStylesheetInput = {
+    stylesheet: string,   // stylesheet to parse
     error: string,      // error text to match
-}
+};
+
 const expectToThrowOnStylesheet = (input: ToThrowOnStylesheetInput): void => {
     const { stylesheet, error } = input;
     expect(() => {
         const extCssDoc = new ExtCssDocument();
-        parse(stylesheet, extCssDoc);
+        parseStylesheet(stylesheet, extCssDoc);
     }).toThrow(error);
 };
 
@@ -571,7 +571,7 @@ describe('stylesheet parser', () => {
 
     describe('invalid stylesheets', () => {
         describe('selector with no style declaration', () => {
-            const error = STYLESHEET_ERROR_PREFIX.NO_STYLE_OR_REMOVE;
+            const error = STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE;
             const invalidSelectors = [
                 '.banner',
                 '.block > span:contains({background: #410e13})',
@@ -605,14 +605,14 @@ describe('stylesheet parser', () => {
 
         describe('invalid style declaration', () => {
             const toThrowInputs = [
-                { selector: 'div { }', error: STYLESHEET_ERROR_PREFIX.NO_STYLE },
-                { selector: 'div { display', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
-                { selector: 'div { display:', error: STYLESHEET_ERROR_PREFIX.UNCLOSED_STYLE },
-                { selector: 'div { display: }', error: STYLESHEET_ERROR_PREFIX.NO_VALUE },
-                { selector: 'div { : none }', error: STYLESHEET_ERROR_PREFIX.NO_PROPERTY },
-                { selector: 'div { display: none; visible ', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
-                { selector: 'div { display: none; visible }', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
-                { selector: 'div { remove }', error: STYLESHEET_ERROR_PREFIX.INVALID_STYLE },
+                { selector: 'div { }', error: STYLE_ERROR_PREFIX.NO_STYLE },
+                { selector: 'div { display', error: STYLE_ERROR_PREFIX.INVALID_STYLE },
+                { selector: 'div { display:', error: STYLE_ERROR_PREFIX.UNCLOSED_STYLE },
+                { selector: 'div { display: }', error: STYLE_ERROR_PREFIX.NO_VALUE },
+                { selector: 'div { : none }', error: STYLE_ERROR_PREFIX.NO_PROPERTY },
+                { selector: 'div { display: none; visible ', error: STYLE_ERROR_PREFIX.INVALID_STYLE },
+                { selector: 'div { display: none; visible }', error: STYLE_ERROR_PREFIX.INVALID_STYLE },
+                { selector: 'div { remove }', error: STYLE_ERROR_PREFIX.INVALID_STYLE },
             ];
             test.each(toThrowInputs)('%s', (input) => expectToThrowOnSelector(input));
         });
@@ -622,7 +622,7 @@ describe('stylesheet parser', () => {
                 div:not(.header) { display: none; }
                 /* div:not(.header) { padding: 0; } */
             `;
-            const error = STYLESHEET_ERROR_PREFIX.NO_COMMENT;
+            const error = STYLE_ERROR_PREFIX.NO_COMMENT;
             expectToThrowOnStylesheet({ stylesheet, error });
         });
 

@@ -84,7 +84,7 @@ describe('tokenizer', () => {
     });
 
     describe('selector tokenizer - trim selectors', () => {
-        const rawSelectors = [
+        const testCases = [
             ' #test p',
             '   #test p',
             '\t#test p',
@@ -105,10 +105,8 @@ describe('tokenizer', () => {
             { type: 'mark', value: ' ' },
             { type: 'word', value: 'p' },
         ];
-        test.each(
-            rawSelectors.map((raw) => ({ raw })),
-        )('%s', ({ raw }) => {
-            expect(tokenizeSelector(raw)).toEqual(expected);
+        test.each(testCases)('%s', (actual) => {
+            expect(tokenizeSelector(actual)).toEqual(expected);
         });
     });
 

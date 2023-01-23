@@ -1,5 +1,5 @@
 import { Context } from './types';
-import { CssStyleMap } from '../../stylesheet/parser';
+import { CssStyleMap } from '../../css-rule';
 
 import { logger } from '../../common/utils/logger';
 

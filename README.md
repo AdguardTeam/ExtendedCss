@@ -484,6 +484,9 @@ div[class]:has(> a > img) { remove: true; }
 
 > Rules with the `remove` pseudo-property should use `#$?#` marker: `$` for CSS style rules syntax, `?` for ExtendedCss syntax.
 
+<!-- TODO: consider :remove() pseudo-class deprecation -->
+<!-- https://github.com/AdguardTeam/ExtendedCss/issues/160 -->
+> Both `:remove()` pseudo-class and `remove` pseudo-property works the same, but we recommend to use the pseudo-property as it is related to an action which should be applied to element, since pseudo-classes is more about elements matching.
 
 ### <a id="extended-css-is"></a> Pseudo-class `:is()`
 
@@ -762,8 +765,11 @@ constructor(configuration: ExtCssConfiguration)
 where
 ```ts
 interface ExtCssConfiguration {
-  // css stylesheet
-  styleSheet: string;
+  // css stylesheet — css rules combined in one string
+  styleSheet?: string;
+
+  // css rules — array of separated css rules
+  cssRules?: string;
 
   // the callback that handles affected elements
   beforeStyleApplied?: BeforeStyleAppliedCallback;
@@ -772,6 +778,10 @@ interface ExtCssConfiguration {
   debug?: boolean;
 }
 ```
+
+> Both `styleSheet` and `cssRules` are optional but at least one of them should be set.
+
+> If both `styleSheet` and `cssRules` are set, both of them are to be applied.
 
 ```ts
 /**

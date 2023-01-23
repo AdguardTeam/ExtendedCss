@@ -1,5 +1,6 @@
 import { isHtmlElement } from '../../common/utils/nodes';
 import { flatten } from '../../common/utils/arrays';
+import { getErrorMessage } from '../../common/utils/error';
 import { logger } from '../../common/utils/logger';
 
 import {
@@ -45,8 +46,8 @@ const matcherWrapper = (callback: MatcherCallback, argsData: MatcherArgsInterfac
     let isMatched: boolean;
     try {
         isMatched = callback(argsData);
-    } catch (e) {
-        logger.error(e);
+    } catch (e: unknown) {
+        logger.error(getErrorMessage(e));
         throw new Error(errorMessage);
     }
     return isMatched;
@@ -130,8 +131,8 @@ export const findByAbsolutePseudoPseudo = {
                 let ancestor: HTMLElement | null = null;
                 try {
                     ancestor = getNthAncestor(domElement, deep, pseudoName);
-                } catch (e) {
-                    logger.error(e);
+                } catch (e: unknown) {
+                    logger.error(getErrorMessage(e));
                 }
                 return ancestor;
             })
@@ -160,9 +161,9 @@ export const findByAbsolutePseudoPseudo = {
                         window.XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                         null,
                     );
-                } catch (e) {
-                    logger.error(e);
-                    throw new Error(`Invalid argument of :xpath pseudo-class: '${rawPseudoArg}'`);
+                } catch (e: unknown) {
+                    logger.error(getErrorMessage(e));
+                    throw new Error(`Invalid argument of :xpath() pseudo-class: '${rawPseudoArg}'`);
                 }
                 let node = xpathResult.iterateNext();
                 while (node) {

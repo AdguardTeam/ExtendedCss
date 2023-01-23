@@ -8,6 +8,8 @@ import {
 import { promises as fsp } from 'fs';
 import path from 'path';
 
+import { getErrorMessage } from '../../src/common/utils/error';
+
 const QUERY_START_MARKER = '?';
 const DEFAULT_PORT = 8585;
 const TEST_TEMP_DIR = '../dist';
@@ -28,9 +30,8 @@ const initServer = (): Server => {
             data = await fsp.readFile(path.join(__dirname, TEST_TEMP_DIR, filename));
             res.writeHead(200);
             res.end(data);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-            console.log(e.message);
+        } catch (e: unknown) {
+            console.log(getErrorMessage(e));
             res.writeHead(404);
             res.end(JSON.stringify(e));
             return;

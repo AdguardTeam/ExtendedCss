@@ -1,4 +1,4 @@
-import { CssStyleMap, ExtCssRuleData } from '../../stylesheet';
+import { CssStyleMap, ExtCssRuleData } from '../../css-rule';
 import { EventTracker } from './event-tracker';
 import { ExtMutationObserver } from './mutation-observer';
 

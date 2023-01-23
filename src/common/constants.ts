@@ -5,6 +5,7 @@ const RIGHT_PARENTHESIS = ')';
 const LEFT_CURLY_BRACKET = '{';
 const RIGHT_CURLY_BRACKET = '}';
 
+// TODO: rename to 'BRACKET'
 export const BRACKETS = {
     SQUARE: {
         LEFT: LEFT_SQUARE_BRACKET,
@@ -94,6 +95,25 @@ export const SUPPORTED_SELECTOR_MARKS = [
     CHILD_COMBINATOR,
     NEXT_SIBLING_COMBINATOR,
     SUBSEQUENT_SIBLING_COMBINATOR,
+    TAB,
+    CARRIAGE_RETURN,
+    LINE_FEED,
+    FORM_FEED,
+];
+
+export const SUPPORTED_STYLE_DECLARATION_MARKS = [
+    // divider between property and value in declaration
+    COLON,
+    // divider between declarations
+    SEMICOLON,
+    // sometimes is needed for value wrapping
+    // e.g. 'content: "-"'
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE,
+    // needed for quote escaping inside the same-type quotes
+    BACKSLASH,
+    // whitespaces
+    SPACE,
     TAB,
     CARRIAGE_RETURN,
     LINE_FEED,
@@ -208,27 +228,33 @@ export const REGULAR_PSEUDO_ELEMENTS = {
     TARGET_TEXT: 'target-text',
 };
 
+// ExtendedCss does not support at-rules
+// https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
+export const AT_RULE_MARKER = '@';
+
 export const CONTENT_CSS_PROPERTY = 'content';
 
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
 
-export const NO_SELECTOR_ERROR_PREFIX = 'Selector should be defined before';
+export const NO_SELECTOR_ERROR_PREFIX = 'Selector should be defined';
 
-export const STYLESHEET_ERROR_PREFIX = {
-    NO_STYLE: 'No style declaration at stylesheet part',
-    NO_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} style declaration in stylesheet`,
-    INVALID_STYLE: 'Invalid style declaration at stylesheet part',
-    UNCLOSED_STYLE: 'Unclosed style declaration at stylesheet part',
-    NO_PROPERTY: 'Missing style property in declaration at stylesheet part',
-    NO_VALUE: 'Missing style value in declaration at stylesheet part',
-    NO_STYLE_OR_REMOVE: 'Invalid stylesheet - no style declared or :remove() pseudo-class used',
-    NO_COMMENT: 'Comments in stylesheet are not supported',
+export const STYLE_ERROR_PREFIX = {
+    NO_STYLE: 'No style declaration found',
+    NO_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before style declaration in stylesheet`,
+    INVALID_STYLE: 'Invalid style declaration',
+    UNCLOSED_STYLE: 'Unclosed style declaration',
+    NO_PROPERTY: 'Missing style property in declaration',
+    NO_VALUE: 'Missing style value in declaration',
+    NO_STYLE_OR_REMOVE: 'Style should be declared or :remove() pseudo-class should used',
+    NO_COMMENT: 'Comments are not supported',
 };
+
+export const NO_AT_RULE_ERROR_PREFIX = 'At-rules are not supported';
 
 export const REMOVE_ERROR_PREFIX = {
     INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
-    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} :remove() pseudo-class`,
+    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :remove() pseudo-class`,
     MULTIPLE_USAGE: 'Pseudo-class :remove() appears more than once in selector',
     INVALID_POSITION: 'Pseudo-class :remove() should be at the end of selector',
 };

@@ -3,7 +3,7 @@ import {
     Context,
     IAffectedElement,
 } from './types';
-import { CssStyleMap } from '../../stylesheet';
+import { CssStyleMap } from '../../css-rule';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';
 import { removeSuffix } from '../../common/utils/strings';

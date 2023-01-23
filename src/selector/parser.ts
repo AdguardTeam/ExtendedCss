@@ -1,4 +1,4 @@
-import { TokenType, tokenizeSelector } from './tokenizer';
+import { tokenizeSelector } from './tokenizer';
 import { NodeType, AnySelectorNodeInterface } from './nodes';
 
 import { Context } from './utils/parser-types';
@@ -34,6 +34,8 @@ import {
     handleNextTokenOnColon,
 } from './utils/parser-ast-node-helpers';
 import { optimizeAst } from './utils/parser-ast-optimizer';
+
+import { TokenType } from '../common/tokenizer';
 
 import { getLast } from '../common/utils/arrays';
 
@@ -321,6 +323,13 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 context.isAttributeBracketsOpen = true;
                             }
                         } else if (isRegularSelectorNode(bufferNode)) {
+                            if (
+                                tokenValue === BRACKETS.CURLY.LEFT
+                                && !(context.isAttributeBracketsOpen || context.isRegexpOpen)
+                            ) {
+                                // e.g. 'div { content: "'
+                                throw new Error(`'${selector}' is not a valid selector`);
+                            }
                             // collect the mark to the value of RegularSelector node
                             updateBufferNode(context, tokenValue);
                             if (isAttributeOpening(tokenValue, prevTokenValue)) {
@@ -439,7 +448,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // selector should be specified before :nth-ancestor() or :upward()
                                 // e.g. ':nth-ancestor(3)'
                                 // or   ':upward(span)'
-                                throw new Error(`${NO_SELECTOR_ERROR_PREFIX} :${nextTokenValue}() pseudo-class`);
+                                throw new Error(`${NO_SELECTOR_ERROR_PREFIX} before :${nextTokenValue}() pseudo-class`);
                             } else {
                                 // make it more obvious if selector starts with pseudo with no tag specified
                                 // e.g. ':has(a)' -> '*:has(a)'
