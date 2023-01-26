@@ -679,6 +679,16 @@ describe('parse array of css rules -- skip invalid rules', () => {
                     },
                 }],
             },
+            {
+                actual: ["h1 { color: pink; content: 'adguard4;example.org#$?#h1 { color: pink}'!important; }\n"],
+                expected: [{
+                    selector: 'h1',
+                    style: {
+                        color: 'pink',
+                        content: "'adguard4;example.org#$?#h1 { color: pink}'!important",
+                    },
+                }],
+            },
         ];
         test.each(testsInputs)('$actual', (input) => expectParsedCssRules(input));
     });
