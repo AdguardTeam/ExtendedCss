@@ -31,14 +31,6 @@ describe('check user-agents', () => {
 
     describe('not supported', () => {
         const unsupportedUserAgents = [
-            // chrome 87
-            'Mozilla/5.0 (Linux; Android 11; SM-A526R4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Mobile Safari/537.36',
-            // firefox 83
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15; rv:83.0) Gecko/20100101 Firefox/83.0',
-            // edge 87
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36 Edg/87.0.664.75',
-            // safari 13
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Safari/605.1.15',
             // internet explorer
             // https://www.whatismybrowser.com/guides/the-latest-user-agent/internet-explorer
             'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)',

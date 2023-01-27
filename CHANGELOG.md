@@ -1,6 +1,6 @@
 # ExtendedCss Changelog
 
-## Unreleased
+## v2.0.44
 
 ### Added
 
@@ -15,6 +15,7 @@
     - Edge — 88
     - Safari — 14
 - instead of throwing the error in unsupported browser, log it
+- disallow only Internet Explorer as unsupported browser
 
 
 ## v2.0.33
