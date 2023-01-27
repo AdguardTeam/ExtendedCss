@@ -1,5 +1,5 @@
 import { parse } from '../../src/selector/parser';
-import { NodeType } from '../../src/selector/nodes';
+import { NODE } from '../../src/selector/nodes';
 
 type TestAnySelectorNodeInterface = {
     type: string,
@@ -17,7 +17,7 @@ type TestAnySelectorNodeInterface = {
  */
 export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInterface => {
     return {
-        type: NodeType.RegularSelector,
+        type: NODE.REGULAR_SELECTOR,
         value: regularValue,
         children: [],
     };
@@ -33,10 +33,10 @@ export const getRegularSelector = (regularValue: string): TestAnySelectorNodeInt
  */
 export const getAbsoluteExtendedSelector = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
-        type: NodeType.ExtendedSelector,
+        type: NODE.EXTENDED_SELECTOR,
         children: [
             {
-                type: NodeType.AbsolutePseudoClass,
+                type: NODE.ABSOLUTE_PSEUDO_CLASS,
                 name,
                 value,
                 children: [],
@@ -54,7 +54,7 @@ export const getAbsoluteExtendedSelector = (name: string, value: string): TestAn
  */
 export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeInterface => {
     const selectorNode = {
-        type: NodeType.Selector,
+        type: NODE.SELECTOR,
         children: [getRegularSelector(regularValue)],
     };
     return selectorNode;
@@ -70,20 +70,20 @@ export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeI
  */
 export const getRelativeExtendedWithSingleRegular = (name: string, value: string): TestAnySelectorNodeInterface => {
     return {
-        type: NodeType.ExtendedSelector,
+        type: NODE.EXTENDED_SELECTOR,
         children: [
             {
-                type: NodeType.RelativePseudoClass,
+                type: NODE.RELATIVE_PSEUDO_CLASS,
                 name,
                 children: [
                     {
-                        type: NodeType.SelectorList,
+                        type: NODE.SELECTOR_LIST,
                         children: [
                             {
-                                type: NodeType.Selector,
+                                type: NODE.SELECTOR,
                                 children: [
                                     {
-                                        type: NodeType.RegularSelector,
+                                        type: NODE.REGULAR_SELECTOR,
                                         value,
                                         children: [],
                                     },
@@ -109,7 +109,7 @@ export const getSelectorListOfRegularSelectors = (regularValues: string[]): Test
         return getSelectorAsRegular(value);
     });
     return {
-        type: NodeType.SelectorList,
+        type: NODE.SELECTOR_LIST,
         children: selectorNodes,
     };
 };
@@ -178,10 +178,10 @@ export const getSingleSelectorAstWithAnyChildren = (
     });
 
     return {
-        type: NodeType.SelectorList,
+        type: NODE.SELECTOR_LIST,
         children: [
             {
-                type: NodeType.Selector,
+                type: NODE.SELECTOR,
                 children: selectorChildren,
             },
         ],

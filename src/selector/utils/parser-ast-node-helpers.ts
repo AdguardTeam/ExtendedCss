@@ -12,12 +12,13 @@ import { isSupportedPseudoClass } from './parser-predicates';
 import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
 import {
-    NodeType,
+    NODE,
     AnySelectorNode,
     AbsolutePseudoClassNode,
     AnySelectorNodeInterface,
     RegularSelectorNode,
     RelativePseudoClassNode,
+    NodeType,
 } from '../nodes';
 
 import {
@@ -128,7 +129,7 @@ export const updateBufferNode = (context: Context, tokenValue: string): void => 
  * @param context Selector parser context.
  */
 export const addSelectorListNode = (context: Context): void => {
-    const selectorListNode = new AnySelectorNode(NodeType.SelectorList);
+    const selectorListNode = new AnySelectorNode(NODE.SELECTOR_LIST);
     context.ast = selectorListNode;
     context.pathToBufferNode.push(selectorListNode);
 };
@@ -150,11 +151,11 @@ export const addAstNodeByType = (context: Context, type: NodeType, tokenValue = 
     }
 
     let node: AnySelectorNodeInterface;
-    if (type === NodeType.RegularSelector) {
+    if (type === NODE.REGULAR_SELECTOR) {
         node = new RegularSelectorNode(tokenValue);
-    } else if (type === NodeType.AbsolutePseudoClass) {
+    } else if (type === NODE.ABSOLUTE_PSEUDO_CLASS) {
         node = new AbsolutePseudoClassNode(tokenValue);
-    } else if (type === NodeType.RelativePseudoClass) {
+    } else if (type === NODE.RELATIVE_PSEUDO_CLASS) {
         node = new RelativePseudoClassNode(tokenValue);
     } else {
         // SelectorList || Selector || ExtendedSelector
@@ -173,9 +174,9 @@ export const addAstNodeByType = (context: Context, type: NodeType, tokenValue = 
  */
 export const initAst = (context: Context, tokenValue: string): void => {
     addSelectorListNode(context);
-    addAstNodeByType(context, NodeType.Selector);
+    addAstNodeByType(context, NODE.SELECTOR);
     // RegularSelector node is always the first child of Selector node
-    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
+    addAstNodeByType(context, NODE.REGULAR_SELECTOR, tokenValue);
 };
 
 /**
@@ -185,9 +186,9 @@ export const initAst = (context: Context, tokenValue: string): void => {
  * @param tokenValue Optional, defaults to `''`, value of inner regular selector.
  */
 export const initRelativeSubtree = (context: Context, tokenValue = ''): void => {
-    addAstNodeByType(context, NodeType.SelectorList);
-    addAstNodeByType(context, NodeType.Selector);
-    addAstNodeByType(context, NodeType.RegularSelector, tokenValue);
+    addAstNodeByType(context, NODE.SELECTOR_LIST);
+    addAstNodeByType(context, NODE.SELECTOR);
+    addAstNodeByType(context, NODE.REGULAR_SELECTOR, tokenValue);
 };
 
 /**
@@ -228,7 +229,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
         return bufferNode;
     }
 
-    upToClosest(context, NodeType.Selector);
+    upToClosest(context, NODE.SELECTOR);
     const selectorNode = getBufferNode(context);
     if (!selectorNode) {
         throw new Error('No SelectorNode, impossible to continue selector parsing by ExtendedCss');
@@ -336,9 +337,9 @@ export const handleNextTokenOnColon = (
             throw new Error(`Usage of :${nextTokenValue}() pseudo-class is not allowed inside regular pseudo: '${getLast(context.standardPseudoNamesStack)}'`);
         } else {
             // stop RegularSelector value collecting
-            upToClosest(context, NodeType.Selector);
+            upToClosest(context, NODE.SELECTOR);
             // add ExtendedSelector to Selector children
-            addAstNodeByType(context, NodeType.ExtendedSelector);
+            addAstNodeByType(context, NODE.EXTENDED_SELECTOR);
         }
     }
 };

@@ -1,12 +1,18 @@
-enum BrowserName {
-    Chrome = 'Chrome',
-    Firefox = 'Firefox',
-    Edge = 'Edg',
-    Opera = 'Opera',
-    Safari = 'Safari',
+/**
+ * BROWSER_NAME is needed for checking whether the current browser is supported.
+ *
+ * IMPORTANT: it is used as 'const' instead of 'enum' to avoid side effects
+ * during ExtendedCss import into other libraries.
+ */
+const BROWSER_NAME = {
+    CHROME: 'Chrome',
+    FIREFOX: 'Firefox',
+    EDGE: 'Edg',
+    OPERA: 'Opera',
+    SAFARI: 'Safari',
     // for puppeteer headless mode
-    HeadlessChrome = 'HeadlessChrome',
-}
+    HEADLESS_CHROME: 'HeadlessChrome',
+};
 
 const CHROMIUM_BRAND_NAME = 'Chromium';
 const GOOGLE_CHROME_BRAND_NAME = 'Google Chrome';
@@ -26,29 +32,29 @@ type SupportedBrowsersData = {
 };
 
 const SUPPORTED_BROWSERS_DATA: SupportedBrowsersData = {
-    [BrowserName.Chrome]: {
+    [BROWSER_NAME.CHROME]: {
         // avoid Chromium-based Edge browser
         // 'EdgA' for android version
         MASK: /\s(Chrome)\/(\d+)\..+\s(?!.*(Edg|EdgA)\/)/,
         MIN_VERSION: 88,
     },
-    [BrowserName.Firefox]: {
+    [BROWSER_NAME.FIREFOX]: {
         MASK: /\s(Firefox)\/(\d+)\./,
         MIN_VERSION: 84,
     },
-    [BrowserName.Edge]: {
+    [BROWSER_NAME.EDGE]: {
         MASK: /\s(Edg)\/(\d+)\./,
         MIN_VERSION: 88,
     },
-    [BrowserName.Opera]: {
+    [BROWSER_NAME.OPERA]: {
         MASK: /\s(OPR)\/(\d+)\./,
         MIN_VERSION: 80,
     },
-    [BrowserName.Safari]: {
+    [BROWSER_NAME.SAFARI]: {
         MASK: /\sVersion\/(\d{2}\.\d)(.+\s|\s)(Safari)\//,
         MIN_VERSION: 14,
     },
-    [BrowserName.HeadlessChrome]: {
+    [BROWSER_NAME.HEADLESS_CHROME]: {
         // support headless Chrome used by puppeteer
         MASK: /\s(HeadlessChrome)\/(\d+)\..+\s(?!.*Edg\/)/,
         // version should be the same as for BrowserName.Chrome
@@ -95,7 +101,7 @@ type BrowserInfo = {
 const parseUserAgent = (userAgent: string): BrowserInfo | null => {
     let browserName;
     let currentVersion;
-    const browserNames = Object.values(BrowserName);
+    const browserNames = Object.values(BROWSER_NAME);
 
     for (let i = 0; i < browserNames.length; i += 1) {
         let match = null;
@@ -149,7 +155,7 @@ const getBrowserInfoAsSupported = (
     const { brand, version } = brandData;
     // handle chromium-based browsers
     const browserName = brand === CHROMIUM_BRAND_NAME || brand === GOOGLE_CHROME_BRAND_NAME
-        ? BrowserName.Chrome
+        ? BROWSER_NAME.CHROME
         : brand;
     return { browserName, currentVersion: Number(version) };
 };

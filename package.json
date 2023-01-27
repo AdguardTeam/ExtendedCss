@@ -11,7 +11,8 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "default": "./dist/extended-css.umd.js"
+      "require": "./dist/extended-css.umd.js",
+      "import": "./dist/extended-css.esm.js"
     }
   },
   "engines": {

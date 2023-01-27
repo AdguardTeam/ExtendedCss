@@ -25,6 +25,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 * [Usage](#usage)
   * [API description](#extended-css-api)
     * [Constructor](#extended-css-constructor)
+    * [init()](#extended-css-init)
     * [apply() and dispose()](#extended-css-apply-dispose)
     * [query()](#extended-css-query)
     * [validate()](#extended-css-validate)
@@ -801,7 +802,14 @@ interface IAffectedElement {
 }
 ```
 
-<a id="extended-css-apply-dispose"></a>
+#### <a id="extended-css-init"></a> Public method `init()`
+
+The `init()` public method initializes ExtendedCss on a page.
+It should be executed on page **as soon as possible**,
+even before the ExtendedCss instance is constructed,
+otherwise the `:contains()` pseudo-class may work incorrectly.
+
+#### <a id="extended-css-apply-dispose"></a> Public methods `apply()` and `dispose()`
 
 After the instance of ExtendedCss is created, it can be applied on the page by the `apply()` method. Its applying also can be stopped and styles are to be restored by the `dispose()` method.
 

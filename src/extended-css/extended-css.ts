@@ -15,6 +15,7 @@ import {
 import { getErrorMessage } from '../common/utils/error';
 import { isBrowserSupported } from '../common/utils/user-agents';
 import { logger } from '../common/utils/logger';
+import { nativeTextContent } from '../common/utils/natives';
 
 import { DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE } from '../common/constants';
 
@@ -182,6 +183,23 @@ export class ExtendedCss {
         this.applyRulesCallbackListener = () => {
             applyRules(this.context);
         };
+    }
+
+    /**
+     * Initializes ExtendedCss.
+     *
+     * Should be executed on page ASAP,
+     * otherwise the :contains() pseudo-class may work incorrectly.
+     */
+    init(): void {
+        /**
+         * Native Node textContent getter must be intercepted as soon as possible,
+         * and stored as it is needed for proper work of :contains() pseudo-class
+         * because DOM Node prototype 'textContent' property may be mocked.
+         *
+         * @see {@link https://github.com/AdguardTeam/ExtendedCss/issues/127}
+         */
+        nativeTextContent.setGetter();
     }
 
     /**

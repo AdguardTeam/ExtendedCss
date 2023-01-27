@@ -24,6 +24,6 @@ export const tokenizeSelector = (rawSelector: string): Token[] => {
  * @returns Array of tokens supported for attribute.
  */
 export const tokenizeAttribute = (attribute: string): Token[] => {
-    // equal sigh `=` in attribute is considered as `TokenType.Mark`
+    // equal sigh `=` in attribute is considered as `TOKEN_TYPE.MARK`
     return tokenize(attribute, [...SUPPORTED_SELECTOR_MARKS, EQUAL_SIGN]);
 };

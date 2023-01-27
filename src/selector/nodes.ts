@@ -1,11 +1,19 @@
-export enum NodeType {
-    SelectorList = 'SelectorList',
-    Selector = 'Selector',
-    RegularSelector = 'RegularSelector',
-    ExtendedSelector = 'ExtendedSelector',
-    AbsolutePseudoClass = 'AbsolutePseudoClass',
-    RelativePseudoClass = 'RelativePseudoClass',
-}
+/**
+ * Possible ast node types.
+ *
+ * IMPORTANT: it is used as 'const' instead of 'enum' to avoid side effects
+ * during ExtendedCss import into other libraries.
+ */
+export const NODE = {
+    SELECTOR_LIST: 'SelectorList',
+    SELECTOR: 'Selector',
+    REGULAR_SELECTOR: 'RegularSelector',
+    EXTENDED_SELECTOR: 'ExtendedSelector',
+    ABSOLUTE_PSEUDO_CLASS: 'AbsolutePseudoClass',
+    RELATIVE_PSEUDO_CLASS: 'RelativePseudoClass',
+} as const;
+
+export type NodeType = typeof NODE[keyof typeof NODE];
 
 /**
  * Universal interface for all node types.
@@ -59,7 +67,7 @@ export class RegularSelectorNode extends AnySelectorNode {
      * @param value Value of RegularSelector node.
      */
     constructor(value: string) {
-        super(NodeType.RegularSelector);
+        super(NODE.REGULAR_SELECTOR);
         this.value = value;
     }
 }
@@ -76,7 +84,7 @@ export class RelativePseudoClassNode extends AnySelectorNode {
      * @param name Name of RelativePseudoClass node.
      */
     constructor(name: string) {
-        super(NodeType.RelativePseudoClass);
+        super(NODE.RELATIVE_PSEUDO_CLASS);
         this.name = name;
     }
 }
@@ -95,7 +103,7 @@ export class AbsolutePseudoClassNode extends AnySelectorNode {
      * @param name Name of AbsolutePseudoClass node.
      */
     constructor(name: string) {
-        super(NodeType.AbsolutePseudoClass);
+        super(NODE.ABSOLUTE_PSEUDO_CLASS);
         this.name = name;
     }
 }

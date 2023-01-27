@@ -3,7 +3,7 @@ import { Context } from './parser-types';
 
 import { tokenizeAttribute } from '../tokenizer';
 
-import { TokenType } from '../../common/tokenizer';
+import { TOKEN_TYPE } from '../../common/tokenizer';
 
 import {
     getFirst,
@@ -105,7 +105,7 @@ export const doesRegularContinueAfterSpace = (
         return false;
     }
     return COMBINATORS.includes(nextTokenValue)
-        || nextTokenType === TokenType.Word
+        || nextTokenType === TOKEN_TYPE.WORD
         // e.g. '#main *:has(> .ad)'
         || nextTokenValue === ASTERISK
         || nextTokenValue === ID_MARKER
@@ -195,7 +195,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     const firstAttrTokenValue = firstAttrToken?.value;
     // signal an error on any mark-type token except backslash
     // e.g. '[="margin"]'
-    if (firstAttrTokenType === TokenType.Mark
+    if (firstAttrTokenType === TOKEN_TYPE.MARK
         // backslash is allowed at start of attribute
         // e.g. '[\\:data-service-slot]'
         && firstAttrTokenValue !== BACKSLASH) {
@@ -212,7 +212,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     }
 
     const equalSignIndex = attrTokens.findIndex((token) => {
-        return token.type === TokenType.Mark
+        return token.type === TOKEN_TYPE.MARK
             && token.value === EQUAL_SIGN;
     });
     const prevToLastAttrTokenValue = getPrevToLast(attrTokens)?.value;
@@ -220,7 +220,7 @@ export const isAttributeClosing = (context: Context): boolean => {
         // if there is no '=' inside attribute,
         // it must be just attribute name which means the word-type token before closing bracket
         // e.g. 'div[style]'
-        if (lastAttrTokenType === TokenType.Word) {
+        if (lastAttrTokenType === TOKEN_TYPE.WORD) {
             return true;
         }
         return prevToLastAttrTokenValue === BACKSLASH
@@ -242,7 +242,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     // e.g. 'div[style*=margin]'
     //      'div[style*=MARGIN i]'
     if (!isAttrValueQuote) {
-        if (lastAttrTokenType === TokenType.Word) {
+        if (lastAttrTokenType === TOKEN_TYPE.WORD) {
             return true;
         }
         // otherwise signal an error
@@ -253,7 +253,7 @@ export const isAttributeClosing = (context: Context): boolean => {
     // otherwise if quotes for value are present
     // the last token before `]` can still be word-type token
     // e.g. 'div[style*="MARGIN" i]'
-    if (lastAttrTokenType === TokenType.Word
+    if (lastAttrTokenType === TOKEN_TYPE.WORD
         && lastAttrTokenValue?.toLocaleLowerCase() === ATTRIBUTE_CASE_INSENSITIVE_FLAG) {
         return prevToLastAttrTokenValue === nextToEqualSignTokenValue;
     }

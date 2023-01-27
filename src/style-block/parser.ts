@@ -1,6 +1,6 @@
 import { tokenizeStyleBlock } from './tokenizer';
 
-import { Token, TokenType } from '../common/tokenizer';
+import { Token, TOKEN_TYPE } from '../common/tokenizer';
 
 import {
     COLON,
@@ -17,10 +17,18 @@ import {
     STYLE_ERROR_PREFIX,
 } from '../common/constants';
 
-enum DeclarationPart {
-    Property = 'property',
-    Value = 'value',
-}
+/**
+ * Describes possible style declaration parts.
+ *
+ * IMPORTANT: it is used as 'const' instead of 'enum' to avoid side effects
+ * during ExtendedCss import into other libraries.
+ */
+const DECLARATION_PART = {
+    PROPERTY: 'property',
+    VALUE: 'value',
+} as const;
+
+type DeclarationPart = typeof DECLARATION_PART[keyof typeof DECLARATION_PART];
 
 export type StyleDeclaration = {
     [key in DeclarationPart]: string;
@@ -103,14 +111,14 @@ const processPropertyToken = (
 ): void => {
     const { value: tokenValue } = token;
     switch (token.type) {
-        case TokenType.Word:
+        case TOKEN_TYPE.WORD:
             if (context.bufferProperty.length > 0) {
                 // e.g. 'padding top: 0;' - current tokenValue is 'top' which is not valid
                 throw new Error(`Invalid style property in style block: '${styleBlock}'`);
             }
             context.bufferProperty += tokenValue;
             break;
-        case TokenType.Mark:
+        case TOKEN_TYPE.MARK:
             // only colon and whitespaces are allowed while style property parsing
             if (tokenValue === COLON) {
                 if (context.bufferProperty.trim().length === 0) {
@@ -120,7 +128,7 @@ const processPropertyToken = (
                 // the property successfully collected
                 context.bufferProperty = context.bufferProperty.trim();
                 // prepare for value collecting
-                context.processing = DeclarationPart.Value;
+                context.processing = DECLARATION_PART.VALUE;
                 // the property buffer shall be reset after the value is successfully collected
             } else if (WHITE_SPACE_CHARACTERS.includes(tokenValue)) {
                 // do nothing and skip the token
@@ -150,7 +158,7 @@ const processValueToken = (
     token: Token,
 ) => {
     const { value: tokenValue } = token;
-    if (token.type === TokenType.Word) {
+    if (token.type === TOKEN_TYPE.WORD) {
         // simply collect to buffer
         context.bufferValue += tokenValue;
     } else {
@@ -180,7 +188,7 @@ const processValueToken = (
                     // save parsed style
                     collectStyle(context);
                     // prepare for value collecting
-                    context.processing = DeclarationPart.Property;
+                    context.processing = DECLARATION_PART.PROPERTY;
                 }
                 break;
             case SINGLE_QUOTE:
@@ -249,7 +257,7 @@ export const parseStyleBlock = (rawStyleBlock: string): StyleDeclaration[] => {
 
     const context: Context = {
         // style declaration parsing always starts with 'property'
-        processing: DeclarationPart.Property,
+        processing: DECLARATION_PART.PROPERTY,
         styles: [],
         bufferProperty: '',
         bufferValue: '',
@@ -262,9 +270,9 @@ export const parseStyleBlock = (rawStyleBlock: string): StyleDeclaration[] => {
         if (!token) {
             break;
         }
-        if (context.processing === DeclarationPart.Property) {
+        if (context.processing === DECLARATION_PART.PROPERTY) {
             processPropertyToken(context, styleBlock, token);
-        } else if (context.processing === DeclarationPart.Value) {
+        } else if (context.processing === DECLARATION_PART.VALUE) {
             processValueToken(context, styleBlock, token);
         } else {
             throw new Error('Style declaration parsing failed');

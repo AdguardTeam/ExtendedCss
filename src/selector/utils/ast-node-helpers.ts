@@ -1,4 +1,4 @@
-import { AnySelectorNodeInterface, NodeType } from '../nodes';
+import { AnySelectorNodeInterface, NODE } from '../nodes';
 
 import { getFirst, getLast } from '../../common/utils/arrays';
 
@@ -12,7 +12,7 @@ const NO_REGULAR_SELECTOR_ERROR = 'At least one of Selector node children should
  * @returns True if astNode.type === SelectorList.
  */
 export const isSelectorListNode = (astNode: AnySelectorNodeInterface | null): boolean => {
-    return astNode?.type === NodeType.SelectorList;
+    return astNode?.type === NODE.SELECTOR_LIST;
 };
 
 /**
@@ -23,7 +23,7 @@ export const isSelectorListNode = (astNode: AnySelectorNodeInterface | null): bo
  * @returns True if astNode.type === Selector.
  */
 export const isSelectorNode = (astNode: AnySelectorNodeInterface | null): boolean => {
-    return astNode?.type === NodeType.Selector;
+    return astNode?.type === NODE.SELECTOR;
 };
 
 /**
@@ -34,7 +34,7 @@ export const isSelectorNode = (astNode: AnySelectorNodeInterface | null): boolea
  * @returns True if astNode.type === RegularSelector.
  */
 export const isRegularSelectorNode = (astNode: AnySelectorNodeInterface | null): boolean => {
-    return astNode?.type === NodeType.RegularSelector;
+    return astNode?.type === NODE.REGULAR_SELECTOR;
 };
 
 /**
@@ -45,7 +45,7 @@ export const isRegularSelectorNode = (astNode: AnySelectorNodeInterface | null):
  * @returns True if astNode.type === ExtendedSelector.
  */
 export const isExtendedSelectorNode = (astNode: AnySelectorNodeInterface): boolean => {
-    return astNode.type === NodeType.ExtendedSelector;
+    return astNode.type === NODE.EXTENDED_SELECTOR;
 };
 
 /**
@@ -56,7 +56,7 @@ export const isExtendedSelectorNode = (astNode: AnySelectorNodeInterface): boole
  * @returns True if astNode.type === AbsolutePseudoClass.
  */
 export const isAbsolutePseudoClassNode = (astNode: AnySelectorNodeInterface | null): boolean => {
-    return astNode?.type === NodeType.AbsolutePseudoClass;
+    return astNode?.type === NODE.ABSOLUTE_PSEUDO_CLASS;
 };
 
 /**
@@ -67,7 +67,7 @@ export const isAbsolutePseudoClassNode = (astNode: AnySelectorNodeInterface | nu
  * @returns True if astNode.type === RelativePseudoClass.
  */
 export const isRelativePseudoClassNode = (astNode: AnySelectorNodeInterface | null): boolean => {
-    return astNode?.type === NodeType.RelativePseudoClass;
+    return astNode?.type === NODE.RELATIVE_PSEUDO_CLASS;
 };
 
 /**

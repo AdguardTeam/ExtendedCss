@@ -1,4 +1,4 @@
-import { nodeTextContentGetter } from './natives';
+import { nativeTextContent } from './natives';
 
 /**
  * Returns textContent of passed domElement.
@@ -8,7 +8,12 @@ import { nodeTextContentGetter } from './natives';
  * @returns DOM element textContent.
  */
 export const getNodeTextContent = (domElement: Node): string => {
-    return nodeTextContentGetter?.apply(domElement) || '';
+    if (nativeTextContent.getter) {
+        return nativeTextContent.getter.apply(domElement);
+    }
+    // if ExtendedCss.init() has not been executed and there is no nodeTextContentGetter,
+    // use simple approach, especially when init() is not really needed, e.g. local tests
+    return domElement.textContent || '';
 };
 
 /**

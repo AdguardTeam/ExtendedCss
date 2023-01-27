@@ -5,6 +5,7 @@
 ### Added
 
 - `cssRules` property to `ExtCssConfiguration` for array of separated CSS rules
+- `init()` public method for ExtendedCss initialization on a page
 
 ### Changed
 

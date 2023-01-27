@@ -21,12 +21,18 @@ import {
     REGULAR_PSEUDO_ELEMENTS,
 } from '../../common/constants';
 
-enum CssProperty {
-    Background = 'background',
-    BackgroundImage = 'background-image',
-    Content = 'content',
-    Opacity = 'opacity',
-}
+/**
+ * CSS_PROPERTY is needed for style values normalization.
+ *
+ * IMPORTANT: it is used as 'const' instead of 'enum' to avoid side effects
+ * during ExtendedCss import into other libraries.
+ */
+const CSS_PROPERTY = {
+    BACKGROUND: 'background',
+    BACKGROUND_IMAGE: 'background-image',
+    CONTENT: 'content',
+    OPACITY: 'opacity',
+};
 
 const REGEXP_ANY_SYMBOL = '.*';
 
@@ -155,16 +161,16 @@ const convertStyleMatchValueToRegexp = (rawValue: string): RegExp => {
 const normalizePropertyValue = (propertyName: string, propertyValue: string): string => {
     let normalized = '';
     switch (propertyName) {
-        case CssProperty.Background:
-        case CssProperty.BackgroundImage:
+        case CSS_PROPERTY.BACKGROUND:
+        case CSS_PROPERTY.BACKGROUND_IMAGE:
             // sometimes url property does not have quotes
             // so we add them for consistent matching
             normalized = addUrlPropertyQuotes(propertyValue);
             break;
-        case CssProperty.Content:
+        case CSS_PROPERTY.CONTENT:
             normalized = removeContentQuotes(propertyValue);
             break;
-        case CssProperty.Opacity:
+        case CSS_PROPERTY.OPACITY:
             // https://bugs.webkit.org/show_bug.cgi?id=93445
             normalized = isSafariBrowser
                 ? (Math.round(parseFloat(propertyValue) * 100) / 100).toString()
