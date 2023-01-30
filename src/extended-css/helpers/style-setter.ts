@@ -107,12 +107,10 @@ const isIAffectedElement = (
 const isAffectedElement = (
     affectedElement: AffectedElement | IAffectedElement,
 ): affectedElement is AffectedElement => {
-    return !affectedElement.rules.some((rule) => {
-        return rule.style
-            // after beforeStyleApplied() is executed
-            // 'content' style property should be an empty string
-            && rule.style[CONTENT_CSS_PROPERTY] !== '';
-    });
+    // simple checking of properties needed for following affectedElement usage
+    return 'node' in affectedElement
+        && 'rules' in affectedElement
+        && affectedElement.rules instanceof Array;
 };
 
 /**
@@ -138,7 +136,7 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
             throw new Error("Callback 'beforeStyleApplied' should return IAffectedElement");
         }
         if (!isAffectedElement(affectedElement)) {
-            throw new Error("Rules should have empty string as 'content' style value");
+            throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
         }
     } else {
         affectedElement = rawAffectedElement;
