@@ -89,9 +89,9 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
 const isIAffectedElement = (
     affectedElement: AffectedElement | IAffectedElement,
 ): affectedElement is IAffectedElement => {
-    return !affectedElement.rules.some((rule) => {
-        return !rule.style
-            || !rule.style[CONTENT_CSS_PROPERTY];
+    return [...affectedElement.rules].every((rule) => {
+        return rule.style
+            && CONTENT_CSS_PROPERTY in rule.style;
     });
 };
 

@@ -1,10 +1,19 @@
 # ExtendedCss Changelog
 
+
+## v2.0.49
+
+### Fixed
+
+- error on `BeforeStyleAppliedCallback` type checking
+
+
 ## v2.0.45
 
 ### Fixed
 
 - type checking for `BeforeStyleAppliedCallback`
+
 
 ## v2.0.44
 
