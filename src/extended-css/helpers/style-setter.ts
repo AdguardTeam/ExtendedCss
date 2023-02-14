@@ -1,8 +1,4 @@
-import {
-    AffectedElement,
-    Context,
-    IAffectedElement,
-} from './types';
+import { AffectedElement, Context } from './types';
 import { CssStyleMap } from '../../css-rule';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';
@@ -78,35 +74,16 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
 };
 
 /**
- * Checks whether the `affectedElement` arg has APIs `IAffectedElement` type
- * before `beforeStyleApplied()` execution.
- *
- * @param affectedElement Affected element.
- *
- * @returns False if any rule of affectedElement.rules has no defined 'content' style property
- * which is needed for `beforeStyleApplied()`.
- */
-const isIAffectedElement = (
-    affectedElement: AffectedElement | IAffectedElement,
-): affectedElement is IAffectedElement => {
-    return [...affectedElement.rules].every((rule) => {
-        return rule.style
-            && CONTENT_CSS_PROPERTY in rule.style;
-    });
-};
-
-/**
- * Checks whether the `affectedElement` arg has `AffectedElement` type
+ * Checks whether the `affectedElement` has required `node` and `rules` properties
  * after `beforeStyleApplied()` execution.
- * Needed for proper internal usage.
+ * These properties are needed for proper internal usage.
  *
  * @param affectedElement Affected element.
  *
- * @returns False if any style in affectedElement.rules has non-empty 'content' property.
+ * @returns False if there is no `node` or `rules`
+ * or `rules` is not an array.
  */
-const isAffectedElement = (
-    affectedElement: AffectedElement | IAffectedElement,
-): affectedElement is AffectedElement => {
+const isAffectedElement = (affectedElement: AffectedElement): boolean => {
     // simple checking of properties needed for following affectedElement usage
     return 'node' in affectedElement
         && 'rules' in affectedElement
@@ -126,11 +103,8 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
         // style is already applied and protected by the observer
         return;
     }
-    let affectedElement: AffectedElement | IAffectedElement;
+    let affectedElement: AffectedElement;
     if (context.beforeStyleApplied) {
-        if (!isIAffectedElement(rawAffectedElement)) {
-            throw new Error("Rule style property 'content' should be defined");
-        }
         affectedElement = context.beforeStyleApplied(rawAffectedElement);
         if (!affectedElement) {
             throw new Error("Callback 'beforeStyleApplied' should return IAffectedElement");

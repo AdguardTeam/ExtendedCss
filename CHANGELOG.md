@@ -1,6 +1,13 @@
 # ExtendedCss Changelog
 
 
+## v2.0.50
+
+### Changed
+
+- Property `content` of `style` in `rules` of API type `IAffectedElement` is marked as optional
+
+
 ## v2.0.49
 
 ### Fixed

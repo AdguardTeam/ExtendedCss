@@ -792,6 +792,42 @@ describe('extended css library', () => {
         expectElementStyle('case14-hidden-no-content', { display: 'none', content: '' });
     });
 
+    it('do fail on beforeStyleApplied as entity callback', () => {
+        document.body.innerHTML = `
+            <div id="case15">
+                <div id="case15-entity-callback"></div>
+            </div>
+        `;
+        const cssRules = ['#case15>div { display: none !important; }'];
+        const extendedCss = new ExtendedCss({
+            cssRules,
+            beforeStyleApplied: (el) => el,
+        });
+        // rule without 'content' style property is applied successfully, no error thrown
+        extendedCss.apply();
+
+        const affectedElements = extendedCss.getAffectedElements();
+        // one element matched
+        expect(affectedElements.length).toBe(1);
+        if (!affectedElements[0]) {
+            throw new Error('One affectedElements should be present for case15');
+        }
+        // one rule applied
+        expect(affectedElements[0].rules.length).toBe(1);
+
+        if (!affectedElements[0].rules[0]) {
+            throw new Error('One rule for affected elements should be present for case15');
+        }
+
+        const expectRuleStyle = {
+            display: 'none !important',
+        };
+        expect(affectedElements[0].rules[0].style).toEqual(expectRuleStyle);
+
+        // but it should not be set in matched element style
+        expectElementStyle('case15-entity-callback', { display: 'none' });
+    });
+
     describe('some invalid selector are passed to apply', () => {
         it('stylesheet -- fail', () => {
             document.body.innerHTML = `

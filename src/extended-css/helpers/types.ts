@@ -1,4 +1,4 @@
-import { CssStyleMap, ExtCssRuleData } from '../../css-rule';
+import { ExtCssRuleData } from '../../css-rule';
 import { EventTracker } from './event-tracker';
 import { ExtMutationObserver } from './mutation-observer';
 
@@ -7,48 +7,21 @@ export type MainCallback = () => void;
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
 /**
- * Prototype interface for:
- *  - `AffectedElement` for internal lib usage
- *     where no required style properties in rules;
- *  - `IAffectedElement` for export
- *     where 'content' style property should be defined in every rule.
+ * Interface for internal lib usage.
+ * Properties `node` and `rules` are required.
  */
-interface AffectedElementProto {
+export interface AffectedElement {
     node: HTMLElement;
+    rules: ExtCssRuleData[];
     originalStyle: string;
     protectionObserver?: ExtMutationObserver | null;
     removed?: boolean;
 }
 
 /**
- * Interface for internal lib usage.
+ * API interface.
  */
-export interface AffectedElement extends AffectedElementProto {
-    rules: ExtCssRuleData[];
-}
-
-/**
- * Needed for ExtCssConfiguration.beforeStyleApplied();
- * value of 'content' property is applied rule text.
- */
-interface CssStyleMapWithContent extends CssStyleMap {
-    content: string;
-}
-
-/**
- * Rule data interface with required 'style' property defined with required 'content' property.
- */
-interface ExtCssRuleDataWithContentStyle extends Partial<ExtCssRuleData> {
-    style: CssStyleMapWithContent;
-}
-
-/**
- * Api interface with required 'content' style property in rules.
- */
-export interface IAffectedElement extends Partial<AffectedElementProto> {
-    node: HTMLElement;
-    rules: ExtCssRuleDataWithContentStyle[];
-}
+export type IAffectedElement = AffectedElement;
 
 /**
  * Data pairs for selector and number of times the element was removed by ExtendedCss.
