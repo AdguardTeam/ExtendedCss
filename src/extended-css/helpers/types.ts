@@ -7,21 +7,33 @@ export type MainCallback = () => void;
 export type ProtectionCallback = (m: MutationRecord[], o: ExtMutationObserver) => void;
 
 /**
- * Interface for internal lib usage.
- * Properties `node` and `rules` are required.
+ * Prototype interface for:
+ *  - `AffectedElement` for internal lib usage
+ *     where no required style properties in rules;
+ *  - `IAffectedElement` for export
+ *     where 'originalStyle' property is not required.
  */
-export interface AffectedElement {
+interface AffectedElementProto {
     node: HTMLElement;
-    rules: ExtCssRuleData[];
     originalStyle: string;
     protectionObserver?: ExtMutationObserver | null;
     removed?: boolean;
 }
 
 /**
+ * Interface for internal lib usage.
+ */
+export interface AffectedElement extends AffectedElementProto {
+    rules: ExtCssRuleData[];
+}
+
+/**
  * API interface.
  */
-export type IAffectedElement = AffectedElement;
+export interface IAffectedElement extends Partial<AffectedElementProto> {
+    node: HTMLElement;
+    rules: Partial<ExtCssRuleData>[];
+}
 
 /**
  * Data pairs for selector and number of times the element was removed by ExtendedCss.

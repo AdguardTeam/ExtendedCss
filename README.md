@@ -796,7 +796,7 @@ type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
  * Simplified just for representation.
  * Its optional property 'content' may contain the applied rule text
  */
-type IAffectedElement {
+interface IAffectedElement {
   rules: { style: { content?: string }}[]
   node: HTMLElement;
 }

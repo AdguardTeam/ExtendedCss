@@ -1,4 +1,8 @@
-import { AffectedElement, Context } from './types';
+import {
+    AffectedElement,
+    Context,
+    IAffectedElement,
+} from './types';
 import { CssStyleMap } from '../../css-rule';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';
@@ -74,8 +78,25 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
 };
 
 /**
- * Checks whether the `affectedElement` has required `node` and `rules` properties
- * after `beforeStyleApplied()` execution.
+ * Checks the required properties of `affectedElement`
+ * **before** `beforeStyleApplied()` execution.
+ *
+ * @param affectedElement Affected element.
+ *
+ * @returns False if there is no `node` or `rules`
+ * or `rules` is not an array.
+ */
+const isIAffectedElement = (
+    affectedElement: AffectedElement | IAffectedElement,
+): affectedElement is IAffectedElement => {
+    return 'node' in affectedElement
+        && 'rules' in affectedElement
+        && affectedElement.rules instanceof Array;
+};
+
+/**
+ * Checks the required properties of `affectedElement`
+ * **after** `beforeStyleApplied()` execution.
  * These properties are needed for proper internal usage.
  *
  * @param affectedElement Affected element.
@@ -83,9 +104,11 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
  * @returns False if there is no `node` or `rules`
  * or `rules` is not an array.
  */
-const isAffectedElement = (affectedElement: AffectedElement): boolean => {
-    // simple checking of properties needed for following affectedElement usage
+const isAffectedElement = (
+    affectedElement: AffectedElement | IAffectedElement,
+): affectedElement is AffectedElement => {
     return 'node' in affectedElement
+        && 'originalStyle' in affectedElement
         && 'rules' in affectedElement
         && affectedElement.rules instanceof Array;
 };
@@ -103,17 +126,21 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
         // style is already applied and protected by the observer
         return;
     }
-    let affectedElement: AffectedElement;
+    let affectedElement: AffectedElement | IAffectedElement;
     if (context.beforeStyleApplied) {
+        if (!isIAffectedElement(rawAffectedElement)) {
+            throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
+        }
         affectedElement = context.beforeStyleApplied(rawAffectedElement);
         if (!affectedElement) {
             throw new Error("Callback 'beforeStyleApplied' should return IAffectedElement");
         }
-        if (!isAffectedElement(affectedElement)) {
-            throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
-        }
     } else {
         affectedElement = rawAffectedElement;
+    }
+
+    if (!isAffectedElement(affectedElement)) {
+        throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
     }
 
     const { node, rules } = affectedElement;
