@@ -1,5 +1,4 @@
-import { ThrottleWrapper } from './throttle-wrapper';
-import { mainDisconnect, mainObserve } from './document-observer';
+import { disconnectDocument, observeDocument } from './document-observer';
 import { applyStyle, revertStyle } from './style-setter';
 import { protectStyleAttribute } from './style-protector';
 import { TimingStats, printTimingInfo } from './timing-stats';
@@ -38,7 +37,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     const isDebuggingMode = !!ruleData.debug || context.debug;
     let startTime: number | undefined;
     if (isDebuggingMode) {
-        startTime = ThrottleWrapper.now();
+        startTime = performance.now();
     }
 
     const { ast } = ruleData;
@@ -76,7 +75,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     });
 
     if (isDebuggingMode && startTime) {
-        const elapsedTimeMs = ThrottleWrapper.now() - startTime;
+        const elapsedTimeMs = performance.now() - startTime;
         if (!ruleData.timingStats) {
             ruleData.timingStats = new TimingStats();
         }
@@ -96,7 +95,7 @@ export const applyRules = (context: Context): void => {
     // some rules could make call - selector.querySelectorAll() temporarily to change node id attribute
     // this caused MutationObserver to call recursively
     // https://github.com/AdguardTeam/ExtendedCss/issues/81
-    mainDisconnect(context, context.mainCallback);
+    disconnectDocument(context);
     context.parsedRules.forEach((ruleData) => {
         const nodes = applyRule(context, ruleData);
         Array.prototype.push.apply(newSelectedElements, nodes);
@@ -131,7 +130,7 @@ export const applyRules = (context: Context): void => {
         affLength -= 1;
     }
     // After styles are applied we can start observe again
-    mainObserve(context, context.mainCallback);
+    observeDocument(context);
 
     printTimingInfo(context);
 };

@@ -1,6 +1,18 @@
 # ExtendedCss Changelog
 
 
+## v2.0.52
+
+### Added
+
+- A guard when initializing in an unsupported browser
+
+### Changed
+
+- Improved throttling algorithm for applying rules
+- Deleted deprecated fallback for observing the document DOM
+
+
 ## v2.0.51
 
 ### Changed

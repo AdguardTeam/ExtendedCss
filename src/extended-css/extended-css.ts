@@ -5,7 +5,7 @@ import { parseRemoveSelector, parseRules } from '../css-rule';
 import { ThrottleWrapper } from './helpers/throttle-wrapper';
 import { applyRules } from './helpers/rules-applier';
 import { revertStyle } from './helpers/style-setter';
-import { mainDisconnect } from './helpers/document-observer';
+import { disconnectDocument } from './helpers/document-observer';
 import {
     AffectedElement,
     BeforeStyleAppliedCallback,
@@ -19,10 +19,6 @@ import { nativeTextContent } from '../common/utils/natives';
 
 import { DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE } from '../common/constants';
 
-/**
- * Throttle timeout for ThrottleWrapper to execute applyRules().
- */
-const APPLY_RULES_DELAY = 150;
 
 /**
  * Result of selector validation.
@@ -114,24 +110,17 @@ export interface ExtCssConfiguration {
 export class ExtendedCss {
     private context: Context;
 
-    private applyRulesScheduler: ThrottleWrapper;
-
-    private applyRulesCallbackListener: () => void;
-
-
     /**
      * Creates new ExtendedCss.
      *
      * @param configuration ExtendedCss configuration.
      */
     constructor(configuration: ExtCssConfiguration) {
-        if (!isBrowserSupported()) {
-            logger.error('Browser is not supported by ExtendedCss');
-        }
-
         if (!configuration) {
             throw new Error('ExtendedCss configuration should be provided.');
         }
+
+        this.applyRulesCallbackListener = this.applyRulesCallbackListener.bind(this);
 
         this.context = {
             beforeStyleApplied: configuration.beforeStyleApplied,
@@ -140,8 +129,14 @@ export class ExtendedCss {
             isDomObserved: false,
             removalsStatistic: {},
             parsedRules: [],
-            mainCallback: () => {},
+            scheduler: new ThrottleWrapper(this.applyRulesCallbackListener),
         };
+
+        // TODO: throw an error instead of logging and handle it in related products.
+        if (!isBrowserSupported()) {
+            logger.error('Browser is not supported by ExtendedCss');
+            return;
+        }
 
         // at least 'styleSheet' or 'cssRules' should be provided
         if (!configuration.styleSheet
@@ -171,18 +166,20 @@ export class ExtendedCss {
             return ruleData.debug === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE;
         });
 
-        this.applyRulesScheduler = new ThrottleWrapper(this.context, applyRules, APPLY_RULES_DELAY);
-
-        this.context.mainCallback = this.applyRulesScheduler.run.bind(this.applyRulesScheduler);
-
         if (this.context.beforeStyleApplied && typeof this.context.beforeStyleApplied !== 'function') {
             // eslint-disable-next-line max-len
             throw new Error(`Invalid configuration. Type of 'beforeStyleApplied' should be a function, received: '${typeof this.context.beforeStyleApplied}'`);
         }
+    }
 
-        this.applyRulesCallbackListener = () => {
-            applyRules(this.context);
-        };
+    /**
+     * Invokes {@link applyRules} function with current app context.
+     * 
+     * This method is bound to the class instance in the constructor because it is called
+     * in {@link ThrottleWrapper} and on the DOMContentLoaded event.
+     */
+    private applyRulesCallbackListener(): void {
+        applyRules(this.context);
     }
 
     /**
@@ -221,7 +218,7 @@ export class ExtendedCss {
      * Disposes ExtendedCss and removes our styles from matched elements.
      */
     dispose(): void {
-        mainDisconnect(this.context, this.context.mainCallback);
+        disconnectDocument(this.context);
         this.context.affectedElements.forEach((el) => {
             revertStyle(el);
         });
@@ -256,12 +253,12 @@ export class ExtendedCss {
             throw new Error('Selector should be defined as a string.');
         }
 
-        const start = ThrottleWrapper.now();
+        const start = performance.now();
 
         try {
             return extCssDocument.querySelectorAll(selector);
         } finally {
-            const end = ThrottleWrapper.now();
+            const end = performance.now();
             if (!noTiming) {
                 logger.info(`[ExtendedCss] Elapsed: ${Math.round((end - start) * 1000)} μs.`);
             }

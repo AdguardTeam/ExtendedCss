@@ -5,7 +5,7 @@
  *
  * @returns True if `arg` is number and not NaN.
  */
-export const isNumber = <T>(arg: T): boolean => {
+export const isNumber = (arg: unknown): arg is number => {
     return typeof arg === 'number'
         && !Number.isNaN(arg);
 };

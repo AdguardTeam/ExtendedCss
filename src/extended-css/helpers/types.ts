@@ -1,6 +1,7 @@
-import { ExtCssRuleData } from '../../css-rule';
-import { EventTracker } from './event-tracker';
-import { ExtMutationObserver } from './mutation-observer';
+import type { ExtCssRuleData } from '../../css-rule';
+import type { EventTracker } from './event-tracker';
+import type { ExtMutationObserver } from './mutation-observer';
+import type { ThrottleWrapper } from './throttle-wrapper';
 
 export type MainCallback = () => void;
 
@@ -82,9 +83,10 @@ export type Context = {
     domMutationObserver?: MutationObserver;
 
     /**
-     * Actually the main callback — applyRules() scheduled by ThrottleWrapper.
+     * Scheduler to throttle calls to the function that applies rules
+     * when a lot of DOM events are being tracked by {@link domMutationObserver}.
      */
-    mainCallback: MainCallback;
+    scheduler: ThrottleWrapper;
 
     /**
      * Info about element selectors and their removing counter.
