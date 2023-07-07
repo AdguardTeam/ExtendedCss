@@ -1,4 +1,4 @@
-# <a id="homepage"></a> ExtendedCss ![npm](https://img.shields.io/npm/v/@adguard/extended-css) [![install size](https://packagephobia.com/badge?p=@adguard/extended-css)](https://packagephobia.com/result?p=@adguard/extended-css) ![GitHub](https://img.shields.io/github/license/AdGuardTeam/ExtendedCss)
+# <a id="homepage"></a> ExtendedCss [![npm-badge]][npm-url] [![install-size-badge]][install-size-url] [![license-badge]][license-url]
 
 AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.
 
@@ -911,3 +911,13 @@ ExtendedCss.query(selector);
 - `:has()` pseudo-class should take [`<forgiving-relative-selector-list>` as argument](https://github.com/AdguardTeam/ExtendedCss/issues/154)
 - `:nth-ancestor()` and `:upward()` are not supported [inside of `:not()` pseudo-class argument](https://github.com/AdguardTeam/ExtendedCss/issues/155)
 - `:is()` pseudo-class does not support [complex selectors](https://github.com/AdguardTeam/ExtendedCss/issues/156)
+
+
+[npm-badge]: https://img.shields.io/npm/v/@adguard/extended-css
+[npm-url]: https://www.npmjs.com/package/@adguard/extended-css
+
+[install-size-badge]: https://packagephobia.com/badge?p=@adguard/extended-css
+[install-size-url]: https://packagephobia.com/result?p=@adguard/extended-css
+
+[license-badge]: https://img.shields.io/github/license/AdGuardTeam/ExtendedCss
+[license-url]: https://github.com/AdguardTeam/ExtendedCss/blob/master/LICENSE
