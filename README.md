@@ -1,4 +1,4 @@
-# <a id="homepage"></a> ExtendedCss [![npm-badge]][npm-url] [![install-size-badge]][install-size-url] [![license-badge]][license-url]
+# <a name="homepage"></a> ExtendedCss [![npm-badge]][npm-url] [![install-size-badge]][install-size-url] [![license-badge]][license-url]
 
 AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.
 
@@ -41,7 +41,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 > Pseudo-class names are case-insensitive, e.g. `:HAS()` works as `:has()`. Still the lower-case names are used commonly.
 
-### <a id="extended-css-limitations"></a> Limitations
+### <a name="extended-css-limitations"></a> Limitations
 
 1. CSS [comments](https://developer.mozilla.org/en-US/docs/Web/CSS/Comments) and [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) are not supported.
 
@@ -49,7 +49,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 [`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations), [`:nth-ancestor()`](#extended-css-nth-ancestor-limitations), [`:upward()`](#extended-css-upward-limitations), [`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and [`:remove()`](#extended-css-remove-limitations).
 
 
-### <a id="extended-css-has"></a> Pseudo-class `:has()`
+### <a name="extended-css-has"></a> Pseudo-class `:has()`
 
 Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, [it is not yet supported](https://caniuse.com/css-has) by all popular browsers.
 
@@ -71,7 +71,7 @@ The pseudo-class `:has()` selects the `target` elements that fit to the `selecto
 
 A selector list can be set in `selector` as well. In this case **all** selectors in the list are being matched for now. It is [one of the known issues](#known-issues) and will be fixed for `<forgiving-relative-selector-list>` as argument.
 
-<a id="extended-css-has-limitations"></a> **Limitations and notes**
+<a name="extended-css-has-limitations"></a> **Limitations and notes**
 
 > Usage of the `:has()` pseudo-class is [restricted for some cases (2, 3)](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54):
 > - disallow `:has()` inside the pseudos accepting only compound selectors;
@@ -132,7 +132,7 @@ A selector list can be set in `selector` as well. In this case **all** selectors
 > [Backward compatible syntax for `:has()`](#old-syntax-has) is supported but not recommended.
 
 
-### <a id="extended-css-contains"></a> Pseudo-class `:contains()`
+### <a name="extended-css-contains"></a> Pseudo-class `:contains()`
 
 This pseudo-class principle is very simple: it allows to select the elements that contain specified text or which content matches a specified regular expression. Regexp flags are supported.
 
@@ -177,7 +177,7 @@ div:contains(/it .* banner/gi)
 > [Backward compatible syntax for `:contains()`](#old-syntax-contains) is supported but not recommended.
 
 
-### <a id="extended-css-matches-css"></a> Pseudo-class `:matches-css()`
+### <a name="extended-css-matches-css"></a> Pseudo-class `:matches-css()`
 
 Pseudo-class `:matches-css()` allows to match the element by its current style properties. The work of the pseudo-class is based on using the [`Window.getComputedStyle()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) method.
 
@@ -229,7 +229,7 @@ div:matches-css(before, content: /block me/)
 > [Backward compatible syntax for `:matches-css()`](#old-syntax-matches-css) is supported but not recommended.
 
 
-### <a id="extended-css-matches-attr"></a> Pseudo-class `:matches-attr()`
+### <a name="extended-css-matches-attr"></a> Pseudo-class `:matches-attr()`
 
 Pseudo-class `:matches-attr()` allows to select an element by its attributes, especially if they are randomized.
 
@@ -275,7 +275,7 @@ Pseudo-class `:matches-attr()` allows to select an element by its attributes, es
 ```
 
 
-### <a id="extended-css-matches-property"></a> Pseudo-class `:matches-property()`
+### <a name="extended-css-matches-property"></a> Pseudo-class `:matches-property()`
 
 Pseudo-class `:matches-property()` allows to select an element by matching its properties.
 
@@ -333,7 +333,7 @@ div:matches-property(memoizedProps._owner.src=/ad/)
 > 2. Run `console.dir($0)` in `Console` tab.
 
 
-### <a id="extended-css-xpath"></a> Pseudo-class `:xpath()`
+### <a name="extended-css-xpath"></a> Pseudo-class `:xpath()`
 
 The `:xpath()` pseudo-class allows to select an element by evaluating an XPath expression.
 
@@ -345,7 +345,7 @@ The `:xpath()` pseudo-class allows to select an element by evaluating an XPath e
 - `target`- optional, standard or extended CSS selector
 - `expression` — required, valid XPath expression
 
-<a id="extended-css-xpath-limitations"></a> **Limitations**
+<a name="extended-css-xpath-limitations"></a> **Limitations**
 
 > `target` can be omitted so it is optional. For any other pseudo-class that would mean "apply to *all* DOM nodes", but in case of `:xpath()` it just means "apply to the *whole* document", and such applying slows elements selecting significantly. That's why rules like `#?#:xpath(expression)` are limited to looking inside the `body` tag. For example, rule `#?#:xpath(//div[@data-st-area=\'Advert\'])` is parsed as `#?#body:xpath(//div[@data-st-area=\'Advert\'])`.
 
@@ -370,7 +370,7 @@ The `:xpath()` pseudo-class allows to select an element by evaluating an XPath e
 ```
 
 
-### <a id="extended-css-nth-ancestor"></a> Pseudo-class `:nth-ancestor()`
+### <a name="extended-css-nth-ancestor"></a> Pseudo-class `:nth-ancestor()`
 
 The `:nth-ancestor()` pseudo-class allows to lookup the *nth* ancestor relative to the previously selected element.
 
@@ -382,7 +382,7 @@ subject:nth-ancestor(n)
 - `subject` — required, standard or extended CSS selector
 - `n` — required, number >= 1 and < 256, distance to the needed ancestor from the element selected by `subject`
 
-<a id="extended-css-nth-ancestor-limitations"></a> **Limitations**
+<a name="extended-css-nth-ancestor-limitations"></a> **Limitations**
 
 > Pseudo-class `:nth-ancestor()` is not supported inside the argument of the [`:not()` pseudo-class](#extended-css-not). It is [one of the known issues](#known-issues).
 
@@ -408,7 +408,7 @@ For such DOM:
 `div[class="inner"]:nth-ancestor(3)` selects the element `div#target2`.
 
 
-### <a id="extended-css-upward"></a> Pseudo-class `:upward()`
+### <a name="extended-css-upward"></a> Pseudo-class `:upward()`
 
 The `:upward()` pseudo-class allows to lookup the ancestor relative to the previously selected element.
 
@@ -422,7 +422,7 @@ subject:upward(ancestor)
   - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
   - *standard CSS selector* for matching closest ancestor
 
-<a id="extended-css-upward-limitations"></a> **Limitations**
+<a name="extended-css-upward-limitations"></a> **Limitations**
 
 > Pseudo-class `:upward()` is not supported inside the argument of the [`:not()` pseudo-class](#extended-css-not) argument. It is [one of the known issues](#known-issues).
 
@@ -450,7 +450,7 @@ For such DOM:
 `.inner:upward(3)` selects the element `div#target2`.
 
 
-### <a id="remove-pseudos"></a> Pseudo-class `:remove()` and pseudo-property `remove`
+### <a name="remove-pseudos"></a> Pseudo-class `:remove()` and pseudo-property `remove`
 
 Sometimes, it is necessary to remove a matching element instead of hiding it or applying custom styles. In order to do it, you can use the `:remove()` pseudo-class as well as the `remove` pseudo-property.
 
@@ -465,7 +465,7 @@ selector { remove: true; }
 ```
 - `selector` — required, standard or extended CSS selector
 
-<a id="extended-css-remove-limitations"></a> **Limitations**
+<a name="extended-css-remove-limitations"></a> **Limitations**
 
 > The `:remove()` pseudo-class is limited to work properly only at the end of selector.
 
@@ -489,7 +489,7 @@ div[class]:has(> a > img) { remove: true; }
 <!-- https://github.com/AdguardTeam/ExtendedCss/issues/160 -->
 > Both `:remove()` pseudo-class and `remove` pseudo-property works the same, but we recommend to use the pseudo-property as it is related to an action which should be applied to element, since pseudo-classes is more about elements matching.
 
-### <a id="extended-css-is"></a> Pseudo-class `:is()`
+### <a name="extended-css-is"></a> Pseudo-class `:is()`
 
 The `:is()` pseudo-class allows to match any element that can be selected by any of selectors passed to it. Invalid selectors are skipped and the pseudo-class deals with valid ones with no error thrown. Our implementation of the [native `:is()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:is).
 
@@ -501,7 +501,7 @@ The `:is()` pseudo-class allows to match any element that can be selected by any
 - `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `selectors` — [*forgiving selector list*](https://drafts.csswg.org/selectors-4/#typedef-forgiving-selector-list) of standard or extended selectors. For extended selectors only compound selectors are supported, not complex.
 
-<a id="extended-css-is-limitations"></a> **Limitations**
+<a name="extended-css-is-limitations"></a> **Limitations**
 
 > Rules with the `:is()` pseudo-class should use the [native implementation of `:is()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:is) if rules use `##` marker and it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:is()`, use `#?#`/`#$?#` marker explicitly.
 
@@ -534,7 +534,7 @@ but `:is(*:not([class]):has(> .banner))` can be used instead of it to select the
 ```
 
 
-### <a id="extended-css-not"></a> Pseudo-class `:not()`
+### <a name="extended-css-not"></a> Pseudo-class `:not()`
 
 The `:not()` pseudo-class allows to select elements which are *not matched* by selectors passed as argument. Invalid argument selectors are not allowed and error is to be thrown. Our implementation of the [`:not()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:not).
 
@@ -546,7 +546,7 @@ The `:not()` pseudo-class allows to select elements which are *not matched* by s
 - `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
 - `selectors` — list of standard or extended selectors
 
-<a id="extended-css-not-limitations"></a> **Limitations**
+<a name="extended-css-not-limitations"></a> **Limitations**
 
 > Rules with the `:not()` pseudo-class should use the [native implementation of `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not) if rules use `##` marker and it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:not()`, use `#?#`/`#$?#` marker explicitly.
 
@@ -569,14 +569,14 @@ The `:not()` pseudo-class allows to select elements which are *not matched* by s
 ```
 
 
-### <a id="extended-css-if-not"></a> Pseudo-class `:if-not()` (deprecated)
+### <a name="extended-css-if-not"></a> Pseudo-class `:if-not()` (deprecated)
 
 > The `:if-not()` pseudo-class is deprecated and is no longer supported. Rules with it are considered as invalid.
 
 This pseudo-class was basically a shortcut for `:not(:has())`. It was supported by ExtendedCss for better compatibility with some filters subscriptions.
 
 
-### <a id="selectors-debug-mode"></a> Selectors debugging mode
+### <a name="selectors-debug-mode"></a> Selectors debugging mode
 
 Sometimes, you might need to check the performance of a given selector or a stylesheet. In order to do it without interacting with JavaScript directly, you can use a special `debug` style property. When `ExtendedCss` meets this property, it enables the debugging mode either for a single selector or for all selectors, depending on the `debug` value.
 
@@ -627,11 +627,11 @@ const extendedCss = new ExtendedCss({
 ```
 
 
-### <a id="extended-css-old-syntax"></a> Backward compatible syntax
+### <a name="extended-css-old-syntax"></a> Backward compatible syntax
 
 **Backward compatible syntax is supported but not recommended.**
 
-### <a id="old-syntax-has"></a> Old syntax for pseudo-class `:has()`
+### <a name="old-syntax-has"></a> Old syntax for pseudo-class `:has()`
 
 **Syntax**
 ```
@@ -649,7 +649,7 @@ div[-ext-has=".banner"]
 ```
 
 
-### <a id="old-syntax-contains"></a> Old syntax for pseudo-class `:contains()`
+### <a name="old-syntax-contains"></a> Old syntax for pseudo-class `:contains()`
 
 **Syntax**
 ```
@@ -676,7 +676,7 @@ div[-ext-contains="/this .* banner/"]
 ```
 
 
-### <a id="old-syntax-matches-css"></a> Old syntax for pseudo-class `:matches-css()`
+### <a name="old-syntax-matches-css"></a> Old syntax for pseudo-class `:matches-css()`
 
 **Syntax**
 ```
@@ -749,9 +749,9 @@ IIFE module can be found by the following path `./dist/extended-css.js`
 
 After that you can use ExtendedCss as you wish.
 
-### <a id="extended-css-api"></a> API description
+### <a name="extended-css-api"></a> API description
 
-#### <a id="extended-css-constructor"></a> Constructor
+#### <a name="extended-css-constructor"></a> Constructor
 
 ```
 /**
@@ -762,7 +762,7 @@ After that you can use ExtendedCss as you wish.
 constructor(configuration: ExtCssConfiguration)
 ```
 
-<a id="ext-css-configuration-interface"></a>
+<a name="ext-css-configuration-interface"></a>
 where
 ```ts
 interface ExtCssConfiguration {
@@ -802,14 +802,14 @@ interface IAffectedElement {
 }
 ```
 
-#### <a id="extended-css-init"></a> Public method `init()`
+#### <a name="extended-css-init"></a> Public method `init()`
 
 The `init()` public method initializes ExtendedCss on a page.
 It should be executed on page **as soon as possible**,
 even before the ExtendedCss instance is constructed,
 otherwise the `:contains()` pseudo-class may work incorrectly.
 
-#### <a id="extended-css-apply-dispose"></a> Public methods `apply()` and `dispose()`
+#### <a name="extended-css-apply-dispose"></a> Public methods `apply()` and `dispose()`
 
 After the instance of ExtendedCss is created, it can be applied on the page by the `apply()` method. Its applying also can be stopped and styles are to be restored by the `dispose()` method.
 
@@ -829,7 +829,7 @@ After the instance of ExtendedCss is created, it can be applied on the page by t
 })();
 ```
 
-#### <a id="extended-css-query"></a> Public method `query()`
+#### <a name="extended-css-query"></a> Public method `query()`
 ```ts
 /**
  * Returns a list of the document's elements that match the specified selector
@@ -843,7 +843,7 @@ After the instance of ExtendedCss is created, it can be applied on the page by t
 public static query(selector: string, noTiming = true): HTMLElement[]
 ```
 
-#### <a id="extended-css-validate"></a> Public method `validate()`
+#### <a name="extended-css-validate"></a> Public method `validate()`
 
 ```ts
 /**
@@ -884,7 +884,7 @@ ExtendedCss.query(selector);
 ```
 
 
-## <a id="projects-using-extended-css"></a> Projects using ExtendedCss
+## <a name="projects-using-extended-css"></a> Projects using ExtendedCss
 
 * [CoreLibs](https://github.com/AdguardTeam/CoreLibs) — `Content Script` dist should be updated
 * [TSUrlFilter](https://github.com/AdguardTeam/tsurlfilter)
@@ -894,7 +894,7 @@ ExtendedCss.query(selector);
 * [AdguardForiOS](https://github.com/AdguardTeam/AdguardForiOS)  — both `ExtendedCss` and `TSUrlFilter` should be updated in `advanced-adblocker-web-extension`
 
 
-### <a id="browser-compatibility"></a> Browser compatibility
+### <a name="browser-compatibility"></a> Browser compatibility
 
 | Browser               | Version   |
 |-----------------------|:----------|
@@ -906,7 +906,7 @@ ExtendedCss.query(selector);
 | Internet Explorer     | ❌        |
 
 
-### <a id="known-issues"></a> Known issues
+### <a name="known-issues"></a> Known issues
 
 - `:has()` pseudo-class should take [`<forgiving-relative-selector-list>` as argument](https://github.com/AdguardTeam/ExtendedCss/issues/154)
 - `:nth-ancestor()` and `:upward()` are not supported [inside of `:not()` pseudo-class argument](https://github.com/AdguardTeam/ExtendedCss/issues/155)
