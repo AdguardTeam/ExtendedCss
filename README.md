@@ -29,6 +29,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
     * [apply() and dispose()](#extended-css-apply-dispose)
     * [query()](#extended-css-query)
     * [validate()](#extended-css-validate)
+    * [EXTENDED_CSS_VERSION](#extended-css-version)
   * [Debugging extended selectors](#debugging-extended-selectors)
 * [Projects using ExtendedCss](#projects-using-extended-css)
 * [Browser compatibility](#browser-compatibility)
@@ -862,6 +863,12 @@ type ValidationResult = {
     error: string | null,
 };
 ```
+
+#### <a name="extended-css-version"></a> Public property `EXTENDED_CSS_VERSION`
+
+type: `string`
+
+Current version of ExtendedCss.
 
 ### Debugging extended selectors
 

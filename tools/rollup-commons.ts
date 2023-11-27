@@ -1,4 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
+import json from '@rollup/plugin-json';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-ts';
 
@@ -15,6 +16,7 @@ export const libOutputBanner = `/**
  */`;
 
 export const commonPlugins = [
+    json(),
     resolve(),
     commonjs({
         include: 'node_modules/**',

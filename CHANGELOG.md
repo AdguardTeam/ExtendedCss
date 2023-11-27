@@ -1,5 +1,10 @@
 # ExtendedCss Changelog
 
+## [2.0.55]
+
+### Added
+- Library version number to the exports [#2237](https://github.com/AdguardTeam/AdguardBrowserExtension/issues/2237).
+
 
 ## v2.0.52
 

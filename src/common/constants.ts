@@ -1,3 +1,7 @@
+import { version } from '../../package.json';
+
+export const EXTENDED_CSS_VERSION = version;
+
 const LEFT_SQUARE_BRACKET = '[';
 const RIGHT_SQUARE_BRACKET = ']';
 const LEFT_PARENTHESIS = '(';
