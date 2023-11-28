@@ -1,5 +1,10 @@
 # ExtendedCss Changelog
 
+## [2.0.56]
+
+### Fixed
+- Path to declarations bundle.
+
 ## [2.0.55]
 
 ### Added
