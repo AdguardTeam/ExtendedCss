@@ -179,6 +179,8 @@ describe('converter', () => {
         const invalidSelectors = [
             '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]',
             '[-ext-has="a[data-item^=\'{sources:\']"',
+            'div[-ext-contains*="text"]',
+            'div[-ext-contains=text i]',
         ];
         test.each(invalidSelectors)('%s', (selector) => {
             expect(() => {
