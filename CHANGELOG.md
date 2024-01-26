@@ -1,5 +1,15 @@
 # ExtendedCss Changelog
 
+## [2.0.58]
+
+### Fixed
+- Not using window.console because in some environments it will lead to error.
+
+## [2.0.57]
+
+### Added
+- Tests for `-ext-contains`.
+
 ## [2.0.56]
 
 ### Fixed

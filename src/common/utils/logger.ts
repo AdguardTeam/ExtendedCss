@@ -6,8 +6,8 @@ export const logger = {
         typeof console !== 'undefined'
             && console.error
             && console.error.bind)
-        ? console.error.bind(window.console)
-        : console.error,
+        ? console.error.bind(console)
+        : () => {},
 
     /**
      * Safe console.info version.
@@ -16,6 +16,6 @@ export const logger = {
         typeof console !== 'undefined'
             && console.info
             && console.info.bind)
-        ? console.info.bind(window.console)
-        : console.info,
+        ? console.info.bind(console)
+        : () => {},
 };
