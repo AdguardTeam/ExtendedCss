@@ -36,16 +36,29 @@ Build:
 
             yarn test
             yarn build
-            rm -rf node_modules
         environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
                      BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
+  final-tasks:
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -x
+            set -e
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -la
+
+            echo "Size before cleanup:" && du -h | tail -n 1
+            rm -rf node_modules
+            echo "Size after cleanup:" && du -h | tail -n 1
   artifacts:
     - name: extended-css.js
       location: dist
       pattern: extended-css.js
       required: true
-  final-tasks:
-    - clean
   requirements:
     - adg-docker: 'true'
 
