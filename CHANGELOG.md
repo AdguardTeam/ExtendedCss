@@ -1,5 +1,13 @@
 # ExtendedCss Changelog
 
+## [2.0.59] - 2024-12-02
+
+### Added
+
+- Types declaration to the exports field in the package.json.
+
+[2.0.59]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.0.58...v2.0.59
+
 ## [2.0.56]
 
 ### Fixed
