@@ -1,5 +1,14 @@
 # ExtendedCss Changelog
 
+## [2.1.0] - 2024-12-17
+
+### Changed
+
+- Now version is exported as a string separately instead of export
+  whole package.json.
+
+[2.1.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.0.59...v2.1.0
+
 ## [2.0.59] - 2024-12-02
 
 ### Added

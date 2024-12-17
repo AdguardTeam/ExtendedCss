@@ -10,6 +10,7 @@ export const LIB_FILE_NAME = 'extended-css';
 export const ROOT_PATH = '..';
 export const SRC_DIR_PATH = '../src';
 export const SRC_FILENAME = 'index.ts';
+export const SRC_VERSION_FILENAME = 'version.ts';
 export const SRC_DEFAULT_FILENAME = 'index.default.ts';
 
 export const SELECTOR_SRC_DIR_PATH = '../src/selector';
