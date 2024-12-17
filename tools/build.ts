@@ -27,10 +27,13 @@ const srcInputDefaultPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_DEFAULT_FI
 
 const prodOutputDir = path.resolve(__dirname, DIST_DIR_PATH);
 
-// public method `query()` will be available as
-//
-// import { ExtendedCss } from '@adguard/extended-css';
-// ExtendedCss.query();
+/**
+ * Public method `query()` will be available as named export.
+ *
+ * @example
+ * import { ExtendedCss } from '@adguard/extended-css';
+ * ExtendedCss.query();
+ */
 const namedProdConfig = {
     input: srcInputPath,
     output: [
@@ -51,7 +54,10 @@ const namedProdConfig = {
     plugins: commonPlugins,
 };
 
-// import { EXTENDED_CSS_VERSION } from '@adguard/extended-css/version';
+/**
+ * @example
+ * import { EXTENDED_CSS_VERSION } from '@adguard/extended-css/version';
+ */
 const versionProdConfig = {
     input: srcVersionPath,
     output: [{
@@ -63,7 +69,9 @@ const versionProdConfig = {
     plugins: commonPlugins,
 };
 
-// needed for debug purposes, check "Debugging extended selectors" in README.md
+/**
+ * Needed for debug purposes, check "Debugging extended selectors" in README.md.
+ */
 const defaultProdConfig = {
     input: srcInputDefaultPath,
     output: [
@@ -104,7 +112,9 @@ const buildTxt = async (): Promise<void> => {
     await writeFile(path.resolve(__dirname, DIST_DIR_PATH, BUILD_TXT_FILENAME), content);
 };
 
-// prod extended-css build is default run with no command
+/**
+ * Prod extended-css build is default run with no command.
+ */
 program
     .description('Builds extended-css')
     .action(async () => {
