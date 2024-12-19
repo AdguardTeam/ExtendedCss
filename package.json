@@ -1,6 +1,6 @@
 {
     "name": "@adguard/extended-css",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "description": "AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.",
     "main": "dist/extended-css.umd.js",
     "module": "dist/extended-css.esm.js",
@@ -15,7 +15,8 @@
             "types": "./dist/types/src/index.d.ts"
         },
         "./version": {
-            "import": "./dist/version.esm.js",
+            "require": "./dist/version.cjs.js",
+            "import": "./dist/version.esm.mjs",
             "types": "./dist/types/src/version.d.ts"
         }
     },

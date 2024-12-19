@@ -1,5 +1,13 @@
 # ExtendedCss Changelog
 
+## [2.1.1] - 2024-12-19
+
+### Fixed
+
+- Correctly export version as ESM.
+
+[2.1.1]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.0...v2.1.1
+
 ## [2.1.0] - 2024-12-17
 
 ### Changed

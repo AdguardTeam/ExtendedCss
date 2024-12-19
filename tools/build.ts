@@ -60,12 +60,20 @@ const namedProdConfig = {
  */
 const versionProdConfig = {
     input: srcVersionPath,
-    output: [{
-        file: `${prodOutputDir}/version.esm.js`,
-        format: OutputFormat.ESM,
-        name: `${LIBRARY_NAME}/version`,
-        banner: libOutputBanner,
-    }],
+    output: [
+        {
+            file: `${prodOutputDir}/version.cjs.js`,
+            format: OutputFormat.CJS,
+            name: `${LIBRARY_NAME}/version`,
+            banner: libOutputBanner,
+        },
+        {
+            file: `${prodOutputDir}/version.esm.mjs`,
+            format: OutputFormat.ESM,
+            name: `${LIBRARY_NAME}/version`,
+            banner: libOutputBanner,
+        },
+    ],
     plugins: commonPlugins,
 };
 

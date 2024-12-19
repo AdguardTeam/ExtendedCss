@@ -2,6 +2,7 @@ export enum OutputFormat {
     IIFE = 'iife',
     ESM = 'esm',
     UMD = 'umd',
+    CJS = 'cjs',
 }
 
 export const LIBRARY_NAME = 'ExtendedCss';
