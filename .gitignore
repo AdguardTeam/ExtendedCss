@@ -1,7 +1,0 @@
-.DS_Store
-.vscode
-.env
-node_modules
-yarn-error.log
-dist
-*.tgz
