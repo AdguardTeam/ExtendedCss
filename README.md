@@ -52,9 +52,9 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 ### <a name="extended-css-has"></a> Pseudo-class `:has()`
 
-Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational). Unfortunately, [it is not yet supported](https://caniuse.com/css-has) by all popular browsers.
+Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational). Since December 2023 this pseudo-class works across [major browsers versions](https://caniuse.com/css-has): v105+ (v101+ via the [Experimental Web Platform features](chrome://flags/#enable-experimental-web-platform-features) flag) for Chromium based and v121+ (v103+ by `layout.css.has-selector.enabled = true` flag in [Extended settings](about:config)) for FireFox based.
 
-> Rules with the `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) if they use `##` marker and if it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:has()`, use `#?#`/`#$?#` marker explicitly.
+> Rules with the `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/docs/Web/CSS/Reference/Selectors/:has) if they use `##` marker and if it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:has()`, use `#?#`/`#$?#` marker explicitly.
 
 > Synonym `:-abp-has` is supported by ExtendedCss for better compatibility.
 
@@ -65,10 +65,10 @@ Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3
 ```
 [target]:has(selector)
 ```
-- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element
-- `selector` — required, standard or extended CSS selector
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element.
+- `selector` — required, standard or extended CSS selector.
 
-The pseudo-class `:has()` selects the `target` elements that fit to the `selector`. Also the `selector` can start with a combinator.
+The pseudo-class `:has()` selects the `target` elements that fit to the `selector`. Also the `selector` can start with a [combinator](https://developer.mozilla.org/docs/Web/CSS/Reference/Selectors/Combinators).
 
 A selector list can be set in `selector` as well. In this case **all** selectors in the list are being matched for now. It is [one of the known issues](#known-issues) and will be fixed for `<forgiving-relative-selector-list>` as argument.
 
@@ -78,7 +78,7 @@ A selector list can be set in `selector` as well. In this case **all** selectors
 > - disallow `:has()` inside the pseudos accepting only compound selectors;
 > - disallow `:has()` after regular pseudo-elements.
 
-> Native `:has()` pseudo-class does not allow `:has()`, `:is()`, `:where()` inside `:has()` argument to avoid increasing the `:has()` invalidation complexity ([case 1](https://bugs.chromium.org/p/chromium/issues/detail?id=669058#c54)). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we have not added this limitation to ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
+> Native `:has()` pseudo-class cannot be nested within [another `:has()`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/:has#syntax). But ExtendedCss did not have such limitation earlier and filter lists already contain such rules, so we have not added this limitation to ExtendedCss and allow to use `:has()` inside `:has()` as it was possible before. To use it, just force ExtendedCss usage by setting `#?#`/`#$?#` rule marker.
 
 > Native implementation does not allow any usage of `:scope` inside `:has()` argument ([[1]](https://github.com/w3c/csswg-drafts/issues/7211), [[2]](https://github.com/w3c/csswg-drafts/issues/6399)). Still, there are some such rules in filter lists: `div:has(:scope > a)` which we continue to support by simply converting them to `div:has(> a)`, as it used to be done previously.
 
@@ -915,9 +915,9 @@ ExtendedCss.query(selector);
 
 ### <a name="known-issues"></a> Known issues
 
-- `:has()` pseudo-class should take [`<forgiving-relative-selector-list>` as argument](https://github.com/AdguardTeam/ExtendedCss/issues/154)
-- `:nth-ancestor()` and `:upward()` are not supported [inside of `:not()` pseudo-class argument](https://github.com/AdguardTeam/ExtendedCss/issues/155)
-- `:is()` pseudo-class does not support [complex selectors](https://github.com/AdguardTeam/ExtendedCss/issues/156)
+- `:has()` pseudo-class should take [`<forgiving-relative-selector-list>` as argument](https://github.com/AdguardTeam/ExtendedCss/issues/154).
+- `:nth-ancestor()` and `:upward()` are not supported [inside of `:not()` pseudo-class argument](https://github.com/AdguardTeam/ExtendedCss/issues/155).
+- `:is()` pseudo-class does not support [complex selectors with extended pseudo-classes](https://github.com/AdguardTeam/ExtendedCss/issues/156).
 
 
 [npm-badge]: https://img.shields.io/npm/v/@adguard/extended-css
