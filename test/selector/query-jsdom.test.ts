@@ -935,6 +935,9 @@ describe('extended pseudo-classes', () => {
                 { actual: 'div.base[level="2"]:upward(#root > div)', expected: 'div#parent' },
                 { actual: 'div.base:upward(body > [level])', expected: 'div#root' },
                 { actual: 'div#inner:upward(p ~ div)', expected: 'div#child' },
+                // test selector list as argument — closest ancestor is expected
+                { actual: 'div#inner:upward(#parent, #root)', expected: 'div#parent' },
+                { actual: 'div#inner:upward(#root, #parent)', expected: 'div#parent' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });

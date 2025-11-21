@@ -420,8 +420,11 @@ subject:upward(ancestor)
 ```
 - `subject` — required, standard or extended CSS selector
 - `ancestor` — required, specification for the ancestor of the element selected by `subject`, can be set as:
-  - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
+  - *number* >= 1 and < 256 for distance to the needed ancestor, same as [`:nth-ancestor()`](#extended-css-nth-ancestor)
   - *standard CSS selector* for matching closest ancestor
+
+> A selector list can be set in `ancestor` as well.
+> In this case the closest ancestor from the list will be matched.
 
 <a name="extended-css-upward-limitations"></a> **Limitations**
 
