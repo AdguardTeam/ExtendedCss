@@ -52,7 +52,11 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
 
 ### <a name="extended-css-has"></a> Pseudo-class `:has()`
 
-Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational). Since December 2023 this pseudo-class works across [major browsers versions](https://caniuse.com/css-has): v105+ (v101+ via the [Experimental Web Platform features](chrome://flags/#enable-experimental-web-platform-features) flag) for Chromium based and v121+ (v103+ by `layout.css.has-selector.enabled = true` flag in [Extended settings](about:config)) for FireFox based.
+Draft CSS 4.0 specification describes the [`:has()` pseudo-class](https://www.w3.org/TR/selectors-4/#relational).
+Since December 2023 this pseudo-class works across [major browser versions](https://caniuse.com/css-has):
+
+* v105+ for Chromium based (v101+ via the [Experimental Web Platform features](chrome://flags/#enable-experimental-web-platform-features) flag), and
+* v121+ for FireFox based (v103+ by `layout.css.has-selector.enabled = true` flag in *Extended settings* via `about:config`).
 
 > Rules with the `:has()` pseudo-class should use [native implementation of `:has()`](https://developer.mozilla.org/docs/Web/CSS/Reference/Selectors/:has) if they use `##` marker and if it is possible, i.e. with no other extended selectors inside. To force applying ExtendedCss rules with `:has()`, use `#?#`/`#$?#` marker explicitly.
 
