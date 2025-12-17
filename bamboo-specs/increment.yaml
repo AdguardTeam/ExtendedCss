@@ -24,7 +24,7 @@ Increment:
     clean-working-dir: true
   tasks:
     - checkout:
-        force-clean-build: 'true'
+        force-clean-build: true
     - script:
         interpreter: SHELL
         scripts:
@@ -43,11 +43,12 @@ Increment:
           selectedRepository: defaultRepository
   requirements:
     - adg-docker: 'true'
+    - extension: 'true'
 
 branches:
   create: manually
   delete: never
-  link-to-jira: 'true'
+  link-to-jira: true
 
 labels: []
 other:

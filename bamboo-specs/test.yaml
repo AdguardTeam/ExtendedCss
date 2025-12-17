@@ -9,8 +9,8 @@ variables:
 
 stages:
   - Build:
-      manual: 'false'
-      final: 'false'
+      manual: false
+      final: false
       jobs:
         - Build
 
@@ -22,7 +22,7 @@ Build:
       ${system.YARN_DIR}: "${bamboo.cacheYarn}"
   tasks:
     - checkout:
-        force-clean-build: 'true'
+        force-clean-build: true
     - script:
         interpreter: SHELL
         scripts:
@@ -61,13 +61,14 @@ Build:
       required: true
   requirements:
     - adg-docker: 'true'
+    - extension: 'true'
 
 branches:
   create: for-pull-request
   delete:
     after-deleted-days: '1'
     after-inactive-days: '5'
-  link-to-jira: 'true'
+  link-to-jira: true
 
 notifications:
   - events:

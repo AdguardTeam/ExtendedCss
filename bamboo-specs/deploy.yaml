@@ -15,7 +15,7 @@ npmjs:
   triggers: []
   tasks:
     - checkout:
-        force-clean-build: 'true'
+        force-clean-build: true
     - artifact-download:
         artifacts:
           - name: extended-css.tgz
@@ -36,6 +36,7 @@ npmjs:
             npm publish extended-css.tgz --access public
   requirements:
     - adg-docker: 'true'
+    - extension: 'true'
   notifications:
     - events:
         - deployment-started-and-finished
