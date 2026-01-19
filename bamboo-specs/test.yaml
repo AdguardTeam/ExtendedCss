@@ -60,7 +60,6 @@ Build:
       pattern: extended-css.js
       required: true
   requirements:
-    - adg-docker: 'true'
     - extension: 'true'
 
 branches:
