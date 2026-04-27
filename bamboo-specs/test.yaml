@@ -4,8 +4,6 @@ plan:
   project-key: AJL
   key: EXTCSSTEST
   name: extended-css - test new
-variables:
-  dockerPlaywright: adguard/playwright-runner:1.24.2--2
 
 stages:
   - Build:
@@ -16,10 +14,6 @@ stages:
 
 Build:
   key: BUILD
-  docker:
-    image: "${bamboo.dockerPlaywright}"
-    volumes:
-      ${system.YARN_DIR}: "${bamboo.cacheYarn}"
   tasks:
     - checkout:
         force-clean-build: true
@@ -32,31 +26,22 @@ Build:
             # Fix mixed logs
             exec 2>&1
 
-            yarn install ${bamboo.varsYarn}
-
-            yarn test
-            yarn build
-        environment: BROWSERSTACK_USER="${bamboo.browserstackUser}" \
-                     BROWSERSTACK_KEY="${bamboo.browserstackPassword}"
+            docker build \
+              --file Dockerfile \
+              --progress plain \
+              --secret id=BROWSERSTACK_USER,env=bamboo_browserstackUser \
+              --secret id=BROWSERSTACK_KEY,env=bamboo_browserstackPassword \
+              --target test-output \
+              --output type=local,dest=output \
+              .
   final-tasks:
     - script:
         interpreter: SHELL
         scripts:
-          - |-
-            set -x
-            set -e
-
-            # Fix mixed logs
-            exec 2>&1
-
-            ls -la
-
-            echo "Size before cleanup:" && du -h | tail -n 1
-            rm -rf node_modules
-            echo "Size after cleanup:" && du -h | tail -n 1
+          - "./bamboo-specs/scripts/cleanup.sh output/artifacts/extended-css.js"
   artifacts:
     - name: extended-css.js
-      location: dist
+      location: output/artifacts
       pattern: extended-css.js
       required: true
   requirements:

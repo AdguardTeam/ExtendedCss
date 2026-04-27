@@ -1,0 +1,16 @@
+.git
+.idea
+.vscode
+.DS_Store
+.eslintcache
+*.tsbuildinfo
+build/
+dist/
+output/
+tmp/
+vendor/
+node_modules/
+Dockerfile*
+*.md
+*.log
+*.tgz
