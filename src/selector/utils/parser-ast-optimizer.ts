@@ -10,7 +10,7 @@ import {
     isExtendedSelectorNode,
     isRegularSelectorNode,
 } from './ast-node-helpers';
-import { isAbsolutePseudoClass } from './common-predicates';
+import { isAbsolutePseudoClass, isStandalonePseudoClass } from './common-predicates';
 import { isOptimizationPseudoClass } from './parser-predicates';
 
 import { getLast, getItemByIndex } from '../../common/utils/arrays';
@@ -91,6 +91,11 @@ const shouldOptimizeExtendedSelector = (currExtendedSelectorNode: AnySelectorNod
     const extendedPseudoClassNode = getPseudoClassNode(currExtendedSelectorNode);
     const pseudoName = getNodeName(extendedPseudoClassNode);
     if (isAbsolutePseudoClass(pseudoName)) {
+        return false;
+    }
+    // Standalone pseudo-classes (e.g. :empty-trimmed) do not have selector-list args.
+    // They cannot be optimized and should remain as standalone ExtendedSelector nodes.
+    if (isStandalonePseudoClass(pseudoName)) {
         return false;
     }
     const relativeSelectorList = getRelativeSelectorListNode(extendedPseudoClassNode);

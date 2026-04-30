@@ -9,7 +9,7 @@ import {
     TestPropElement,
 } from '../helpers/selector-query-jsdom';
 
-import { MATCHING_ELEMENT_ERROR_PREFIX } from '../../src/common/constants';
+import { MATCHING_ELEMENT_ERROR_PREFIX, STANDALONE_ERROR_PREFIX } from '../../src/common/constants';
 
 describe('regular selectors', () => {
     afterEach(() => {
@@ -1141,6 +1141,7 @@ describe('extended pseudo-classes', () => {
                 { actual: '.base:not([level="3"])', expected: 'div#child' },
                 { actual: '#inner2 > :not(span)', expected: 'p#innerParagraph' },
                 { actual: '#child *:not(a, span, p)', expected: '#inner, #inner2' },
+                { actual: '#inner2 > :not(:empty-trimmed)', expected: 'p#innerParagraph' },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });
@@ -1163,6 +1164,243 @@ describe('extended pseudo-classes', () => {
                 { selector: 'div:not()', error: 'Missing arg for :not() pseudo-class' },
             ];
             test.each(toThrowInputs)('$selector - $error', (input) => expectToThrowInput(input));
+        });
+    });
+
+    describe('empty-trimmed pseudo-class', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="root">
+                    <p id="emptyParagraph"></p>
+                    <p id="blankParagraph"> \n\t </p>
+                    <p id="textParagraph"> text </p>
+                    <div id="childOnly"><span></span></div>
+                    <!-- &nbsp; (\u00A0) is trimmed by String.prototype.trim() per the ECMAScript spec -->
+                    <div id="nbs"><span>  &nbsp;  </span></div>
+                    <div id="nbs-p"><p>&nbsp;</p></div>
+                    <div id="emptyTextContainer">
+                        <p class="emptyText"></p>
+                    </div>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        describe('empty-trimmed - ok', () => {
+            const successInputs = [
+                // eslint-disable-next-line max-len
+                { actual: '#root > :empty-trimmed', expected: '#emptyParagraph, #blankParagraph, #childOnly, #nbs, #nbs-p, #emptyTextContainer' },
+                { actual: '#root > :not(:empty-trimmed)', expected: '#textParagraph' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+        });
+
+        describe('empty-trimmed - no match', () => {
+            const noMatchSelectors = [
+                '#root > #textParagraph:empty-trimmed',
+            ];
+            test.each(noMatchSelectors)('%s', (selector) => expectNoMatchInput({ selector }));
+        });
+
+        describe('empty-trimmed - invalid syntax', () => {
+            const invalidSelectors = [
+                { selector: 'div:empty-trimmed()', error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS },
+                { selector: 'div:empty-trimmed(foo)', error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS },
+                { selector: ':empty-trimmed()', error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS },
+                { selector: ':empty-trimmed(.banner)', error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS },
+            ];
+            test.each(invalidSelectors)('$selector - $error', (input) => expectToThrowInput(input));
+        });
+
+        describe('empty-trimmed - compound with class', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <p id="emptyWithClass" class="target"></p>
+                        <p id="emptyNoClass"></p>
+                        <p id="textWithClass" class="target">text</p>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :empty-trimmed.target', expected: '#emptyWithClass' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+
+            const noMatchSelectors = [
+                '#root > #textWithClass:empty-trimmed.target',
+            ];
+            test.each(noMatchSelectors)(
+                '%s', (selector) => expectNoMatchInput({ selector }),
+            );
+        });
+
+        describe('empty-trimmed - compound with attribute', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <div id="emptyWithAttr" data-x="1"></div>
+                        <div id="emptyNoAttr"></div>
+                        <div id="textWithAttr" data-x="1">text</div>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :empty-trimmed[data-x]', expected: '#emptyWithAttr' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+        });
+
+        describe('empty-trimmed - chained with standard pseudo-class', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <p id="first"></p>
+                        <p id="second">text</p>
+                        <p id="third"> \t </p>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :nth-child(1):empty-trimmed', expected: '#first' },
+                { actual: '#root > :nth-child(3):empty-trimmed', expected: '#third' },
+                { actual: '#root > :empty-trimmed:nth-child(1)', expected: '#first' },
+                { actual: '#root > :empty-trimmed:nth-child(3)', expected: '#third' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+
+            const noMatchSelectors = [
+                '#root > :nth-child(2):empty-trimmed',
+                '#root > :empty-trimmed:nth-child(2)',
+            ];
+            test.each(noMatchSelectors)(
+                '%s', (selector) => expectNoMatchInput({ selector }),
+            );
+        });
+
+        describe('empty-trimmed - nested inside :has()', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <div id="parentWithEmpty"><span></span></div>
+                        <div id="parentWithText"><span>text</span></div>
+                        <div id="parentWithWhitespace"><span> \t </span></div>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                {
+                    actual: '#root > div:has(:empty-trimmed)',
+                    expected: '#parentWithEmpty, #parentWithWhitespace',
+                },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+        });
+
+        describe('empty-trimmed - zero-width whitespace', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <p id="zwsp">\u200B</p>
+                        <p id="zwspWithSpaces"> \u200B </p>
+                        <p id="zwspWithText">\u200Btext</p>
+                        <p id="trulyEmpty"></p>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :empty-trimmed', expected: '#trulyEmpty' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+
+            const noMatchSelectors = [
+                '#root > #zwsp:empty-trimmed',
+                '#root > #zwspWithSpaces:empty-trimmed',
+                '#root > #zwspWithText:empty-trimmed',
+            ];
+            test.each(noMatchSelectors)(
+                '%s', (selector) => expectNoMatchInput({ selector }),
+            );
+        });
+
+        describe('empty-trimmed - comment-only children', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <div id="commentOnly"><!-- hidden --></div>
+                        <div id="commentAndEmpty"><!-- note --><span></span></div>
+                        <div id="commentAndText"><!-- note --><span>text</span></div>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :empty-trimmed', expected: '#commentOnly, #commentAndEmpty' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+        });
+
+        describe('empty-trimmed - script/style matches', () => {
+            beforeEach(() => {
+                document.body.innerHTML = `
+                    <div id="root">
+                        <div id="emptyScriptChild"><script></script></div>
+                        <div id="emptyStyleChild"><style></style></div>
+                        <div id="emptyDiv"></div>
+                        <div id="scriptChild"><script>var a = 1;</script></div>
+                        <div id="styleChild"><style>.a { color: red; }</style></div>
+                    </div>
+                `;
+            });
+
+            afterEach(() => {
+                document.body.innerHTML = '';
+            });
+
+            const successInputs = [
+                { actual: '#root > :empty-trimmed', expected: '#emptyScriptChild, #emptyStyleChild, #emptyDiv' },
+            ];
+            test.each(successInputs)('%s', (input) => expectSuccessInput(input));
+
+            const noMatchSelectors = [
+                '#root > #scriptChild:empty-trimmed',
+                '#root > #styleChild:empty-trimmed',
+            ];
+            test.each(noMatchSelectors)(
+                '%s', (selector) => expectNoMatchInput({ selector }),
+            );
         });
     });
 });

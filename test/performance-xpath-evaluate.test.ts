@@ -21,6 +21,7 @@ declare global {
  * Returns elements ids selected by extCss.querySelectorAll.
  *
  * @param extSelector Selector for extended css.
+ * @returns Tuple of xpath evaluation counter and matched elements count.
  */
 const getXpathEvaluationResult = async (extSelector: string): Promise<[number, number]> => {
     return page.evaluate((selector: string): [number, number] => {

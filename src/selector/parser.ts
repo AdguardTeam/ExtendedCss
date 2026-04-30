@@ -21,7 +21,7 @@ import {
     isOptimizationPseudoClass,
     isWhiteSpaceChar,
 } from './utils/parser-predicates';
-import { isAbsolutePseudoClass } from './utils/common-predicates';
+import { isAbsolutePseudoClass, isStandalonePseudoClass } from './utils/common-predicates';
 import {
     initAst,
     addAstNodeByType,
@@ -72,6 +72,7 @@ import {
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     NO_SELECTOR_ERROR_PREFIX,
     REMOVE_ERROR_PREFIX,
+    STANDALONE_ERROR_PREFIX,
 } from '../common/constants';
 
 // limit applying of :xpath() pseudo-class to 'any' element
@@ -160,8 +161,11 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         throw new Error(`${NO_WHITESPACE_ERROR_PREFIX}: '${selector}'`);
                     }
                     const lowerCaseTokenValue = tokenValue.toLowerCase();
-                    // save pseudo-class name for brackets balance checking
-                    context.extendedPseudoNamesStack.push(lowerCaseTokenValue);
+                    const isStandalonePseudo = isStandalonePseudoClass(lowerCaseTokenValue);
+                    // save pseudo-class name for brackets balance checking only for functional pseudo-classes.
+                    if (!isStandalonePseudo) {
+                        context.extendedPseudoNamesStack.push(lowerCaseTokenValue);
+                    }
                     // extended pseudo-class name are parsed in lower case
                     // as they should be case-insensitive
                     // https://www.w3.org/TR/selectors-4/#pseudo-classes
@@ -174,6 +178,16 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         // for :not() and :is() pseudo-classes parsed ast should be optimized later
                         if (isOptimizationPseudoClass(lowerCaseTokenValue)) {
                             context.shouldOptimize = true;
+                        }
+                        // standalone pseudo-class is complete right after its name.
+                        if (isStandalonePseudo) {
+                            // standalone pseudo-classes must not have arguments
+                            // check if next token is opening parenthesis
+                            if (nextTokenValue === BRACKET.PARENTHESES.LEFT) {
+                                // eslint-disable-next-line max-len
+                                throw new Error(`${STANDALONE_ERROR_PREFIX.NO_ARGUMENTS}: ':${lowerCaseTokenValue}'`);
+                            }
+                            upToClosest(context, NODE.SELECTOR);
                         }
                     }
                 } else if (isAbsolutePseudoClassNode(bufferNode)) {

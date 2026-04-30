@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 
+import { STANDALONE_ERROR_PREFIX } from '../../src/common/constants';
 import { NODE } from '../../src/selector/nodes';
 import { parse } from '../../src/selector/parser';
 
@@ -11,6 +12,7 @@ import {
     getAbsoluteExtendedSelector,
     getRelativeExtendedWithSingleRegular,
     getSelectorAsRegular,
+    getStandaloneExtendedSelector,
     getSelectorListOfRegularSelectors,
     getSingleSelectorAstWithAnyChildren,
     expectSelectorListOfRegularSelectors,
@@ -1460,6 +1462,45 @@ describe('combined extended selectors', () => {
             { isRegular: true, value: '[data-ad-subtype]' },
             { isAbsolute: true, name: 'upward', value: '1' },
             { isAbsolute: true, name: 'matches-css', value: 'min-height:/[0-9]+/' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
+    it('empty-trimmed contains', () => {
+        const actual = 'div:empty-trimmed:contains(text)';
+        const expected = [
+            { isRegular: true, value: 'div' },
+            { isStandalone: true, name: 'empty-trimmed' },
+            { isAbsolute: true, name: 'contains', value: 'text' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
+    it('empty-trimmed upward', () => {
+        const actual = 'div:empty-trimmed:upward(2)';
+        const expected = [
+            { isRegular: true, value: 'div' },
+            { isStandalone: true, name: 'empty-trimmed' },
+            { isAbsolute: true, name: 'upward', value: '2' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
+    it('empty-trimmed has', () => {
+        const actual = 'div:empty-trimmed:has(> span)';
+        const expected = [
+            { isRegular: true, value: 'div' },
+            { isStandalone: true, name: 'empty-trimmed' },
+            { isRelative: true, name: 'has', value: '> span' },
+        ];
+        expectSingleSelectorAstWithAnyChildren({ actual, expected });
+    });
+
+    it('empty-trimmed not - as standard', () => {
+        const actual = 'div:empty-trimmed:not(.foo)';
+        const expected = [
+            { isRegular: true, value: 'div:not(.foo)' },
+            { isStandalone: true, name: 'empty-trimmed' },
         ];
         expectSingleSelectorAstWithAnyChildren({ actual, expected });
     });
@@ -2948,5 +2989,326 @@ describe('fail on invalid selector', () => {
             },
         ];
         test.each(toThrowInputs)('$selector', (input) => expectToThrowInput(input));
+    });
+});
+
+describe('standalone extended selectors', () => {
+    describe('empty-trimmed', () => {
+        const name = 'empty-trimmed';
+        const testsInputs = [
+            {
+                actual: 'div:empty-trimmed',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    {
+                        isStandalone: true,
+                        name,
+                    },
+                ],
+            },
+            {
+                actual: '*:empty-trimmed',
+                expected: [
+                    { isRegular: true, value: '*' },
+                    {
+                        isStandalone: true,
+                        name,
+                    },
+                ],
+            },
+            {
+                actual: ':empty-trimmed',
+                expected: [
+                    { isRegular: true, value: '*' },
+                    {
+                        isStandalone: true,
+                        name,
+                    },
+                ],
+            },
+        ];
+        test.each(testsInputs)(
+            '$actual',
+            (input) => {
+                expectSingleSelectorAstWithAnyChildren(input);
+            },
+        );
+
+        it('div:empty-trimmed — full ast', () => {
+            const actual = 'div:empty-trimmed';
+            const expected = {
+                type: NODE.SELECTOR_LIST,
+                children: [
+                    {
+                        type: NODE.SELECTOR,
+                        children: [
+                            getRegularSelector('div'),
+                            getStandaloneExtendedSelector('empty-trimmed'),
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+
+        it(':empty-trimmed standalone — full ast', () => {
+            const actual = ':empty-trimmed';
+            const expected = {
+                type: NODE.SELECTOR_LIST,
+                children: [
+                    {
+                        type: NODE.SELECTOR,
+                        children: [
+                            getRegularSelector('*'),
+                            getStandaloneExtendedSelector('empty-trimmed'),
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+
+        it(':not(:empty-trimmed) — full ast', () => {
+            const actual = 'div:not(:empty-trimmed)';
+            const expected = {
+                type: NODE.SELECTOR_LIST,
+                children: [
+                    {
+                        type: NODE.SELECTOR,
+                        children: [
+                            getRegularSelector('div'),
+                            {
+                                type: NODE.EXTENDED_SELECTOR,
+                                children: [
+                                    {
+                                        type: NODE.RELATIVE_PSEUDO_CLASS,
+                                        name: 'not',
+                                        children: [
+                                            {
+                                                type: NODE.SELECTOR_LIST,
+                                                children: [
+                                                    {
+                                                        type: NODE.SELECTOR,
+                                                        children: [
+                                                            getRegularSelector('*'),
+                                                            getStandaloneExtendedSelector('empty-trimmed'),
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+
+        it(':empty-trimmed, .banner — selector-list continuation', () => {
+            const actual = ':empty-trimmed, .banner';
+            const expected = {
+                type: NODE.SELECTOR_LIST,
+                children: [
+                    {
+                        type: NODE.SELECTOR,
+                        children: [
+                            getRegularSelector('*'),
+                            getStandaloneExtendedSelector('empty-trimmed'),
+                        ],
+                    },
+                    getSelectorAsRegular('.banner'),
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+
+        it('div:has(:empty-trimmed) — nested in functional pseudo', () => {
+            const actual = 'div:has(:empty-trimmed)';
+            const expected = {
+                type: NODE.SELECTOR_LIST,
+                children: [
+                    {
+                        type: NODE.SELECTOR,
+                        children: [
+                            getRegularSelector('div'),
+                            {
+                                type: NODE.EXTENDED_SELECTOR,
+                                children: [
+                                    {
+                                        type: NODE.RELATIVE_PSEUDO_CLASS,
+                                        name: 'has',
+                                        children: [
+                                            {
+                                                type: NODE.SELECTOR_LIST,
+                                                children: [
+                                                    {
+                                                        type: NODE.SELECTOR,
+                                                        children: [
+                                                            getRegularSelector('*'),
+                                                            getStandaloneExtendedSelector('empty-trimmed'),
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(parse(actual)).toEqual(expected);
+        });
+    });
+
+    describe('empty-trimmed - compound selectors', () => {
+        const name = 'empty-trimmed';
+        const testsInputs = [
+            {
+                actual: 'div:empty-trimmed + span',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isStandalone: true, name },
+                    { isRegular: true, value: '+ span' },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed > p',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isStandalone: true, name },
+                    { isRegular: true, value: '> p' },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed ~ span',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isStandalone: true, name },
+                    { isRegular: true, value: '~ span' },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed span',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isStandalone: true, name },
+                    { isRegular: true, value: 'span' },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed.foo',
+                expected: [
+                    { isRegular: true, value: 'div.foo' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed#bar',
+                expected: [
+                    { isRegular: true, value: 'div#bar' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed[attr]',
+                expected: [
+                    { isRegular: true, value: 'div[attr]' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed.foo > span',
+                expected: [
+                    { isRegular: true, value: 'div.foo' },
+                    { isStandalone: true, name },
+                    { isRegular: true, value: '> span' },
+                ],
+            },
+            {
+                actual: ':nth-child(1):empty-trimmed',
+                expected: [
+                    { isRegular: true, value: '*:nth-child(1)' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: 'p:nth-child(2):empty-trimmed',
+                expected: [
+                    { isRegular: true, value: 'p:nth-child(2)' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: ':empty-trimmed:nth-child(1)',
+                expected: [
+                    { isRegular: true, value: '*:nth-child(1)' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: 'div:empty-trimmed:nth-child(2)',
+                expected: [
+                    { isRegular: true, value: 'div:nth-child(2)' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: ':empty-trimmed:first-child',
+                expected: [
+                    { isRegular: true, value: '*:first-child' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: ':empty-trimmed:last-child',
+                expected: [
+                    { isRegular: true, value: '*:last-child' },
+                    { isStandalone: true, name },
+                ],
+            },
+            {
+                actual: ':empty-trimmed:hover',
+                expected: [
+                    { isRegular: true, value: '*:hover' },
+                    { isStandalone: true, name },
+                ],
+            },
+        ];
+        test.each(testsInputs)(
+            '$actual',
+            (input) => {
+                expectSingleSelectorAstWithAnyChildren(input);
+            },
+        );
+    });
+
+    describe('empty-trimmed - invalid', () => {
+        const toThrowInputs = [
+            {
+                selector: 'div:empty-trimmed()',
+                error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS,
+            },
+            {
+                selector: 'div:empty-trimmed(foo)',
+                error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS,
+            },
+            {
+                selector: ':empty-trimmed()',
+                error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS,
+            },
+            {
+                selector: ':empty-trimmed(.banner)',
+                error: STANDALONE_ERROR_PREFIX.NO_ARGUMENTS,
+            },
+        ];
+        test.each(toThrowInputs)(
+            '$selector - $error',
+            (input) => expectToThrowInput(input),
+        );
     });
 });

@@ -17,6 +17,7 @@ The idea of extended capabilities is an opportunity to match DOM elements with s
   * [Pseudo-class `:remove()` and pseudo-property `remove`](#remove-pseudos)
   * [Pseudo-class `:is()`](#extended-css-is)
   * [Pseudo-class `:not()`](#extended-css-not)
+  * [Pseudo-class `:empty-trimmed`](#extended-css-empty-trimmed)
   * [Pseudo-class `:if-not()` (deprecated)](#extended-css-if-not)
   * [Selectors debugging mode](#selectors-debug-mode)
   * [Backward compatible syntax](#extended-css-old-syntax)
@@ -575,6 +576,54 @@ The `:not()` pseudo-class allows to select elements which are *not matched* by s
   <span class="text">text</span>
 </div>
 ```
+
+
+### <a name="extended-css-empty-trimmed"></a> Pseudo-class `:empty-trimmed`
+
+The `:empty-trimmed` pseudo-class allows selecting elements without text.
+It also matches elements whose text content consists only of whitespace, including non-breaking spaces such as `&nbsp;`.
+
+**Syntax**
+
+```
+[target]:empty-trimmed
+```
+- `target` — optional, standard or extended CSS selector, can be missed for checking *any* element.
+
+**Notes**
+
+> This pseudo-class has no arguments.
+
+> Matches elements whose textContent (including all text from the element and its descendants) is empty or consists only of whitespace characters (including `&nbsp;`).
+
+> It can be combined with other pseudo-classes, e.g. `:not(:empty-trimmed)` or `:empty-trimmed:nth-child(1)`.
+
+> Unlike the native CSS [`:empty`](https://developer.mozilla.org/en-US/docs/Web/CSS/:empty) pseudo-class, which matches elements that have no child nodes at all (no elements, no text nodes), `:empty-trimmed` checks `textContent` of the element **and its descendants**. This means an element like `<p><span></span></p>` matches `:empty-trimmed` (its text content is empty) but does **not** match native `:empty` (it has a child `<span>` node). See the `#child-empty` example below.
+
+> Elements containing only HTML comments (e.g. `<!-- hidden -->`) also match `:empty-trimmed`, because comment nodes are not reflected in `textContent`.
+
+> Zero-width characters such as zero-width space(`\u200B`) are **not** treated as whitespace. An element containing only zero-width characters does **not** match `:empty-trimmed`.
+
+**Examples**
+
+For such DOM:
+```html
+<!-- HTML code -->
+<div id="root">
+  <p id="empty"></p>
+  <p id="spaces">   </p>
+  <p id="nbsp">&nbsp;</p>
+  <p id="text">hello</p>
+  <p id="child-empty"><span></span></p>
+  <p id="child-text"><span>world</span></p>
+  <p id="comment"><!-- hidden --></p>
+  <p id="zwsp">&#x200B;</p>
+</div>
+```
+
+`#root > :empty-trimmed` selects `#empty`, `#spaces`, `#nbsp`, `#child-empty`, and `#comment`.
+
+`#root > :not(:empty-trimmed)` selects `#text`, `#child-text`, and `#zwsp`.
 
 
 ### <a name="extended-css-if-not"></a> Pseudo-class `:if-not()` (deprecated)

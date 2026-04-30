@@ -10,7 +10,11 @@ import {
     isExtendedSelectorNode,
 } from './ast-node-helpers';
 import { findByAbsolutePseudoPseudo, isMatchedByAbsolutePseudo } from './absolute-processor';
-import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
+import {
+    isAbsolutePseudoClass,
+    isRelativePseudoClass,
+    isStandalonePseudoClass,
+} from './common-predicates';
 
 import { getElementSelectorDesc, getParent } from '../../common/utils/nodes';
 import { flatten, getItemByIndex } from '../../common/utils/arrays';
@@ -31,6 +35,7 @@ import {
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKER,
     ABP_HAS_PSEUDO_CLASS_MARKER,
+    EMPTY_TRIMMED_PSEUDO_CLASS_MARKER,
 } from '../../common/constants';
 
 /**
@@ -339,6 +344,7 @@ export const getByExtendedSelector = (
     } else if (isRelativePseudoClass(pseudoName)) {
         const relativeSelectorList = getRelativeSelectorListNode(extendedPseudoClassNode);
         let relativePredicate: (e: HTMLElement) => boolean;
+
         switch (pseudoName) {
             case HAS_PSEUDO_CLASS_MARKER:
             case ABP_HAS_PSEUDO_CLASS_MARKER:
@@ -366,6 +372,24 @@ export const getByExtendedSelector = (
                 throw new Error(`Unknown relative pseudo-class: '${pseudoName}'`);
         }
         foundElements = domElements.filter(relativePredicate);
+    } else if (isStandalonePseudoClass(pseudoName)) {
+        let standalonePredicate: (e: HTMLElement) => boolean;
+
+        switch (pseudoName) {
+            case EMPTY_TRIMMED_PSEUDO_CLASS_MARKER:
+                standalonePredicate = (element: HTMLElement) => {
+                    const textContent = element.textContent ?? '';
+                    // String.prototype.trim() removes all Unicode whitespace per the ECMAScript spec,
+                    // including \u00A0 (non-breaking space / &nbsp;).
+                    // See https://tc39.es/ecma262/#sec-string.prototype.trim
+                    return textContent.trim().length === 0;
+                };
+                break;
+            default:
+                throw new Error(`Unknown standalone pseudo-class: '${pseudoName}'`);
+        }
+
+        foundElements = domElements.filter(standalonePredicate);
     } else {
         // extra check is parser missed something
         throw new Error(`Unknown extended pseudo-class: '${pseudoName}'`);

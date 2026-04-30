@@ -61,6 +61,29 @@ export const getSelectorAsRegular = (regularValue: string): TestAnySelectorNodeI
 };
 
 /**
+ * Returns extended selector for standalone
+ * (no-argument) pseudo-class like :empty-trimmed.
+ *
+ * @param name Extended pseudo-class name.
+ *
+ * @returns Ast ExtendedSelector node for tests.
+ */
+export const getStandaloneExtendedSelector = (
+    name: string,
+): TestAnySelectorNodeInterface => {
+    return {
+        type: NODE.EXTENDED_SELECTOR,
+        children: [
+            {
+                type: NODE.RELATIVE_PSEUDO_CLASS,
+                name,
+                children: [],
+            },
+        ],
+    };
+};
+
+/**
  * Returns extended selector RelativePseudoClass node with single RegularSelector.
  *
  * @param name Extended pseudo-class name.
@@ -135,7 +158,8 @@ export const getAstWithSingleRegularSelector = (regularValue: string): TestAnySe
 type AnyChildOfSelectorRaw = {
     isRegular?: boolean,
     isAbsolute?: boolean,
-    isRelative?: boolean
+    isRelative?: boolean,
+    isStandalone?: boolean,
     value?: string,
     name?: string,
 };
@@ -155,12 +179,15 @@ export const getSingleSelectorAstWithAnyChildren = (
             isRegular,
             isAbsolute,
             isRelative,
+            isStandalone,
             value,
             name,
         } = raw;
 
-        if (isRegular && isAbsolute && isRelative) {
-            throw new Error('Just one of properties should be specified: isRegular OR isAbsolute');
+        const flags = [isRegular, isAbsolute, isRelative, isStandalone].filter(Boolean);
+        if (flags.length > 1) {
+            // eslint-disable-next-line max-len
+            throw new Error('Just one of properties should be specified: isRegular OR isAbsolute OR isRelative OR isStandalone');
         }
 
         let childNode;
@@ -170,6 +197,8 @@ export const getSingleSelectorAstWithAnyChildren = (
             childNode = getAbsoluteExtendedSelector(name, value);
         } else if (isRelative && name && value) {
             childNode = getRelativeExtendedWithSingleRegular(name, value);
+        } else if (isStandalone && name) {
+            childNode = getStandaloneExtendedSelector(name);
         }
         if (!childNode) {
             throw new Error('Selector node child cannot be undefined. Some input param might be not set.');

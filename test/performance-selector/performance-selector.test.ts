@@ -25,6 +25,7 @@ declare global {
  * Returns PerformanceResult for extCss v1.
  *
  * @param selectorStr Css selector - standard or extended.
+ * @returns PerformanceResult for extCss v1.
  */
 const getV1PerformanceResult = async (selectorStr: string): Promise<PerformanceResult> => {
     return page.evaluate((selector): PerformanceResult => {
@@ -36,6 +37,7 @@ const getV1PerformanceResult = async (selectorStr: string): Promise<PerformanceR
  * Returns PerformanceResult for extCss v2.
  *
  * @param selectorStr Css selector - standard or extended.
+ * @returns PerformanceResult for extCss v2.
  */
 const getV2PerformanceResult = async (selectorStr: string): Promise<PerformanceResult> => {
     return page.evaluate((selector: string): PerformanceResult => {

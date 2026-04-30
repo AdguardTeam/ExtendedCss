@@ -168,6 +168,14 @@ export const HAS_PSEUDO_CLASS_MARKERS = [
 export const IS_PSEUDO_CLASS_MARKER = 'is';
 export const NOT_PSEUDO_CLASS_MARKER = 'not';
 
+// standalone (no-argument pseudo-classes that test the element
+// itself, not a selector-list of related elements):
+export const EMPTY_TRIMMED_PSEUDO_CLASS_MARKER = 'empty-trimmed';
+
+export const STANDALONE_PSEUDO_CLASSES = [
+    EMPTY_TRIMMED_PSEUDO_CLASS_MARKER,
+];
+
 export const ABSOLUTE_PSEUDO_CLASSES = [
     CONTAINS_PSEUDO,
     HAS_TEXT_PSEUDO,
@@ -191,6 +199,7 @@ export const RELATIVE_PSEUDO_CLASSES = [
 export const SUPPORTED_PSEUDO_CLASSES = [
     ...ABSOLUTE_PSEUDO_CLASSES,
     ...RELATIVE_PSEUDO_CLASSES,
+    ...STANDALONE_PSEUDO_CLASSES,
 ];
 
 // these pseudo-classes should be part of RegularSelector value
@@ -239,6 +248,10 @@ export const CONTENT_CSS_PROPERTY = 'content';
 
 export const PSEUDO_PROPERTY_POSITIVE_VALUE = 'true';
 export const DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE = 'global';
+
+export const STANDALONE_ERROR_PREFIX = {
+    NO_ARGUMENTS: 'Standalone pseudo-class does not accept arguments',
+};
 
 export const NO_SELECTOR_ERROR_PREFIX = 'Selector should be defined';
 

@@ -1,6 +1,7 @@
 /**
- * Pseudo-elements are not supported by jsdom
- * so playwright is required for matches-css-before and matches-css-after selector tests.
+ * Playwright is required for:
+ * - matches-css-before and matches-css-after selector tests (pseudo-elements not supported by jsdom).
+ * - empty-trimmed browser integration tests (verifying real textContent behavior).
  *
  * @see {@link https://github.com/jsdom/jsdom/issues/1928}
  */
@@ -40,6 +41,7 @@ declare global {
  * Returns elements ids selected by extCss.querySelectorAll.
  *
  * @param extCssSelector Selector for extended css.
+ * @returns Array of element ids matched by the extended selector.
  */
 const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
     return page.evaluate((selector: string): string[] => {
@@ -51,6 +53,7 @@ const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
  * Returns elements ids selected by document.querySelectorAll().
  *
  * @param regularSelector Standard selector.
+ * @returns Array of element ids matched by the regular selector.
  */
 const getIdsByRegular = async (regularSelector: string): Promise<string[]> => {
     return page.evaluate((selector) => {
@@ -220,6 +223,138 @@ describe('playwright required tests', () => {
 
             extCssSelector = 'p:matches-css(first-line, word-spacing: *px)';
             expect(await getIdsByExtended(extCssSelector)).toEqual(await getIdsByRegular(targetSelector));
+        });
+    });
+
+    describe('empty-trimmed pseudo-class', () => {
+        beforeAll(async () => {
+            await server.start();
+            browser = await chromium.launch();
+        });
+        afterAll(async () => {
+            await browser?.close();
+            await server?.stop();
+        });
+
+        beforeEach(async () => {
+            page = await browser.newPage();
+            await page.goto('http://localhost:8585/empty.html');
+        });
+        afterEach(async () => {
+            await page?.close();
+        });
+
+        it('empty-trimmed - selects empty and whitespace-only elements', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <p id="emptyParagraph"></p>
+                        <p id="blankParagraph"> \n\t </p>
+                        <p id="textParagraph"> text </p>
+                        <div id="childOnly"><span></span></div>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :empty-trimmed';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toEqual(
+                expect.arrayContaining(['emptyParagraph', 'blankParagraph', 'childOnly']),
+            );
+            expect(selectedIds).not.toContain('textParagraph');
+        });
+
+        it('empty-trimmed - does not match element with text content', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <p id="textParagraph"> text </p>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            await expectNoMatch('#root > #textParagraph:empty-trimmed');
+        });
+
+        it('empty-trimmed - combined with :not()', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <p id="emptyParagraph"></p>
+                        <p id="blankParagraph"> \n\t </p>
+                        <p id="textParagraph"> text </p>
+                        <div id="childOnly"><span></span></div>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :not(:empty-trimmed)';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toEqual(['textParagraph']);
+        });
+
+        it('empty-trimmed - nbsp handling', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <div id="nbs"><span>&nbsp;</span></div>
+                        <div id="nbs-p"><p>&nbsp;</p></div>
+                        <p id="emptyParagraph"></p>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :empty-trimmed';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toEqual(['nbs', 'nbs-p', 'emptyParagraph']);
+        });
+
+        it('empty-trimmed - comment-only element matches', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <div id="commentOnly"><!-- hidden --></div>
+                        <div id="textDiv">content</div>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :empty-trimmed';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toContain('commentOnly');
+            expect(selectedIds).not.toContain('textDiv');
+        });
+
+        it('empty-trimmed - zero-width whitespace', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <p id="zwsp">\u200B</p>
+                        <p id="zwspWithSpaces"> \u200B </p>
+                        <p id="zwspWithText">\u200Btext</p>
+                        <p id="trulyEmpty"></p>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :empty-trimmed';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toEqual(['trulyEmpty']);
+
+            await expectNoMatch('#root > #zwsp:empty-trimmed');
+            await expectNoMatch('#root > #zwspWithSpaces:empty-trimmed');
+            await expectNoMatch('#root > #zwspWithText:empty-trimmed');
+        });
+
+        it('empty-trimmed - empty script/style matches', async () => {
+            const bodyInnerHtml = `
+                    <div id="root">
+                        <div id="emptyScriptChild"><script></script></div>
+                        <div id="emptyStyleChild"><style></style></div>
+                        <div id="emptyDiv"></div>
+                        <div id="scriptChild"><script>var a = 1;</script></div>
+                        <div id="styleChild"><style>.a { color: red; }</style></div>
+                    </div>
+                `;
+            await setBodyInnerHtml(bodyInnerHtml);
+
+            const extCssSelector = '#root > :empty-trimmed';
+            const selectedIds = await getIdsByExtended(extCssSelector);
+            expect(selectedIds).toEqual(['emptyScriptChild', 'emptyStyleChild', 'emptyDiv']);
         });
     });
 });
