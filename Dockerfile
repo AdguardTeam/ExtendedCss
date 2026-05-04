@@ -1,15 +1,14 @@
 # Base for build plan (node-ssh)
-FROM adguard/node-ssh:18.13--0 AS base
+FROM adguard/node-ssh:22.17--0 AS base
 WORKDIR /workdir
 ENV YARN_CACHE_FOLDER=/yarn-cache
 
 # Install dependencies (--ignore-scripts skips husky install which requires .git)
-# --ignore-engines: eslint-plugin-jsdoc requires Node >=20, but lint only runs on host
 FROM base AS deps
 RUN --mount=type=cache,target=/yarn-cache,id=extended-css-yarn \
     --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    yarn install --frozen-lockfile --ignore-scripts --ignore-engines
+    yarn install --frozen-lockfile --ignore-scripts
 
 FROM base AS source-deps
 COPY --from=deps /workdir/node_modules ./node_modules
@@ -19,18 +18,17 @@ COPY . .
 # Test plan
 # =============================================================================
 
-FROM adguard/playwright-runner:1.24.2--2 AS test-base
+FROM adguard/playwright-runner:22.17--1.53.2--1 AS test-base
 WORKDIR /workdir
 ENV YARN_CACHE_FOLDER=/yarn-cache
 
 # Install dependencies (--ignore-scripts skips husky install which requires .git)
 # Tests run on BrowserStack (remote), no local browser install needed
-# --ignore-engines: eslint-plugin-jsdoc requires Node >=20, but lint doesn't run here
 FROM test-base AS test-deps
 RUN --mount=type=cache,target=/yarn-cache,id=extended-css-yarn \
     --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    yarn install --frozen-lockfile --ignore-scripts --ignore-engines
+    yarn install --frozen-lockfile --ignore-scripts
 
 FROM test-base AS test
 COPY --from=test-deps /workdir/node_modules ./node_modules

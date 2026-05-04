@@ -24,15 +24,15 @@
 
 ## Prerequisites
 
-| Tool    | Version  | Notes                          |
-| ---     | ---      | ---                            |
-| Node.js | >= 16    | See `engines` in package.json  |
-| Yarn    | 1.x      | Classic Yarn (not Yarn Berry)  |
+| Tool | Version | Notes |
+| --- | --- | --- |
+| Node.js | >= 22 | Required by development tooling |
+| Yarn | 1.x | Classic Yarn (not Yarn Berry) |
 
 Verify your setup:
 
 ```bash
-node --version   # must be 16 or higher
+node --version   # must be 22 or higher
 yarn --version   # must be 1.x
 ```
 
@@ -252,8 +252,8 @@ ls dist/
 
 **`yarn install` fails with Node.js version error**
 
-The project requires Node.js >= 16. Check your version
-with `node --version` and upgrade if needed.
+Development tooling requires Node.js >= 22. Check your
+version with `node --version` and upgrade if needed.
 
 **Tests fail with "Cannot find module 'playwright'"**
 

@@ -30,7 +30,7 @@ by AdGuard products and other ad-blocking tools.
 | --- | --- |
 | Language | TypeScript (compiled to ES5) |
 | Runtime | Browser DOM (no Node.js runtime) |
-| Node.js (build) | >= 16 |
+| Node.js (build) | >= 22 |
 | Package manager | Yarn v1 |
 | Bundler | Rollup v2 (custom build in `tools/build.ts`) |
 | Testing | Jest 29, jsdom, Playwright, QUnit (BrowserStack) |
@@ -327,7 +327,7 @@ costs.
   exact versions for reproducibility.
 - `fs-extra` could be replaced with Node.js built-in
   `fs/promises` (available since Node 14, project requires
-  Node >= 16).
+  Node >= 22 for development tooling).
 - `rimraf` could be replaced with `fs.rm` with `{ recursive:
   true }` (available since Node 14).
 - Several Rollup plugins and build tooling packages are on older
