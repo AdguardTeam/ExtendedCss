@@ -261,7 +261,7 @@ Playwright is a devDependency but may need browser binaries
 installed. Run:
 
 ```bash
-npx playwright install
+yarn playwright install chromium
 ```
 
 **`yarn lint` reports JSDoc errors**
