@@ -2,10 +2,9 @@
 .vscode
 .env
 node_modules
-yarn-error.log
+pnpm-debug.log
 dist
 
-.npmrc
 *.tgz
 
 # Output directory for CI build

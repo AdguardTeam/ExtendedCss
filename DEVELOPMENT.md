@@ -27,13 +27,13 @@
 | Tool | Version | Notes |
 | --- | --- | --- |
 | Node.js | >= 22 | Required by development tooling |
-| Yarn | 1.x | Classic Yarn (not Yarn Berry) |
+| pnpm | 10.x | Installed via corepack or npm |
 
 Verify your setup:
 
 ```bash
 node --version   # must be 22 or higher
-yarn --version   # must be 1.x
+pnpm --version   # must be 10.x
 ```
 
 No other system-level tools are required for local
@@ -52,7 +52,7 @@ cd ExtendedCss
 ### Install Dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 All dependencies are devDependencies — the library ships
@@ -85,19 +85,19 @@ local builds, linting, or local tests.
 
 | Command                | Purpose                                |
 | ---                    | ---                                    |
-| `yarn build`           | Build all output formats to `dist/`    |
-| `yarn build:types`     | Emit `.d.ts` declarations only         |
-| `yarn lint`            | Run ESLint + TypeScript type checking  |
-| `yarn test local`      | Run local tests (Jest + Playwright)    |
-| `yarn test browserstack` | Run BrowserStack tests (needs creds) |
-| `yarn test performance`  | Run performance benchmarks           |
-| `yarn test`            | Run local + BrowserStack tests         |
-| `yarn increment`       | Bump patch version in package.json     |
+| `pnpm build`           | Build all output formats to `dist/`    |
+| `pnpm build:types`     | Emit `.d.ts` declarations only         |
+| `pnpm lint`            | Run ESLint + TypeScript type checking  |
+| `pnpm test local`      | Run local tests (Jest + Playwright)    |
+| `pnpm test browserstack` | Run BrowserStack tests (needs creds) |
+| `pnpm test performance`  | Run performance benchmarks           |
+| `pnpm test`            | Run local + BrowserStack tests         |
+| `pnpm increment`       | Bump patch version in package.json     |
 
 ### Building
 
 ```bash
-yarn build
+pnpm build
 ```
 
 This runs `ts-node tools/build`, which uses Rollup to
@@ -113,18 +113,18 @@ produce the following bundles in `dist/`:
 | `version.esm.mjs`          | ESM (version) |
 
 The `prebuild` script automatically runs `rimraf dist` and
-`yarn build:types` before each build.
+`pnpm build:types` before each build.
 
 To emit only TypeScript declarations:
 
 ```bash
-yarn build:types
+pnpm build:types
 ```
 
 ### Linting and Type Checking
 
 ```bash
-yarn lint
+pnpm lint
 ```
 
 This runs two checks sequentially:
@@ -147,7 +147,7 @@ Key ESLint rules enforced:
 #### Local Tests
 
 ```bash
-yarn test local
+pnpm test local
 ```
 
 This is the primary test command for development. It:
@@ -166,7 +166,7 @@ at the top of the file.
 #### BrowserStack Tests
 
 ```bash
-yarn test browserstack
+pnpm test browserstack
 ```
 
 Requires `BROWSERSTACK_USER` and `BROWSERSTACK_KEY` in your
@@ -176,7 +176,7 @@ then runs them on BrowserStack.
 #### Performance Tests
 
 ```bash
-yarn test performance
+pnpm test performance
 ```
 
 Runs selector performance benchmarks comparing ExtendedCss
@@ -189,7 +189,7 @@ The project uses Husky with a pre-commit hook that runs
 `lint-staged`. When you commit, all staged `.ts` files are
 automatically linted via ESLint.
 
-No additional setup is needed — `yarn install` runs
+No additional setup is needed — `pnpm install` runs
 `husky install` via the `prepare` script.
 
 ### Contributing Changes
@@ -200,9 +200,9 @@ No additional setup is needed — `yarn install` runs
 3. Run the full verification suite:
 
     ```bash
-    yarn lint
-    yarn build
-    yarn test local
+    pnpm lint
+    pnpm build
+    pnpm test local
     ```
 
 4. Update or add tests for any changed functionality.
@@ -228,29 +228,29 @@ No additional setup is needed — `yarn install` runs
 ### Incrementing the Version
 
 ```bash
-yarn increment
+pnpm increment
 ```
 
-This runs `yarn version --patch --no-git-tag-version`,
+This runs `pnpm version patch --no-git-tag-version`,
 bumping the patch version in `package.json` without
 creating a Git tag.
 
 ### Inspecting Build Output
 
-After running `yarn build`, the `dist/` directory contains:
+After running `pnpm build`, the `dist/` directory contains:
 
 - All bundle formats (ESM, UMD, IIFE, minified IIFE)
 - Type declarations under `dist/types/`
 - A `build.txt` file with the version number
 
 ```bash
-yarn build
+pnpm build
 ls dist/
 ```
 
 ## Troubleshooting
 
-**`yarn install` fails with Node.js version error**
+**`pnpm install` fails with Node.js version error**
 
 Development tooling requires Node.js >= 22. Check your
 version with `node --version` and upgrade if needed.
@@ -261,10 +261,10 @@ Playwright is a devDependency but may need browser binaries
 installed. Run:
 
 ```bash
-yarn playwright install chromium
+pnpm exec playwright install chromium
 ```
 
-**`yarn lint` reports JSDoc errors**
+**`pnpm lint` reports JSDoc errors**
 
 Every exported function, class, method, and class property
 must have a JSDoc comment with a complete-sentence
@@ -285,7 +285,7 @@ if you see stale files, clean manually:
 
 ```bash
 rm -rf dist
-yarn build
+pnpm build
 ```
 
 **Type errors in test files**

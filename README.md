@@ -767,29 +767,29 @@ div[-ext-matches-css-before="content: /block me/"]
 
 Install dependencies
 ```
-yarn install
+pnpm install
 ```
 
 And just run
 ```
-yarn build
+pnpm build
 ```
 
 ## How to test
 
 Install dependencies
 ```
-yarn install
+pnpm install
 ```
 
 Run local node testing
 ```
-yarn test local
+pnpm test local
 ```
 
 Run performance tests which are not included in `test local` run and should be executed manually:
 ```
-yarn test performance
+pnpm test performance
 ```
 
 ## Usage

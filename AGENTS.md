@@ -31,7 +31,7 @@ by AdGuard products and other ad-blocking tools.
 | Language | TypeScript (compiled to ES5) |
 | Runtime | Browser DOM (no Node.js runtime) |
 | Node.js (build) | >= 22 |
-| Package manager | Yarn v1 |
+| Package manager | pnpm v10 |
 | Bundler | Rollup v2 (custom build in `tools/build.ts`) |
 | Testing | Jest 29, jsdom, Playwright, QUnit (BrowserStack) |
 | Linting | ESLint 8 (airbnb-typescript, jsdoc plugin) |
@@ -92,23 +92,23 @@ by AdGuard products and other ad-blocking tools.
 
 | Command | Purpose |
 | --- | --- |
-| `yarn build` | Build all output formats to `dist/` |
-| `yarn lint` | Run ESLint and TypeScript type checking |
-| `yarn test local` | Run local tests (Jest + Playwright) |
-| `yarn build:types` | Emit `.d.ts` type declarations only |
+| `pnpm build` | Build all output formats to `dist/` |
+| `pnpm lint` | Run ESLint and TypeScript type checking |
+| `pnpm test local` | Run local tests (Jest + Playwright) |
+| `pnpm build:types` | Emit `.d.ts` type declarations only |
 
 **Notes:**
 
-- `yarn test` runs `ts-node tools/test` which orchestrates Jest
+- `pnpm test` runs `ts-node tools/test` which orchestrates Jest
   and Playwright. Subcommands:
-    - `yarn test local` — local tests only (no BrowserStack).
-    - `yarn test browserstack` — BrowserStack only (needs creds).
-    - `yarn test performance` — performance selector benchmarks.
-    - `yarn test` (no subcommand) — runs local + BrowserStack.
-  Use `yarn test local` for day-to-day development.
-- `yarn build` runs `ts-node tools/build` which uses Rollup to
+    - `pnpm test local` — local tests only (no BrowserStack).
+    - `pnpm test browserstack` — BrowserStack only (needs creds).
+    - `pnpm test performance` — performance selector benchmarks.
+    - `pnpm test` (no subcommand) — runs local + BrowserStack.
+  Use `pnpm test local` for day-to-day development.
+- `pnpm build` runs `ts-node tools/build` which uses Rollup to
   produce ESM, UMD, IIFE, and minified IIFE bundles.
-- `yarn lint` runs both `eslint .` and
+- `pnpm lint` runs both `eslint .` and
   `tsc --project tsconfig.eslint.json --noEmit`.
 
 ## Contribution Instructions
@@ -117,12 +117,12 @@ by AdGuard products and other ad-blocking tools.
   type checker.
 
     Use the following commands:
-    - `yarn lint` to run ESLint and TypeScript type checking
-    - `yarn build` to verify the full build succeeds
+    - `pnpm lint` to run ESLint and TypeScript type checking
+    - `pnpm build` to verify the full build succeeds
 
 - You MUST update the unit tests for changed code.
 
-- You MUST run tests with `yarn test local` to verify that your
+- You MUST run tests with `pnpm test local` to verify that your
   changes do not break existing functionality.
 
 - When making changes to the project structure, ensure the Project
@@ -287,10 +287,10 @@ Raw CSS string
 - **jsdom environment**: Most tests use `@jest-environment jsdom`
   directive at the top of the file.
 - **Performance tests**: Located in `test/performance-selector/`
-  and run separately (not included in default `yarn test`).
+  and run separately (not included in default `pnpm test`).
 - **BrowserStack tests**: Located in `test/browserstack/` and
   require environment variables (`BROWSERSTACK_USER`,
-  `BROWSERSTACK_KEY`). Not included in default `yarn test`.
+  `BROWSERSTACK_KEY`). Not included in default `pnpm test`.
 
 ### Dependency Management
 
@@ -322,9 +322,9 @@ costs.
 **Known exclusions** (to be fixed):
 
 - Most devDependencies in `package.json` use caret (`^`) version
-  ranges instead of exact pinning. The `yarn.lock` file pins
-  exact versions in practice, but `package.json` should use
-  exact versions for reproducibility.
+  ranges instead of exact pinning. The `pnpm-lock.yaml` file
+  pins exact versions in practice, but `package.json` should
+  use exact versions for reproducibility.
 - `fs-extra` could be replaced with Node.js built-in
   `fs/promises` (available since Node 14, project requires
   Node >= 22 for development tooling).

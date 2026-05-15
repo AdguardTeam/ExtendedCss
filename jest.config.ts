@@ -5,7 +5,7 @@ const config: Config.InitialOptions = {
     testPathIgnorePatterns: [
         './test/browserstack',
         './tools/test',
-        // do not run performance selector tests while `yarn test local`
+        // do not run performance selector tests while `pnpm test local`
         // as it should be run separately and manually
         './test/performance-selector/performance-selector.test.ts',
     ],

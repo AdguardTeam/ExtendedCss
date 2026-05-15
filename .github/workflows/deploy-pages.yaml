@@ -17,17 +17,20 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: yarn install
-        run: yarn install
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: Install Playwright browsers
-        run: yarn playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
-      - name: yarn build
-        run: yarn build
+      - name: pnpm build
+        run: pnpm build
 
-      - name: yarn test local
-        run: yarn test local
+      - name: pnpm test local
+        run: pnpm test local
 
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@v4

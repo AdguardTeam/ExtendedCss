@@ -25,7 +25,13 @@
   "ts-node": {
       // override these options only for ts-node
       "compilerOptions": {
-        "module": "commonjs"
+        "module": "commonjs",
+        "types": [
+          "node",
+          "qunit",
+          "jest",
+          "./node_modules/user-agent-data-types"
+        ]
       }
   },
   "include": [
