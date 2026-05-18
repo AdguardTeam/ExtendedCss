@@ -10,6 +10,7 @@ module.exports = {
     plugins: [
         'import',
         '@typescript-eslint',
+        'import-newlines',
     ],
     extends: [
         'eslint:recommended',
@@ -17,9 +18,6 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
         'airbnb-typescript/base',
         'plugin:jsdoc/recommended',
-    ],
-    plugins: [
-        'import-newlines',
     ],
     rules: {
         'indent': ['error', 4, {
@@ -81,9 +79,9 @@ module.exports = {
         // disabled as types are described in typescript
         'jsdoc/require-param-type': 'off',
         'jsdoc/require-returns-type': 'off',
-        // for jest tests
+        // for vitest tests
         'jsdoc/check-tag-names': ['error', {
-            'definedTags': ['jest-environment'],
+            'definedTags': ['vitest-environment'],
         }],
     },
 };

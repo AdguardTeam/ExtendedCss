@@ -33,7 +33,7 @@ by AdGuard products and other ad-blocking tools.
 | Node.js (build) | >= 22 |
 | Package manager | pnpm v10 |
 | Bundler | Rollup v2 (custom build in `tools/build.ts`) |
-| Testing | Jest 29, jsdom, Playwright, QUnit (BrowserStack) |
+| Testing | Vitest 4, jsdom, Vitest browser mode with Playwright, QUnit (BrowserStack) |
 | Linting | ESLint 8 (airbnb-typescript, jsdoc plugin) |
 | Type checking | TypeScript ~4.7 (`tsc`) |
 | Output formats | ESM, UMD, IIFE, IIFE-minified |
@@ -67,7 +67,7 @@ by AdGuard products and other ad-blocking tools.
 │   ├── css-rule/               # CSS rule parsing (selector + style block)
 │   ├── style-block/            # Style declaration parsing and tokenizing
 │   └── stylesheet/             # Full stylesheet string parsing
-├── test/                       # Tests (Jest, Playwright, BrowserStack)
+├── test/                       # Tests (Vitest, Playwright, BrowserStack)
 │   ├── helpers/                # Shared test utilities
 │   ├── selector/               # Selector parser and query tests
 │   ├── css-rule/               # CSS rule parser tests
@@ -77,14 +77,14 @@ by AdGuard products and other ad-blocking tools.
 │   └── performance-selector/   # Performance benchmarks
 ├── tools/                      # Build and test orchestration scripts
 │   ├── build.ts                # Rollup build configurations
-│   ├── test.ts                 # Jest/Playwright/BrowserStack runner
+│   ├── test.ts                 # Vitest/Playwright/BrowserStack runner
 │   └── constants.ts            # Build paths and output names
 ├── package.json                # Dependencies and scripts
 ├── tsconfig.json               # TypeScript config (source)
 ├── tsconfig.eslint.json        # TypeScript config (lint: src+test+tools)
 ├── .eslintrc.js                # ESLint configuration
 ├── babel.config.js             # Babel config for browser targets
-├── jest.config.ts              # Jest configuration
+├── vitest.config.ts            # Vitest unit/browser/performance configuration
 └── AGENTS.md                   # This file
 ```
 
@@ -94,16 +94,16 @@ by AdGuard products and other ad-blocking tools.
 | --- | --- |
 | `pnpm build` | Build all output formats to `dist/` |
 | `pnpm lint` | Run ESLint and TypeScript type checking |
-| `pnpm test local` | Run local tests (Jest + Playwright) |
+| `pnpm test local` | Run local tests (Vitest + browser mode) |
 | `pnpm build:types` | Emit `.d.ts` type declarations only |
 
 **Notes:**
 
-- `pnpm test` runs `ts-node tools/test` which orchestrates Jest
+- `pnpm test` runs `ts-node tools/test` which orchestrates Vitest
   and Playwright. Subcommands:
-    - `pnpm test local` — local tests only (no BrowserStack).
+    - `pnpm test local` — local tests only (Vitest unit + browser projects).
     - `pnpm test browserstack` — BrowserStack only (needs creds).
-    - `pnpm test performance` — performance selector benchmarks.
+    - `pnpm test performance` — Vitest performance selector benchmarks.
     - `pnpm test` (no subcommand) — runs local + BrowserStack.
   Use `pnpm test local` for day-to-day development.
 - `pnpm build` runs `ts-node tools/build` which uses Rollup to
@@ -274,9 +274,10 @@ Raw CSS string
 
 ### Testing
 
-- **Framework**: Jest 29 with jsdom environment for unit tests.
-  Playwright for browser-based selector query tests. QUnit +
-  BrowserStack for cross-browser integration tests.
+- **Framework**: Vitest 4 with jsdom environment for unit tests.
+  Vitest browser mode with Playwright for browser-specific selector
+  query tests. QUnit + BrowserStack for cross-browser integration
+  tests.
 - **Test file placement**: Test files mirror the `src/` structure
   under `test/`. Each source module has a corresponding
   `*.test.ts` file (e.g., `test/selector/parser.test.ts` tests
@@ -284,8 +285,8 @@ Raw CSS string
 - **Shared test utilities** live in `test/helpers/`.
 - **Test naming**: Use `describe`/`test` blocks. `test.each()`
   is used for parameterized tests over selector lists.
-- **jsdom environment**: Most tests use `@jest-environment jsdom`
-  directive at the top of the file.
+- **jsdom environment**: Most unit tests run through the Vitest
+  jsdom project. Browser-specific tests use the browser project.
 - **Performance tests**: Located in `test/performance-selector/`
   and run separately (not included in default `pnpm test`).
 - **BrowserStack tests**: Located in `test/browserstack/` and

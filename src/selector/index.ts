@@ -1,3 +1,3 @@
-export { AnySelectorNodeInterface } from './nodes';
+export type { AnySelectorNodeInterface } from './nodes';
 
 export { extCssDocument, ExtCssDocument, selectElementsByAst } from './query';

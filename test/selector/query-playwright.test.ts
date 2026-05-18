@@ -1,21 +1,12 @@
 /**
- * Playwright is required for:
+ * Vitest browser mode is required for:
  * - matches-css-before and matches-css-after selector tests (pseudo-elements not supported by jsdom).
  * - empty-trimmed browser integration tests (verifying real textContent behavior).
  *
  * @see {@link https://github.com/jsdom/jsdom/issues/1928}
  */
 
-import {
-    chromium,
-    Browser,
-    Page,
-} from 'playwright';
-
-import server from '../helpers/server';
-
-let browser: Browser;
-let page: Page;
+import { extCssDocument } from '../../src/selector';
 
 // sometimes default 5 seconds are not enough
 const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
@@ -26,16 +17,8 @@ const TESTS_RUN_TIMEOUT_MS = 20 * 1000;
  * @param htmlContent Inner html content.
  */
 const setBodyInnerHtml = async (htmlContent: string): Promise<void> => {
-    await page.evaluate((bodyInnerHtml) => {
-        document.body.innerHTML = bodyInnerHtml;
-    }, htmlContent);
+    document.body.innerHTML = htmlContent;
 };
-
-declare global {
-    const testExtCss: {
-        querySelectorAll(selector: string, document: Document): HTMLElement[];
-    };
-}
 
 /**
  * Returns elements ids selected by extCss.querySelectorAll.
@@ -44,9 +27,7 @@ declare global {
  * @returns Array of element ids matched by the extended selector.
  */
 const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
-    return page.evaluate((selector: string): string[] => {
-        return testExtCss.querySelectorAll(selector, document).map((el: Element) => el.id);
-    }, extCssSelector);
+    return extCssDocument.querySelectorAll(extCssSelector).map((el: Element) => el.id);
 };
 
 /**
@@ -56,9 +37,7 @@ const getIdsByExtended = async (extCssSelector: string): Promise<string[]> => {
  * @returns Array of element ids matched by the regular selector.
  */
 const getIdsByRegular = async (regularSelector: string): Promise<string[]> => {
-    return page.evaluate((selector) => {
-        return Array.from(document.querySelectorAll(selector)).map((el) => el.id);
-    }, regularSelector);
+    return Array.from(document.querySelectorAll(regularSelector)).map((el) => el.id);
 };
 
 /**
@@ -71,27 +50,12 @@ const expectNoMatch = async (extCssSelector: string): Promise<void> => {
     expect(selectedIds.length).toEqual(0);
 };
 
-jest.setTimeout(TESTS_RUN_TIMEOUT_MS);
+vi.setConfig({ testTimeout: TESTS_RUN_TIMEOUT_MS });
 
 describe('playwright required tests', () => {
     describe('matches-css pseudos', () => {
-        beforeAll(async () => {
-            await server.start();
-            browser = await chromium.launch();
-            // can be useful for debugging
-            // browser = await chromium.launch({ headless: false });
-        });
-        afterAll(async () => {
-            await browser?.close();
-            await server?.stop();
-        });
-
-        beforeEach(async () => {
-            page = await browser.newPage();
-            await page.goto('http://localhost:8585/empty.html');
-        });
-        afterEach(async () => {
-            await page?.close();
+        afterEach(() => {
+            document.body.innerHTML = '';
         });
 
         it('matches-css - simple', async () => {
@@ -227,21 +191,8 @@ describe('playwright required tests', () => {
     });
 
     describe('empty-trimmed pseudo-class', () => {
-        beforeAll(async () => {
-            await server.start();
-            browser = await chromium.launch();
-        });
-        afterAll(async () => {
-            await browser?.close();
-            await server?.stop();
-        });
-
-        beforeEach(async () => {
-            page = await browser.newPage();
-            await page.goto('http://localhost:8585/empty.html');
-        });
-        afterEach(async () => {
-            await page?.close();
+        afterEach(() => {
+            document.body.innerHTML = '';
         });
 
         it('empty-trimmed - selects empty and whitespace-only elements', async () => {

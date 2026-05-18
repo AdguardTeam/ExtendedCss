@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { STANDALONE_ERROR_PREFIX } from '../../src/common/constants';

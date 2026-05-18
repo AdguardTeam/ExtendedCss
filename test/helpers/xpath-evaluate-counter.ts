@@ -12,8 +12,11 @@ export const checkXpathEvaluation = (selector: string, document: Document): Xpat
         counter += 1;
         return nativeEvaluate.apply(document, args);
     };
-    const extCssDoc = new ExtCssDocument();
-    const elements = extCssDoc.querySelectorAll(selector);
-
-    return { counter, elements };
+    try {
+        const extCssDoc = new ExtCssDocument();
+        const elements = extCssDoc.querySelectorAll(selector);
+        return { counter, elements };
+    } finally {
+        Document.prototype.evaluate = nativeEvaluate;
+    }
 };

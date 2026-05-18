@@ -1,13 +1,17 @@
 declare global {
-    const extCssV1: {
-        query(selector: string, noTiming: boolean): Element[];
-    };
+    interface Window {
+        extCssV1: {
+            query(selector: string, noTiming: boolean): Element[];
+        };
+        extCssV2: {
+            ExtendedCss: {
+                query(selector: string): Element[];
+            }
+        };
+    }
 
-    const extCssV2: {
-        ExtendedCss: {
-            query(selector: string): Element[];
-        }
-    };
+    const extCssV1: Window['extCssV1'];
+    const extCssV2: Window['extCssV2'];
 }
 
 export type PerformanceResult = {

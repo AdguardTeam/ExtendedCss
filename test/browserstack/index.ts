@@ -34,6 +34,7 @@ export const runBrowserstack = async () => {
 
     browserstackRunner.run(config, (error: unknown, report: unknown[]): void => {
         if (error) {
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
             throw error;
         }
         if (report) {

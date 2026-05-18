@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { isUserAgentSupported } from '../../../src/common/utils/user-agents';

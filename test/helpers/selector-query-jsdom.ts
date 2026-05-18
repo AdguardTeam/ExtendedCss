@@ -61,9 +61,9 @@ type ToThrowSelectorInput = {
     selector: string,
 
     /**
-     * Error text to match.
+     * Error text or pattern to match.
      */
-    error: string,
+    error: string | RegExp,
 };
 export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
     const { selector, error } = input;
@@ -74,6 +74,5 @@ export const expectToThrowInput = (input: ToThrowSelectorInput): void => {
 };
 
 export interface TestPropElement extends Element {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    _testProp: string | Object,
+    _testProp: string | object,
 }

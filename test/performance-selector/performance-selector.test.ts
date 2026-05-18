@@ -1,25 +1,36 @@
-import path from 'path';
-import fs from 'fs';
-import {
-    chromium,
-    Browser,
-    Page,
-} from 'playwright';
+import { ExtendedCss } from '../../src';
+import extCssV1Url from '../test-files/extCssV1.js?url';
+import performanceHtml from '../test-files/performance.html?raw';
 
-import server from '../helpers/server';
-import { PerformanceResult } from '../helpers/performance-checker';
+import { PerformanceResult, checkPerformance } from '../helpers/performance-checker';
 
-let browser: Browser;
-let page: Page;
+/**
+ * Extracts the body innerHTML from a full HTML string.
+ *
+ * @param html Full HTML document string.
+ * @returns Body innerHTML content.
+ */
+const getBodyContent = (html: string): string => {
+    const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return match ? match[1]! : '';
+};
 
-declare global {
-    const extCssPerformance: {
-        checkPerformance: {
-            v1(selector: string): PerformanceResult;
-            v2(selector: string): PerformanceResult;
-        }
-    };
-}
+/**
+ * Loads an external script into the browser.
+ *
+ * @param src URL of the script to load.
+ * @returns Promise that resolves when the script is loaded.
+ */
+const loadScript = async (src: string): Promise<void> => {
+    await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Unable to load script: ${src}`));
+        document.head.append(script);
+    });
+};
 
 /**
  * Returns PerformanceResult for extCss v1.
@@ -28,9 +39,7 @@ declare global {
  * @returns PerformanceResult for extCss v1.
  */
 const getV1PerformanceResult = async (selectorStr: string): Promise<PerformanceResult> => {
-    return page.evaluate((selector): PerformanceResult => {
-        return extCssPerformance.checkPerformance.v1(selector);
-    }, selectorStr);
+    return checkPerformance.v1(selectorStr);
 };
 
 /**
@@ -40,9 +49,7 @@ const getV1PerformanceResult = async (selectorStr: string): Promise<PerformanceR
  * @returns PerformanceResult for extCss v2.
  */
 const getV2PerformanceResult = async (selectorStr: string): Promise<PerformanceResult> => {
-    return page.evaluate((selector: string): PerformanceResult => {
-        return extCssPerformance.checkPerformance.v2(selector);
-    }, selectorStr);
+    return checkPerformance.v2(selectorStr);
 };
 
 const compareV2toV1 = (averageV1: number, averageV2: number): string => {
@@ -74,40 +81,34 @@ const getPerformanceComparingLog = (
 let resultsToSave = '';
 
 /**
- * Saves comparison results to file in test/test-files.
+ * Logs comparison results to console.
  *
  * @param resultsStr Performance tests results.
  */
-const saveResultsToFile = (resultsStr: string): void => {
-    const RESULTS_FILENAME = 'performance-selector-results.txt';
-    const TEST_FILES_DIR_PATH = '../test-files';
-    const resultsPath = path.resolve(__dirname, TEST_FILES_DIR_PATH, RESULTS_FILENAME);
-    fs.writeFileSync(resultsPath, resultsStr);
+const logResults = (resultsStr: string): void => {
+    // eslint-disable-next-line no-console
+    console.log(resultsStr);
 };
 
-const SELECTOR_PERFORMANCE_PORT = 8586;
-
-jest.setTimeout(10 * 1000);
+vi.setConfig({ testTimeout: 10 * 1000 });
 
 describe('performance selector tests', () => {
     describe('one pre rule', () => {
         beforeAll(async () => {
-            await server.start(SELECTOR_PERFORMANCE_PORT);
-            browser = await chromium.launch();
-        });
-        afterAll(async () => {
-            await browser.close();
-            await server.stop();
-            // save results to file
-            saveResultsToFile(resultsToSave);
+            await loadScript(extCssV1Url);
+            window.extCssV2 = { ExtendedCss };
         });
 
-        beforeEach(async () => {
-            page = await browser.newPage();
-            await page.goto(`http://localhost:${SELECTOR_PERFORMANCE_PORT}/performance-selector.html`);
+        afterAll(() => {
+            logResults(resultsToSave);
         });
-        afterEach(async () => {
-            await page.close();
+
+        beforeEach(() => {
+            document.body.innerHTML = getBodyContent(performanceHtml);
+        });
+
+        afterEach(() => {
+            document.body.innerHTML = '';
         });
 
         it('simple regular selector', async () => {

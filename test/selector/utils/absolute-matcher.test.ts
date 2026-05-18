@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { getValidMatcherArg, parseRawPropChain } from '../../../src/selector/utils/absolute-matcher';

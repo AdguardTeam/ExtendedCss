@@ -1,8 +1,13 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "es2022"
+  },
   "include": [
     "src",
     "test",
     "tools",
+    "vitest.config.ts",
+    "vitest-env.d.ts"
   ]
 }

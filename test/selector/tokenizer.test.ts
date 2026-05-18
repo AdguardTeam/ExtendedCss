@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { tokenizeAttribute, tokenizeSelector } from '../../src/selector/tokenizer';

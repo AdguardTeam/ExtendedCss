@@ -88,9 +88,9 @@ local builds, linting, or local tests.
 | `pnpm build`           | Build all output formats to `dist/`    |
 | `pnpm build:types`     | Emit `.d.ts` declarations only         |
 | `pnpm lint`            | Run ESLint + TypeScript type checking  |
-| `pnpm test local`      | Run local tests (Jest + Playwright)    |
+| `pnpm test local`      | Run local tests (Vitest + browser mode) |
 | `pnpm test browserstack` | Run BrowserStack tests (needs creds) |
-| `pnpm test performance`  | Run performance benchmarks           |
+| `pnpm test performance`  | Run Vitest performance benchmarks    |
 | `pnpm test`            | Run local + BrowserStack tests         |
 | `pnpm increment`       | Bump patch version in package.json     |
 
@@ -150,18 +150,18 @@ Key ESLint rules enforced:
 pnpm test local
 ```
 
-This is the primary test command for development. It:
-
-1. Builds selector tests for Playwright (Rollup bundle)
-2. Builds xpath evaluation performance tests
-3. Runs Jest with jsdom environment
+This is the primary test command for development. It runs
+Vitest projects for jsdom unit tests and Chromium
+browser-mode tests. Performance tests and BrowserStack
+tests are excluded.
 
 Test files mirror the `src/` structure under `test/`. For
 example, `src/selector/parser.ts` is tested by
 `test/selector/parser.test.ts`.
 
-Most test files use the `@jest-environment jsdom` directive
-at the top of the file.
+Most unit test files run through the jsdom project.
+Browser-specific tests run through Vitest browser mode
+with Chromium.
 
 #### BrowserStack Tests
 

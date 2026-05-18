@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 /**
@@ -7,8 +7,15 @@
  */
 const windowBefore = Object.assign({}, window);
 
-const { ExtendedCss } = require('../src'); // eslint-disable-line @typescript-eslint/no-var-requires
-const { expectElementStyle } = require('./extended-css.test'); // eslint-disable-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/naming-convention */
+let ExtendedCss: typeof import('../src').ExtendedCss;
+let expectElementStyle: typeof import('./extended-css.test').expectElementStyle;
+/* eslint-enable @typescript-eslint/naming-convention */
+
+beforeAll(async () => {
+    ({ ExtendedCss } = await import('../src'));
+    ({ expectElementStyle } = await import('./extended-css.test'));
+});
 
 /**
  * Compares whether the two objects are equal.
