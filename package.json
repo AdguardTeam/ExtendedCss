@@ -29,13 +29,18 @@
         "prebuild": "rimraf dist && pnpm build:types",
         "build:types": "tsc --declaration --emitDeclarationOnly --outdir dist/types",
         "increment": "pnpm version patch --no-git-tag-version",
-        "lint": "eslint . && tsc --project tsconfig.eslint.json --noEmit",
+        "lint": "pnpm lint:code && pnpm lint:md",
+        "lint:code": "eslint . && tsc --project tsconfig.eslint.json --noEmit",
+        "lint:md": "markdownlint .",
         "lint-staged": "lint-staged",
         "prepare": "husky install"
     },
     "lint-staged": {
         "*.ts": [
             "eslint"
+        ],
+        "*.md": [
+            "markdownlint"
         ]
     },
     "author": "AdGuard",
@@ -78,6 +83,8 @@
         "husky": "^8.0.0",
         "jsdom": "29.1.1",
         "lint-staged": "^13.0.3",
+        "markdownlint": "^0.40.0",
+        "markdownlint-cli": "^0.48.0",
         "playwright": "1.56.0",
         "qunit": "2.10.0",
         "rimraf": "^3.0.2",

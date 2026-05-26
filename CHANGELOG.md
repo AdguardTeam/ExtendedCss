@@ -49,13 +49,14 @@ and this project adheres to
 ## [2.0.56]
 
 ### Fixed
+
 - Path to declarations bundle.
 
 ## [2.0.55]
 
 ### Added
-- Library version number to the exports [#2237](https://github.com/AdguardTeam/AdguardBrowserExtension/issues/2237).
 
+- Library version number to the exports [#2237](https://github.com/AdguardTeam/AdguardBrowserExtension/issues/2237).
 
 ## v2.0.52
 
@@ -73,7 +74,8 @@ and this project adheres to
 
 ### Changed
 
-- Property `content` of `style` in `rules` of API type `IAffectedElement` is marked as optional [#163](https://github.com/AdguardTeam/ExtendedCss/issues/163)
+- Property `content` of `style` in `rules` of API type `IAffectedElement` is
+  marked as optional [#163](https://github.com/AdguardTeam/ExtendedCss/issues/163)
 
 
 ## v2.0.49
@@ -173,7 +175,8 @@ and this project adheres to
 
 ### Fixed
 
-- public method `validate()` for `:remove()` pseudo-class, not defined `getComputedStyle` and `XPathResult`, and selector started with combinator
+- public method `validate()` for `:remove()` pseudo-class, not defined
+    `getComputedStyle` and `XPathResult`, and selector started with combinator
 - parsing of:
     - attribute selectors
     - regexp pattern pseudo-class args
@@ -205,13 +208,15 @@ and this project adheres to
 
 - selectors with case-insensitive attribute [#104](https://github.com/AdguardTeam/ExtendedCss/issues/104)
 - parsing of `:xpath()` pseudo-class argument [#106](https://github.com/AdguardTeam/ExtendedCss/issues/106)
-- `:upward()` and `:nth-ancestor()` pseudo-classes are no longer supposed to be the last on selector [#111](https://github.com/AdguardTeam/ExtendedCss/issues/111)
+- `:upward()` and `:nth-ancestor()` pseudo-classes are no longer supposed to be
+  the last on selector [#111](https://github.com/AdguardTeam/ExtendedCss/issues/111)
 - applying of `:not(:has(...))` combination [#141](https://github.com/AdguardTeam/ExtendedCss/issues/141)
 - performance for some pseudo-class combinations [#136](https://github.com/AdguardTeam/ExtendedCss/issues/136)
 
 ### Added
 
-- `::first-line` and other pseudo-element support by `:matches-css()` pseudo-class [#150](https://github.com/AdguardTeam/ExtendedCss/issues/150)
+- `::first-line` and other pseudo-element support by `:matches-css()` pseudo-class
+  [#150](https://github.com/AdguardTeam/ExtendedCss/issues/150)
 
 ### Changed
 

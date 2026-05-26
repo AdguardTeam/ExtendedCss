@@ -24,10 +24,10 @@
 
 ## Prerequisites
 
-| Tool | Version | Notes |
-| --- | --- | --- |
-| Node.js | >= 22 | Required by development tooling |
-| pnpm | 10.x | Installed via corepack or npm |
+| Tool    | Version | Notes                            |
+| ------- | ------- | -------------------------------- |
+| Node.js | >= 22   | Required by development tooling  |
+| pnpm    | 10.x    | Installed via corepack or npm    |
 
 Verify your setup:
 
@@ -83,16 +83,16 @@ local builds, linting, or local tests.
 
 ### Available Commands
 
-| Command                | Purpose                                |
-| ---                    | ---                                    |
-| `pnpm build`           | Build all output formats to `dist/`    |
-| `pnpm build:types`     | Emit `.d.ts` declarations only         |
-| `pnpm lint`            | Run ESLint + TypeScript type checking  |
-| `pnpm test local`      | Run local tests (Vitest + browser mode) |
-| `pnpm test browserstack` | Run BrowserStack tests (needs creds) |
-| `pnpm test performance`  | Run Vitest performance benchmarks    |
-| `pnpm test`            | Run local + BrowserStack tests         |
-| `pnpm increment`       | Bump patch version in package.json     |
+| Command                    | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `pnpm build`               | Build all output formats to `dist/`         |
+| `pnpm build:types`         | Emit `.d.ts` declarations only              |
+| `pnpm lint`                | Run ESLint + TypeScript type checking       |
+| `pnpm test local`          | Run local tests (Vitest + browser mode)     |
+| `pnpm test browserstack`   | Run BrowserStack tests (needs creds)        |
+| `pnpm test performance`    | Run Vitest performance benchmarks           |
+| `pnpm test`                | Run local + BrowserStack tests              |
+| `pnpm increment`           | Bump patch version in package.json          |
 
 ### Building
 
@@ -104,11 +104,11 @@ This runs `ts-node tools/build`, which uses Rollup to
 produce the following bundles in `dist/`:
 
 | File                       | Format        |
-| ---                        | ---           |
+| -------------------------- | ------------- |
 | `extended-css.esm.js`      | ESM           |
 | `extended-css.umd.js`      | UMD           |
-| `extended-css.js`           | IIFE          |
-| `extended-css.min.js`       | IIFE minified |
+| `extended-css.js`          | IIFE          |
+| `extended-css.min.js`      | IIFE minified |
 | `version.cjs.js`           | CJS (version) |
 | `version.esm.mjs`          | ESM (version) |
 
@@ -250,12 +250,12 @@ ls dist/
 
 ## Troubleshooting
 
-**`pnpm install` fails with Node.js version error**
+### `pnpm install` fails with Node.js version error
 
 Development tooling requires Node.js >= 22. Check your
 version with `node --version` and upgrade if needed.
 
-**Tests fail with "Cannot find module 'playwright'"**
+### Tests fail with "Cannot find module 'playwright'"
 
 Playwright is a devDependency but may need browser binaries
 installed. Run:
@@ -264,7 +264,7 @@ installed. Run:
 pnpm exec playwright install chromium
 ```
 
-**`pnpm lint` reports JSDoc errors**
+### `pnpm lint` reports JSDoc errors
 
 Every exported function, class, method, and class property
 must have a JSDoc comment with a complete-sentence
@@ -272,13 +272,13 @@ description. The ESLint jsdoc plugin enforces `@returns`
 tags and `@throws` tags (when applicable). See the JSDoc
 rules in `.eslintrc.js`.
 
-**BrowserStack tests fail with authentication errors**
+### BrowserStack tests fail with authentication errors
 
 Ensure your `.env` file contains valid `BROWSERSTACK_USER`
 and `BROWSERSTACK_KEY` values. Copy `.env-example` as a
 template.
 
-**Build produces stale output**
+### Build produces stale output
 
 The `prebuild` script runs `rimraf dist` automatically, but
 if you see stale files, clean manually:
@@ -288,7 +288,7 @@ rm -rf dist
 pnpm build
 ```
 
-**Type errors in test files**
+### Type errors in test files
 
 The lint command uses `tsconfig.eslint.json`, which extends
 `tsconfig.json` and includes `src/`, `test/`, and `tools/`.
