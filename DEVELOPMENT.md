@@ -24,16 +24,16 @@
 
 ## Prerequisites
 
-| Tool    | Version | Notes                            |
-| ------- | ------- | -------------------------------- |
-| Node.js | >= 22   | Required by development tooling  |
-| pnpm    | 10.x    | Installed via corepack or npm    |
+| Tool    | Version           | Notes                            |
+| ------- | ----------------- | -------------------------------- |
+| Node.js | >= 22             | Required by development tooling  |
+| pnpm    | >=10.33.4 and <11 | Installed via corepack or npm    |
 
 Verify your setup:
 
 ```bash
 node --version   # must be 22 or higher
-pnpm --version   # must be 10.x
+pnpm --version   # must be >=10.33.4 and <11
 ```
 
 No other system-level tools are required for local

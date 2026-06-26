@@ -26,23 +26,23 @@ by AdGuard products and other ad-blocking tools.
 
 ## Technical Context
 
-| Field                | Value                                                                            |
-| -------------------- | -------------------------------------------------------------------------------- |
-| Language             | TypeScript (compiled to ES5)                                                     |
-| Runtime              | Browser DOM (no Node.js runtime)                                                 |
-| Node.js (build)      | >= 22                                                                            |
-| Package manager      | pnpm v10                                                                         |
-| Bundler              | Rollup v2 (custom build in `tools/build.ts`)                                     |
-| Testing              | Vitest 4, jsdom, Vitest browser mode with Playwright, QUnit (BrowserStack)       |
-| Linting              | ESLint 8 (airbnb-typescript, jsdoc plugin)                                       |
-| Type checking        | TypeScript ~4.7 (`tsc`)                                                          |
-| Output formats       | ESM, UMD, IIFE, IIFE-minified                                                    |
-| License              | GPL-3.0                                                                          |
-| Target platform      | Modern browsers (Chrome 88+, Firefox 84+, Edge 88+, Opera 80+, Safari 14+)       |
-| Project type         | Library / Package                                                                |
-| Performance goals    | N/A                                                                              |
-| Constraints          | No production dependencies — all deps are devDependencies                        |
-| Scale/Scope          | Consumed by AdGuard browser extensions and other ad-blocking tools               |
+| Field                | Value                                                                      |
+| -------------------- | -------------------------------------------------------------------------- |
+| Language             | TypeScript (compiled to ES5)                                               |
+| Runtime              | Browser DOM (no Node.js runtime)                                           |
+| Node.js (build)      | >= 22                                                                      |
+| Package manager      | pnpm >=10.33.4 and <11                                                     |
+| Bundler              | Rollup v2 (custom build in `tools/build.ts`)                               |
+| Testing              | Vitest 4, jsdom, Vitest browser mode with Playwright, QUnit (BrowserStack) |
+| Linting              | ESLint 8 (airbnb-typescript, jsdoc plugin)                                 |
+| Type checking        | TypeScript ~4.7 (`tsc`)                                                    |
+| Output formats       | ESM, UMD, IIFE, IIFE-minified                                              |
+| License              | GPL-3.0                                                                    |
+| Target platform      | Modern browsers (Chrome 88+, Firefox 84+, Edge 88+, Opera 80+, Safari 14+) |
+| Project type         | Library / Package                                                          |
+| Performance goals    | N/A                                                                        |
+| Constraints          | No production dependencies — all deps are devDependencies                  |
+| Scale/Scope          | Consumed by AdGuard browser extensions and other ad-blocking tools         |
 
 ## Project Structure
 
