@@ -14,6 +14,19 @@ export const SRC_FILENAME = 'index.ts';
 export const SRC_VERSION_FILENAME = 'version.ts';
 export const SRC_DEFAULT_FILENAME = 'index.default.ts';
 
+export const SRC_APPLY_FILENAME = 'index.apply.ts';
+
+/**
+ * Base file name for the ExtendedCSS apply injection bundle (IIFE), used for
+ * `chrome.scripting.executeScript()` injection (AG-45086).
+ */
+export const APPLY_LIB_FILE_NAME = 'extended-css.apply';
+
+/**
+ * Global variable name exposed by the apply injection IIFE bundle.
+ */
+export const APPLY_GLOBAL_NAME = 'applyExtendedCss';
+
 export const SELECTOR_SRC_DIR_PATH = '../src/selector';
 export const SELECTOR_QUERY_FILE_NAME = 'query.ts';
 

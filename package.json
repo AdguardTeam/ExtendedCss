@@ -26,6 +26,7 @@
     "scripts": {
         "build": "ts-node tools/build",
         "test": "ts-node tools/test",
+        "test:smoke": "pnpm build && vitest run --project smoke",
         "prebuild": "rimraf dist && pnpm build:types",
         "build:types": "tsc --declaration --emitDeclarationOnly --outdir dist/types",
         "increment": "pnpm version patch --no-git-tag-version",

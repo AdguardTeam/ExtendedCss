@@ -50,6 +50,7 @@ by AdGuard products and other ad-blocking tools.
 ├── src/                        # Library source code
 │   ├── index.ts                # Named exports entry point (ESM/UMD)
 │   ├── index.default.ts        # Default export entry point (IIFE)
+│   ├── index.apply.ts          # Apply entry point for scripting injection (IIFE)
 │   ├── version.ts              # Separate version export
 │   ├── common/                 # Shared constants, tokenizer, utilities
 │   │   ├── constants.ts        # Pseudo-class names, brackets, operators

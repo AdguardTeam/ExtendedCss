@@ -11,8 +11,11 @@ import {
     SRC_DIR_PATH,
     SRC_FILENAME,
     SRC_DEFAULT_FILENAME,
+    SRC_APPLY_FILENAME,
     LIBRARY_NAME,
     LIB_FILE_NAME,
+    APPLY_LIB_FILE_NAME,
+    APPLY_GLOBAL_NAME,
     DIST_DIR_PATH,
     BUILD_TXT_FILENAME,
     OutputFormat,
@@ -24,6 +27,7 @@ import { version } from '../package.json';
 const srcInputPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_FILENAME);
 const srcVersionPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_VERSION_FILENAME);
 const srcInputDefaultPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_DEFAULT_FILENAME);
+const srcInputApplyPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_APPLY_FILENAME);
 
 const prodOutputDir = path.resolve(__dirname, DIST_DIR_PATH);
 
@@ -106,6 +110,36 @@ const defaultProdConfig = {
     plugins: commonPlugins,
 };
 
+/**
+ * Self-contained minified IIFE exposing `applyExtendedCss` for injection via
+ * `chrome.scripting.executeScript()` (AG-45086). Mirrors
+ * `defaultProdConfig` but uses the apply entry point.
+ */
+const applyProdConfig = {
+    input: srcInputApplyPath,
+    output: [
+        {
+            file: `${prodOutputDir}/${APPLY_LIB_FILE_NAME}.js`,
+            format: OutputFormat.IIFE,
+            name: APPLY_GLOBAL_NAME,
+            banner: libOutputBanner,
+        },
+        {
+            file: `${prodOutputDir}/${APPLY_LIB_FILE_NAME}.min.js`,
+            format: OutputFormat.IIFE,
+            name: APPLY_GLOBAL_NAME,
+            banner: libOutputBanner,
+            plugins: [terser({
+                output: {
+                    comments: false,
+                    preamble: libOutputBanner,
+                },
+            })],
+        },
+    ],
+    plugins: commonPlugins,
+};
+
 const buildLib = async (): Promise<void> => {
     const namedConfigName = 'extended-css prod build for named export';
     await rollupRunner(namedProdConfig, namedConfigName);
@@ -113,6 +147,8 @@ const buildLib = async (): Promise<void> => {
     await rollupRunner(versionProdConfig, versionConfigName);
     const defaultConfigName = 'extended-css prod build for default export for debugging';
     await rollupRunner(defaultProdConfig, defaultConfigName);
+    const applyConfigName = 'extended-css prod build for apply injection entry';
+    await rollupRunner(applyProdConfig, applyConfigName);
 };
 
 const buildTxt = async (): Promise<void> => {

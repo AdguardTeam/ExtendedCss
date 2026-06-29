@@ -8,6 +8,14 @@ The format is based on
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- New `index.apply.ts` entry point and `extended-css.apply.min.js` build
+  output: a self-contained minified IIFE exposing `applyExtendedCss(cssRules,
+  beforeStyleApplied?)` for injection via `scripting.executeScript()`.
+
 ## [2.2.0] - 2026-04-30
 
 ### Added

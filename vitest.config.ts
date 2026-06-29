@@ -25,6 +25,18 @@ export default defineConfig({
                         'test/performance-selector/**',
                         'test/selector/query-playwright.test.ts',
                         'test/performance-xpath-evaluate.test.ts',
+                        'test/extended-css-apply-bundle.test.ts',
+                    ],
+                    testTimeout: LOCAL_TEST_TIMEOUT_MS,
+                },
+            },
+            {
+                test: {
+                    name: 'smoke',
+                    globals: true,
+                    environment: 'jsdom',
+                    include: [
+                        'test/extended-css-apply-bundle.test.ts',
                     ],
                     testTimeout: LOCAL_TEST_TIMEOUT_MS,
                 },
