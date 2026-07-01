@@ -1,4 +1,6 @@
 import path from 'path';
+import fs from 'fs-extra';
+import chalk from 'chalk';
 import { writeFile } from './utils';
 import { program } from 'commander';
 
@@ -30,6 +32,41 @@ const srcInputDefaultPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_DEFAULT_FI
 const srcInputApplyPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_APPLY_FILENAME);
 
 const prodOutputDir = path.resolve(__dirname, DIST_DIR_PATH);
+
+const { log } = console;
+
+/**
+ * Maximum allowed size (in bytes) of the minified apply IIFE bundle.
+ *
+ * The bundle is injected via `chrome.scripting.executeScript()` (AG-45086) and
+ * must stay small; MV3 `scripting.executeScript` recommends staying well under
+ * the per-file limits.
+ */
+const APPLY_BUNDLE_SIZE_LIMIT_BYTES = 500 * 1024;
+
+/**
+ * Asserts that the minified apply IIFE bundle stays under the configured size
+ * limit. Fails the build (`pnpm build`) if the bundle is too large for
+ * `chrome.scripting.executeScript()` injection.
+ *
+ * @throws If the bundle exceeds `APPLY_BUNDLE_SIZE_LIMIT_BYTES`.
+ */
+const assertApplyBundleSize = (): void => {
+    const minifiedPath = path.resolve(prodOutputDir, `${APPLY_LIB_FILE_NAME}.min.js`);
+    const { size: sizeBytes } = fs.statSync(minifiedPath);
+    const limitBytes = APPLY_BUNDLE_SIZE_LIMIT_BYTES;
+    if (sizeBytes >= limitBytes) {
+        const sizeKb = Math.round(sizeBytes / 1024);
+        const limitKb = Math.round(limitBytes / 1024);
+        throw new Error(
+            `Apply bundle size ${sizeKb} KB exceeds the ${limitKb} KB limit: ${minifiedPath}.`,
+        );
+    }
+    log(
+        chalk.greenBright('Apply bundle size:'),
+        `${Math.round(sizeBytes / 1024)} KB (limit ${Math.round(limitBytes / 1024)} KB)`,
+    );
+};
 
 /**
  * Public method `query()` will be available as named export.
@@ -149,6 +186,8 @@ const buildLib = async (): Promise<void> => {
     await rollupRunner(defaultProdConfig, defaultConfigName);
     const applyConfigName = 'extended-css prod build for apply injection entry';
     await rollupRunner(applyProdConfig, applyConfigName);
+
+    assertApplyBundleSize();
 };
 
 const buildTxt = async (): Promise<void> => {

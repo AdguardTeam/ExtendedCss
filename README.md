@@ -28,6 +28,7 @@ styles with non-standard CSS properties.
 - [How to build](#how-to-build)
 - [How to test](#how-to-test)
 - [Usage](#usage)
+    - [Apply bundle (`applyExtendedCss`)](#extended-css-apply-bundle)
     - [API description](#extended-css-api)
         - [Constructor](#extended-css-constructor)
         - [init()](#extended-css-init)
@@ -975,6 +976,38 @@ const ExtendedCss = require('extended-css');
 IIFE module can be found by the following path `./dist/extended-css.js`
 
 After that you can use ExtendedCss as you wish.
+
+### <a name="extended-css-apply-bundle"></a> Apply bundle (`applyExtendedCss`)
+
+A self-contained minified IIFE bundle — `./dist/extended-css.apply.min.js` — is
+provided for injection via `chrome.scripting.executeScript()` (MV3). It exposes
+a single function, `applyExtendedCss`, which encapsulates the correct lifecycle:
+it calls `init()` (snapshots the native `textContent` getter so `:contains()`
+works correctly on pages that may mock DOM APIs) before `apply()`.
+
+```js
+// files-style injection
+chrome.scripting.executeScript({
+    files: ['dist/extended-css.apply.min.js'],
+});
+// then call it in a separate injection:
+chrome.scripting.executeScript({
+    func: (rules) => applyExtendedCss(rules),
+    args: [['.ad:has(.banner) { display: none !important; }']],
+    world: 'MAIN',
+});
+```
+
+```ts
+// TypeScript signature
+applyExtendedCss(
+    cssRules: string[],
+    beforeStyleApplied?: (el: IAffectedElement) => IAffectedElement,
+): ExtendedCss;
+```
+
+The bundle has no runtime dependencies and is kept under a strict size limit
+(enforced at build time by `pnpm build`).
 
 ### <a name="extended-css-api"></a> API description
 

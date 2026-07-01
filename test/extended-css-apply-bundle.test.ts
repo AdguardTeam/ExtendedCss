@@ -4,18 +4,20 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { ExtendedCss, IAffectedElement } from '../src';
 
 const APPLY_BUNDLE_PATH = resolve(__dirname, '..', 'dist', 'extended-css.apply.min.js');
 
 type ApplyFn = (
     cssRules: string[],
-    beforeStyleApplied?: (el: unknown) => unknown,
-) => unknown;
+    beforeStyleApplied?: (el: IAffectedElement) => IAffectedElement,
+) => ExtendedCss;
 
 const HIDE_RULE = '.ad:has(.child) { display: none !important; }';
+const CONTAINS_HIDE_RULE = '.ad:contains(ads) { display: none !important; }';
 
 const setupDom = (): void => {
-    document.body.innerHTML = '<div class="container"><div class="ad"><span class="child">ad</span></div></div>';
+    document.body.innerHTML = '<div class="container"><div class="ad"><span class="child">ads</span></div></div>';
 };
 
 describe('ExtendedCSS apply bundle (smoke test)', () => {
@@ -41,6 +43,20 @@ describe('ExtendedCSS apply bundle (smoke test)', () => {
         const apply = (globalThis as { applyExtendedCss?: ApplyFn }).applyExtendedCss;
         expect(typeof apply).toBe('function');
         apply?.([HIDE_RULE]);
+
+        const ad = document.querySelector('.ad') as HTMLElement;
+        expect(ad.style.getPropertyValue('display')).toBe('none');
+        expect(ad.style.getPropertyPriority('display')).toBe('important');
+    });
+
+    it('hides a :contains() target when loaded as a file', () => {
+        setupDom();
+
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        new Function('globalThis', `${bundleCode}; globalThis.applyExtendedCss = applyExtendedCss;`)(globalThis);
+
+        const apply = (globalThis as { applyExtendedCss?: ApplyFn }).applyExtendedCss;
+        apply?.([CONTAINS_HIDE_RULE]);
 
         const ad = document.querySelector('.ad') as HTMLElement;
         expect(ad.style.getPropertyValue('display')).toBe('none');
@@ -74,10 +90,7 @@ describe('ExtendedCSS apply bundle (smoke test)', () => {
     it('is within the MV3 bundle-size limit', () => {
         const sizeBytes = Buffer.byteLength(bundleCode, 'utf8');
 
-        // MV3 extension limit is 30 MB; the apply bundle must be far below it.
-        expect(sizeBytes).toBeLessThan(30 * 1024 * 1024);
-
-        // Mirrors the stricter build-time guard in tools/build.ts.
+        // Sanity check mirroring the build-time guard enforced in tools/build.ts.
         expect(sizeBytes).toBeLessThan(500 * 1024);
     });
 });

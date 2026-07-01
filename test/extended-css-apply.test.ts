@@ -42,4 +42,34 @@ describe('applyExtendedCss entry point', () => {
         const ad = document.querySelector('.ad') as HTMLElement;
         expect(ad.style.getPropertyValue('display')).toBe('');
     });
+
+    it('applies a :contains() rule and hides matching elements', () => {
+        document.body.innerHTML = '<div class="ad">buy my ads now</div>';
+
+        instance = applyExtendedCss(['.ad:contains(ads) { display: none !important; }']);
+
+        const ad = document.querySelector('.ad') as HTMLElement;
+        expect(ad.style.getPropertyValue('display')).toBe('none');
+        expect(ad.style.getPropertyPriority('display')).toBe('important');
+    });
+
+    it('invokes beforeStyleApplied callback for each matched element', () => {
+        document.body.innerHTML = '<div class="ad"><span class="child">ad</span></div>';
+
+        const callback = vi.fn();
+        instance = applyExtendedCss(
+            ['.ad:has(.child) { display: none !important; }'],
+            (el) => {
+                callback(el);
+                return el;
+            },
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledWith(
+            expect.objectContaining({
+                node: document.querySelector('.ad'),
+            }),
+        );
+    });
 });
