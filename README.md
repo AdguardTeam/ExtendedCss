@@ -981,22 +981,34 @@ After that you can use ExtendedCss as you wish.
 
 ### <a name="extended-css-apply-bundle"></a> Apply bundle (`applyExtendedCss`)
 
-A self-contained minified IIFE bundle — `./dist/extended-css.apply.min.js` — is
-provided for injection via `chrome.scripting.executeScript()` (MV3). It exposes
-a single function, `applyExtendedCss`, which encapsulates the correct lifecycle:
-it calls `init()` (snapshots the native `textContent` getter so `:contains()`
-works correctly on pages that may mock DOM APIs) before `apply()`.
+A self-contained minified IIFE bundle is available via the `"./apply"`
+exports subpath. It exposes a single function, `applyExtendedCss`, which
+encapsulates the correct lifecycle: it calls `init()` (snapshots the native
+`textContent` getter so `:contains()` works correctly on pages that may mock
+DOM APIs) before `apply()`.
+
+**Resolving the bundle programmatically:**
+
+```js
+// Node.js (build-time plugins)
+const path = require.resolve('@adguard/extended-css/apply');
+
+// Or import the function directly (ESM/UMD):
+import { applyExtendedCss } from '@adguard/extended-css';
+```
+
+**Injection via `chrome.scripting.executeScript()`:**
 
 ```js
 // files-style injection
 chrome.scripting.executeScript({
-    files: ['dist/extended-css.apply.min.js'],
+    files: [require.resolve('@adguard/extended-css/apply')],
 });
 // then call it in a separate injection:
 chrome.scripting.executeScript({
     func: (rules) => applyExtendedCss(rules),
     args: [['.ad:has(.banner) { display: none !important; }']],
-    world: 'MAIN',
+    world: 'ISOLATED',
 });
 ```
 

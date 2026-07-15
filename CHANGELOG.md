@@ -12,9 +12,9 @@ and this project adheres to
 
 ### Added
 
-- New `index.apply.ts` entry point and `extended-css.apply.min.js` build
-  output: a self-contained minified IIFE exposing `applyExtendedCss(cssRules,
-  beforeStyleApplied?)` for injection via `scripting.executeScript()`.
+- New `index.apply.ts` entry point exposing `applyExtendedCss(cssRules,
+  beforeStyleApplied?)`, available as a named export and a pre-built
+  minified IIFE bundle via the `"./apply"` exports subpath.
 
 ## [2.2.0] - 2026-04-30
 

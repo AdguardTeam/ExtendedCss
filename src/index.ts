@@ -5,3 +5,4 @@ export type {
     IAffectedElement,
     SelectorValidationResult,
 } from './extended-css';
+export { default as applyExtendedCss } from './index.apply';
