@@ -5,20 +5,33 @@ on:
     branches:
       - master
 
+env:
+  PNPM_VERSION: 10.33.4
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - 22.x
+          - 24.x
 
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
 
       - name: pnpm install
         run: pnpm install

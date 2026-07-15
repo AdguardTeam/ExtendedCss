@@ -709,6 +709,8 @@ pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:not).
 
 ### <a name="extended-css-empty-trimmed"></a> Pseudo-class `:empty-trimmed`
 
+> Added in v2.0.0.
+
 The `:empty-trimmed` pseudo-class allows selecting elements without text.
 It also matches elements whose text content consists only of whitespace, including non-breaking spaces such as `&nbsp;`.
 

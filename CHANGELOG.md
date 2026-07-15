@@ -23,11 +23,12 @@ and this project adheres to
 - New `:empty-trimmed` extended pseudo-class that selects
   elements whose text content (including descendants) is empty
   or consists only of whitespace characters including
-  non-breaking spaces (`&nbsp;`).
+  non-breaking spaces (`&nbsp;`) [#189].
 - Support for standalone (no-argument) extended pseudo-classes
   in the selector parser, query engine, and AST optimizer.
 
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
+[#189]: https://github.com/AdguardTeam/ExtendedCss/issues/189
 
 ## [2.1.1] - 2024-12-19
 

@@ -21,7 +21,8 @@
         }
     },
     "engines": {
-        "node": ">=16"
+        "node": ">=22",
+        "pnpm": ">=10.33.4 <11"
     },
     "scripts": {
         "build": "ts-node tools/build",
