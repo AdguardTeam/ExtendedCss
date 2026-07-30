@@ -243,7 +243,7 @@ export class ExtendedCss {
      * Uses ExtCssDocument.querySelectorAll().
      *
      * @param selector Selector text.
-     * @param [noTiming=true] If true — do not print the timings to the console.
+     * @param noTiming If true, do not print the timings to the console (defaults to true).
      *
      * @throws An error if selector is not valid.
      * @returns A list of elements that match the selector.

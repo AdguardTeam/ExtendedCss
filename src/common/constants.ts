@@ -1,6 +1,5 @@
-import { version } from '../../package.json';
-
-export const EXTENDED_CSS_VERSION = version;
+const EXTENDED_CSS_VERSION: string = '__EXTENDED_CSS_VERSION__';
+export { EXTENDED_CSS_VERSION };
 
 const LEFT_SQUARE_BRACKET = '[';
 const RIGHT_SQUARE_BRACKET = ']';

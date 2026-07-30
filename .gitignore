@@ -9,3 +9,6 @@ dist
 
 # Output directory for CI build
 output/
+
+# SDD specs
+.sdd/

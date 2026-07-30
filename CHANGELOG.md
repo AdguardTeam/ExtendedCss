@@ -8,6 +8,20 @@ The format is based on
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
 ## [2.2.0] - 2026-04-30
 
 ### Added
@@ -19,6 +33,7 @@ and this project adheres to
 - Support for standalone (no-argument) extended pseudo-classes
   in the selector parser, query engine, and AST optimizer.
 
+[Unreleased]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...HEAD
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
 [#189]: https://github.com/AdguardTeam/ExtendedCss/issues/189
 

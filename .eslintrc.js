@@ -79,6 +79,7 @@ module.exports = {
         // disabled as types are described in typescript
         'jsdoc/require-param-type': 'off',
         'jsdoc/require-returns-type': 'off',
+        'jsdoc/require-throws-type': 'off',
         // for vitest tests
         'jsdoc/check-tag-names': ['error', {
             'definedTags': ['vitest-environment'],

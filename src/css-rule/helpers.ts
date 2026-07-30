@@ -237,7 +237,7 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
         /**
          * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().
          *
-         * @see {@link BeforeStyleAppliedCallback}
+         * Search `BeforeStyleAppliedCallback` for more details.
          */
         const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
         if (contentStyle) {

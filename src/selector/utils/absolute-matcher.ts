@@ -329,7 +329,7 @@ const validateStrMatcherArg = (arg: string): boolean => {
  * Returns valid arg for :matches-attr() and :matcher-property().
  *
  * @param rawArg Arg pattern.
- * @param [isWildcardAllowed=false] Flag for wildcard (`*`) using as pseudo-class arg.
+ * @param isWildcardAllowed Flag for wildcard (`*`) using as pseudo-class arg (defaults to false).
  *
  * @returns Valid arg for :matches-attr() and :matcher-property().
  * @throws An error on invalid `rawArg`.
@@ -539,7 +539,7 @@ type Chain = {
  *
  * @param base Element to check.
  * @param chain Array of objects - parsed string property chain.
- * @param [output=[]] Result acc.
+ * @param output Result accumulator (defaults to []).
  *
  * @returns Array of parsed data — representation of `base`-related `chain`.
  */

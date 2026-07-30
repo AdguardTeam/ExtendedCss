@@ -35,11 +35,13 @@ by AdGuard products and other ad-blocking tools.
 | Bundler              | Rollup v2 (custom build in `tools/build.ts`)                               |
 | Testing              | Vitest 4, jsdom, Vitest browser mode with Playwright, QUnit (BrowserStack) |
 | Linting              | ESLint 8 (airbnb-typescript, jsdoc plugin)                                 |
-| Type checking        | TypeScript ~4.7 (`tsc`)                                                    |
+| Type checking        | TypeScript ~6.0 (`tsc`)                                                    |
 | Output formats       | ESM, UMD, IIFE, IIFE-minified                                              |
 | License              | GPL-3.0                                                                    |
 | Target platform      | Modern browsers (Chrome 88+, Firefox 84+, Edge 88+, Opera 80+, Safari 14+) |
 | Project type         | Library / Package                                                          |
+| CI/CD                | GitHub Actions (self-hosted `team-extensions` runner, Docker)              |
+| Version source       | Git tags / CHANGELOG.md (no `version` in `package.json`)                   |
 | Performance goals    | N/A                                                                        |
 | Constraints          | No production dependencies — all deps are devDependencies                  |
 | Scale/Scope          | Consumed by AdGuard browser extensions and other ad-blocking tools         |
@@ -47,6 +49,12 @@ by AdGuard products and other ad-blocking tools.
 ## Project Structure
 
 ```text
+├── .github/workflows/          # GitHub Actions CI/CD
+│   ├── ci.yml                  # Lint, test, build on PRs and master
+│   ├── deploy-pages.yml        # Deploy dist/ to GitHub Pages on tag
+│   ├── mirror.yml              # Mirror to public AdguardTeam/ExtendedCss
+│   ├── prepare-release.yml     # Open release PR for a given tag
+│   └── publish-release.yml     # Tag, build, publish to npm, notify
 ├── src/                        # Library source code
 │   ├── index.ts                # Named exports entry point (ESM/UMD)
 │   ├── index.default.ts        # Default export entry point (IIFE)
@@ -77,8 +85,10 @@ by AdGuard products and other ad-blocking tools.
 │   └── performance-selector/   # Performance benchmarks
 ├── tools/                      # Build and test orchestration scripts
 │   ├── build.ts                # Rollup build configurations
+│   ├── build-version.ts        # Build version resolution (CHANGELOG-derived)
 │   ├── test.ts                 # Vitest/Playwright/BrowserStack runner
 │   └── constants.ts            # Build paths and output names
+├── Dockerfile                  # Multi-stage Docker build (test + build)
 ├── package.json                # Dependencies and scripts
 ├── tsconfig.json               # TypeScript config (source)
 ├── tsconfig.eslint.json        # TypeScript config (lint: src+test+tools)
@@ -251,8 +261,11 @@ Raw CSS string
   `ClassProperty`, `FunctionDeclaration`, and
   `MethodDefinition`. Descriptions must be complete sentences.
   `@throws` tags are required when a function throws.
-  `@returns` tags are always required. Parameter types and return
-  types are omitted from JSDoc (TypeScript provides them).
+  `@returns` tags are always required. Type annotations are
+  omitted from all JSDoc tags (`@param`, `@returns`,
+  `@property`, `@throws`, etc.) because TypeScript provides
+  them — e.g. `@throws An error ...`, not
+  `@throws {Error} An error ...`.
 - **No `eslint-disable` without justification.** If a rule must
   be disabled, add a comment explaining why.
 - **Indentation**: 4 spaces (enforced by ESLint).
@@ -271,6 +284,15 @@ Raw CSS string
 - **Naming conventions**: Files use kebab-case. Types and classes
   use PascalCase. Functions and variables use camelCase.
   Constants use UPPER_SNAKE_CASE.
+- **Version export**: `EXTENDED_CSS_VERSION` is a build-time
+  placeholder (`__EXTENDED_CSS_VERSION__`) in source, replaced at
+  build time by `@rollup/plugin-replace` with the version resolved
+  by `tools/build-version.ts` (`getBuildVersion()`).
+  `package.json` is versionless in source — CI stamps the version
+  via `set-dev-version` (dev builds) or `npm pkg set version`
+  (release builds), and local builds derive a `-dev` version from
+  `CHANGELOG.md`. Do not import `version` from `package.json` in
+  `src/`.
 
 ### Testing
 
@@ -326,9 +348,6 @@ costs.
   ranges instead of exact pinning. The `pnpm-lock.yaml` file
   pins exact versions in practice, but `package.json` should
   use exact versions for reproducibility.
-- `fs-extra` could be replaced with Node.js built-in
-  `fs/promises` (available since Node 14, project requires
-  Node >= 22 for development tooling).
 - `rimraf` could be replaced with `fs.rm` with `{ recursive:
   true }` (available since Node 14).
 - Several Rollup plugins and build tooling packages are on older

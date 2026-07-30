@@ -18,7 +18,6 @@ export const SELECTOR_SRC_DIR_PATH = '../src/selector';
 export const SELECTOR_QUERY_FILE_NAME = 'query.ts';
 
 export const DIST_DIR_PATH = '../dist';
-export const BUILD_TXT_FILENAME = 'build.txt';
 
 export const TEST_TEMP_DIR_PATH = '../test/dist';
 

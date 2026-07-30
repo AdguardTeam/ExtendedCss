@@ -1,0 +1,69 @@
+name: CI
+
+description: Lints, tests, and builds on pull requests and pushes to master.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+# Least-privilege GITHUB_TOKEN scope: this job only checks out the repository
+# contents and uploads artifacts, neither of which needs a write scope.
+permissions:
+  contents: read
+
+# Cancel in-progress CI runs for the same ref when a new push occurs,
+# preventing redundant builds and saving CI resources.
+concurrency:
+  group: ci-ext-extended-css-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, test, build
+    runs-on: team-extensions
+    env:
+      # Whether BrowserStack secrets are configured. When unavailable, the
+      # BrowserStack test step is skipped with a warning rather than failing.
+      HAS_BROWSERSTACK: ${{ secrets.BROWSERSTACK_USER != '' && secrets.BROWSERSTACK_KEY != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set dev version
+        uses: >-
+          AdGuardSoftwareLimited/ext-shared-actions/.github/actions/set-dev-version@master
+
+      - name: Lint via Docker
+        run: DOCKER_BUILDKIT=1 docker build --progress plain --target lint-output .
+
+      - name: Local test via Docker
+        # Runs the Vitest unit and Playwright browser projects (`pnpm test
+        # local`). BrowserStack cross-browser tests run in the next step.
+        run: DOCKER_BUILDKIT=1 docker build --progress plain --target local-test-output .
+
+      - name: BrowserStack test via Docker
+        if: ${{ env.HAS_BROWSERSTACK == 'true' }}
+        env:
+          BROWSERSTACK_USER: ${{ secrets.BROWSERSTACK_USER }}
+          BROWSERSTACK_KEY: ${{ secrets.BROWSERSTACK_KEY }}
+        run: >-
+          DOCKER_BUILDKIT=1 docker build --progress plain
+          --target browserstack-output
+          --secret id=BROWSERSTACK_USER,env=BROWSERSTACK_USER
+          --secret id=BROWSERSTACK_KEY,env=BROWSERSTACK_KEY
+          .
+
+      - name: Skip BrowserStack tests
+        if: ${{ env.HAS_BROWSERSTACK != 'true' }}
+        run: echo "::warning::BrowserStack tests skipped — BROWSERSTACK_USER and BROWSERSTACK_KEY secrets are not configured"
+
+      - name: Build release artifacts
+        run: DOCKER_BUILDKIT=1 docker build --progress plain --target build-output --output ./artifacts .
+
+      - name: Upload npm package
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-package
+          path: artifacts/extended-css.tgz

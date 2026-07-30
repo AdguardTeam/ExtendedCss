@@ -11,6 +11,5 @@ tmp/
 vendor/
 node_modules/
 Dockerfile*
-*.md
 *.log
 *.tgz

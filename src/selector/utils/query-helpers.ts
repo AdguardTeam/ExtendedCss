@@ -269,7 +269,7 @@ const notElementBySelectorList = (argsData: RelativePredicateArgsData): boolean 
  *
  * @param regularSelectorNode RegularSelector node.
  * @param root Root DOM element.
- * @param specifiedSelector @see {@link SpecifiedSelector}.
+ * @param specifiedSelector {@link SpecifiedSelector}.
  *
  * @returns Array of DOM elements.
  * @throws An error if RegularSelector node value is an invalid selector.

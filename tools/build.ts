@@ -1,5 +1,5 @@
-import path from 'path';
-import { writeFile } from './utils';
+import path from 'node:path';
+
 import { program } from 'commander';
 
 import { terser } from 'rollup-plugin-terser';
@@ -14,12 +14,9 @@ import {
     LIBRARY_NAME,
     LIB_FILE_NAME,
     DIST_DIR_PATH,
-    BUILD_TXT_FILENAME,
     OutputFormat,
     SRC_VERSION_FILENAME,
 } from './constants';
-
-import { version } from '../package.json';
 
 const srcInputPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_FILENAME);
 const srcVersionPath = path.resolve(__dirname, SRC_DIR_PATH, SRC_VERSION_FILENAME);
@@ -115,11 +112,6 @@ const buildLib = async (): Promise<void> => {
     await rollupRunner(defaultProdConfig, defaultConfigName);
 };
 
-const buildTxt = async (): Promise<void> => {
-    const content = `version=${version}`;
-    await writeFile(path.resolve(__dirname, DIST_DIR_PATH, BUILD_TXT_FILENAME), content);
-};
-
 /**
  * Prod extended-css build is default run with no command.
  */
@@ -127,7 +119,6 @@ program
     .description('Builds extended-css')
     .action(async () => {
         await buildLib();
-        await buildTxt();
     });
 
 program.parse(process.argv);

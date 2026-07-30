@@ -16,7 +16,7 @@ function shouldIgnoreMutations(mutations: MutationRecord[]): boolean {
 }
 
 /**
- * Adds new {@link context.domMutationObserver} instance and connect it to document.
+ * Adds new `context.domMutationObserver` instance and connect it to document.
  * 
  * @param context ExtendedCss context.
  */
@@ -52,7 +52,7 @@ export function observeDocument(context: Context): void {
 }
 
 /**
- * Disconnect from {@link context.domMutationObserver}.
+ * Disconnect from `context.domMutationObserver`.
  * 
  * @param context ExtendedCss context.
  */

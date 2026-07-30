@@ -27,7 +27,7 @@ export class ThrottleWrapper {
     }
 
     /**
-     * Calls the {@link callback} function and update bounded throttle wrapper properties.
+     * Calls the `this.callback` function and update bounded throttle wrapper properties.
      */
     private executeCallback(): void {
         this.lastRunTime = performance.now();
@@ -48,9 +48,9 @@ export class ThrottleWrapper {
      *
      * 2. If {@link lastRunTime} is set, we need to check the time elapsed time since the last call. If it is
      * less than {@link ThrottleWrapper.THROTTLE_DELAY_MS}, we schedule the function execution after the remaining time.
-     * 
-     * Otherwise, we execute the function asynchronously to ensure that it is executed 
-     * in the correct order with respect to DOM events, by deferring its execution until after 
+     *
+     * Otherwise, we execute the function asynchronously to ensure that it is executed
+     * in the correct order with respect to DOM events, by deferring its execution until after
      * those tasks have completed.
      */
     public run(): void {

@@ -1,0 +1,33 @@
+name: Publish release
+
+description: >-
+  Tags the release commit, builds, tests, publishes to npm,
+  mirrors to the public repo, drafts a GitHub Release, and notifies Slack.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Ref to publish manually
+        required: false
+        type: string
+
+jobs:
+  publish:
+    uses: AdGuardSoftwareLimited/ext-shared-actions/.github/workflows/publish-release.yml@master
+    with:
+      package_file: extended-css.tgz
+      npm_package_name: "@adguard/extended-css"
+      target_repo: AdguardTeam/ExtendedCss
+      ref: ${{ inputs.ref }}
+    secrets: inherit
+    permissions:
+      # create tag & GitHub release (tag-from-changelog, mirror-and-release)
+      contents: write
+      # OIDC trusted publishing to npm (deploy-to-npm, mirror-and-release)
+      id-token: write
+      # disable/enable workflows in the mirror repo (mirror-and-release)
+      actions: write

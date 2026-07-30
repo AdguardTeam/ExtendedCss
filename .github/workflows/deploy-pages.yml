@@ -1,0 +1,93 @@
+name: Deploy ExtendedCSS to GitHub Pages
+
+description: >-
+  Builds dist/ on a release tag and deploys it to GitHub Pages, then posts
+  the deploy result to Slack via the org's SlackKit action.
+
+on:
+  push:
+    tags:
+      - v*
+
+# Least-privilege GITHUB_TOKEN scope. The default (inherited by every job)
+# is read-only; the deploy job widens this locally to `pages`/`id-token` for
+# the Pages API. The notify job needs no token at all — it posts via the
+# internal SlackKit service, reachable only on the team-extensions runner.
+permissions:
+  contents: read
+
+# Cancel an in-progress deploy for the same tag when it is re-pushed.
+concurrency:
+  group: deploy-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 10.33.4
+
+jobs:
+  deploy:
+    name: Build and deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test local
+        run: pnpm test local
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  notify:
+    name: Notify on deploy
+    needs: deploy
+    if: ${{ always() }}
+    runs-on: team-extensions
+    steps:
+      - name: Send Slack notification
+        uses: AdGuardSoftwareLimited/actions/actions/slack@master
+        with:
+          channel: '#adguard-extension-vcs'
+          color: ${{ needs.deploy.result == 'success' && 'good' || 'danger' }}
+          message: >-
+            :${{ needs.deploy.result == 'success' && 'white_check_mark' || 'x' }}:
+            *AdGuard ExtendedCss* GitHub Pages deployment
+            ${{ needs.deploy.result == 'success' && 'succeeded' || 'failed' }}
+            for `${{ github.ref_name }}` —
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>

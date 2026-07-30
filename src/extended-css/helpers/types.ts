@@ -84,7 +84,7 @@ export type Context = {
 
     /**
      * Scheduler to throttle calls to the function that applies rules
-     * when a lot of DOM events are being tracked by {@link domMutationObserver}.
+     * when a lot of DOM events are being tracked by `domMutationObserver`.
      */
     scheduler: ThrottleWrapper;
 

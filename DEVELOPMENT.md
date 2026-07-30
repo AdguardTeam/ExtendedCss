@@ -17,7 +17,7 @@
     - [Contributing Changes](#contributing-changes)
 - [Common Tasks](#common-tasks)
     - [Adding a New Pseudo-class](#adding-a-new-pseudo-class)
-    - [Incrementing the Version](#incrementing-the-version)
+    - [Releasing a New Version](#releasing-a-new-version)
     - [Inspecting Build Output](#inspecting-build-output)
 - [Troubleshooting](#troubleshooting)
 - [Additional Resources](#additional-resources)
@@ -45,8 +45,16 @@ development. BrowserStack tests need credentials (see
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/AdguardTeam/ExtendedCss.git
-cd ExtendedCss
+git clone https://github.com/AdguardTeam/ExtendedCss.git ext-extended-css
+cd ext-extended-css
+```
+
+AdGuard contributors with access to the private repository can clone it
+directly instead:
+
+```bash
+git clone git@github.com:AdGuardSoftwareLimited/ext-extended-css.git ext-extended-css
+cd ext-extended-css
 ```
 
 ### Install Dependencies
@@ -92,7 +100,6 @@ local builds, linting, or local tests.
 | `pnpm test browserstack`   | Run BrowserStack tests (needs creds)        |
 | `pnpm test performance`    | Run Vitest performance benchmarks           |
 | `pnpm test`                | Run local + BrowserStack tests              |
-| `pnpm increment`           | Bump patch version in package.json          |
 
 ### Building
 
@@ -140,6 +147,15 @@ Key ESLint rules enforced:
 - JSDoc required on all public APIs (classes, methods,
   functions, class properties) with complete-sentence
   descriptions
+- No type annotations in JSDoc tags: types come from
+  TypeScript, not JSDoc. Applies to `@param`, `@returns`,
+  `@property`, and `@throws` — write
+  `@throws An error ...` (not `@throws {Error} An error ...`).
+  Type annotations are omitted from all JSDoc tags by
+  convention — TypeScript provides them. The jsdoc rules only
+  stop *requiring* types (`jsdoc/require-param-type`,
+  `jsdoc/require-returns-type`, `jsdoc/require-throws-type`
+  are off) and do not forbid them, so this is review-enforced.
 - Named imports with at most 2 imports per line
 
 ### Testing
@@ -225,15 +241,22 @@ No additional setup is needed — `pnpm install` runs
 6. Update `README.md` with the new pseudo-class
    documentation.
 
-### Incrementing the Version
+### Releasing a New Version
 
-```bash
-pnpm increment
-```
+This project uses GitHub Actions for releases. The version
+is derived from git tags and `CHANGELOG.md` — there is no
+`version` field in `package.json`.
 
-This runs `pnpm version patch --no-git-tag-version`,
-bumping the patch version in `package.json` without
-creating a Git tag.
+1. Make sure all changes for the release are recorded under
+   `## [Unreleased]` in `CHANGELOG.md` — the
+   `prepare-release` workflow finalizes the version section
+   automatically (it moves `[Unreleased]` entries into the
+   new version section and rewrites the compare links).
+2. Trigger the `prepare-release` workflow with the desired
+   tag (e.g. `v2.3.0`).
+3. Review and merge the release PR.
+4. `publish-release` automatically tags, builds, publishes
+   to npm, mirrors to the public repo, and notifies Slack.
 
 ### Inspecting Build Output
 
@@ -241,7 +264,6 @@ After running `pnpm build`, the `dist/` directory contains:
 
 - All bundle formats (ESM, UMD, IIFE, minified IIFE)
 - Type declarations under `dist/types/`
-- A `build.txt` file with the version number
 
 ```bash
 pnpm build
@@ -269,8 +291,10 @@ pnpm exec playwright install chromium
 Every exported function, class, method, and class property
 must have a JSDoc comment with a complete-sentence
 description. The ESLint jsdoc plugin enforces `@returns`
-tags and `@throws` tags (when applicable). See the JSDoc
-rules in `.eslintrc.js`.
+tags and `@throws` tags (when applicable). JSDoc tags must
+not include type annotations (e.g. write `@throws An error
+...`, not `@throws {Error} An error ...`), because types
+come from TypeScript. See the JSDoc rules in `.eslintrc.js`.
 
 ### BrowserStack tests fail with authentication errors
 
