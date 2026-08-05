@@ -34,16 +34,15 @@ const browserstackTestInput = path.resolve(
 const testBrowserstackDir = path.resolve(__dirname, TEST_BROWSERSTACK_DIR_PATH);
 
 /**
- * Runs Vitest with specified project names.
+ * Runs a single Vitest project by name.
  *
- * @param projects Array of project names to run.
+ * @param project Project name to run.
  */
-const runVitestProjects = (projects: string[]): void => {
-    const projectArgs = projects.map((p) => `--project ${p}`).join(' ');
-    const cmd = `npx vitest run ${projectArgs}`;
+const runVitestProject = (project: string): void => {
+    const cmd = `npx vitest run --project ${project}`;
     log(chalk.blueBright(`Running: ${cmd}`));
     execSync(cmd, { cwd: projectRootPath, stdio: 'inherit' });
-    log(chalk.greenBright('Tests completed'));
+    log(chalk.greenBright(`Tests completed: ${project}`));
 };
 
 /**
@@ -88,7 +87,14 @@ const buildBrowserstackAssets = async (): Promise<void> => {
 };
 
 const runTestsLocally = (): void => {
-    runVitestProjects(['unit', 'browser']);
+    // Run the jsdom (unit) and Playwright (browser) projects in separate,
+    // sequential vitest invocations rather than a single combined run. In a
+    // single invocation the jsdom worker pool and the Chromium/Vite browser
+    // stack are alive at the same time, which exceeds the remote BuildKit
+    // builder's memory budget in CI and OOM-kills the build. Each stack
+    // individually fits comfortably, so splitting halves the peak memory.
+    runVitestProject('unit');
+    runVitestProject('browser');
 };
 
 const runTestsOnBrowserstack = async (): Promise<void> => {
@@ -97,7 +103,7 @@ const runTestsOnBrowserstack = async (): Promise<void> => {
 };
 
 const runSelectorPerformanceTests = (): void => {
-    runVitestProjects(['performance']);
+    runVitestProject('performance');
 };
 
 // run tests locally and on browserstack if no command specified

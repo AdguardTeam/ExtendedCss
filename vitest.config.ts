@@ -10,6 +10,13 @@ export default defineConfig({
         sequence: {
             hooks: 'list',
         },
+        // Cap worker parallelism in CI. The remote BuildKit builder is CPU-rich
+        // but capped at ~1.8 GB, so vitest would otherwise spawn one worker per
+        // core and OOM before the suite finishes. CI is signalled by
+        // ENV CI=true in the Docker test stages; local runs keep the default
+        // (full) pool size. Vitest 4 made `maxWorkers` a top-level option
+        // (the old `poolOptions.{forks,threads}` was removed).
+        maxWorkers: process.env.CI ? 4 : undefined,
         projects: [
             {
                 test: {

@@ -23,6 +23,9 @@ COPY . .
 FROM adguard/playwright-runner:22.20--1.56.0--0 AS test-base
 WORKDIR /workdir
 ENV PNPM_STORE_DIR=/pnpm-store
+# Signal a CI environment to vitest (see maxWorkers in vitest.config.ts) so the
+# worker pool is capped within the builder's ~1.8 GB memory budget.
+ENV CI=true
 
 FROM test-base AS test-deps
 RUN --mount=type=cache,target=/pnpm-store,id=extended-css-pnpm \
