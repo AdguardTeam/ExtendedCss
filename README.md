@@ -1,5 +1,12 @@
 # ExtendedCss [![npm-badge]][npm-url] [![install-size-badge]][install-size-url] [![license-badge]][license-url]
 
+> **This repository has moved to GitHub.**
+>
+> The project is now maintained at [AdGuardSoftwareLimited/ext-extended-css][new-repo].
+> Please use GitHub for the latest code, issues, and pull requests.
+
+[new-repo]: https://github.com/AdGuardSoftwareLimited/ext-extended-css
+
 <a name="homepage"></a>
 
 AdGuard's TypeScript library for non-standard element selecting and applying CSS styles with extended properties.
