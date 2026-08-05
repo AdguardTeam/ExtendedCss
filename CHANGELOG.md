@@ -22,6 +22,8 @@ and this project adheres to
 
 ### Security
 
+## [2.2.1] - 2026-08-05
+
 ## [2.2.1-beta.0] - 2026-08-05
 
 ## [2.2.0] - 2026-04-30
@@ -35,7 +37,8 @@ and this project adheres to
 - Support for standalone (no-argument) extended pseudo-classes
   in the selector parser, query engine, and AST optimizer.
 
-[Unreleased]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.1-beta.0...HEAD
+[Unreleased]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1
 [2.2.1-beta.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1-beta.0
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
 [#189]: https://github.com/AdguardTeam/ExtendedCss/issues/189
