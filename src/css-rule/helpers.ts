@@ -20,8 +20,10 @@ import {
     COLON,
     BRACKET,
     BACKSLASH,
+    SLASH,
     SINGLE_QUOTE,
     DOUBLE_QUOTE,
+    WHITE_SPACE_CHARACTERS,
     REMOVE_PSEUDO_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
     REMOVE_CLASS_PSEUDO_MARKER,
@@ -37,6 +39,11 @@ import {
 
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
+
+/**
+ * Regexp flag character, e.g. 'i', 'm' or 'u'.
+ */
+const REGEXP_FLAG_CHARACTER = /[a-z]/;
 
 /**
  * Info about an action pseudo-class found in a selector.
@@ -65,7 +72,57 @@ type ActionSelectorData = {
 };
 
 /**
+ * Checks whether the character is a whitespace character.
+ *
+ * @param char Character to check.
+ *
+ * @returns True if the character is a whitespace character.
+ */
+const isWhiteSpace = (char: string | undefined): boolean => {
+    return char !== undefined && WHITE_SPACE_CHARACTERS.includes(char);
+};
+
+/**
+ * Finds the end of a regexp literal at the beginning of an action argument.
+ *
+ * @param rawSelector Raw selector text.
+ * @param startIndex Index of the first argument character.
+ *
+ * @returns Index of the closing slash of the regexp literal,
+ * or -1 if the argument does not start with a regexp literal.
+ */
+const findRegexpArgEnd = (rawSelector: string, startIndex: number): number => {
+    let i = startIndex;
+    while (i < rawSelector.length && isWhiteSpace(rawSelector[i])) {
+        i += 1;
+    }
+    if (rawSelector[i] !== SLASH) {
+        return -1;
+    }
+
+    let inCharClass = false;
+    for (i += 1; i < rawSelector.length; i += 1) {
+        const char = rawSelector[i];
+
+        if (char === BACKSLASH) {
+            i += 1;
+        } else if (char === BRACKET.SQUARE.LEFT) {
+            inCharClass = true;
+        } else if (char === BRACKET.SQUARE.RIGHT) {
+            inCharClass = false;
+        } else if (char === SLASH && !inCharClass) {
+            return i;
+        }
+    }
+
+    return -1;
+};
+
+/**
  * Finds the index of the closing parenthesis of an action argument.
+ *
+ * A well-formed regexp literal argument is skipped as a whole,
+ * so parentheses, slashes and quotes inside it are not treated as delimiters.
  *
  * @param rawSelector Raw selector text.
  * @param startIndex Index of the first argument character.
@@ -73,6 +130,21 @@ type ActionSelectorData = {
  * @returns Index of the closing parenthesis or -1 if it is not found.
  */
 const findClosingParenthesis = (rawSelector: string, startIndex: number): number => {
+    const regexpEndIndex = findRegexpArgEnd(rawSelector, startIndex);
+    if (regexpEndIndex !== -1) {
+        // after a regexp literal there can be only flags, whitespace and the closing parenthesis
+        let i = regexpEndIndex + 1;
+        while (i < rawSelector.length && REGEXP_FLAG_CHARACTER.test(rawSelector[i] as string)) {
+            i += 1;
+        }
+        while (i < rawSelector.length && isWhiteSpace(rawSelector[i])) {
+            i += 1;
+        }
+        if (rawSelector[i] === BRACKET.PARENTHESES.RIGHT) {
+            return i;
+        }
+    }
+
     let depth = 1;
     let inSingleQuote = false;
     let inDoubleQuote = false;
@@ -174,6 +246,12 @@ const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
                 : rawSelector.substring(argStartIndex, closingIndex),
             endIndex: closingIndex === -1 ? -1 : closingIndex + 1,
         });
+
+        if (closingIndex !== -1) {
+            // skip the action argument, so parentheses inside a regexp literal
+            // do not affect the depth tracking
+            i = closingIndex;
+        }
     }
 
     return found;

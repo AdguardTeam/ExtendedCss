@@ -98,9 +98,18 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     if (!(node instanceof HTMLElement)) {
         return;
     }
+    // Action style maps may contain the 'content' property which is needed
+    // only for ExtCssConfiguration.beforeStyleApplied() and should never be applied.
+    const isActionStyle = style[REMOVE_PSEUDO_MARKER] !== undefined
+        || style[REMOVE_ATTR_PSEUDO_MARKER] !== undefined
+        || style[REMOVE_CLASS_PSEUDO_MARKER] !== undefined;
     Object.keys(style).forEach((prop) => {
         // action pseudo-classes are handled by applyStyle() and are not CSS properties
         if (prop === REMOVE_ATTR_PSEUDO_MARKER || prop === REMOVE_CLASS_PSEUDO_MARKER) {
+            return;
+        }
+        // do not apply 'content' of action rules (e.g. via the style protection observer)
+        if (isActionStyle && prop === CONTENT_CSS_PROPERTY) {
             return;
         }
         // Apply this style only to existing properties

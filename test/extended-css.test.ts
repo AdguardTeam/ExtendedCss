@@ -536,6 +536,42 @@ describe('extended css library', () => {
         expect(element?.style.getPropertyValue('content')).toBe('');
     });
 
+    it("does not apply action rule 'content' style on style protection", () => {
+        document.body.innerHTML = `
+            <div id="case-remove-attr-content-protection" onclick="alert(1)"></div>
+        `;
+        const styleSheet = '#case-remove-attr-content-protection:remove-attr(onclick)'
+            + " { content: 'plain-content' !important }";
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-attr-content-protection');
+        expect(element).not.toBeNull();
+        if (!element) {
+            return;
+        }
+        expect(element.hasAttribute('onclick')).toBe(false);
+
+        const setPropertySpy = vi.spyOn(element.style, 'setProperty');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                element.setAttribute('style', 'display: block');
+                rAF(() => {
+                    try {
+                        // the protection observer should not apply 'content' of the action rule
+                        const contentCalls = setPropertySpy.mock.calls
+                            .filter(([prop]) => prop === 'content');
+                        expect(contentCalls).toHaveLength(0);
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                    setPropertySpy.mockRestore();
+                }, 100);
+            }, 100);
+        });
+    });
+
     it('removes re-added attributes after DOM mutations', () => {
         document.body.innerHTML = `
             <div id="case-remove-attr-mutation" onclick="alert(1)"></div>

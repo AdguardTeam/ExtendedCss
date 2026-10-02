@@ -603,10 +603,11 @@ operator of uBlock Origin.
 #### Syntax
 
 ```css
-[target]:remove-attr(attr)
+target:remove-attr(attr)
 ```
 
-- `target` — optional, standard or extended CSS selector
+- `target` — required, standard or extended CSS selector; use the
+    universal selector `*` to apply the action to any element
 - `attr` — required, an attribute name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
 
 <a name="extended-css-remove-attr-limitations"></a>
@@ -626,6 +627,7 @@ operator of uBlock Origin.
 
 ```css
 a:remove-attr(href)
+*:remove-attr(onclick)
 div:remove-attr(/^on[a-z]+/)
 div:remove-attr(/^data-(foo|bar)$/i)
 ```
@@ -639,10 +641,11 @@ operator of uBlock Origin.
 #### Syntax
 
 ```css
-[target]:remove-class(class)
+target:remove-class(class)
 ```
 
-- `target` — optional, standard or extended CSS selector
+- `target` — required, standard or extended CSS selector; use the
+    universal selector `*` to apply the action to any element
 - `class` — required, a class name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
 
 <a name="extended-css-remove-class-limitations"></a>
@@ -660,6 +663,7 @@ operator of uBlock Origin.
 
 ```css
 div:remove-class(ads)
+*:remove-class(ads)
 div:remove-class(/^ad-/)
 ```
 

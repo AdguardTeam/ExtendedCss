@@ -210,6 +210,27 @@ describe('parse action selector -- :remove-attr() and :remove-class()', () => {
                 },
             },
             {
+                actual: 'div:remove-attr(/[)]/)',
+                expected: {
+                    selector: 'div',
+                    stylesOfSelector: [{ property: 'remove-attr', value: '/[)]/' }],
+                },
+            },
+            {
+                actual: 'div:remove-attr(/[(]/)',
+                expected: {
+                    selector: 'div',
+                    stylesOfSelector: [{ property: 'remove-attr', value: '/[(]/' }],
+                },
+            },
+            {
+                actual: 'div:remove-class(/[/]/)',
+                expected: {
+                    selector: 'div',
+                    stylesOfSelector: [{ property: 'remove-class', value: '/[/]/' }],
+                },
+            },
+            {
                 actual: '.banner:has(> a):remove-class(ads)',
                 expected: {
                     selector: '.banner:has(> a)',
@@ -246,6 +267,10 @@ describe('parse action selector -- :remove-attr() and :remove-class()', () => {
             { selector: ':remove-attr(href)', error: REMOVE_ATTR_ERROR_PREFIX.NO_TARGET_SELECTOR },
             { selector: 'div:remove-attr(href) > a', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_POSITION },
             { selector: 'div:remove-attr(href):remove-class(ads)', error: REMOVE_ATTR_ERROR_PREFIX.MULTIPLE_USAGE },
+            {
+                selector: 'div:remove-attr(/[)]/):remove-class(ads)',
+                error: REMOVE_ATTR_ERROR_PREFIX.MULTIPLE_USAGE,
+            },
             { selector: 'div:remove-attr()', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
             { selector: 'div:remove-attr(href', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ACTION },
             { selector: 'div:remove-attr(//)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
