@@ -8,16 +8,57 @@ import { CssStyleMap } from '../../css-rule';
 import { getElementSelectorPath } from '../../common/utils/nodes';
 import { removeSuffix } from '../../common/utils/strings';
 import { logger } from '../../common/utils/logger';
+import { createActionArgMatcher } from '../../common/utils/action-arg';
 
 import {
     MAX_STYLE_PROTECTION_COUNT,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     REMOVE_PSEUDO_MARKER,
+    REMOVE_ATTR_PSEUDO_MARKER,
+    REMOVE_CLASS_PSEUDO_MARKER,
     CONTENT_CSS_PROPERTY,
 } from '../../common/constants';
 
 // added by tsurlfilter's CssHitsCounter
 const CONTENT_ATTR_PREFIX_REGEXP = /^("|')adguard.+?/;
+
+/**
+ * Removes attributes matching the `:remove-attr()` argument from the node.
+ *
+ * @param node DOM node.
+ * @param arg Normalized `:remove-attr()` argument.
+ */
+const removeAttributes = (node: Node, arg: string): void => {
+    if (!(node instanceof HTMLElement)) {
+        return;
+    }
+    const isMatch = createActionArgMatcher(arg);
+    // snapshot names as the live collection is mutated while removing
+    [...node.getAttributeNames()].forEach((name) => {
+        if (isMatch(name)) {
+            node.removeAttribute(name);
+        }
+    });
+};
+
+/**
+ * Removes classes matching the `:remove-class()` argument from the node.
+ *
+ * @param node DOM node.
+ * @param arg Normalized `:remove-class()` argument.
+ */
+const removeClasses = (node: Node, arg: string): void => {
+    if (!(node instanceof HTMLElement)) {
+        return;
+    }
+    const isMatch = createActionArgMatcher(arg);
+    // snapshot classes as the live collection is mutated while removing
+    [...node.classList].forEach((name) => {
+        if (isMatch(name)) {
+            node.classList.remove(name);
+        }
+    });
+};
 
 /**
  * Removes affectedElement.node from DOM.
@@ -58,6 +99,10 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
         return;
     }
     Object.keys(style).forEach((prop) => {
+        // action pseudo-classes are handled by applyStyle() and are not CSS properties
+        if (prop === REMOVE_ATTR_PSEUDO_MARKER || prop === REMOVE_CLASS_PSEUDO_MARKER) {
+            return;
+        }
         // Apply this style only to existing properties
         // We cannot use hasOwnProperty here (does not work in FF)
         if (typeof node.style.getPropertyValue(prop.toString()) !== 'undefined') {
@@ -114,6 +159,41 @@ const isAffectedElement = (
 };
 
 /**
+ * Applies action pseudo-class styles to the node.
+ *
+ * @param node DOM node.
+ * @param style Rule style map.
+ *
+ * @returns True if the style contains action pseudo-classes.
+ */
+const applyRuleAction = (node: Node, style: CssStyleMap): boolean => {
+    const removeAttrArg = style[REMOVE_ATTR_PSEUDO_MARKER];
+    if (removeAttrArg) {
+        removeAttributes(node, removeAttrArg);
+    }
+
+    const removeClassArg = style[REMOVE_CLASS_PSEUDO_MARKER];
+    if (removeClassArg) {
+        removeClasses(node, removeClassArg);
+    }
+
+    return Boolean(removeAttrArg || removeClassArg);
+};
+
+/**
+ * Applies action pseudo-class styles of all rules of the affected element.
+ *
+ * @param affectedElement Affected element.
+ */
+const applyActionStyles = (affectedElement: AffectedElement): void => {
+    affectedElement.rules.forEach((rule) => {
+        if (rule.style) {
+            applyRuleAction(affectedElement.node, rule.style);
+        }
+    });
+};
+
+/**
  * Applies style to the specified DOM node.
  *
  * @param context ExtendedCss context.
@@ -123,7 +203,9 @@ const isAffectedElement = (
  */
 export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): void => {
     if (rawAffectedElement.protectionObserver) {
-        // style is already applied and protected by the observer
+        // style is already applied and protected by the observer,
+        // but action pseudo-classes should be re-applied on DOM mutations
+        applyActionStyles(rawAffectedElement);
         return;
     }
     let affectedElement: AffectedElement | IAffectedElement;
@@ -156,6 +238,13 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
                 removeElement(context, affectedElement);
                 return;
             }
+
+            if (applyRuleAction(node, style)) {
+                // Action rules do not apply other styles,
+                // but they may contain the 'content' property for CssHitsCounter.
+                continue;
+            }
+
             setStyleToElement(node, style);
         } else if (!debug) {
             // but rule should not have both style and debug properties

@@ -66,7 +66,8 @@ import {
     SUPPORTED_PSEUDO_CLASSES,
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKERS,
-    REMOVE_PSEUDO_MARKER,
+    ACTION_PSEUDO_MARKERS,
+    ACTION_ERROR_PREFIXES,
     REGULAR_PSEUDO_ELEMENTS,
     UPWARD_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
@@ -513,12 +514,15 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 // if supported extended pseudo-class is next to colon
                                 // add ExtendedSelector to Selector children
                                 addAstNodeByType(context, NODE.EXTENDED_SELECTOR);
-                            } else if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
-                                // :remove() pseudo-class should be handled before
-                                // as it is not about element selecting but actions with elements
-                                // e.g. '#banner:upward(2):remove()'
-                                throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
                             } else {
+                                const actionMarker = nextTokenValue.toLowerCase();
+                                if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                    // Action pseudo-classes should be handled before
+                                    // as they are not about element selecting but actions with elements
+                                    // e.g. '#banner:upward(2):remove()'
+                                    const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
+                                    throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                                }
                                 // otherwise it is standard pseudo after extended pseudo-class in complex selector
                                 // and colon should be collected to value of previous RegularSelector
                                 // e.g. 'body *:not(input)::selection'
@@ -541,6 +545,16 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 && nextToNextTokenValue === BRACKET.PARENTHESES.LEFT) {
                                 throw new Error(`:xpath() pseudo-class should be the last in selector: '${selector}'`);
                             }
+                            // Action pseudo-classes are not allowed inside :upward() arg
+                            // as it accepts only standard selectors
+                            // e.g. 'div:upward(:remove-attr(href))'
+                            const actionMarker = nextTokenValue?.toLowerCase();
+                            if (getNodeName(bufferNode) === UPWARD_PSEUDO_CLASS_MARKER
+                                && actionMarker
+                                && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
+                                throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                            }
                             // collecting arg for absolute pseudo-class
                             // e.g. 'div:matches-css(width:400px)'
                             updateBufferNode(context, tokenValue);
@@ -556,6 +570,14 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             // or   'div:not(:empty)'
                             initRelativeSubtree(context, ASTERISK);
                             if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
+                                const actionMarker = nextTokenValue.toLowerCase();
+                                if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                    // Action pseudo-classes are not allowed inside relative pseudo-classes
+                                    // as they are not about element selecting but actions with elements
+                                    // e.g. 'div:has(:remove-attr(href))'
+                                    const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
+                                    throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                                }
                                 // collect the colon to value of RegularSelector
                                 // e.g. 'div:not(:empty)'
                                 updateBufferNode(context, tokenValue);

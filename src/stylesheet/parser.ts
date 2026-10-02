@@ -3,7 +3,7 @@ import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
 import { StyleDeclaration } from '../style-block';
 
 import {
-    parseRemoveSelector,
+    parseActionSelector,
     createRawResultsMap,
     saveToRawResults,
     combineRulesData,
@@ -23,7 +23,6 @@ import {
     ASTERISK,
     AT_RULE_MARKER,
     STYLE_ERROR_PREFIX,
-    REMOVE_ERROR_PREFIX,
     NO_AT_RULE_ERROR_PREFIX,
 } from '../common/constants';
 
@@ -89,10 +88,10 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
 
     let removeSelectorData: ParsedSelectorData;
     try {
-        removeSelectorData = parseRemoveSelector(selector);
+        removeSelectorData = parseActionSelector(selector);
     } catch (e: unknown) {
         logger.error(getErrorMessage(e));
-        throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+        throw e;
     }
 
     if (context.nextIndex === -1) {

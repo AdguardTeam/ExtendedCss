@@ -19,6 +19,8 @@ styles with non-standard CSS properties.
     - [Pseudo-class `:nth-ancestor()`](#extended-css-nth-ancestor)
     - [Pseudo-class `:upward()`](#extended-css-upward)
     - [Pseudo-class `:remove()` and pseudo-property `remove`](#remove-pseudos)
+    - [Pseudo-class `:remove-attr()`](#extended-css-remove-attr)
+    - [Pseudo-class `:remove-class()`](#extended-css-remove-class)
     - [Pseudo-class `:is()`](#extended-css-is)
     - [Pseudo-class `:not()`](#extended-css-not)
     - [Pseudo-class `:empty-trimmed`](#extended-css-empty-trimmed)
@@ -59,8 +61,9 @@ styles with non-standard CSS properties.
 
 [`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations),
 [`:nth-ancestor()`](#extended-css-nth-ancestor-limitations), [`:upward()`](#extended-css-upward-limitations),
-[`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and
-[`:remove()`](#extended-css-remove-limitations).
+[`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations),
+[`:remove()`](#extended-css-remove-limitations), [`:remove-attr()`](#extended-css-remove-attr-limitations), and
+[`:remove-class()`](#extended-css-remove-class-limitations).
 
 ### <a name="extended-css-has"></a> Pseudo-class `:has()`
 
@@ -590,6 +593,75 @@ div[class]:has(> a > img) { remove: true; }
 > Both `:remove()` pseudo-class and `remove` pseudo-property works the same, but we recommend to use the
 > pseudo-property as it is related to an action which should be applied to element, since pseudo-classes is more about
 > elements matching.
+
+### <a name="extended-css-remove-attr"></a> Pseudo-class `:remove-attr()`
+
+The `:remove-attr()` pseudo-class removes attributes from matching elements instead of hiding them. It is compatible
+with the [`remove-attr`](https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-attrarg) action
+operator of uBlock Origin.
+
+#### Syntax
+
+```css
+[target]:remove-attr(attr)
+```
+
+- `target` — optional, standard or extended CSS selector
+- `attr` — required, an attribute name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
+
+<a name="extended-css-remove-attr-limitations"></a>
+
+#### Limitations
+
+> The `:remove-attr()` pseudo-class is limited to work properly only at the end of selector.
+
+> If the `:remove-attr()` pseudo-class is used, all style properties are ignored except for the
+> [`debug` pseudo-property](#selectors-debug-mode).
+
+> Removed attributes are not restored by `dispose()`.
+
+> `:remove-attr(style)` conflicts with the style protection mechanism.
+
+#### Examples
+
+```css
+a:remove-attr(href)
+div:remove-attr(/^on[a-z]+/)
+div:remove-attr(/^data-(foo|bar)$/i)
+```
+
+### <a name="extended-css-remove-class"></a> Pseudo-class `:remove-class()`
+
+The `:remove-class()` pseudo-class removes classes from matching elements instead of hiding them. It is compatible
+with the [`remove-class`](https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-classarg) action
+operator of uBlock Origin.
+
+#### Syntax
+
+```css
+[target]:remove-class(class)
+```
+
+- `target` — optional, standard or extended CSS selector
+- `class` — required, a class name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
+
+<a name="extended-css-remove-class-limitations"></a>
+
+#### Limitations
+
+> The `:remove-class()` pseudo-class is limited to work properly only at the end of selector.
+
+> If the `:remove-class()` pseudo-class is used, all style properties are ignored except for the
+> [`debug` pseudo-property](#selectors-debug-mode).
+
+> Removed classes are not restored by `dispose()`.
+
+#### Examples
+
+```css
+div:remove-class(ads)
+div:remove-class(/^ad-/)
+```
 
 ### <a name="extended-css-is"></a> Pseudo-class `:is()`
 

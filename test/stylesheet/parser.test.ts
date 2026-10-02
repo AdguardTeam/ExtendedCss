@@ -5,7 +5,12 @@
 import { parseStylesheet } from '../../src/stylesheet';
 import { ExtCssDocument } from '../../src/selector';
 
-import { REMOVE_ERROR_PREFIX, STYLE_ERROR_PREFIX } from '../../src/common/constants';
+import {
+    REMOVE_ERROR_PREFIX,
+    REMOVE_ATTR_ERROR_PREFIX,
+    REMOVE_CLASS_ERROR_PREFIX,
+    STYLE_ERROR_PREFIX,
+} from '../../src/common/constants';
 
 import { TestCssRuleData, expectSameParsedRules } from '../helpers/common';
 
@@ -590,17 +595,68 @@ describe('stylesheet parser', () => {
         });
 
         describe('invalid remove pseudo-class', () => {
-            const error = REMOVE_ERROR_PREFIX.INVALID_REMOVE;
             const invalidSelectors = [
-                ':remove()',
-                '.block:remove() > .banner:remove()',
-                '.block:remove():upward(2)',
-                'div:remove():contains(/test-content/)',
-                '.banner:has(> div[class]):remove():upward()',
-                'div:remove(0)',
-                'div:not([class]):remove(invalid)',
+                { selector: ':remove()', error: REMOVE_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: '.block:remove() > .banner:remove()', error: REMOVE_ERROR_PREFIX.MULTIPLE_USAGE },
+                { selector: '.block:remove():upward(2)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove():contains(/test-content/)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                // eslint-disable-next-line max-len
+                { selector: '.banner:has(> div[class]):remove():upward()', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove(0)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:not([class]):remove(invalid)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
             ];
-            test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
+        });
+
+        describe('nested action pseudo-classes', () => {
+            // the stylesheet parser skips the invalid selector part and then
+            // fails on the leftover style block
+            const invalidSelectors = [
+                {
+                    selector: 'div:has(:remove-attr(href)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                },
+                {
+                    selector: 'div:not(:remove-class(ads)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                },
+                {
+                    selector: 'div:has(:remove()) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                },
+                {
+                    selector: 'div:upward(:remove-attr(x)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                },
+                {
+                    selector: 'div:upward(:has(:remove-attr(x))) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                },
+            ];
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
+        });
+
+        describe('invalid action pseudo-classes', () => {
+            const invalidSelectors = [
+                { selector: ':remove-attr(href)', error: REMOVE_ATTR_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: 'div:remove-attr(href) > a', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove-attr(href):remove-class(ads)', error: REMOVE_ATTR_ERROR_PREFIX.MULTIPLE_USAGE },
+                { selector: 'div:remove-attr()', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(href', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ACTION },
+                { selector: 'div:remove-attr(/+/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/[/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/x/ii)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: ':remove-class(ads)', error: REMOVE_CLASS_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: 'div:remove-class(ads):upward(1)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove-class(/+/)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
+            ];
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
         });
 
         describe('invalid style declaration', () => {
@@ -673,6 +729,37 @@ describe('stylesheet parser', () => {
                         remove: 'true',
                         content: "'testContentRuleText' !important",
                     },
+                },
+            },
+            {
+                actual: 'div[class]:remove-attr(href) { display: none !important; }',
+                expected: {
+                    selector: 'div[class]',
+                    style: { 'remove-attr': 'href' },
+                },
+            },
+            {
+                actual: 'div[class]:remove-class(ads) { display: none !important; }',
+                expected: {
+                    selector: 'div[class]',
+                    style: { 'remove-class': 'ads' },
+                },
+            },
+            {
+                actual: "div[class]:remove-attr(href) { content: 'test' !important; }",
+                expected: {
+                    selector: 'div[class]',
+                    style: {
+                        'remove-attr': 'href',
+                        content: "'test' !important",
+                    },
+                },
+            },
+            {
+                actual: '#ad { color: red; } #ad:remove-attr(href) { display: none; }',
+                expected: {
+                    selector: '#ad',
+                    style: { 'remove-attr': 'href' },
                 },
             },
         ];

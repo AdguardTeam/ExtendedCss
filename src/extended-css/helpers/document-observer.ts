@@ -2,6 +2,34 @@ import { EventTracker } from './event-tracker';
 import { Context } from './types';
 import { natives } from '../../common/utils/natives';
 
+import { REMOVE_ATTR_PSEUDO_MARKER, SLASH } from '../../common/constants';
+
+/**
+ * Collects attribute names that should trigger re-application of action rules.
+ *
+ * @param context ExtendedCss context.
+ *
+ * @returns Attribute filter array, or undefined if all attributes should be observed.
+ */
+function collectAttributeFilter(context: Context): string[] | undefined {
+    const filter = new Set<string>(['id', 'class']);
+
+    for (const rule of context.parsedRules) {
+        const arg = rule.style?.[REMOVE_ATTR_PSEUDO_MARKER];
+        if (!arg) {
+            continue;
+        }
+        if (arg.startsWith(SLASH)) {
+            // Regexp arguments may match any attribute,
+            // so all attribute mutations should be observed.
+            return undefined;
+        }
+        filter.add(arg);
+    }
+
+    return [...filter];
+}
+
 /**
  * We are trying to limit the number of callback calls by not calling it on all kind of "hover" events.
  * The rationale behind this is that "hover" events often cause attributes modification,
@@ -43,11 +71,13 @@ export function observeDocument(context: Context): void {
         context.scheduler.run();
     }));
 
+    const attributeFilter = collectAttributeFilter(context);
+
     context.domMutationObserver.observe(document, {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['id', 'class'],
+        ...(attributeFilter ? { attributeFilter } : {}),
     });
 }
 

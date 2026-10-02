@@ -29,7 +29,8 @@ import {
 import {
     BRACKET,
     HAS_PSEUDO_CLASS_MARKERS,
-    REMOVE_PSEUDO_MARKER,
+    ACTION_PSEUDO_MARKERS,
+    ACTION_ERROR_PREFIXES,
     REMOVE_ERROR_PREFIX,
 } from '../../common/constants';
 
@@ -282,7 +283,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
  * Checks values of few next tokens on colon token `:` and:
  *  - updates buffer node for following standard pseudo-class;
  *  - adds extended selector ast node for following extended pseudo-class;
- *  - validates some cases of `:remove()` and `:has()` usage.
+ *  - validates some cases of action pseudo-classes and `:has()` usage.
  *
  * @param context Selector parser context.
  * @param selector Selector.
@@ -290,7 +291,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
  * @param nextTokenValue Value of token next to current one.
  * @param nextToNextTokenValue Value of token next to next to current one.
  *
- * @throws An error on :remove() pseudo-class in selector
+ * @throws An error on action pseudo-class in selector
  * or :has() inside regular pseudo limitation.
  */
 export const handleNextTokenOnColon = (
@@ -304,11 +305,13 @@ export const handleNextTokenOnColon = (
         throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
     }
     if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
-        if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
-            // :remove() pseudo-class should be handled before
-            // as it is not about element selecting but actions with elements
+        const actionMarker = nextTokenValue.toLowerCase();
+        if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+            // Action pseudo-classes should be handled before
+            // as they are not about element selecting but actions with elements
             // e.g. 'body > div:empty:remove()'
-            throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+            const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
+            throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
         }
         // if following token is not an extended pseudo
         // the colon should be collected to value of RegularSelector

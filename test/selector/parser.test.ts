@@ -2862,6 +2862,57 @@ describe('remove pseudo-class is invalid for selector parser', () => {
     test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
 });
 
+describe('action pseudo-classes are invalid for selector parser', () => {
+    const toThrowInputs = [
+        {
+            selector: 'div:remove-attr(href)',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:remove-class(ads)',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:remove-attr(/^on[a-z]+/)',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:has(:remove-attr(href))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:not(:remove-class(ads))',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:has(:remove())',
+            error: 'Invalid :remove() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove-attr(x))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:has(:remove-attr(x)))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove-class(x))',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove())',
+            error: 'Invalid :remove() pseudo-class in selector:',
+        },
+    ];
+    test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+
+    it('should allow standard pseudo-classes inside :upward()', () => {
+        expect(() => parse('div:upward(:hover)')).not.toThrow();
+        expect(() => parse('div:upward(div:not(.a))')).not.toThrow();
+    });
+});
+
 describe('fail on white space which is before or after extended pseudo-class name', () => {
     describe('supported extended pseudo-classes', () => {
         // No white space is allowed between the colon and the name of the pseudo-class,

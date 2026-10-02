@@ -474,6 +474,153 @@ describe('extended css library', () => {
         });
     });
 
+    it('removes attributes with :remove-attr()', () => {
+        document.body.innerHTML = `
+            <a id="case-remove-attr" href="https://example.org" onclick="alert(1)"></a>
+        `;
+        const styleSheet = '#case-remove-attr:remove-attr(onclick)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-attr');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        expect(element?.hasAttribute('href')).toBe(true);
+    });
+
+    it('removes attributes by regexp with :remove-attr()', () => {
+        document.body.innerHTML = `
+            <div id="case-remove-attr-regexp" data-ad="1" data-foo="2" title="t"></div>
+        `;
+        const styleSheet = '#case-remove-attr-regexp:remove-attr(/^data-/)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-attr-regexp');
+        expect(element?.hasAttribute('data-ad')).toBe(false);
+        expect(element?.hasAttribute('data-foo')).toBe(false);
+        expect(element?.hasAttribute('title')).toBe(true);
+    });
+
+    it('removes classes with :remove-class()', () => {
+        document.body.innerHTML = `
+            <div id="case-remove-class" class="banner ads sponsored"></div>
+        `;
+        const styleSheet = '#case-remove-class:remove-class(ads)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-class');
+        expect(element?.classList.contains('ads')).toBe(false);
+        expect(element?.classList.contains('banner')).toBe(true);
+        expect(element?.classList.contains('sponsored')).toBe(true);
+    });
+
+    it("keeps 'content' style in rule data for :remove-attr()", () => {
+        document.body.innerHTML = `
+            <div id="case-remove-attr-content" onclick="alert(1)"></div>
+        `;
+        const cssRules = [
+            // eslint-disable-next-line max-len
+            "#case-remove-attr-content:remove-attr(onclick) { content: 'adguardTestContentRuleText' !important }",
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
+
+        const affectedElements = extendedCss.getAffectedElements();
+        expect(affectedElements.length).toBe(1);
+        expect(affectedElements[0]?.rules[0]?.style).toEqual({
+            'remove-attr': 'onclick',
+            content: "'adguardTestContentRuleText' !important",
+        });
+
+        const element = document.getElementById('case-remove-attr-content');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        // 'content' should not be applied to the element
+        expect(element?.style.getPropertyValue('content')).toBe('');
+    });
+
+    it('removes re-added attributes after DOM mutations', () => {
+        document.body.innerHTML = `
+            <div id="case-remove-attr-mutation" onclick="alert(1)"></div>
+        `;
+        const styleSheet = '#case-remove-attr-mutation:remove-attr(onclick)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-attr-mutation');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+
+        element?.setAttribute('onclick', 'alert(2)');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            }, 100);
+        });
+    });
+
+    it('removes attributes with case-insensitive regexp :remove-attr()', () => {
+        document.body.innerHTML = `
+            <div id="case-remove-attr-flags" data-ad="1"></div>
+        `;
+        const styleSheet = '#case-remove-attr-flags:remove-attr(/^DATA-/i)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-attr-flags');
+        expect(element?.hasAttribute('data-ad')).toBe(false);
+    });
+
+    it('removes re-added classes after DOM mutations', () => {
+        document.body.innerHTML = `
+            <div id="case-remove-class-mutation" class="banner ads"></div>
+        `;
+        const styleSheet = '#case-remove-class-mutation:remove-class(ads)';
+        applyExtCssStyleSheet(styleSheet);
+
+        const element = document.getElementById('case-remove-class-mutation');
+        expect(element?.classList.contains('ads')).toBe(false);
+
+        element?.classList.add('ads');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    expect(element?.classList.contains('ads')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            }, 100);
+        });
+    });
+
+    it('skips invalid action rules without aborting application', () => {
+        document.body.innerHTML = `
+            <div id="case-invalid-action" onclick="alert(1)"></div>
+        `;
+        const cssRules = [
+            '#case-invalid-action:remove-attr(/+/)',
+            '#case-invalid-action:upward(:remove-attr(x))',
+            '#case-invalid-action:remove-attr(onclick)',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+
+        expect(() => extendedCss.apply()).not.toThrow();
+
+        const element = document.getElementById('case-invalid-action');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+    });
+
+    it('validates action pseudo-classes', () => {
+        expect(ExtendedCss.validate('div:remove()').ok).toBeTruthy();
+        expect(ExtendedCss.validate('div:remove-attr(href)').ok).toBeTruthy();
+        expect(ExtendedCss.validate('div:remove-class(ads)').ok).toBeTruthy();
+        expect(ExtendedCss.validate('div:remove-attr(/^data-/i)').ok).toBeTruthy();
+        expect(ExtendedCss.validate('div:remove-attr(/+/)').ok).toBeFalsy();
+        expect(ExtendedCss.validate('div:has(:remove-attr(href))').ok).toBeFalsy();
+    });
+
     it('apply different rules to the same element', () => {
         document.body.innerHTML = `
             <div id="case15">

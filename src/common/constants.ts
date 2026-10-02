@@ -157,6 +157,27 @@ export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
  */
 export const REMOVE_PSEUDO_MARKER = 'remove';
 
+/**
+ * Pseudo-classes `:remove-attr()` and `:remove-class()` are action operators:
+ * they remove matching attributes or classes instead of selecting elements.
+ *
+ * Selector text should not contain these pseudo-classes,
+ * so the selector parser considers them invalid,
+ * and they are handled by the stylesheet parser.
+ */
+export const REMOVE_ATTR_PSEUDO_MARKER = 'remove-attr';
+export const REMOVE_CLASS_PSEUDO_MARKER = 'remove-class';
+
+/**
+ * Action pseudo-class markers which are handled by the stylesheet parser
+ * and should never reach the selector parser.
+ */
+export const ACTION_PSEUDO_MARKERS = [
+    REMOVE_PSEUDO_MARKER,
+    REMOVE_ATTR_PSEUDO_MARKER,
+    REMOVE_CLASS_PSEUDO_MARKER,
+];
+
 // relative:
 export const HAS_PSEUDO_CLASS_MARKER = 'has';
 export const ABP_HAS_PSEUDO_CLASS_MARKER = '-abp-has';
@@ -267,11 +288,48 @@ export const STYLE_ERROR_PREFIX = {
 
 export const NO_AT_RULE_ERROR_PREFIX = 'At-rules are not supported';
 
-export const REMOVE_ERROR_PREFIX = {
-    INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
+/**
+ * Error message shape shared by all action pseudo-classes.
+ */
+export type ActionErrorPrefix = {
+    INVALID_ACTION: string;
+    NO_TARGET_SELECTOR: string;
+    MULTIPLE_USAGE: string;
+    INVALID_POSITION: string;
+    INVALID_ARG: string;
+};
+
+export const REMOVE_ERROR_PREFIX: ActionErrorPrefix = {
+    INVALID_ACTION: 'Invalid :remove() pseudo-class in selector',
     NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :remove() pseudo-class`,
     MULTIPLE_USAGE: 'Pseudo-class :remove() appears more than once in selector',
     INVALID_POSITION: 'Pseudo-class :remove() should be at the end of selector',
+    INVALID_ARG: 'Invalid argument of :remove() pseudo-class',
+};
+
+export const REMOVE_ATTR_ERROR_PREFIX: ActionErrorPrefix = {
+    INVALID_ACTION: 'Invalid :remove-attr() pseudo-class in selector',
+    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :remove-attr() pseudo-class`,
+    MULTIPLE_USAGE: 'Pseudo-class :remove-attr() appears more than once in selector',
+    INVALID_POSITION: 'Pseudo-class :remove-attr() should be at the end of selector',
+    INVALID_ARG: 'Invalid argument of :remove-attr() pseudo-class',
+};
+
+export const REMOVE_CLASS_ERROR_PREFIX: ActionErrorPrefix = {
+    INVALID_ACTION: 'Invalid :remove-class() pseudo-class in selector',
+    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :remove-class() pseudo-class`,
+    MULTIPLE_USAGE: 'Pseudo-class :remove-class() appears more than once in selector',
+    INVALID_POSITION: 'Pseudo-class :remove-class() should be at the end of selector',
+    INVALID_ARG: 'Invalid argument of :remove-class() pseudo-class',
+};
+
+/**
+ * Maps an action pseudo-class marker to its error messages.
+ */
+export const ACTION_ERROR_PREFIXES: Record<string, ActionErrorPrefix> = {
+    [REMOVE_PSEUDO_MARKER]: REMOVE_ERROR_PREFIX,
+    [REMOVE_ATTR_PSEUDO_MARKER]: REMOVE_ATTR_ERROR_PREFIX,
+    [REMOVE_CLASS_PSEUDO_MARKER]: REMOVE_CLASS_ERROR_PREFIX,
 };
 
 export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
