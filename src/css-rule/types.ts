@@ -82,6 +82,13 @@ export type ExtCssRuleData = {
     style?: CssStyleMap;
 
     /**
+     * Action pseudo-class styles (e.g. `:remove-attr()` or `:remove-class()`)
+     * with all their arguments preserved, unlike `style`
+     * where action styles are merged by property.
+     */
+    actionStyles?: StyleDeclaration[];
+
+    /**
      * Rule debugging mode value.
      */
     debug?: 'true' | 'global';

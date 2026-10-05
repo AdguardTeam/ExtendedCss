@@ -469,6 +469,14 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '[id][class]' },
                 ],
             },
+            {
+                // action-like text inside a quoted attribute value is not a pseudo-class
+                actual: 'div:upward([data-x=":remove-attr(title)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '[data-x=":remove-attr(title)"]' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
@@ -483,6 +491,14 @@ describe('relative extended selectors', () => {
                 expected: [
                     { isRegular: true, value: 'div' },
                     { isRelative: true, name, value: 'span' },
+                ],
+            },
+            {
+                // action-like text inside a quoted attribute value is not a pseudo-class
+                actual: 'div:has([data-x=":remove-attr(y)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isRelative: true, name, value: '[data-x=":remove-attr(y)"]' },
                 ],
             },
             {

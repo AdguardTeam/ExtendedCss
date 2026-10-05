@@ -3,7 +3,7 @@ import {
     Context,
     IAffectedElement,
 } from './types';
-import { CssStyleMap } from '../../css-rule';
+import { CssStyleMap, ExtCssRuleData } from '../../css-rule';
 
 import { getElementSelectorPath } from '../../common/utils/nodes';
 import { removeSuffix } from '../../common/utils/strings';
@@ -168,20 +168,35 @@ const isAffectedElement = (
 };
 
 /**
- * Applies action pseudo-class styles to the node.
+ * Applies action pseudo-class styles of the rule to the node.
  *
  * @param node DOM node.
- * @param style Rule style map.
+ * @param rule Rule data.
  *
- * @returns True if the style contains action pseudo-classes.
+ * @returns True if the rule contains action pseudo-classes.
  */
-const applyRuleAction = (node: Node, style: CssStyleMap): boolean => {
-    const removeAttrArg = style[REMOVE_ATTR_PSEUDO_MARKER];
+const applyRuleAction = (node: Node, rule: ExtCssRuleData): boolean => {
+    const { actionStyles, style } = rule;
+
+    if (actionStyles && actionStyles.length > 0) {
+        // apply each preserved action argument
+        actionStyles.forEach((actionStyle) => {
+            if (actionStyle.property === REMOVE_ATTR_PSEUDO_MARKER) {
+                removeAttributes(node, actionStyle.value);
+            } else if (actionStyle.property === REMOVE_CLASS_PSEUDO_MARKER) {
+                removeClasses(node, actionStyle.value);
+            }
+        });
+        return true;
+    }
+
+    // fallback for rule data without preserved action styles
+    const removeAttrArg = style?.[REMOVE_ATTR_PSEUDO_MARKER];
     if (removeAttrArg) {
         removeAttributes(node, removeAttrArg);
     }
 
-    const removeClassArg = style[REMOVE_CLASS_PSEUDO_MARKER];
+    const removeClassArg = style?.[REMOVE_CLASS_PSEUDO_MARKER];
     if (removeClassArg) {
         removeClasses(node, removeClassArg);
     }
@@ -197,7 +212,7 @@ const applyRuleAction = (node: Node, style: CssStyleMap): boolean => {
 const applyActionStyles = (affectedElement: AffectedElement): void => {
     affectedElement.rules.forEach((rule) => {
         if (rule.style) {
-            applyRuleAction(affectedElement.node, rule.style);
+            applyRuleAction(affectedElement.node, rule);
         }
     });
 };
@@ -248,7 +263,7 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
                 return;
             }
 
-            if (applyRuleAction(node, style)) {
+            if (rule && applyRuleAction(node, rule)) {
                 // Action rules do not apply other styles,
                 // but they may contain the 'content' property for CssHitsCounter.
                 continue;

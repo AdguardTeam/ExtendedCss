@@ -301,6 +301,12 @@ export const handleNextTokenOnColon = (
     nextTokenValue: string | undefined,
     nextToNextTokenValue: string | undefined,
 ) => {
+    if (context.quoteCharacter) {
+        // the colon is inside a quoted value and is not a pseudo-class start,
+        // e.g. ':upward([data-x=":remove-attr(title)"])'
+        updateBufferNode(context, tokenValue);
+        return;
+    }
     if (!nextTokenValue) {
         throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
     }

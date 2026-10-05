@@ -51,6 +51,13 @@ export type Context = {
     isRegexpOpen: boolean;
 
     /**
+     * Character of the currently open quoted string, if any.
+     * Needed to not treat quoted values as selector syntax,
+     * e.g. ':upward([data-x=":remove-attr(title)"])'.
+     */
+    quoteCharacter: string | undefined;
+
+    /**
      * Flag for optimizing ast before return.
      * Needed for :not() and :is() pseudo-classes
      * which should be parsed as standard if arg has no extended selector.

@@ -597,7 +597,7 @@ div[class]:has(> a > img) { remove: true; }
 ### <a name="extended-css-remove-attr"></a> Pseudo-class `:remove-attr()`
 
 The `:remove-attr()` pseudo-class removes attributes from matching elements instead of hiding them. It is compatible
-with the [`remove-attr`](https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-attrarg) action
+with the [`remove-attr`][ubo] action
 operator of uBlock Origin.
 
 #### Syntax
@@ -635,7 +635,7 @@ div:remove-attr(/^data-(foo|bar)$/i)
 ### <a name="extended-css-remove-class"></a> Pseudo-class `:remove-class()`
 
 The `:remove-class()` pseudo-class removes classes from matching elements instead of hiding them. It is compatible
-with the [`remove-class`](https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-classarg) action
+with the [`remove-class`][ubo] action
 operator of uBlock Origin.
 
 #### Syntax
@@ -1243,6 +1243,8 @@ ExtendedCss.query(selector);
 
 [install-size-badge]: https://packagephobia.com/badge?p=@adguard/extended-css
 [install-size-url]: https://packagephobia.com/result?p=@adguard/extended-css
+
+[ubo]: https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-attrarg-subjectremove-classarg
 
 [license-badge]: https://img.shields.io/github/license/AdGuardTeam/ExtendedCss
 [license-url]: https://github.com/AdguardTeam/ExtendedCss/blob/master/LICENSE

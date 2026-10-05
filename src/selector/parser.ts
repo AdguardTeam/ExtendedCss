@@ -103,6 +103,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         isAttributeBracketsOpen: false,
         attributeBuffer: '',
         isRegexpOpen: false,
+        quoteCharacter: undefined,
         shouldOptimize: false,
     };
 
@@ -138,6 +139,18 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         // e.g. ':matches-css(background-image: /^url\(https:\/\/example\.org\//)'
         const previousToPreviousToken = tokens[i - 2];
         const prevToPrevTokenValue = previousToPreviousToken?.value;
+
+        // track quoted strings to not treat their contents as selector syntax,
+        // e.g. ':upward([data-x=":remove-attr(title)"])'
+        if ((tokenValue === SINGLE_QUOTE || tokenValue === DOUBLE_QUOTE)
+            && prevTokenValue !== BACKSLASH
+            && !context.isRegexpOpen) {
+            if (context.quoteCharacter === undefined) {
+                context.quoteCharacter = tokenValue;
+            } else if (context.quoteCharacter === tokenValue) {
+                context.quoteCharacter = undefined;
+            }
+        }
 
         let bufferNode = getBufferNode(context);
 
@@ -516,7 +529,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 addAstNodeByType(context, NODE.EXTENDED_SELECTOR);
                             } else {
                                 const actionMarker = nextTokenValue.toLowerCase();
-                                if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                if (!context.quoteCharacter && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
                                     // Action pseudo-classes should be handled before
                                     // as they are not about element selecting but actions with elements
                                     // e.g. '#banner:upward(2):remove()'
@@ -549,7 +562,8 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             // as it accepts only standard selectors
                             // e.g. 'div:upward(:remove-attr(href))'
                             const actionMarker = nextTokenValue?.toLowerCase();
-                            if (getNodeName(bufferNode) === UPWARD_PSEUDO_CLASS_MARKER
+                            if (!context.quoteCharacter
+                                && getNodeName(bufferNode) === UPWARD_PSEUDO_CLASS_MARKER
                                 && actionMarker
                                 && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
                                 const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
@@ -571,7 +585,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             initRelativeSubtree(context, ASTERISK);
                             if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
                                 const actionMarker = nextTokenValue.toLowerCase();
-                                if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                if (!context.quoteCharacter && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
                                     // Action pseudo-classes are not allowed inside relative pseudo-classes
                                     // as they are not about element selecting but actions with elements
                                     // e.g. 'div:has(:remove-attr(href))'

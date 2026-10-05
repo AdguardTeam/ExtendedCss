@@ -231,6 +231,41 @@ describe('parse action selector -- :remove-attr() and :remove-class()', () => {
                 },
             },
             {
+                actual: 'div:contains(/[(]/):remove-class(ads)',
+                expected: {
+                    selector: 'div:contains(/[(]/)',
+                    stylesOfSelector: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                actual: 'div:contains(/[)]/):remove-class(ads)',
+                expected: {
+                    selector: 'div:contains(/[)]/)',
+                    stylesOfSelector: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                actual: 'div:contains(/[/]/):remove-class(ads)',
+                expected: {
+                    selector: 'div:contains(/[/]/)',
+                    stylesOfSelector: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                actual: 'div[data-label="O\'Reilly"]:remove-attr(title)',
+                expected: {
+                    selector: 'div[data-label="O\'Reilly"]',
+                    stylesOfSelector: [{ property: 'remove-attr', value: 'title' }],
+                },
+            },
+            {
+                actual: 'div[data-label=\'a"b\']:remove-attr(title)',
+                expected: {
+                    selector: 'div[data-label=\'a"b\']',
+                    stylesOfSelector: [{ property: 'remove-attr', value: 'title' }],
+                },
+            },
+            {
                 actual: '.banner:has(> a):remove-class(ads)',
                 expected: {
                     selector: '.banner:has(> a)',

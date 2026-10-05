@@ -23,6 +23,8 @@ import {
     SLASH,
     SINGLE_QUOTE,
     DOUBLE_QUOTE,
+    DOT,
+    EQUAL_SIGN,
     WHITE_SPACE_CHARACTERS,
     REMOVE_PSEUDO_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
@@ -44,6 +46,17 @@ const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
  * Regexp flag character, e.g. 'i', 'm' or 'u'.
  */
 const REGEXP_FLAG_CHARACTER = /[a-z]/;
+
+/**
+ * Characters that may precede a regexp literal in a selector,
+ * e.g. ':contains(/text/)' or ':matches-css(height:/20px/)'.
+ */
+const REGEXP_OPENING_CHARACTERS = [
+    BRACKET.PARENTHESES.LEFT,
+    EQUAL_SIGN,
+    DOT,
+    COLON,
+];
 
 /**
  * Info about an action pseudo-class found in a selector.
@@ -80,6 +93,17 @@ type ActionSelectorData = {
  */
 const isWhiteSpace = (char: string | undefined): boolean => {
     return char !== undefined && WHITE_SPACE_CHARACTERS.includes(char);
+};
+
+/**
+ * Checks whether a regexp literal can start after the given character.
+ *
+ * @param char Character preceding a slash.
+ *
+ * @returns True if a regexp literal can start after the character.
+ */
+const isRegexpOpeningCharacter = (char: string | undefined): boolean => {
+    return isWhiteSpace(char) || (char !== undefined && REGEXP_OPENING_CHARACTERS.includes(char));
 };
 
 /**
@@ -157,11 +181,17 @@ const findClosingParenthesis = (rawSelector: string, startIndex: number): number
             continue;
         }
         if (char === SINGLE_QUOTE) {
-            inSingleQuote = !inSingleQuote;
+            // a quote should change state only when the other quote type is not active,
+            // e.g. an apostrophe inside a double-quoted attribute value
+            if (!inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            }
             continue;
         }
         if (char === DOUBLE_QUOTE) {
-            inDoubleQuote = !inDoubleQuote;
+            if (!inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            }
             continue;
         }
         if (inSingleQuote || inDoubleQuote) {
@@ -195,34 +225,71 @@ const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
     let parenDepth = 0;
     let inSingleQuote = false;
     let inDoubleQuote = false;
+    let inRegexp = false;
+    let inRegexpCharClass = false;
+    // character preceding the current one, needed to detect regexp literal opening
+    let prevChar: string | undefined;
 
     for (let i = 0; i < rawSelector.length; i += 1) {
         const char = rawSelector[i];
 
+        if (inRegexp) {
+            // skip regexp literal contents as a whole:
+            // parentheses inside it do not affect the selector nesting
+            if (char === BACKSLASH) {
+                i += 1;
+            } else if (char === BRACKET.SQUARE.LEFT) {
+                inRegexpCharClass = true;
+            } else if (char === BRACKET.SQUARE.RIGHT) {
+                inRegexpCharClass = false;
+            } else if (char === SLASH && !inRegexpCharClass) {
+                inRegexp = false;
+            }
+            prevChar = char;
+            continue;
+        }
         if (char === BACKSLASH) {
             i += 1;
+            prevChar = char;
             continue;
         }
         if (char === SINGLE_QUOTE) {
-            inSingleQuote = !inSingleQuote;
+            // a quote should change state only when the other quote type is not active,
+            // e.g. an apostrophe inside a double-quoted attribute value
+            if (!inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            }
+            prevChar = char;
             continue;
         }
         if (char === DOUBLE_QUOTE) {
-            inDoubleQuote = !inDoubleQuote;
+            if (!inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            }
+            prevChar = char;
             continue;
         }
         if (inSingleQuote || inDoubleQuote) {
+            prevChar = char;
+            continue;
+        }
+        if (char === SLASH && isRegexpOpeningCharacter(prevChar)) {
+            inRegexp = true;
+            prevChar = char;
             continue;
         }
         if (char === BRACKET.PARENTHESES.LEFT) {
             parenDepth += 1;
+            prevChar = char;
             continue;
         }
         if (char === BRACKET.PARENTHESES.RIGHT) {
             parenDepth -= 1;
+            prevChar = char;
             continue;
         }
         if (char !== COLON || parenDepth !== 0) {
+            prevChar = char;
             continue;
         }
 
@@ -232,6 +299,7 @@ const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
             return candidate.toLowerCase() === markerText;
         });
         if (!marker) {
+            prevChar = char;
             continue;
         }
 
@@ -252,6 +320,7 @@ const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
             // do not affect the depth tracking
             i = closingIndex;
         }
+        prevChar = rawSelector[i];
     }
 
     return found;
@@ -489,6 +558,13 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
         actionStyles.forEach((actionStyle) => {
             actionStyleMap[actionStyle.property] = actionStyle.value;
         });
+
+        // preserve all action arguments to apply each of them:
+        // rules with the same target selector are merged by `style` property,
+        // so a single value per property would keep only the last argument
+        if (actionStyles.length > 0) {
+            ruleData.actionStyles = actionStyles;
+        }
 
         /**
          * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().

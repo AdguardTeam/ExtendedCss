@@ -497,6 +497,57 @@ describe('stylesheet parser', () => {
         });
     });
 
+    describe('action pseudo-classes', () => {
+        const testsInputs = [
+            {
+                actual: '#x:remove-attr(href)',
+                expected: {
+                    selector: '#x',
+                    style: { 'remove-attr': 'href' },
+                },
+            },
+            {
+                actual: '#x:remove-class(ads)',
+                expected: {
+                    selector: '#x',
+                    style: { 'remove-class': 'ads' },
+                },
+            },
+            {
+                // braces inside a regexp argument should not be treated as style block start
+                actual: '#x:remove-attr(/^data-{1,2}ad$/)',
+                expected: {
+                    selector: '#x',
+                    style: { 'remove-attr': '/^data-{1,2}ad$/' },
+                },
+            },
+            {
+                actual: '#x:remove-attr(/^data-{1,2}ad$/) { display: none }',
+                expected: {
+                    selector: '#x',
+                    style: { 'remove-attr': '/^data-{1,2}ad$/' },
+                },
+            },
+            {
+                // parentheses inside a regexp argument of the target selector
+                actual: 'div:contains(/[(]/):remove-class(ads)',
+                expected: {
+                    selector: 'div:contains(/[(]/)',
+                    style: { 'remove-class': 'ads' },
+                },
+            },
+            {
+                // apostrophe inside a double-quoted attribute value
+                actual: 'div[data-label="O\'Reilly"]:remove-attr(title)',
+                expected: {
+                    selector: 'div[data-label="O\'Reilly"]',
+                    style: { 'remove-attr': 'title' },
+                },
+            },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
+    });
+
     describe('debug pseudo-property', () => {
         const testsInputs = [
             // 'true' value

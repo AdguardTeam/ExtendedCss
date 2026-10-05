@@ -631,6 +631,72 @@ describe('extended css library', () => {
         });
     });
 
+    it('applies all action rules for the same target selector', () => {
+        document.body.innerHTML = `
+            <a id="case-multiple-actions" href="https://example.org" onclick="alert(1)"></a>
+            <div id="case-multiple-class-actions" class="ads sponsored banner"></div>
+        `;
+        const cssRules = [
+            '#case-multiple-actions:remove-attr(href)',
+            '#case-multiple-actions:remove-attr(onclick)',
+            '#case-multiple-class-actions:remove-class(ads)',
+            '#case-multiple-class-actions:remove-class(sponsored)',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-multiple-actions');
+        expect(element?.hasAttribute('href')).toBe(false);
+        expect(element?.hasAttribute('onclick')).toBe(false);
+
+        const classElement = document.getElementById('case-multiple-class-actions');
+        expect(classElement?.classList.contains('ads')).toBe(false);
+        expect(classElement?.classList.contains('sponsored')).toBe(false);
+        expect(classElement?.classList.contains('banner')).toBe(true);
+
+        // all action arguments should be preserved for the same target selector
+        const rules = extendedCss.getAffectedElements()[0]?.rules;
+        expect(rules?.[0]?.actionStyles).toEqual([
+            { property: 'remove-attr', value: 'href' },
+            { property: 'remove-attr', value: 'onclick' },
+        ]);
+    });
+
+    it('does not re-apply action rules to elements that no longer match', () => {
+        document.body.innerHTML = `
+            <div id="case-stale-action" class="eligible" onclick="alert(1)"></div>
+        `;
+        const cssRules = [
+            '.eligible:remove-attr(onclick)',
+            '#case-stale-action { color: red; }',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-stale-action');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        expect(extendedCss.getAffectedElements()[0]?.rules.length).toBe(2);
+
+        // the element no longer matches the action selector
+        // but still matches the ordinary rule
+        element?.classList.remove('eligible');
+        element?.setAttribute('onclick', 'alert(2)');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                rAF(() => {
+                    try {
+                        expect(element?.hasAttribute('onclick')).toBe(true);
+                        expect(extendedCss.getAffectedElements()[0]?.rules.length).toBe(1);
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            }, 100);
+        });
+    });
+
     it('skips invalid action rules without aborting application', () => {
         document.body.innerHTML = `
             <div id="case-invalid-action" onclick="alert(1)"></div>

@@ -15,16 +15,20 @@ function collectAttributeFilter(context: Context): string[] | undefined {
     const filter = new Set<string>(['id', 'class']);
 
     for (const rule of context.parsedRules) {
-        const arg = rule.style?.[REMOVE_ATTR_PSEUDO_MARKER];
-        if (!arg) {
+        if (!rule.actionStyles) {
             continue;
         }
-        if (arg.startsWith(SLASH)) {
-            // Regexp arguments may match any attribute,
-            // so all attribute mutations should be observed.
-            return undefined;
+        for (const actionStyle of rule.actionStyles) {
+            if (actionStyle.property !== REMOVE_ATTR_PSEUDO_MARKER) {
+                continue;
+            }
+            if (actionStyle.value.startsWith(SLASH)) {
+                // Regexp arguments may match any attribute,
+                // so all attribute mutations should be observed.
+                return undefined;
+            }
+            filter.add(actionStyle.value);
         }
-        filter.add(arg);
     }
 
     return [...filter];
