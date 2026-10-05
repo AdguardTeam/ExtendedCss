@@ -159,7 +159,20 @@ describe('parse remove selector', () => {
                     stylesOfSelector: [REMOVE_PROPERTY_STYLE],
                 },
             },
-
+            {
+                actual: 'div:contains(/[(]/):remove()',
+                expected: {
+                    selector: 'div:contains(/[(]/)',
+                    stylesOfSelector: [REMOVE_PROPERTY_STYLE],
+                },
+            },
+            {
+                actual: 'div:contains(/[)]/):remove()',
+                expected: {
+                    selector: 'div:contains(/[)]/)',
+                    stylesOfSelector: [REMOVE_PROPERTY_STYLE],
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectParsedSelectorData(input));
     });
