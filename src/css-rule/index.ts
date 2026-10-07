@@ -5,6 +5,9 @@ export {
     createRawResultsMap,
     saveToRawResults,
     combineRulesData,
+    hasActionPseudoStyles,
+    filterActionRuleStyles,
+    filterStyleBlockActionDeclarations,
 } from './helpers';
 
 export type {

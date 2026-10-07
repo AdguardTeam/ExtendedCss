@@ -544,6 +544,41 @@ describe('stylesheet parser', () => {
                     style: { 'remove-attr': 'title' },
                 },
             },
+            {
+                // apostrophe in plain text of an extended pseudo-class arg
+                actual: "#t:contains(Don't):remove()",
+                expected: {
+                    selector: "#t:contains(Don't)",
+                    style: { remove: 'true' },
+                },
+            },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
+    });
+
+    describe('quotes and slashes in selector args', () => {
+        const testsInputs = [
+            {
+                actual: "#t:contains(Don't) { display: none }",
+                expected: {
+                    selector: "#t:contains(Don't)",
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: 'span:contains(1 / 2) { display: none }',
+                expected: {
+                    selector: 'span:contains(1 / 2)',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: '#a:xpath(../..) { display: none }',
+                expected: {
+                    selector: '#a:xpath(../..)',
+                    style: { display: 'none' },
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });
@@ -810,7 +845,7 @@ describe('stylesheet parser', () => {
                 actual: '#ad { color: red; } #ad:remove-attr(href) { display: none; }',
                 expected: {
                     selector: '#ad',
-                    style: { 'remove-attr': 'href' },
+                    style: { color: 'red', 'remove-attr': 'href' },
                 },
             },
         ];

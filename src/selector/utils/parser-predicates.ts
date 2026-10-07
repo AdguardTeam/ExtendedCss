@@ -24,46 +24,14 @@ import {
     BRACKET,
     SLASH,
     BACKSLASH,
-    DOT,
     CONTAINS_PSEUDO_NAMES,
     XPATH_PSEUDO_CLASS_MARKER,
     SUPPORTED_PSEUDO_CLASSES,
     OPTIMIZATION_PSEUDO_CLASSES,
-    WHITE_SPACE_CHARACTERS,
+    POSSIBLE_MARKS_BEFORE_REGEXP,
 } from '../../common/constants';
 
 const ATTRIBUTE_CASE_INSENSITIVE_FLAG = 'i';
-
-/**
- * Limited list of available symbols before slash `/`
- * to check whether it is valid regexp pattern opening.
- */
-const POSSIBLE_MARKS_BEFORE_REGEXP = {
-    COMMON: [
-        // e.g. ':matches-attr(/data-/)'
-        BRACKET.PARENTHESES.LEFT,
-        // e.g. `:matches-attr('/data-/')`
-        SINGLE_QUOTE,
-        // e.g. ':matches-attr("/data-/")'
-        DOUBLE_QUOTE,
-        // e.g. ':matches-attr(check=/data-v-/)'
-        EQUAL_SIGN,
-        // e.g. ':matches-property(inner./_test/=null)'
-        DOT,
-        // e.g. ':matches-css(height:/20px/)'
-        COLON,
-        // ':matches-css-after( content  :   /(\\d+\\s)*me/  )'
-        SPACE,
-    ],
-    CONTAINS: [
-        // e.g. ':contains(/text/)'
-        BRACKET.PARENTHESES.LEFT,
-        // e.g. `:contains('/text/')`
-        SINGLE_QUOTE,
-        // e.g. ':contains("/text/")'
-        DOUBLE_QUOTE,
-    ],
-};
 
 /**
  * Checks whether the passed token is supported extended pseudo-class.
@@ -263,16 +231,4 @@ export const isAttributeClosing = (context: Context): boolean => {
     return lastAttrTokenValue === nextToEqualSignTokenValue;
 };
 
-/**
- * Checks whether the `tokenValue` is a whitespace character.
- *
- * @param tokenValue Token value.
- *
- * @returns True if `tokenValue` is a whitespace character.
- */
-export const isWhiteSpaceChar = (tokenValue: string | undefined): boolean => {
-    if (!tokenValue) {
-        return false;
-    }
-    return WHITE_SPACE_CHARACTERS.includes(tokenValue);
-};
+export { isWhiteSpaceChar } from '../../common/utils/strings';

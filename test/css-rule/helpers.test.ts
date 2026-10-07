@@ -173,6 +173,27 @@ describe('parse remove selector', () => {
                     stylesOfSelector: [REMOVE_PROPERTY_STYLE],
                 },
             },
+            {
+                actual: "div:contains(Don't):remove()",
+                expected: {
+                    selector: "div:contains(Don't)",
+                    stylesOfSelector: [REMOVE_PROPERTY_STYLE],
+                },
+            },
+            {
+                actual: 'div:contains(1 / 2):remove()',
+                expected: {
+                    selector: 'div:contains(1 / 2)',
+                    stylesOfSelector: [REMOVE_PROPERTY_STYLE],
+                },
+            },
+            {
+                actual: '#a:xpath(../..):remove()',
+                expected: {
+                    selector: '#a:xpath(../..)',
+                    stylesOfSelector: [REMOVE_PROPERTY_STYLE],
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectParsedSelectorData(input));
     });
@@ -276,6 +297,13 @@ describe('parse action selector -- :remove-attr() and :remove-class()', () => {
                 expected: {
                     selector: 'div[data-label=\'a"b\']',
                     stylesOfSelector: [{ property: 'remove-attr', value: 'title' }],
+                },
+            },
+            {
+                actual: "#t:contains(Don't):remove-attr(onclick)",
+                expected: {
+                    selector: "#t:contains(Don't)",
+                    stylesOfSelector: [{ property: 'remove-attr', value: 'onclick' }],
                 },
             },
             {

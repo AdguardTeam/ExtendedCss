@@ -103,6 +103,37 @@ export const SUPPORTED_SELECTOR_MARKS = [
     FORM_FEED,
 ];
 
+/**
+ * Limited list of available symbols before slash `/`
+ * to check whether it is valid regexp pattern opening.
+ */
+export const POSSIBLE_MARKS_BEFORE_REGEXP = {
+    COMMON: [
+        // e.g. ':matches-attr(/data-/)'
+        LEFT_PARENTHESIS,
+        // e.g. `:matches-attr('/data-/')`
+        SINGLE_QUOTE,
+        // e.g. ':matches-attr("/data-/")'
+        DOUBLE_QUOTE,
+        // e.g. ':matches-attr(check=/data-v-/)'
+        EQUAL_SIGN,
+        // e.g. ':matches-property(inner./_test/=null)'
+        DOT,
+        // e.g. ':matches-css(height:/20px/)'
+        COLON,
+        // ':matches-css-after( content  :   /(\\d+\\s)*me/  )'
+        SPACE,
+    ],
+    CONTAINS: [
+        // e.g. ':contains(/text/)'
+        LEFT_PARENTHESIS,
+        // e.g. `:contains('/text/')`
+        SINGLE_QUOTE,
+        // e.g. ':contains("/text/")'
+        DOUBLE_QUOTE,
+    ],
+};
+
 export const SUPPORTED_STYLE_DECLARATION_MARKS = [
     // divider between property and value in declaration
     COLON,
@@ -335,3 +366,5 @@ export const ACTION_ERROR_PREFIXES: Record<string, ActionErrorPrefix> = {
 export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
 
 export const MAX_STYLE_PROTECTION_COUNT = 50;
+
+export const STYLE_ATTRIBUTE = 'style';

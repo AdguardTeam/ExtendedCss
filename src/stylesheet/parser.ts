@@ -11,21 +11,19 @@ import {
     ParsedSelectorData,
     RawCssRuleData,
     SelectorPartData,
+    hasActionPseudoStyles,
+    filterActionRuleStyles,
+    filterStyleBlockActionDeclarations,
 } from '../css-rule';
 
 import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
+import { findStyleBlockStarts } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
     COLON,
     SLASH,
-    BACKSLASH,
-    SINGLE_QUOTE,
-    DOUBLE_QUOTE,
-    DOT,
-    EQUAL_SIGN,
-    WHITE_SPACE_CHARACTERS,
     ASTERISK,
     AT_RULE_MARKER,
     STYLE_ERROR_PREFIX,
@@ -35,101 +33,6 @@ import {
 const REGEXP_DECLARATION_END = /[;}]/g;
 const REGEXP_DECLARATION_DIVIDER = /[;:}]/g;
 const REGEXP_NON_WHITESPACE = /\S/g;
-
-/**
- * Characters that may precede a regexp literal in a selector,
- * e.g. ':contains(/text/)' or ':matches-css(height:/20px/)'.
- */
-const REGEXP_OPENING_CHARACTERS = [
-    BRACKET.PARENTHESES.LEFT,
-    EQUAL_SIGN,
-    DOT,
-    COLON,
-];
-
-/**
- * Checks whether the character is a whitespace character.
- *
- * @param char Character to check.
- *
- * @returns True if the character is a whitespace character.
- */
-const isWhiteSpace = (char: string | undefined): boolean => {
-    return char !== undefined && WHITE_SPACE_CHARACTERS.includes(char);
-};
-
-/**
- * Finds the index of the first opening curly bracket which starts a style block.
- *
- * Braces inside quoted strings or regexp literals are not treated as style block start,
- * e.g. '#x:remove-attr(/^data-{1,2}ad$/)'.
- *
- * @param cssToParse Stylesheet part to search in.
- *
- * @returns Index of the opening curly bracket or -1 if it is not found.
- */
-const findStyleBlockStart = (cssToParse: string): number => {
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-    let inRegexp = false;
-    let inRegexpCharClass = false;
-    // character preceding the current one, needed to detect regexp literal opening
-    let prevChar: string | undefined;
-
-    for (let i = 0; i < cssToParse.length; i += 1) {
-        const char = cssToParse[i];
-
-        if (inRegexp) {
-            if (char === BACKSLASH) {
-                i += 1;
-            } else if (char === BRACKET.SQUARE.LEFT) {
-                inRegexpCharClass = true;
-            } else if (char === BRACKET.SQUARE.RIGHT) {
-                inRegexpCharClass = false;
-            } else if (char === SLASH && !inRegexpCharClass) {
-                inRegexp = false;
-            }
-            prevChar = char;
-            continue;
-        }
-        if (char === BACKSLASH) {
-            i += 1;
-            prevChar = char;
-            continue;
-        }
-        if (char === SINGLE_QUOTE) {
-            if (!inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
-            }
-            prevChar = char;
-            continue;
-        }
-        if (char === DOUBLE_QUOTE) {
-            if (!inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-            }
-            prevChar = char;
-            continue;
-        }
-        if (inSingleQuote || inDoubleQuote) {
-            prevChar = char;
-            continue;
-        }
-        if (char === SLASH
-            && (isWhiteSpace(prevChar)
-                || (prevChar !== undefined && REGEXP_OPENING_CHARACTERS.includes(prevChar)))) {
-            inRegexp = true;
-            prevChar = char;
-            continue;
-        }
-        if (char === BRACKET.CURLY.LEFT) {
-            return i;
-        }
-        prevChar = char;
-    }
-
-    return -1;
-};
 
 /**
  * Interface for stylesheet parser context.
@@ -370,7 +273,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
         if (context.isSelector) {
             // find index of first opening curly bracket
             // which may mean start of style part and end of selector one
-            context.nextIndex = findStyleBlockStart(context.cssToParse);
+            context.nextIndex = findStyleBlockStarts(context.cssToParse)[0] ?? -1;
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
@@ -416,10 +319,16 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
 
             // styles can be parsed from selector part if it has :remove() pseudo-class
             // e.g. '.banner:remove() { debug: true; }'
-            context.rawRuleData.rawStyles?.push(...parsedStyles);
+            const stylesToPush = hasActionPseudoStyles(context.rawRuleData.rawStyles ?? [])
+                ? filterActionRuleStyles(parsedStyles)
+                : filterStyleBlockActionDeclarations(parsedStyles);
 
-            // save rule data to results
-            saveToRawResults(rawResults, context.rawRuleData);
+            // rule with only ignored action declarations has nothing to apply
+            if (stylesToPush.length > 0 || hasActionPseudoStyles(context.rawRuleData.rawStyles ?? [])) {
+                context.rawRuleData.rawStyles?.push(...stylesToPush);
+                // save rule data to results
+                saveToRawResults(rawResults, context.rawRuleData);
+            }
 
             context.nextIndex = 0;
 

@@ -17,15 +17,7 @@ import { logger } from '../common/utils/logger';
 import { normalizeActionArg } from '../common/utils/action-arg';
 
 import {
-    COLON,
     BRACKET,
-    BACKSLASH,
-    SLASH,
-    SINGLE_QUOTE,
-    DOUBLE_QUOTE,
-    DOT,
-    EQUAL_SIGN,
-    WHITE_SPACE_CHARACTERS,
     REMOVE_PSEUDO_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
     REMOVE_CLASS_PSEUDO_MARKER,
@@ -39,24 +31,10 @@ import {
     NO_AT_RULE_ERROR_PREFIX,
 } from '../common/constants';
 
+import { findClosingParenthesis, scanSelector } from '../common/utils/selector-scanner';
+
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
-
-/**
- * Regexp flag character, e.g. 'i', 'm' or 'u'.
- */
-const REGEXP_FLAG_CHARACTER = /[a-z]/;
-
-/**
- * Characters that may precede a regexp literal in a selector,
- * e.g. ':contains(/text/)' or ':matches-css(height:/20px/)'.
- */
-const REGEXP_OPENING_CHARACTERS = [
-    BRACKET.PARENTHESES.LEFT,
-    EQUAL_SIGN,
-    DOT,
-    COLON,
-];
 
 /**
  * Info about an action pseudo-class found in a selector.
@@ -85,132 +63,6 @@ type ActionSelectorData = {
 };
 
 /**
- * Checks whether the character is a whitespace character.
- *
- * @param char Character to check.
- *
- * @returns True if the character is a whitespace character.
- */
-const isWhiteSpace = (char: string | undefined): boolean => {
-    return char !== undefined && WHITE_SPACE_CHARACTERS.includes(char);
-};
-
-/**
- * Checks whether a regexp literal can start after the given character.
- *
- * @param char Character preceding a slash.
- *
- * @returns True if a regexp literal can start after the character.
- */
-const isRegexpOpeningCharacter = (char: string | undefined): boolean => {
-    return isWhiteSpace(char) || (char !== undefined && REGEXP_OPENING_CHARACTERS.includes(char));
-};
-
-/**
- * Finds the end of a regexp literal at the beginning of an action argument.
- *
- * @param rawSelector Raw selector text.
- * @param startIndex Index of the first argument character.
- *
- * @returns Index of the closing slash of the regexp literal,
- * or -1 if the argument does not start with a regexp literal.
- */
-const findRegexpArgEnd = (rawSelector: string, startIndex: number): number => {
-    let i = startIndex;
-    while (i < rawSelector.length && isWhiteSpace(rawSelector[i])) {
-        i += 1;
-    }
-    if (rawSelector[i] !== SLASH) {
-        return -1;
-    }
-
-    let inCharClass = false;
-    for (i += 1; i < rawSelector.length; i += 1) {
-        const char = rawSelector[i];
-
-        if (char === BACKSLASH) {
-            i += 1;
-        } else if (char === BRACKET.SQUARE.LEFT) {
-            inCharClass = true;
-        } else if (char === BRACKET.SQUARE.RIGHT) {
-            inCharClass = false;
-        } else if (char === SLASH && !inCharClass) {
-            return i;
-        }
-    }
-
-    return -1;
-};
-
-/**
- * Finds the index of the closing parenthesis of an action argument.
- *
- * A well-formed regexp literal argument is skipped as a whole,
- * so parentheses, slashes and quotes inside it are not treated as delimiters.
- *
- * @param rawSelector Raw selector text.
- * @param startIndex Index of the first argument character.
- *
- * @returns Index of the closing parenthesis or -1 if it is not found.
- */
-const findClosingParenthesis = (rawSelector: string, startIndex: number): number => {
-    const regexpEndIndex = findRegexpArgEnd(rawSelector, startIndex);
-    if (regexpEndIndex !== -1) {
-        // after a regexp literal there can be only flags, whitespace and the closing parenthesis
-        let i = regexpEndIndex + 1;
-        while (i < rawSelector.length && REGEXP_FLAG_CHARACTER.test(rawSelector[i] as string)) {
-            i += 1;
-        }
-        while (i < rawSelector.length && isWhiteSpace(rawSelector[i])) {
-            i += 1;
-        }
-        if (rawSelector[i] === BRACKET.PARENTHESES.RIGHT) {
-            return i;
-        }
-    }
-
-    let depth = 1;
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-
-    for (let i = startIndex; i < rawSelector.length; i += 1) {
-        const char = rawSelector[i];
-
-        if (char === BACKSLASH) {
-            i += 1;
-            continue;
-        }
-        if (char === SINGLE_QUOTE) {
-            // a quote should change state only when the other quote type is not active,
-            // e.g. an apostrophe inside a double-quoted attribute value
-            if (!inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
-            }
-            continue;
-        }
-        if (char === DOUBLE_QUOTE) {
-            if (!inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-            }
-            continue;
-        }
-        if (inSingleQuote || inDoubleQuote) {
-            continue;
-        }
-        if (char === BRACKET.PARENTHESES.LEFT) {
-            depth += 1;
-        } else if (char === BRACKET.PARENTHESES.RIGHT) {
-            depth -= 1;
-            if (depth === 0) {
-                return i;
-            }
-        }
-    }
-
-    return -1;
-};
-
-/**
  * Finds top-level action pseudo-classes in the raw selector.
  *
  * Action pseudo-classes nested in other pseudo-classes are ignored here
@@ -222,106 +74,35 @@ const findClosingParenthesis = (rawSelector: string, startIndex: number): number
  */
 const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
     const found: ActionSelectorData[] = [];
-    let parenDepth = 0;
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-    let inRegexp = false;
-    let inRegexpCharClass = false;
-    // character preceding the current one, needed to detect regexp literal opening
-    let prevChar: string | undefined;
 
-    for (let i = 0; i < rawSelector.length; i += 1) {
-        const char = rawSelector[i];
-
-        if (inRegexp) {
-            // skip regexp literal contents as a whole:
-            // parentheses inside it do not affect the selector nesting
-            if (char === BACKSLASH) {
-                i += 1;
-            } else if (char === BRACKET.SQUARE.LEFT) {
-                inRegexpCharClass = true;
-            } else if (char === BRACKET.SQUARE.RIGHT) {
-                inRegexpCharClass = false;
-            } else if (char === SLASH && !inRegexpCharClass) {
-                inRegexp = false;
+    scanSelector(rawSelector, {
+        onTopLevelColon: (index) => {
+            const marker = ACTION_PSEUDO_MARKERS.find((name) => {
+                const markerText = `${name}${BRACKET.PARENTHESES.LEFT}`;
+                const candidate = rawSelector.substring(index + 1, index + 1 + markerText.length);
+                return candidate.toLowerCase() === markerText;
+            });
+            if (!marker) {
+                return;
             }
-            prevChar = char;
-            continue;
-        }
-        if (char === BACKSLASH) {
-            i += 1;
-            prevChar = char;
-            continue;
-        }
-        if (char === SINGLE_QUOTE) {
-            // a quote should change state only when the other quote type is not active,
-            // e.g. an apostrophe inside a double-quoted attribute value
-            if (!inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
+
+            const argStartIndex = index + marker.length + 2;
+            const closingIndex = findClosingParenthesis(rawSelector, argStartIndex, marker);
+
+            found.push({
+                marker,
+                startIndex: index,
+                arg: closingIndex === -1
+                    ? rawSelector.substring(argStartIndex)
+                    : rawSelector.substring(argStartIndex, closingIndex),
+                endIndex: closingIndex === -1 ? -1 : closingIndex + 1,
+            });
+
+            if (closingIndex !== -1) {
+                return closingIndex;
             }
-            prevChar = char;
-            continue;
-        }
-        if (char === DOUBLE_QUOTE) {
-            if (!inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-            }
-            prevChar = char;
-            continue;
-        }
-        if (inSingleQuote || inDoubleQuote) {
-            prevChar = char;
-            continue;
-        }
-        if (char === SLASH && isRegexpOpeningCharacter(prevChar)) {
-            inRegexp = true;
-            prevChar = char;
-            continue;
-        }
-        if (char === BRACKET.PARENTHESES.LEFT) {
-            parenDepth += 1;
-            prevChar = char;
-            continue;
-        }
-        if (char === BRACKET.PARENTHESES.RIGHT) {
-            parenDepth -= 1;
-            prevChar = char;
-            continue;
-        }
-        if (char !== COLON || parenDepth !== 0) {
-            prevChar = char;
-            continue;
-        }
-
-        const marker = ACTION_PSEUDO_MARKERS.find((name) => {
-            const markerText = `${name}${BRACKET.PARENTHESES.LEFT}`;
-            const candidate = rawSelector.substring(i + 1, i + 1 + markerText.length);
-            return candidate.toLowerCase() === markerText;
-        });
-        if (!marker) {
-            prevChar = char;
-            continue;
-        }
-
-        const argStartIndex = i + marker.length + 2;
-        const closingIndex = findClosingParenthesis(rawSelector, argStartIndex);
-
-        found.push({
-            marker,
-            startIndex: i,
-            arg: closingIndex === -1
-                ? rawSelector.substring(argStartIndex)
-                : rawSelector.substring(argStartIndex, closingIndex),
-            endIndex: closingIndex === -1 ? -1 : closingIndex + 1,
-        });
-
-        if (closingIndex !== -1) {
-            // skip the action argument, so parentheses inside a regexp literal
-            // do not affect the depth tracking
-            i = closingIndex;
-        }
-        prevChar = rawSelector[i];
-    }
+        },
+    });
 
     return found;
 };
@@ -498,6 +279,43 @@ const getActionStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
 };
 
 /**
+ * Checks whether styles contain action pseudo-class declarations.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns True if styles contain action pseudo-class declarations.
+ */
+export const hasActionPseudoStyles = (styles: StyleDeclaration[]): boolean => {
+    return styles.some((s) => ACTION_PSEUDO_MARKERS.includes(s.property));
+};
+
+/**
+ * Filters styles declared together with an action pseudo-class:
+ * such styles are ignored except `content` and `debug` needed for internal usage.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns Styles which should be kept.
+ */
+export const filterActionRuleStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
+    return styles.filter((s) => {
+        return s.property === CONTENT_CSS_PROPERTY || s.property === DEBUG_PSEUDO_PROPERTY_KEY;
+    });
+};
+
+/**
+ * Removes action pseudo-class declarations from style block styles:
+ * `remove-attr` and `remove-class` are supported only as pseudo-classes.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns Styles without action pseudo-class declarations.
+ */
+export const filterStyleBlockActionDeclarations = (styles: StyleDeclaration[]): StyleDeclaration[] => {
+    return styles.filter((s) => !ACTION_STYLE_MARKERS.includes(s.property));
+};
+
+/**
  * Returns 'debug' property value which is set in styles.
  *
  * @param styles Array of styles.
@@ -549,12 +367,25 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
     const actionStyles = getActionStyles(rawStyles);
 
     if (shouldRemove || actionStyles.length > 0) {
-        // no other styles are needed to apply if an action is set
         const actionStyleMap: CssStyleMap = {};
 
         if (shouldRemove) {
+            // the element is removed, so only 'content' is needed for internal usage
+            const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
+            if (contentStyle) {
+                actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
+            }
             actionStyleMap[REMOVE_PSEUDO_MARKER] = PSEUDO_PROPERTY_POSITIVE_VALUE;
+        } else {
+            // keep styles of other rules with the same target selector
+            styles.forEach((style) => {
+                if (ACTION_PSEUDO_MARKERS.includes(style.property)) {
+                    return;
+                }
+                actionStyleMap[style.property] = style.value;
+            });
         }
+
         actionStyles.forEach((actionStyle) => {
             actionStyleMap[actionStyle.property] = actionStyle.value;
         });
@@ -564,16 +395,6 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
         // so a single value per property would keep only the last argument
         if (actionStyles.length > 0) {
             ruleData.actionStyles = actionStyles;
-        }
-
-        /**
-         * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().
-         *
-         * Search `BeforeStyleAppliedCallback` for more details.
-         */
-        const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
-        if (contentStyle) {
-            actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
         }
 
         ruleData.style = actionStyleMap;

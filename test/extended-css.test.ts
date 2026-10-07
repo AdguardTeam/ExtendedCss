@@ -540,9 +540,15 @@ describe('extended css library', () => {
         document.body.innerHTML = `
             <div id="case-remove-attr-content-protection" onclick="alert(1)"></div>
         `;
-        const styleSheet = '#case-remove-attr-content-protection:remove-attr(onclick)'
+        const actionRule = '#case-remove-attr-content-protection:remove-attr(onclick)'
             + " { content: 'plain-content' !important }";
-        applyExtCssStyleSheet(styleSheet);
+        // a regular style rule makes the element style-protected
+        const cssRules = [
+            actionRule,
+            '#case-remove-attr-content-protection { color: red; }',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
 
         const element = document.getElementById('case-remove-attr-content-protection');
         expect(element).not.toBeNull();
@@ -695,6 +701,175 @@ describe('extended css library', () => {
                 }, 100);
             }, 100);
         });
+    });
+
+    it('applies regular styles of other rules with the same target selector', () => {
+        document.body.innerHTML = '<div id="case-action-with-styles" class="ads"></div>';
+        const cssRules = [
+            '#case-action-with-styles:remove-class(ads)',
+            '#case-action-with-styles { display: none !important; }',
+        ];
+        applyExtCssRules(cssRules);
+
+        const element = document.getElementById('case-action-with-styles');
+        expect(element?.classList.contains('ads')).toBe(false);
+        expectElementStyle('case-action-with-styles', { display: 'none' });
+    });
+
+    it('does not protect or revert action-only elements', () => {
+        document.body.innerHTML = `
+            <div id="case-action-only" style="display: block" onclick="alert(1)"></div>
+        `;
+        const extendedCss = new ExtendedCss({ cssRules: ['#case-action-only:remove-attr(onclick)'] });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-action-only');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        // action-only elements should not be style-protected
+        expect(extendedCss.getAffectedElements()[0]?.protectionObserver).toBeNull();
+        expect(element?.getAttribute('style')).toBe('display: block');
+
+        extendedCss.dispose();
+        // dispose should not clear styles of action-only elements
+        expect(element?.getAttribute('style')).toBe('display: block');
+    });
+
+    it('does not revert styles of self-unmatching action rules', () => {
+        document.body.innerHTML = `
+            <div id="case-self-unmatching" style="display: block" onclick="alert(1)"></div>
+        `;
+        const extendedCss = new ExtendedCss({ cssRules: ['[onclick]:remove-attr(onclick)'] });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-self-unmatching');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        expect(element?.getAttribute('style')).toBe('display: block');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                rAF(() => {
+                    try {
+                        // the rule no longer matches, but the page inline style should stay
+                        expect(element?.getAttribute('style')).toBe('display: block');
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            }, 100);
+        });
+    });
+
+    it('removes re-added attributes matching regexp :remove-attr() after mutations', () => {
+        document.body.innerHTML = `
+            <div id="case-regexp-mutation" onclick="alert(1)"></div>
+        `;
+        applyExtCssStyleSheet('#case-regexp-mutation:remove-attr(/^on/)');
+
+        const element = document.getElementById('case-regexp-mutation');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+
+        element?.setAttribute('onclick', 'alert(2)');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            }, 100);
+        });
+    });
+
+    it('does not loop when :remove-attr(style) conflicts with style protection', () => {
+        document.body.innerHTML = '<div id="case-remove-style-attr"></div>';
+        const cssRules = [
+            '#case-remove-style-attr { display: none !important; }',
+            '#case-remove-style-attr:remove-attr(style)',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-remove-style-attr');
+        expectElementStyle('case-remove-style-attr', { display: 'none' });
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                // a style mutation is relevant because of the `style` action argument
+                element?.setAttribute('style', 'display: block');
+                rAF(() => {
+                    try {
+                        // protected styles should be restored without an endless loop
+                        expectElementStyle('case-remove-style-attr', { display: 'none' });
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            }, 100);
+        });
+    });
+
+    it('removes attributes and classes from SVG elements', () => {
+        document.body.innerHTML = `
+            <svg id="case-svg" data-ad="1" class="ads banner"></svg>
+        `;
+        const cssRules = [
+            '#case-svg:remove-attr(data-ad)',
+            '#case-svg:remove-class(ads)',
+        ];
+        applyExtCssRules(cssRules);
+
+        const element = document.getElementById('case-svg');
+        expect(element?.hasAttribute('data-ad')).toBe(false);
+        expect(element?.classList.contains('ads')).toBe(false);
+        expect(element?.classList.contains('banner')).toBe(true);
+    });
+
+    it('ignores action properties in style blocks', () => {
+        document.body.innerHTML = '<div id="case-block-action" onclick="alert(1)"></div>';
+        const extendedCss = new ExtendedCss({ cssRules: ['#case-block-action { remove-attr: onclick }'] });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-block-action');
+        expect(element?.hasAttribute('onclick')).toBe(true);
+        expect(extendedCss.getAffectedElements().length).toBe(0);
+    });
+
+    it('ignores style block styles of action rules except content', () => {
+        document.body.innerHTML = '<div id="case-block-action-rule" onclick="alert(1)"></div>';
+        const cssRules = [
+            '#case-block-action-rule:remove-attr(onclick) { remove-class: ads; display: none; }',
+        ];
+        applyExtCssRules(cssRules);
+
+        const element = document.getElementById('case-block-action-rule');
+        expect(element?.hasAttribute('onclick')).toBe(false);
+        // styles declared together with an action pseudo-class are ignored
+        expectElementStyle('case-block-action-rule', { display: '' });
+    });
+
+    it('applies action rules once per rule per pass', () => {
+        document.body.innerHTML = `
+            <div id="case-action-count" class="a b c" title="t" data-x="1" data-y="2"></div>
+        `;
+        const cssRules = [
+            '.a:remove-attr(title)',
+            '.b:remove-attr(data-x)',
+            '.c:remove-attr(data-y)',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        const getAttributeNamesSpy = vi.spyOn(Element.prototype, 'getAttributeNames');
+
+        extendedCss.apply();
+        expect(getAttributeNamesSpy.mock.calls.length).toBe(3);
+
+        extendedCss.apply();
+        expect(getAttributeNamesSpy.mock.calls.length).toBe(6);
+
+        getAttributeNamesSpy.mockRestore();
     });
 
     it('skips invalid action rules without aborting application', () => {

@@ -220,7 +220,10 @@ export class ExtendedCss {
     dispose(): void {
         disconnectDocument(this.context);
         this.context.affectedElements.forEach((el) => {
-            revertStyle(el);
+            // action-only elements were not modified by us, so they should not be reverted
+            if (el.hasStyles) {
+                revertStyle(el);
+            }
         });
         document.removeEventListener(
             'DOMContentLoaded',

@@ -8,6 +8,9 @@ import {
     saveToRawResults,
     combineRulesData,
     createRawResultsMap,
+    hasActionPseudoStyles,
+    filterActionRuleStyles,
+    filterStyleBlockActionDeclarations,
 } from './helpers';
 
 import { ExtCssDocument } from '../selector';
@@ -16,6 +19,7 @@ import { parseStyleBlock } from '../style-block';
 import { getFirst } from '../common/utils/arrays';
 import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
+import { findStyleBlockStarts } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -28,18 +32,15 @@ import {
 /**
  * Returns array of positions of `{` in `cssRule`.
  *
+ * Braces inside quoted strings and regexp literals are skipped,
+ * e.g. '#x:remove-attr(/^data-{1,2}ad$/)'.
+ *
  * @param cssRule CSS rule.
  *
  * @returns Array of left curly bracket indexes.
  */
 const getLeftCurlyBracketIndexes = (cssRule: string): number[] => {
-    const indexes: number[] = [];
-    for (let i = 0; i < cssRule.length; i += 1) {
-        if (cssRule[i] === BRACKET.CURLY.LEFT) {
-            indexes.push(i);
-        }
-    }
-    return indexes;
+    return findStyleBlockStarts(cssRule);
 };
 
 // TODO: use `extCssDoc` for caching of style block parser results
@@ -148,7 +149,15 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
             // style block should be parsed
             // TODO: add cache for style block parsing
             const parsedStyles = parseStyleBlock(styleBlockBuffer);
-            rawRuleData.rawStyles?.push(...parsedStyles);
+            const hasActionStyles = hasActionPseudoStyles(rawRuleData.rawStyles ?? []);
+            const stylesToPush = hasActionStyles
+                ? filterActionRuleStyles(parsedStyles)
+                : filterStyleBlockActionDeclarations(parsedStyles);
+            if (stylesToPush.length === 0 && !hasActionStyles) {
+                // rule with only ignored action declarations has nothing to apply
+                throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE}: '${cssRule}'`);
+            }
+            rawRuleData.rawStyles?.push(...stylesToPush);
             // stop rule parsing
             break;
         } else {

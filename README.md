@@ -616,12 +616,17 @@ target:remove-attr(attr)
 
 > The `:remove-attr()` pseudo-class is limited to work properly only at the end of selector.
 
-> If the `:remove-attr()` pseudo-class is used, all style properties are ignored except for the
-> [`debug` pseudo-property](#selectors-debug-mode).
+> If the `:remove-attr()` pseudo-class is used, style properties declared in the same rule
+> are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
+> Styles of other rules with the same target selector are still applied.
 
 > Removed attributes are not restored by `dispose()`.
 
-> `:remove-attr(style)` conflicts with the style protection mechanism.
+> `:remove-attr(style)` conflicts with the style protection mechanism:
+> the `style` attribute is not removed from elements whose styles are protected by other rules.
+
+> `remove-attr` and `remove-class` properties are not supported in style blocks,
+> use the pseudo-classes instead.
 
 #### Examples
 
@@ -654,8 +659,9 @@ target:remove-class(class)
 
 > The `:remove-class()` pseudo-class is limited to work properly only at the end of selector.
 
-> If the `:remove-class()` pseudo-class is used, all style properties are ignored except for the
-> [`debug` pseudo-property](#selectors-debug-mode).
+> If the `:remove-class()` pseudo-class is used, style properties declared in the same rule
+> are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
+> Styles of other rules with the same target selector are still applied.
 
 > Removed classes are not restored by `dispose()`.
 

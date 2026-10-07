@@ -207,6 +207,22 @@ describe('absolute extended selectors', () => {
                 ],
             },
             {
+                // an apostrophe in plain text should not open a quoted string
+                actual: "span:contains(Don't)",
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: "Don't" },
+                ],
+            },
+            {
+                // a slash in plain text should not open a regexp literal
+                actual: 'span:contains(1 / 2)',
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: '1 / 2' },
+                ],
+            },
+            {
                 actual: 'div[id] > .row > span:contains(/^Advertising$/)',
                 expected: [
                     { isRegular: true, value: 'div[id] > .row > span' },
@@ -382,6 +398,14 @@ describe('absolute extended selectors', () => {
                 expected: [
                     { isRegular: true, value: '[data-src^="https://example.org/"]' },
                     { isAbsolute: true, name, value: '..' },
+                ],
+            },
+            {
+                // slashes inside :xpath() should not open a regexp literal
+                actual: '#a:xpath(../..)',
+                expected: [
+                    { isRegular: true, value: '#a' },
+                    { isAbsolute: true, name, value: '../..' },
                 ],
             },
             {

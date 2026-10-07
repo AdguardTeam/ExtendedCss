@@ -38,6 +38,7 @@ import { optimizeAst } from './utils/parser-ast-optimizer';
 import { TOKEN_TYPE } from '../common/tokenizer';
 
 import { getLast } from '../common/utils/arrays';
+import { canOpenQuote } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -55,6 +56,7 @@ import {
     COMMA,
     BACKSLASH,
     SLASH,
+    EQUAL_SIGN,
     SINGLE_QUOTE,
     DOUBLE_QUOTE,
     CARET,
@@ -141,14 +143,19 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         const prevToPrevTokenValue = previousToPreviousToken?.value;
 
         // track quoted strings to not treat their contents as selector syntax,
-        // e.g. ':upward([data-x=":remove-attr(title)"])'
+        // e.g. ':upward([data-x=":remove-attr(title)"])';
+        // quotes in plain text, e.g. ':contains(Don't)', should not open a string
         if ((tokenValue === SINGLE_QUOTE || tokenValue === DOUBLE_QUOTE)
             && prevTokenValue !== BACKSLASH
             && !context.isRegexpOpen) {
-            if (context.quoteCharacter === undefined) {
-                context.quoteCharacter = tokenValue;
-            } else if (context.quoteCharacter === tokenValue) {
+            if (context.quoteCharacter === tokenValue) {
                 context.quoteCharacter = undefined;
+            } else if (context.quoteCharacter === undefined
+                && (canOpenQuote(prevTokenValue)
+                    // attribute value quotes, e.g. '[data-x=":remove-attr(title)"]';
+                    // '=' is not a separate token, so it can be a part of a word
+                    || (prevTokenValue?.endsWith(EQUAL_SIGN) ?? false))) {
+                context.quoteCharacter = tokenValue;
             }
         }
 

@@ -1,5 +1,9 @@
 import { disconnectDocument, observeDocument } from './document-observer';
-import { applyStyle, revertStyle } from './style-setter';
+import {
+    applyStyle,
+    hasRegularStyles,
+    revertStyle,
+} from './style-setter';
 import { protectStyleAttribute } from './style-protector';
 import { TimingStats, printTimingInfo } from './timing-stats';
 import { AffectedElement, Context } from './types';
@@ -55,22 +59,18 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     }
 
     nodes.forEach((node) => {
-        let affectedElement = findAffectedElement(context.affectedElements, node);
+        const affectedElement = findAffectedElement(context.affectedElements, node);
 
         if (affectedElement) {
             affectedElement.rules.push(ruleData);
-            applyStyle(context, affectedElement);
         } else {
-            // Applying style first time
-            const originalStyle = node.style.cssText;
-            affectedElement = {
+            // element is affected first time
+            context.affectedElements.push({
                 node,                       // affected DOM node
                 rules: [ruleData],          // rule to be applied
-                originalStyle,              // original node style
+                originalStyle: node.style.cssText, // original node style
                 protectionObserver: null,   // style attribute observer
-            };
-            applyStyle(context, affectedElement);
-            context.affectedElements.push(affectedElement);
+            });
         }
     });
 
@@ -111,6 +111,23 @@ export const applyRules = (context: Context): void => {
             ruleData.matchedElements = nodes;
         }
     });
+    // apply collected rules to each affected element once per pass
+    context.affectedElements.forEach((affectedElement) => {
+        const isSelected = newSelectedElements.includes(affectedElement.node);
+        if (!isSelected) {
+            return;
+        }
+        affectedElement.hasStyles = affectedElement.rules.some((rule) => hasRegularStyles(rule.style));
+        applyStyle(context, affectedElement);
+        // add style protection observer only for elements with regular styles
+        if (!affectedElement.removed && affectedElement.hasStyles && !affectedElement.protectionObserver) {
+            affectedElement.protectionObserver = protectStyleAttribute(
+                affectedElement.node,
+                affectedElement.rules,
+            );
+        }
+    });
+
     // Now revert styles for elements which are no more affected
     let affLength = context.affectedElements.length;
     // do nothing if there is no elements to process
@@ -120,18 +137,11 @@ export const applyRules = (context: Context): void => {
             break;
         }
         if (!newSelectedElements.includes(affectedElement.node)) {
-            // Time to revert style
-            revertStyle(affectedElement);
-            context.affectedElements.splice(affLength - 1, 1);
-        } else if (!affectedElement.removed) {
-            // Add style protection observer
-            // Protect "style" attribute from changes
-            if (!affectedElement.protectionObserver) {
-                affectedElement.protectionObserver = protectStyleAttribute(
-                    affectedElement.node,
-                    affectedElement.rules,
-                );
+            // revert styles only if the element had regular styles applied
+            if (affectedElement.hasStyles) {
+                revertStyle(affectedElement);
             }
+            context.affectedElements.splice(affLength - 1, 1);
         }
         affLength -= 1;
     }

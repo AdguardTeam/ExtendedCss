@@ -19,6 +19,15 @@ interface AffectedElementProto {
     originalStyle: string;
     protectionObserver?: ExtMutationObserver | null;
     removed?: boolean;
+    /**
+     * Flag indicating that styles of the element are already applied.
+     */
+    isStyleApplied?: boolean;
+    /**
+     * Flag indicating that the element has regular styles applied,
+     * so it should be style-protected and reverted.
+     */
+    hasStyles?: boolean;
 }
 
 /**

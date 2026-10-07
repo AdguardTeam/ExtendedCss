@@ -1,37 +1,47 @@
 import { EventTracker } from './event-tracker';
 import { Context } from './types';
 import { natives } from '../../common/utils/natives';
+import { createActionArgMatcher } from '../../common/utils/action-arg';
 
-import { REMOVE_ATTR_PSEUDO_MARKER, SLASH } from '../../common/constants';
+import { REMOVE_ATTR_PSEUDO_MARKER } from '../../common/constants';
 
 /**
- * Collects attribute names that should trigger re-application of action rules.
+ * Creates a checker which decides whether a DOM mutation can affect the applied rules.
+ *
+ * `id` and `class` attributes are always checked as they are used by selectors,
+ * and `remove-attr()` arguments are checked with the corresponding matchers.
  *
  * @param context ExtendedCss context.
  *
- * @returns Attribute filter array, or undefined if all attributes should be observed.
+ * @returns Mutation relevance checker.
  */
-function collectAttributeFilter(context: Context): string[] | undefined {
-    const filter = new Set<string>(['id', 'class']);
+function createMutationRelevanceChecker(context: Context): (mutation: MutationRecord) => boolean {
+    const attributeMatchers: Array<(name: string) => boolean> = [];
 
     for (const rule of context.parsedRules) {
         if (!rule.actionStyles) {
             continue;
         }
         for (const actionStyle of rule.actionStyles) {
-            if (actionStyle.property !== REMOVE_ATTR_PSEUDO_MARKER) {
-                continue;
+            if (actionStyle.property === REMOVE_ATTR_PSEUDO_MARKER) {
+                attributeMatchers.push(createActionArgMatcher(actionStyle.value));
             }
-            if (actionStyle.value.startsWith(SLASH)) {
-                // Regexp arguments may match any attribute,
-                // so all attribute mutations should be observed.
-                return undefined;
-            }
-            filter.add(actionStyle.value);
         }
     }
 
-    return [...filter];
+    return (mutation: MutationRecord): boolean => {
+        if (mutation.type !== 'attributes') {
+            return true;
+        }
+        const attributeName = mutation.attributeName;
+        if (!attributeName) {
+            return true;
+        }
+        if (attributeName === 'id' || attributeName === 'class') {
+            return true;
+        }
+        return attributeMatchers.some((isMatch) => isMatch(attributeName));
+    };
 }
 
 /**
@@ -60,8 +70,14 @@ export function observeDocument(context: Context): void {
     // enable dynamically added elements handling
     context.isDomObserved = true;
 
+    const isRelevantMutation = createMutationRelevanceChecker(context);
+
     context.domMutationObserver = new natives.MutationObserver(((mutations) => {
         if (!mutations || mutations.length === 0) {
+            return;
+        }
+        // ignore mutations which cannot affect the applied rules
+        if (!mutations.some(isRelevantMutation)) {
             return;
         }
         const eventTracker = new EventTracker();
@@ -75,13 +91,10 @@ export function observeDocument(context: Context): void {
         context.scheduler.run();
     }));
 
-    const attributeFilter = collectAttributeFilter(context);
-
     context.domMutationObserver.observe(document, {
         childList: true,
         subtree: true,
         attributes: true,
-        ...(attributeFilter ? { attributeFilter } : {}),
     });
 }
 
