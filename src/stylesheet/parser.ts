@@ -90,16 +90,16 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
         throw new Error(`${NO_AT_RULE_ERROR_PREFIX}: '${selector}'.`);
     }
 
-    let removeSelectorData: ParsedSelectorData;
+    let actionSelectorData: ParsedSelectorData;
     try {
-        removeSelectorData = parseActionSelector(selector);
+        actionSelectorData = parseActionSelector(selector);
     } catch (e: unknown) {
         logger.error(getErrorMessage(e));
         throw e;
     }
 
     if (context.nextIndex === -1) {
-        if (selector === removeSelectorData.selector) {
+        if (selector === actionSelectorData.selector) {
             // rule should have style or pseudo-class :remove()
             throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
         }
@@ -112,8 +112,8 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
     let ast: AnySelectorNodeInterface | undefined;
 
     try {
-        selector = removeSelectorData.selector;
-        stylesOfSelector = removeSelectorData.stylesOfSelector;
+        selector = actionSelectorData.selector;
+        stylesOfSelector = actionSelectorData.stylesOfSelector;
         // validate found selector by parsing it to ast
         // so if it is invalid error will be thrown
         ast = extCssDoc.getSelectorAst(selector);

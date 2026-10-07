@@ -1,5 +1,7 @@
 import { AnySelectorNodeInterface } from '../nodes';
 
+import { QuoteMark } from '../../common/constants';
+
 /**
  * Interface for selector parser context.
  */
@@ -55,7 +57,7 @@ export type Context = {
      * Needed to not treat quoted values as selector syntax,
      * e.g. ':upward([data-x=":remove-attr(title)"])'.
      */
-    quoteCharacter: string | undefined;
+    quoteCharacter: QuoteMark | undefined;
 
     /**
      * Flag for optimizing ast before return.

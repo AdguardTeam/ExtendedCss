@@ -429,7 +429,9 @@ The `:xpath()` pseudo-class allows to select an element by evaluating an XPath e
 > Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not
 > recommended, so `target` should be specified instead.
 
-> Works properly only at the end of selector, except for [pseudo-class :remove()](#remove-pseudos).
+> Works properly only at the end of selector, except for [action pseudo-classes](#remove-pseudos):
+> [`:remove()`](#remove-pseudos), [`:remove-attr()`](#extended-css-remove-attr), and
+> [`:remove-class()`](#extended-css-remove-class).
 
 #### Examples
 
@@ -608,7 +610,9 @@ target:remove-attr(attr)
 
 - `target` — required, standard or extended CSS selector; use the
     universal selector `*` to apply the action to any element
-- `attr` — required, an attribute name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
+- `attr` — required, an attribute name for exact match (can be quoted, e.g. `"onclick"`),
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A plain argument cannot contain whitespace,
+    parentheses, quotes, or commas
 
 <a name="extended-css-remove-attr-limitations"></a>
 
@@ -619,6 +623,9 @@ target:remove-attr(attr)
 > If the `:remove-attr()` pseudo-class is used, style properties declared in the same rule
 > are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
 > Styles of other rules with the same target selector are still applied.
+
+> The [`remove` pseudo-property](#remove-pseudos) and `:remove()` pseudo-class declared in the same rule
+> still remove the element.
 
 > Removed attributes are not restored by `dispose()`.
 
@@ -651,7 +658,9 @@ target:remove-class(class)
 
 - `target` — required, standard or extended CSS selector; use the
     universal selector `*` to apply the action to any element
-- `class` — required, a class name for exact match, or a regexp literal `/.../` with optional `i`, `m`, `u` flags
+- `class` — required, a class name for exact match (can be quoted, e.g. `"ads"`),
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A plain argument cannot contain whitespace,
+    parentheses, quotes, or commas
 
 <a name="extended-css-remove-class-limitations"></a>
 
@@ -662,6 +671,9 @@ target:remove-class(class)
 > If the `:remove-class()` pseudo-class is used, style properties declared in the same rule
 > are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
 > Styles of other rules with the same target selector are still applied.
+
+> The [`remove` pseudo-property](#remove-pseudos) and `:remove()` pseudo-class declared in the same rule
+> still remove the element.
 
 > Removed classes are not restored by `dispose()`.
 

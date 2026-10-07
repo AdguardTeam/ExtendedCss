@@ -35,9 +35,10 @@ import {
 } from './utils/parser-ast-node-helpers';
 import { optimizeAst } from './utils/parser-ast-optimizer';
 
-import { TOKEN_TYPE } from '../common/tokenizer';
+import { TOKEN_TYPE, Token } from '../common/tokenizer';
 
 import { getLast } from '../common/utils/arrays';
+import { isActionPseudoMarker, throwActionError } from '../common/utils/action-arg';
 import { canOpenQuote } from '../common/utils/selector-scanner';
 
 import {
@@ -68,13 +69,10 @@ import {
     SUPPORTED_PSEUDO_CLASSES,
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKERS,
-    ACTION_PSEUDO_MARKERS,
-    ACTION_ERROR_PREFIXES,
     REGULAR_PSEUDO_ELEMENTS,
     UPWARD_PSEUDO_CLASS_MARKER,
     NTH_ANCESTOR_PSEUDO_CLASS_MARKER,
     NO_SELECTOR_ERROR_PREFIX,
-    REMOVE_ERROR_PREFIX,
     STANDALONE_ERROR_PREFIX,
 } from '../common/constants';
 
@@ -83,6 +81,22 @@ import {
 const XPATH_PSEUDO_SELECTING_ROOT = 'body';
 
 const NO_WHITESPACE_ERROR_PREFIX = 'No white space is allowed before or after extended pseudo-class name in selector';
+
+/**
+ * Checks whether the token is escaped by an odd number of backslashes.
+ *
+ * @param tokens Selector tokens.
+ * @param index Index of the token.
+ *
+ * @returns True if the token is escaped.
+ */
+const isEscapedToken = (tokens: Token[], index: number): boolean => {
+    let backslashCount = 0;
+    for (let i = index - 1; i >= 0 && tokens[i]?.value === BACKSLASH; i -= 1) {
+        backslashCount += 1;
+    }
+    return backslashCount % 2 === 1;
+};
 
 /**
  * Parses selector into ast for following element selection.
@@ -146,7 +160,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         // e.g. ':upward([data-x=":remove-attr(title)"])';
         // quotes in plain text, e.g. ':contains(Don't)', should not open a string
         if ((tokenValue === SINGLE_QUOTE || tokenValue === DOUBLE_QUOTE)
-            && prevTokenValue !== BACKSLASH
+            && !isEscapedToken(tokens, i)
             && !context.isRegexpOpen) {
             if (context.quoteCharacter === tokenValue) {
                 context.quoteCharacter = undefined;
@@ -536,12 +550,11 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                                 addAstNodeByType(context, NODE.EXTENDED_SELECTOR);
                             } else {
                                 const actionMarker = nextTokenValue.toLowerCase();
-                                if (!context.quoteCharacter && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                if (!context.quoteCharacter && isActionPseudoMarker(actionMarker)) {
                                     // Action pseudo-classes should be handled before
                                     // as they are not about element selecting but actions with elements
                                     // e.g. '#banner:upward(2):remove()'
-                                    const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
-                                    throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                                    throwActionError(actionMarker, 'INVALID_ACTION', selector);
                                 }
                                 // otherwise it is standard pseudo after extended pseudo-class in complex selector
                                 // and colon should be collected to value of previous RegularSelector
@@ -572,9 +585,8 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             if (!context.quoteCharacter
                                 && getNodeName(bufferNode) === UPWARD_PSEUDO_CLASS_MARKER
                                 && actionMarker
-                                && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
-                                const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
-                                throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                                && isActionPseudoMarker(actionMarker)) {
+                                throwActionError(actionMarker, 'INVALID_ACTION', selector);
                             }
                             // collecting arg for absolute pseudo-class
                             // e.g. 'div:matches-css(width:400px)'
@@ -592,12 +604,11 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             initRelativeSubtree(context, ASTERISK);
                             if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
                                 const actionMarker = nextTokenValue.toLowerCase();
-                                if (!context.quoteCharacter && ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+                                if (!context.quoteCharacter && isActionPseudoMarker(actionMarker)) {
                                     // Action pseudo-classes are not allowed inside relative pseudo-classes
                                     // as they are not about element selecting but actions with elements
                                     // e.g. 'div:has(:remove-attr(href))'
-                                    const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
-                                    throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+                                    throwActionError(actionMarker, 'INVALID_ACTION', selector);
                                 }
                                 // collect the colon to value of RegularSelector
                                 // e.g. 'div:not(:empty)'

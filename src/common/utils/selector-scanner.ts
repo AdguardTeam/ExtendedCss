@@ -6,6 +6,7 @@ import {
     DOUBLE_QUOTE,
     EQUAL_SIGN,
     POSSIBLE_MARKS_BEFORE_REGEXP,
+    QuoteMark,
     SINGLE_QUOTE,
     SLASH,
     XPATH_PSEUDO_CLASS_MARKER,
@@ -31,7 +32,7 @@ type SelectorScannerState = {
     /**
      * Character of the currently open quoted string, if any.
      */
-    quote: string | undefined;
+    quote: QuoteMark | undefined;
 
     /**
      * Flag for a regexp literal being scanned.
@@ -338,6 +339,17 @@ export const findClosingParenthesis = (
  */
 export const findStyleBlockStarts = (input: string): number[] => {
     const indexes: number[] = [];
+
+    // fast path: without quotes, slashes and backslashes
+    // no quoted string or regexp literal can start
+    if (!/['"\\/]/.test(input)) {
+        let index = input.indexOf(BRACKET.CURLY.LEFT);
+        while (index !== -1) {
+            indexes.push(index);
+            index = input.indexOf(BRACKET.CURLY.LEFT, index + 1);
+        }
+        return indexes;
+    }
 
     scanSelector(input, {
         onStyleBlockStart: (index) => {

@@ -11,6 +11,8 @@ import {
 import { isSupportedPseudoClass } from './parser-predicates';
 import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
+import { isActionPseudoMarker, throwActionError } from '../../common/utils/action-arg';
+
 import {
     NODE,
     AnySelectorNode,
@@ -26,13 +28,7 @@ import {
     getLast,
     getPrevToLast,
 } from '../../common/utils/arrays';
-import {
-    BRACKET,
-    HAS_PSEUDO_CLASS_MARKERS,
-    ACTION_PSEUDO_MARKERS,
-    ACTION_ERROR_PREFIXES,
-    REMOVE_ERROR_PREFIX,
-} from '../../common/constants';
+import { BRACKET, HAS_PSEUDO_CLASS_MARKERS } from '../../common/constants';
 
 /**
  * Returns the node which is being collected
@@ -312,12 +308,11 @@ export const handleNextTokenOnColon = (
     }
     if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
         const actionMarker = nextTokenValue.toLowerCase();
-        if (ACTION_PSEUDO_MARKERS.includes(actionMarker)) {
+        if (isActionPseudoMarker(actionMarker)) {
             // Action pseudo-classes should be handled before
             // as they are not about element selecting but actions with elements
             // e.g. 'body > div:empty:remove()'
-            const errorPrefix = ACTION_ERROR_PREFIXES[actionMarker] ?? REMOVE_ERROR_PREFIX;
-            throw new Error(`${errorPrefix.INVALID_ACTION}: '${selector}'`);
+            throwActionError(actionMarker, 'INVALID_ACTION', selector);
         }
         // if following token is not an extended pseudo
         // the colon should be collected to value of RegularSelector

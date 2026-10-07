@@ -945,11 +945,11 @@ describe('parse single rule -- throws error on invalid rule', () => {
             },
             {
                 rule: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
-                error: 'Style should be declared or :remove() pseudo-class should used',
+                error: 'Style should be declared or action pseudo-class should be used',
             },
             {
                 rule: '.banner',
-                error: 'Style should be declared or :remove() pseudo-class should used',
+                error: 'Style should be declared or action pseudo-class should be used',
             },
             {
                 rule: '.block > span:contains({background: #410e13)',

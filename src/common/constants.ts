@@ -207,6 +207,17 @@ export const ACTION_PSEUDO_MARKERS = [
     REMOVE_PSEUDO_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
     REMOVE_CLASS_PSEUDO_MARKER,
+] as const;
+
+export type ActionPseudoMarker = typeof ACTION_PSEUDO_MARKERS[number];
+
+/**
+ * Action pseudo-class markers which are stored in rule styles
+ * and are not CSS properties.
+ */
+export const ACTION_STYLE_MARKERS = [
+    REMOVE_ATTR_PSEUDO_MARKER,
+    REMOVE_CLASS_PSEUDO_MARKER,
 ];
 
 // relative:
@@ -313,7 +324,7 @@ export const STYLE_ERROR_PREFIX = {
     UNCLOSED_STYLE: 'Unclosed style declaration',
     NO_PROPERTY: 'Missing style property in declaration',
     NO_VALUE: 'Missing style value in declaration',
-    NO_STYLE_OR_REMOVE: 'Style should be declared or :remove() pseudo-class should used',
+    NO_STYLE_OR_REMOVE: 'Style should be declared or action pseudo-class should be used',
     NO_COMMENT: 'Comments are not supported',
 };
 
@@ -357,11 +368,16 @@ export const REMOVE_CLASS_ERROR_PREFIX: ActionErrorPrefix = {
 /**
  * Maps an action pseudo-class marker to its error messages.
  */
-export const ACTION_ERROR_PREFIXES: Record<string, ActionErrorPrefix> = {
+export const ACTION_ERROR_PREFIXES: Record<ActionPseudoMarker, ActionErrorPrefix> = {
     [REMOVE_PSEUDO_MARKER]: REMOVE_ERROR_PREFIX,
     [REMOVE_ATTR_PSEUDO_MARKER]: REMOVE_ATTR_ERROR_PREFIX,
     [REMOVE_CLASS_PSEUDO_MARKER]: REMOVE_CLASS_ERROR_PREFIX,
 };
+
+/**
+ * Quote mark of a quoted string.
+ */
+export type QuoteMark = '"' | "'";
 
 export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
 

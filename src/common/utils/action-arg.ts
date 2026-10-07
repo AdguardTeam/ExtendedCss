@@ -1,4 +1,8 @@
 import {
+    ACTION_ERROR_PREFIXES,
+    ACTION_PSEUDO_MARKERS,
+    ActionErrorPrefix,
+    ActionPseudoMarker,
     DOUBLE_QUOTE,
     SINGLE_QUOTE,
     SLASH,
@@ -14,6 +18,34 @@ export const REGEXP_ACTION_ARG = /^\/(.+)\/([imu]*)$/;
  * Plain action argument: no whitespace, parentheses, quotes or commas.
  */
 export const PLAIN_ACTION_ARG = /^[^\s()'",]+$/;
+
+/**
+ * Checks whether the string is an action pseudo-class marker.
+ *
+ * @param marker Marker to check.
+ *
+ * @returns True if the string is an action pseudo-class marker.
+ */
+export const isActionPseudoMarker = (marker: string): marker is ActionPseudoMarker => {
+    return (ACTION_PSEUDO_MARKERS as readonly string[]).includes(marker);
+};
+
+/**
+ * Throws an error for invalid action pseudo-class usage.
+ *
+ * @param marker Action pseudo-class marker.
+ * @param messageKey Key of the error message.
+ * @param selector Selector which caused the error.
+ *
+ * @throws An error with the message for the action pseudo-class.
+ */
+export const throwActionError = (
+    marker: ActionPseudoMarker,
+    messageKey: keyof ActionErrorPrefix,
+    selector: string,
+): never => {
+    throw new Error(`${ACTION_ERROR_PREFIXES[marker][messageKey]}: '${selector}'`);
+};
 
 /**
  * Cache of compiled action argument matchers.
@@ -33,7 +65,6 @@ const isValidRegexpArg = (arg: string): boolean => {
         return false;
     }
     try {
-        // eslint-disable-next-line no-new
         new RegExp(match[1] as string, match[2]);
         return true;
     } catch (e: unknown) {

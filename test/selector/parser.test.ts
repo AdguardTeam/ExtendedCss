@@ -223,6 +223,14 @@ describe('absolute extended selectors', () => {
                 ],
             },
             {
+                // a quote after an escaped backslash should close the quoted string
+                actual: 'div[data-x="a\\\\"]:contains(hello)',
+                expected: [
+                    { isRegular: true, value: 'div[data-x="a\\\\"]' },
+                    { isAbsolute: true, name, value: 'hello' },
+                ],
+            },
+            {
                 actual: 'div[id] > .row > span:contains(/^Advertising$/)',
                 expected: [
                     { isRegular: true, value: 'div[id] > .row > span' },

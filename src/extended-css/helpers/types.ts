@@ -28,6 +28,13 @@ interface AffectedElementProto {
      * so it should be style-protected and reverted.
      */
     hasStyles?: boolean;
+    /**
+     * Statistic of action removals per action argument,
+     * needed to avoid an endless loop of removing re-added attributes or classes.
+     */
+    actionRemovalsStatistic?: {
+        [key: string]: number;
+    };
 }
 
 /**

@@ -14,16 +14,18 @@ import { StyleDeclaration } from '../style-block';
 import { getErrorMessage } from '../common/utils/error';
 import { getObjectFromEntries } from '../common/utils/objects';
 import { logger } from '../common/utils/logger';
-import { normalizeActionArg } from '../common/utils/action-arg';
+import {
+    isActionPseudoMarker,
+    normalizeActionArg,
+    throwActionError,
+} from '../common/utils/action-arg';
 
 import {
     BRACKET,
     REMOVE_PSEUDO_MARKER,
-    REMOVE_ATTR_PSEUDO_MARKER,
-    REMOVE_CLASS_PSEUDO_MARKER,
     ACTION_PSEUDO_MARKERS,
-    ACTION_ERROR_PREFIXES,
-    REMOVE_ERROR_PREFIX,
+    ACTION_STYLE_MARKERS,
+    ActionPseudoMarker,
     CONTENT_CSS_PROPERTY,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
@@ -43,7 +45,7 @@ type ActionSelectorData = {
     /**
      * Action pseudo-class marker, e.g. 'remove-attr'.
      */
-    marker: string;
+    marker: ActionPseudoMarker;
 
     /**
      * Index of the action pseudo-class colon in the raw selector.
@@ -128,26 +130,25 @@ export const parseActionSelector = (rawSelector: string): ParsedSelectorData => 
     }
 
     const action = actions[0] as ActionSelectorData;
-    const errorPrefix = ACTION_ERROR_PREFIXES[action.marker] ?? REMOVE_ERROR_PREFIX;
 
     if (actions.length > 1) {
-        throw new Error(`${errorPrefix.MULTIPLE_USAGE}: '${rawSelector}'`);
+        throwActionError(action.marker, 'MULTIPLE_USAGE', rawSelector);
     }
     if (action.endIndex === -1) {
-        throw new Error(`${errorPrefix.INVALID_ACTION}: '${rawSelector}'`);
+        throwActionError(action.marker, 'INVALID_ACTION', rawSelector);
     }
     if (action.startIndex === 0) {
-        throw new Error(`${errorPrefix.NO_TARGET_SELECTOR}: '${rawSelector}'`);
+        throwActionError(action.marker, 'NO_TARGET_SELECTOR', rawSelector);
     }
     if (action.endIndex < rawSelector.length) {
-        throw new Error(`${errorPrefix.INVALID_POSITION}: '${rawSelector}'`);
+        throwActionError(action.marker, 'INVALID_POSITION', rawSelector);
     }
 
     const selector = rawSelector.substring(0, action.startIndex);
 
     if (action.marker === REMOVE_PSEUDO_MARKER) {
         if (action.arg !== '') {
-            throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_ARG}: '${rawSelector}'`);
+            throwActionError(action.marker, 'INVALID_ARG', rawSelector);
         }
         return {
             selector,
@@ -157,7 +158,7 @@ export const parseActionSelector = (rawSelector: string): ParsedSelectorData => 
 
     const arg = normalizeActionArg(action.arg);
     if (!arg) {
-        throw new Error(`${errorPrefix.INVALID_ARG}: '${rawSelector}'`);
+        throwActionError(action.marker, 'INVALID_ARG', rawSelector);
     }
 
     return {
@@ -181,9 +182,9 @@ export const parseSelectorRulePart = (selectorBuffer: string, extCssDoc: ExtCssD
         throw new Error(`${NO_AT_RULE_ERROR_PREFIX}: '${selector}'.`);
     }
 
-    let removeSelectorData: ParsedSelectorData;
+    let actionSelectorData: ParsedSelectorData;
     try {
-        removeSelectorData = parseActionSelector(selector);
+        actionSelectorData = parseActionSelector(selector);
     } catch (e: unknown) {
         logger.error(getErrorMessage(e));
         throw e;
@@ -194,8 +195,8 @@ export const parseSelectorRulePart = (selectorBuffer: string, extCssDoc: ExtCssD
     let ast: AnySelectorNodeInterface | undefined;
 
     try {
-        selector = removeSelectorData.selector;
-        stylesOfSelector = removeSelectorData.stylesOfSelector;
+        selector = actionSelectorData.selector;
+        stylesOfSelector = actionSelectorData.stylesOfSelector;
         // validate found selector by parsing it to ast
         // so if it is invalid error will be thrown
         ast = extCssDoc.getSelectorAst(selector);
@@ -260,14 +261,6 @@ const isRemoveSetInStyles = (styles: StyleDeclaration[]): boolean => {
 };
 
 /**
- * Action pseudo-class markers that are stored in rule styles.
- */
-const ACTION_STYLE_MARKERS = [
-    REMOVE_ATTR_PSEUDO_MARKER,
-    REMOVE_CLASS_PSEUDO_MARKER,
-];
-
-/**
  * Returns action styles (e.g. 'remove-attr') from the given styles.
  *
  * @param styles Array of styles.
@@ -286,7 +279,7 @@ const getActionStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
  * @returns True if styles contain action pseudo-class declarations.
  */
 export const hasActionPseudoStyles = (styles: StyleDeclaration[]): boolean => {
-    return styles.some((s) => ACTION_PSEUDO_MARKERS.includes(s.property));
+    return styles.some((s) => isActionPseudoMarker(s.property));
 };
 
 /**
@@ -379,7 +372,7 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
         } else {
             // keep styles of other rules with the same target selector
             styles.forEach((style) => {
-                if (ACTION_PSEUDO_MARKERS.includes(style.property)) {
+                if (isActionPseudoMarker(style.property)) {
                     return;
                 }
                 actionStyleMap[style.property] = style.value;
