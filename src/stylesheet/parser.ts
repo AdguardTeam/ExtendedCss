@@ -100,8 +100,8 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
 
     if (context.nextIndex === -1) {
         if (selector === actionSelectorData.selector) {
-            // rule should have style or pseudo-class :remove()
-            throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
+            // rule should have style or action pseudo-class
+            throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION}: '${context.cssToParse}'`);
         }
         // stop parsing as there is no style declaration and selector parsed fine
         context.cssToParse = '';
@@ -281,7 +281,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
             }
             if (context.nextIndex === -1) {
                 // no style declaration in rule
-                // but rule still may contain :remove() pseudo-class
+                // but rule still may contain action pseudo-class
                 context.selectorBuffer = context.cssToParse;
             } else {
                 // collect string parts before opening curly bracket
@@ -317,7 +317,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
             // style declaration should be parsed
             const parsedStyles = parseNextStyle(context);
 
-            // styles can be parsed from selector part if it has :remove() pseudo-class
+            // styles can be parsed from selector part if it has an action pseudo-class
             // e.g. '.banner:remove() { debug: true; }'
             const stylesToPush = hasActionPseudoStyles(context.rawRuleData.rawStyles ?? [])
                 ? filterActionRuleStyles(parsedStyles)

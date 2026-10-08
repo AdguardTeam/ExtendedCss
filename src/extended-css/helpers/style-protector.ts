@@ -6,10 +6,12 @@ import { CssStyleMap, ExtCssRuleData } from '../../css-rule';
 
 import { natives } from '../../common/utils/natives';
 
+import { STYLE_ATTRIBUTE } from '../../common/constants';
+
 const PROTECTION_OBSERVER_OPTIONS = {
     attributes: true,
     attributeOldValue: true,
-    attributeFilter: ['style'],
+    attributeFilter: [STYLE_ATTRIBUTE],
 };
 
 /**

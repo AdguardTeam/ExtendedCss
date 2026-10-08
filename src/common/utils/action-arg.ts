@@ -1,8 +1,10 @@
 import {
     ACTION_ERROR_PREFIXES,
     ACTION_PSEUDO_MARKERS,
+    ACTION_STYLE_MARKERS,
     ActionErrorPrefix,
     ActionPseudoMarker,
+    ActionStyleMarker,
     DOUBLE_QUOTE,
     SINGLE_QUOTE,
     SLASH,
@@ -28,6 +30,17 @@ export const PLAIN_ACTION_ARG = /^[^\s()'",]+$/;
  */
 export const isActionPseudoMarker = (marker: string): marker is ActionPseudoMarker => {
     return (ACTION_PSEUDO_MARKERS as readonly string[]).includes(marker);
+};
+
+/**
+ * Checks whether the string is an action pseudo-class marker stored in styles.
+ *
+ * @param marker Marker to check.
+ *
+ * @returns True if the string is an action style marker.
+ */
+export const isActionStyleMarker = (marker: string): marker is ActionStyleMarker => {
+    return (ACTION_STYLE_MARKERS as readonly string[]).includes(marker);
 };
 
 /**
@@ -121,12 +134,18 @@ export const createActionArgMatcher = (arg: string): ((value: string) => boolean
     if (match) {
         try {
             const regexp = new RegExp(match[1] as string, match[2]);
-            matcher = (value: string): boolean => regexp.test(value);
+            matcher = (value: string): boolean => {
+                return regexp.test(value);
+            };
         } catch (e: unknown) {
-            matcher = (): boolean => false;
+            matcher = (): boolean => {
+                return false;
+            };
         }
     } else {
-        matcher = (value: string): boolean => value === arg;
+        matcher = (value: string): boolean => {
+            return value === arg;
+        };
     }
 
     actionArgMatchers.set(arg, matcher);

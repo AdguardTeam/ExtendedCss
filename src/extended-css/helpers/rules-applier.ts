@@ -86,12 +86,15 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
 };
 
 /**
- * Applies filtering rules.
+ * Applies filtering rules once.
  *
  * @param context ExtendedCss context.
+ *
+ * @returns True if the pass changed the DOM with removals.
  */
-export const applyRules = (context: Context): void => {
-    const newSelectedElements: HTMLElement[] = [];
+const applyRulesPass = (context: Context): boolean => {
+    let hasDomMutations = false;
+    const newSelectedElements = new Set<HTMLElement>();
     // reset rules collected during the previous pass:
     // only rules matching elements in the current pass should be applied,
     // otherwise actions could be replayed for elements which no longer match
@@ -104,7 +107,7 @@ export const applyRules = (context: Context): void => {
     disconnectDocument(context);
     context.parsedRules.forEach((ruleData) => {
         const nodes = applyRule(context, ruleData);
-        Array.prototype.push.apply(newSelectedElements, nodes);
+        nodes.forEach((node) => newSelectedElements.add(node));
         // save matched elements to ruleData as linked to applied rule
         // only for debugging purposes
         if (ruleData.debug) {
@@ -113,14 +116,18 @@ export const applyRules = (context: Context): void => {
     });
     // apply collected rules to each affected element once per pass
     context.affectedElements.forEach((affectedElement) => {
-        const isSelected = newSelectedElements.includes(affectedElement.node);
-        if (!isSelected) {
+        if (!newSelectedElements.has(affectedElement.node)) {
             return;
         }
-        affectedElement.hasStyles = affectedElement.rules.some((rule) => hasRegularStyles(rule.style));
-        applyStyle(context, affectedElement);
+        // the flag is sticky: regular styles, once applied, should be
+        // protected and reverted even if their rule stops matching
+        affectedElement.hasRegularStyles = affectedElement.hasRegularStyles
+            || affectedElement.rules.some((rule) => hasRegularStyles(rule));
+        hasDomMutations = applyStyle(context, affectedElement) || hasDomMutations;
         // add style protection observer only for elements with regular styles
-        if (!affectedElement.removed && affectedElement.hasStyles && !affectedElement.protectionObserver) {
+        if (!affectedElement.removed
+            && affectedElement.hasRegularStyles
+            && !affectedElement.protectionObserver) {
             affectedElement.protectionObserver = protectStyleAttribute(
                 affectedElement.node,
                 affectedElement.rules,
@@ -136,14 +143,32 @@ export const applyRules = (context: Context): void => {
         if (!affectedElement) {
             break;
         }
-        if (!newSelectedElements.includes(affectedElement.node)) {
+        if (!newSelectedElements.has(affectedElement.node)) {
             // revert styles only if the element had regular styles applied
-            if (affectedElement.hasStyles) {
+            if (affectedElement.hasRegularStyles) {
                 revertStyle(affectedElement);
             }
             context.affectedElements.splice(affLength - 1, 1);
         }
         affLength -= 1;
+    }
+
+    return hasDomMutations;
+};
+
+/**
+ * Applies filtering rules.
+ *
+ * A pass can change the DOM: removed elements or attributes can make
+ * other elements match, e.g. `#child:remove()` makes its parent match `:empty`.
+ * The document observer is disconnected during the pass,
+ * so such changes should be handled by re-running the pass.
+ *
+ * @param context ExtendedCss context.
+ */
+export const applyRules = (context: Context): void => {
+    while (applyRulesPass(context)) {
+        // repeat while the pass changes the DOM
     }
     // After styles are applied we can start observe again
     observeDocument(context);

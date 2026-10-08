@@ -3,7 +3,11 @@ import { Context } from './types';
 import { natives } from '../../common/utils/natives';
 import { createActionArgMatcher } from '../../common/utils/action-arg';
 
-import { REMOVE_ATTR_PSEUDO_MARKER } from '../../common/constants';
+import {
+    CLASS_ATTRIBUTE,
+    ID_ATTRIBUTE,
+    REMOVE_ATTR_PSEUDO_MARKER,
+} from '../../common/constants';
 
 /**
  * Creates a checker which decides whether a DOM mutation can affect the applied rules.
@@ -37,7 +41,7 @@ function createMutationRelevanceChecker(context: Context): (mutation: MutationRe
         if (!attributeName) {
             return true;
         }
-        if (attributeName === 'id' || attributeName === 'class') {
+        if (attributeName === ID_ATTRIBUTE || attributeName === CLASS_ATTRIBUTE) {
             return true;
         }
         return attributeMatchers.some((isMatch) => isMatch(attributeName));

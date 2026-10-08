@@ -19,37 +19,6 @@ interface AffectedElementProto {
     originalStyle: string;
     protectionObserver?: ExtMutationObserver | null;
     removed?: boolean;
-    /**
-     * Flag indicating that styles of the element are already applied.
-     */
-    isStyleApplied?: boolean;
-    /**
-     * Flag indicating that the element has regular styles applied,
-     * so it should be style-protected and reverted.
-     */
-    hasStyles?: boolean;
-    /**
-     * Statistic of action removals per action argument,
-     * needed to avoid an endless loop of removing re-added attributes or classes.
-     */
-    actionRemovalsStatistic?: {
-        [key: string]: number;
-    };
-}
-
-/**
- * Interface for internal lib usage.
- */
-export interface AffectedElement extends AffectedElementProto {
-    rules: ExtCssRuleData[];
-}
-
-/**
- * API interface.
- */
-export interface IAffectedElement extends Partial<AffectedElementProto> {
-    node: HTMLElement;
-    rules: Partial<ExtCssRuleData>[];
 }
 
 /**
@@ -59,6 +28,35 @@ export interface IAffectedElement extends Partial<AffectedElementProto> {
 type RemovalsStatistic = {
     [key: string]: number;
 };
+
+/**
+ * Interface for internal lib usage.
+ */
+export interface AffectedElement extends AffectedElementProto {
+    rules: ExtCssRuleData[];
+    /**
+     * Flag indicating that regular styles of the element are already applied.
+     */
+    isStyleApplied?: boolean;
+    /**
+     * Flag indicating that the element has regular styles applied,
+     * so it should be style-protected and reverted.
+     */
+    hasRegularStyles?: boolean;
+    /**
+     * Statistic of action removals per action argument,
+     * needed to avoid an endless loop of removing re-added attributes or classes.
+     */
+    actionRemovalsStatistic?: RemovalsStatistic;
+}
+
+/**
+ * API interface.
+ */
+export interface IAffectedElement extends Partial<AffectedElementProto> {
+    node: HTMLElement;
+    rules: Partial<ExtCssRuleData>[];
+}
 
 /**
  * Needed for getting affected node elements and handle style properties

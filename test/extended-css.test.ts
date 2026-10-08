@@ -536,6 +536,21 @@ describe('extended css library', () => {
         expect(element?.style.getPropertyValue('content')).toBe('');
     });
 
+    it("protects and reverts regular 'content' styles", () => {
+        document.body.innerHTML = '<div id="case-content-style"></div>';
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-content-style { content: "ad" !important; }'],
+        });
+        extendedCss.apply();
+
+        // regular 'content' styles should be applied and protected
+        expectElementStyle('case-content-style', { content: '"ad"' });
+        expect(extendedCss.getAffectedElements()[0]?.protectionObserver).not.toBeNull();
+
+        extendedCss.dispose();
+        expectElementStyle('case-content-style', { content: '' });
+    });
+
     it("does not apply action rule 'content' style on style protection", () => {
         document.body.innerHTML = `
             <div id="case-remove-attr-content-protection" onclick="alert(1)"></div>
@@ -760,6 +775,85 @@ describe('extended css library', () => {
         });
     });
 
+    it('applies regular styles to action-only elements that start matching them later', () => {
+        document.body.innerHTML = `
+            <div id="case-action-then-style" data-x="1"></div>
+        `;
+        const cssRules = [
+            'div:remove-attr(data-x)',
+            '.ad { display: none !important; }',
+        ];
+        applyExtCssRules(cssRules);
+
+        const element = document.getElementById('case-action-then-style');
+        expect(element?.hasAttribute('data-x')).toBe(false);
+        expectElementStyle('case-action-then-style', { display: '' });
+
+        element?.classList.add('ad');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    // the action-only element should receive regular styles of the new rule
+                    expectElementStyle('case-action-then-style', { display: 'none' });
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            }, 100);
+        });
+    });
+
+    it('reverts styles of elements that stop matching style rules but still match action rules', () => {
+        document.body.innerHTML = `
+            <div id="case-sticky-styles" class="keep ad" onclick="alert(1)"></div>
+        `;
+        const cssRules = [
+            '.keep:remove-attr(onclick)',
+            '.ad { display: none !important; }',
+        ];
+        const extendedCss = new ExtendedCss({ cssRules });
+        extendedCss.apply();
+
+        expectElementStyle('case-sticky-styles', { display: 'none' });
+
+        // the style rule stops matching, but the action rule keeps matching
+        document.getElementById('case-sticky-styles')?.classList.remove('ad');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                rAF(() => {
+                    try {
+                        const element = document.getElementById('case-sticky-styles');
+                        // applied styles should stay protected even if their rule no longer matches
+                        expect(element?.style.getPropertyValue('display')).toBe('none');
+                        extendedCss.dispose();
+                        // and should be reverted on dispose
+                        expect(element?.style.getPropertyValue('display')).toBe('');
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            }, 100);
+        });
+    });
+
+    it('applies rules that match after an element removal in the same pass', () => {
+        // no whitespace text nodes inside the parent, otherwise ':empty' does not match
+        document.body.innerHTML = '<div id="case-empty-parent"><div id="case-empty-child"></div></div>';
+        const cssRules = [
+            '#case-empty-child:remove()',
+            '#case-empty-parent:empty { display: none !important; }',
+        ];
+        applyExtCssRules(cssRules);
+
+        expect(document.getElementById('case-empty-child')).toBeNull();
+        // the parent becomes ':empty' after the child removal
+        // and should be styled within the same apply() call
+        expectElementStyle('case-empty-parent', { display: 'none' });
+    });
+
     it('removes re-added attributes matching regexp :remove-attr() after mutations', () => {
         document.body.innerHTML = `
             <div id="case-regexp-mutation" onclick="alert(1)"></div>
@@ -863,11 +957,13 @@ describe('extended css library', () => {
         const extendedCss = new ExtendedCss({ cssRules });
         const getAttributeNamesSpy = vi.spyOn(Element.prototype, 'getAttributeNames');
 
-        extendedCss.apply();
-        expect(getAttributeNamesSpy.mock.calls.length).toBe(3);
-
+        // the first apply runs a second pass because the removals can reveal new matches
         extendedCss.apply();
         expect(getAttributeNamesSpy.mock.calls.length).toBe(6);
+
+        // no removals happen anymore, so each apply runs a single pass
+        extendedCss.apply();
+        expect(getAttributeNamesSpy.mock.calls.length).toBe(9);
 
         getAttributeNamesSpy.mockRestore();
     });

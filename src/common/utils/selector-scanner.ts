@@ -1,4 +1,5 @@
 import {
+    ACTION_PSEUDO_MARKERS,
     BACKSLASH,
     BRACKET,
     COLON,
@@ -18,11 +19,6 @@ import { isWhiteSpaceChar } from './strings';
  * State of the selector scanner.
  */
 type SelectorScannerState = {
-    /**
-     * Parentheses nesting depth.
-     */
-    parenDepth: number;
-
     /**
      * Names of pseudo-classes whose arguments are currently open;
      * plain parentheses are stored as empty strings.
@@ -78,7 +74,6 @@ export type SelectorScanHandlers = {
  */
 const createSelectorScannerState = (): SelectorScannerState => {
     return {
-        parenDepth: 0,
         pseudoStack: [],
         quote: undefined,
         inRegexp: false,
@@ -152,8 +147,9 @@ const readPseudoClassName = (input: string, colonIndex: number): string => {
 /**
  * Processes the character at `index` and updates the scanner state.
  *
- * Some constructs (escaped characters, regexp literals, quoted strings)
- * are consumed as a whole, so the returned index can be greater than `index`.
+ * Escaped characters are consumed as a whole (together with the next character),
+ * so the returned index can be greater than `index`.
+ * Regexp literals and quoted strings are tracked character by character.
  *
  * @param input Scanned string.
  * @param index Index of the character to process.
@@ -211,16 +207,12 @@ const updateSelectorScannerState = (
         return index;
     }
     if (char === BRACKET.PARENTHESES.LEFT) {
-        state.parenDepth += 1;
         state.pseudoStack.push(state.pendingPseudo ?? '');
         state.pendingPseudo = undefined;
         state.prevChar = char;
         return index;
     }
     if (char === BRACKET.PARENTHESES.RIGHT) {
-        if (state.parenDepth > 0) {
-            state.parenDepth -= 1;
-        }
         state.pseudoStack.pop();
         state.prevChar = char;
         return index;
@@ -252,7 +244,7 @@ export const scanSelector = (input: string, handlers: SelectorScanHandlers): voi
             // the character is a part of a quoted string or regexp literal
             continue;
         }
-        if (input[i] === COLON && state.parenDepth === 0 && handlers.onTopLevelColon) {
+        if (input[i] === COLON && state.pseudoStack.length === 0 && handlers.onTopLevelColon) {
             const nextIndex = handlers.onTopLevelColon(i);
             if (typeof nextIndex === 'number') {
                 // the handler skipped a part of the input, e.g. an action argument
@@ -264,32 +256,6 @@ export const scanSelector = (input: string, handlers: SelectorScanHandlers): voi
             handlers.onStyleBlockStart(i);
         }
     }
-};
-
-/**
- * Finds the index of the closing parenthesis of an argument
- * without treating regexp literals specially.
- *
- * @param input Scanned string.
- * @param startIndex Index of the first argument character.
- *
- * @returns Index of the closing parenthesis or -1 if it is not found.
- */
-const findClosingParenthesisPlain = (input: string, startIndex: number): number => {
-    const state = createSelectorScannerState();
-    state.parenDepth = 1;
-    // empty pseudo name disables regexp detection
-    state.pseudoStack = [''];
-    state.prevChar = BRACKET.PARENTHESES.LEFT;
-
-    for (let i = startIndex; i < input.length; i += 1) {
-        i = updateSelectorScannerState(input, i, state);
-        if (state.parenDepth === 0) {
-            return i;
-        }
-    }
-
-    return -1;
 };
 
 /**
@@ -307,31 +273,49 @@ export const findClosingParenthesis = (
     pseudoName: string,
 ): number => {
     const state = createSelectorScannerState();
-    state.parenDepth = 1;
     state.pseudoStack = [pseudoName];
     state.prevChar = BRACKET.PARENTHESES.LEFT;
 
     for (let i = startIndex; i < input.length; i += 1) {
         i = updateSelectorScannerState(input, i, state);
-        if (state.parenDepth === 0) {
+        if (state.pseudoStack.length === 0) {
             return i;
         }
     }
 
-    if (state.inRegexp) {
-        // the regexp literal is not closed, so the argument is invalid;
-        // fall back to plain parenthesis balancing to find its end
-        // and let the argument validation reject it
-        return findClosingParenthesisPlain(input, startIndex);
-    }
-
+    // the argument is not closed, e.g. an unclosed regexp literal;
+    // `parseActionSelector()` rejects such arguments
     return -1;
+};
+
+/**
+ * Finds the end of an action pseudo-class argument at the given colon.
+ *
+ * @param input Scanned string.
+ * @param colonIndex Index of the action pseudo-class colon.
+ *
+ * @returns Index of the closing parenthesis or undefined
+ * if there is no complete action pseudo-class at the colon.
+ */
+const findActionArgumentEnd = (input: string, colonIndex: number): number | undefined => {
+    for (const marker of ACTION_PSEUDO_MARKERS) {
+        const markerText = `${marker}${BRACKET.PARENTHESES.LEFT}`;
+        const candidate = input.substring(colonIndex + 1, colonIndex + 1 + markerText.length);
+        if (candidate.toLowerCase() !== markerText) {
+            continue;
+        }
+        const argStartIndex = colonIndex + 1 + markerText.length;
+        const closingIndex = findClosingParenthesis(input, argStartIndex, marker);
+        return closingIndex === -1 ? undefined : closingIndex;
+    }
+    return undefined;
 };
 
 /**
  * Finds indexes of `{` marks which may start a style block.
  *
- * Braces inside quoted strings and regexp literals are skipped.
+ * Braces inside quoted strings, regexp literals and action pseudo-class
+ * arguments are skipped.
  *
  * @param input Scanned string.
  *
@@ -340,9 +324,12 @@ export const findClosingParenthesis = (
 export const findStyleBlockStarts = (input: string): number[] => {
     const indexes: number[] = [];
 
-    // fast path: without quotes, slashes and backslashes
-    // no quoted string or regexp literal can start
-    if (!/['"\\/]/.test(input)) {
+    // fast path: without quotes, slashes, backslashes and action pseudo-classes
+    // no quoted string or regexp literal can start,
+    // and no `{` can be a part of an action argument
+    const canUseFastPath = !/['"\\/]/.test(input)
+        && !ACTION_PSEUDO_MARKERS.some((marker) => input.includes(marker));
+    if (canUseFastPath) {
         let index = input.indexOf(BRACKET.CURLY.LEFT);
         while (index !== -1) {
             indexes.push(index);
@@ -352,6 +339,9 @@ export const findStyleBlockStarts = (input: string): number[] => {
     }
 
     scanSelector(input, {
+        onTopLevelColon: (index) => {
+            return findActionArgumentEnd(input, index);
+        },
         onStyleBlockStart: (index) => {
             indexes.push(index);
         },

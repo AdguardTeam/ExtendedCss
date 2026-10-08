@@ -231,4 +231,3 @@ export const isAttributeClosing = (context: Context): boolean => {
     return lastAttrTokenValue === nextToEqualSignTokenValue;
 };
 
-export { isWhiteSpaceChar } from '../../common/utils/strings';

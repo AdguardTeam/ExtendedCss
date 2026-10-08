@@ -29,20 +29,6 @@ import {
     NO_SELECTOR_ERROR_PREFIX,
 } from '../common/constants';
 
-/**
- * Returns array of positions of `{` in `cssRule`.
- *
- * Braces inside quoted strings and regexp literals are skipped,
- * e.g. '#x:remove-attr(/^data-{1,2}ad$/)'.
- *
- * @param cssRule CSS rule.
- *
- * @returns Array of left curly bracket indexes.
- */
-const getLeftCurlyBracketIndexes = (cssRule: string): number[] => {
-    return findStyleBlockStarts(cssRule);
-};
-
 // TODO: use `extCssDoc` for caching of style block parser results
 /**
  * Parses CSS rule into rules data object:
@@ -70,7 +56,8 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
         throw new Error(STYLE_ERROR_PREFIX.NO_COMMENT);
     }
 
-    const leftCurlyBracketIndexes = getLeftCurlyBracketIndexes(cssRule);
+    // braces inside quoted strings, regexp literals and action arguments are skipped
+    const leftCurlyBracketIndexes = findStyleBlockStarts(cssRule);
 
     // rule with style block but no selector
     // e.g. '{ display: none; }'
@@ -96,17 +83,17 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
     ) {
         try {
             // the whole css rule considered as "selector part"
-            // which may contain :remove() pseudo-class
+            // which may contain an action pseudo-class
             selectorData = parseSelectorRulePart(cssRule, extCssDoc);
             if (selectorData.success) {
-                // rule with no style block has valid :remove() pseudo-class
+                // rule with no style block has a valid action pseudo-class
                 // which is parsed into "styles"
                 // e.g. 'div:remove()'
                 // but also it can be just selector with no styles
                 // e.g. 'div'
                 // which should not be considered as valid css rule
                 if (selectorData.stylesOfSelector?.length === 0) {
-                    throw new Error(STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE);
+                    throw new Error(STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION);
                 }
                 return {
                     selector: selectorData.selector.trim(),

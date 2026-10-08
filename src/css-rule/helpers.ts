@@ -16,15 +16,16 @@ import { getObjectFromEntries } from '../common/utils/objects';
 import { logger } from '../common/utils/logger';
 import {
     isActionPseudoMarker,
+    isActionStyleMarker,
     normalizeActionArg,
     throwActionError,
 } from '../common/utils/action-arg';
 
 import {
     BRACKET,
+    SLASH,
     REMOVE_PSEUDO_MARKER,
     ACTION_PSEUDO_MARKERS,
-    ACTION_STYLE_MARKERS,
     ActionPseudoMarker,
     CONTENT_CSS_PROPERTY,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
@@ -135,7 +136,10 @@ export const parseActionSelector = (rawSelector: string): ParsedSelectorData => 
         throwActionError(action.marker, 'MULTIPLE_USAGE', rawSelector);
     }
     if (action.endIndex === -1) {
-        throwActionError(action.marker, 'INVALID_ACTION', rawSelector);
+        // an unclosed regexp literal is an argument error,
+        // while any other unclosed argument is an action error
+        const messageKey = action.arg.trim().startsWith(SLASH) ? 'INVALID_ARG' : 'INVALID_ACTION';
+        throwActionError(action.marker, messageKey, rawSelector);
     }
     if (action.startIndex === 0) {
         throwActionError(action.marker, 'NO_TARGET_SELECTOR', rawSelector);
@@ -268,7 +272,7 @@ const isRemoveSetInStyles = (styles: StyleDeclaration[]): boolean => {
  * @returns Styles of action pseudo-classes.
  */
 const getActionStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
-    return styles.filter((s) => ACTION_STYLE_MARKERS.includes(s.property));
+    return styles.filter((s) => isActionStyleMarker(s.property));
 };
 
 /**
@@ -305,7 +309,7 @@ export const filterActionRuleStyles = (styles: StyleDeclaration[]): StyleDeclara
  * @returns Styles without action pseudo-class declarations.
  */
 export const filterStyleBlockActionDeclarations = (styles: StyleDeclaration[]): StyleDeclaration[] => {
-    return styles.filter((s) => !ACTION_STYLE_MARKERS.includes(s.property));
+    return styles.filter((s) => !isActionStyleMarker(s.property));
 };
 
 /**

@@ -930,7 +930,9 @@ describe('parse single rule -- throws error on invalid rule', () => {
             { rule: 'div:remove-attr(/+/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
             { rule: 'div:remove-attr(/[/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
             { rule: 'div:remove-attr(/x/ii)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-attr(/foo', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
             { rule: ':remove-class(ads)', error: REMOVE_CLASS_ERROR_PREFIX.NO_TARGET_SELECTOR },
+            { rule: 'div:remove-class(/foo', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
             { rule: 'div:remove-class(ads):upward(1)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_POSITION },
             { rule: 'div:remove-class(/+/)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
         ];

@@ -19,8 +19,9 @@ import {
     isAttributeClosing,
     isSupportedPseudoClass,
     isOptimizationPseudoClass,
-    isWhiteSpaceChar,
 } from './utils/parser-predicates';
+
+import { isWhiteSpaceChar } from '../common/utils/strings';
 import { isAbsolutePseudoClass, isStandalonePseudoClass } from './utils/common-predicates';
 import {
     initAst,

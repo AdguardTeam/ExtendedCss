@@ -221,7 +221,7 @@ export class ExtendedCss {
         disconnectDocument(this.context);
         this.context.affectedElements.forEach((el) => {
             // action-only elements were not modified by us, so they should not be reverted
-            if (el.hasStyles) {
+            if (el.hasRegularStyles) {
                 revertStyle(el);
             }
         });

@@ -529,6 +529,14 @@ describe('stylesheet parser', () => {
                 },
             },
             {
+                // braces inside a plain action argument should not be treated as style block start
+                actual: '#x:remove-class(ad{foo)',
+                expected: {
+                    selector: '#x',
+                    style: { 'remove-class': 'ad{foo' },
+                },
+            },
+            {
                 // parentheses inside a regexp argument of the target selector
                 actual: 'div:contains(/[(]/):remove-class(ads)',
                 expected: {
@@ -662,7 +670,7 @@ describe('stylesheet parser', () => {
 
     describe('invalid stylesheets', () => {
         describe('selector with no style declaration', () => {
-            const error = STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE;
+            const error = STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION;
             const invalidSelectors = [
                 '.banner',
                 '.block > span:contains({background: #410e13})',
@@ -702,23 +710,23 @@ describe('stylesheet parser', () => {
             const invalidSelectors = [
                 {
                     selector: 'div:has(:remove-attr(href)) { display: none; }',
-                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
                 },
                 {
                     selector: 'div:not(:remove-class(ads)) { display: none; }',
-                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
                 },
                 {
                     selector: 'div:has(:remove()) { display: none; }',
-                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
                 },
                 {
                     selector: 'div:upward(:remove-attr(x)) { display: none; }',
-                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
                 },
                 {
                     selector: 'div:upward(:has(:remove-attr(x))) { display: none; }',
-                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE,
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
                 },
             ];
             test.each(invalidSelectors)('$selector', ({ selector, error }) => {
@@ -736,7 +744,9 @@ describe('stylesheet parser', () => {
                 { selector: 'div:remove-attr(/+/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
                 { selector: 'div:remove-attr(/[/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
                 { selector: 'div:remove-attr(/x/ii)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/foo', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
                 { selector: ':remove-class(ads)', error: REMOVE_CLASS_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: 'div:remove-class(/foo', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
                 { selector: 'div:remove-class(ads):upward(1)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_POSITION },
                 { selector: 'div:remove-class(/+/)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
             ];

@@ -8,7 +8,11 @@ import { CssStyleMap, ExtCssRuleData } from '../../css-rule';
 import { getElementSelectorPath } from '../../common/utils/nodes';
 import { removeSuffix } from '../../common/utils/strings';
 import { logger } from '../../common/utils/logger';
-import { createActionArgMatcher, isActionPseudoMarker } from '../../common/utils/action-arg';
+import {
+    createActionArgMatcher,
+    isActionPseudoMarker,
+    isActionStyleMarker,
+} from '../../common/utils/action-arg';
 
 import {
     MAX_STYLE_PROTECTION_COUNT,
@@ -16,7 +20,6 @@ import {
     REMOVE_PSEUDO_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
     REMOVE_CLASS_PSEUDO_MARKER,
-    ACTION_STYLE_MARKERS,
     CONTENT_CSS_PROPERTY,
     STYLE_ATTRIBUTE,
 } from '../../common/constants';
@@ -25,19 +28,28 @@ import {
 const CONTENT_ATTR_PREFIX_REGEXP = /^("|')adguard.+?/;
 
 /**
- * Checks whether the style map contains regular styles (not action pseudo-classes
- * and not the 'content' property needed for internal usage).
+ * Checks whether the rule contains regular styles to apply:
+ * action pseudo-classes and the 'content' property of action rules
+ * are needed for internal usage and should not be counted as regular styles.
  *
- * @param style Style map.
+ * @param rule Rule data.
  *
- * @returns True if the style map contains regular styles.
+ * @returns True if the rule contains regular styles.
  */
-export const hasRegularStyles = (style: CssStyleMap | undefined): boolean => {
+export const hasRegularStyles = (rule: ExtCssRuleData): boolean => {
+    const { style } = rule;
     if (!style) {
         return false;
     }
+    const isActionRule = Object.keys(style).some((prop) => isActionPseudoMarker(prop));
     return Object.keys(style).some((prop) => {
-        return !isActionPseudoMarker(prop) && prop !== CONTENT_CSS_PROPERTY;
+        if (isActionPseudoMarker(prop)) {
+            return false;
+        }
+        if (isActionRule && prop === CONTENT_CSS_PROPERTY) {
+            return false;
+        }
+        return true;
     });
 };
 
@@ -56,8 +68,7 @@ const removeAttributes = (node: Node, arg: string, skipStyleAttribute = false): 
     }
     let removedCount = 0;
     const isMatch = createActionArgMatcher(arg);
-    // snapshot names as the live collection is mutated while removing
-    [...node.getAttributeNames()].forEach((name) => {
+    node.getAttributeNames().forEach((name) => {
         if (skipStyleAttribute && name === STYLE_ATTRIBUTE) {
             return;
         }
@@ -98,8 +109,10 @@ const removeClasses = (node: Node, arg: string): number => {
  *
  * @param context ExtendedCss context.
  * @param affectedElement Affected element.
+ *
+ * @returns True if the node was removed from DOM.
  */
-const removeElement = (context: Context, affectedElement: AffectedElement): void => {
+const removeElement = (context: Context, affectedElement: AffectedElement): boolean => {
     const { node } = affectedElement;
 
     affectedElement.removed = true;
@@ -112,13 +125,16 @@ const removeElement = (context: Context, affectedElement: AffectedElement): void
     // if removals attempts happened more than specified we do not try to remove node again
     if (elementRemovalsCounter > MAX_STYLE_PROTECTION_COUNT) {
         logger.error(`ExtendedCss: infinite loop protection for selector: '${elementSelector}'`);
-        return;
+        return false;
     }
 
     if (node.parentElement) {
         node.parentElement.removeChild(node);
         context.removalsStatistic[elementSelector] = elementRemovalsCounter + 1;
+        return true;
     }
+
+    return false;
 };
 
 /**
@@ -136,7 +152,7 @@ export const setStyleToElement = (node: Node, style: CssStyleMap): void => {
     const isActionStyle = Object.keys(style).some((prop) => isActionPseudoMarker(prop));
     Object.keys(style).forEach((prop) => {
         // action pseudo-classes are handled by applyStyle() and are not CSS properties
-        if (ACTION_STYLE_MARKERS.includes(prop)) {
+        if (isActionStyleMarker(prop)) {
             return;
         }
         // do not apply 'content' of action rules (e.g. via the style protection observer)
@@ -204,13 +220,16 @@ const isAffectedElement = (
  * @param affectedElement Affected element.
  * @param rule Rule data.
  * @param skipStyleAttribute True if the `style` attribute should not be removed.
+ *
+ * @returns True if an attribute or a class was removed from DOM.
  */
 const applyRuleAction = (
     affectedElement: AffectedElement,
     rule: ExtCssRuleData,
     skipStyleAttribute: boolean,
-): void => {
+): boolean => {
     const { node } = affectedElement;
+    let hasRemovals = false;
 
     rule.actionStyles?.forEach((actionStyle) => {
         const statisticKey = `${actionStyle.property}:${actionStyle.value}`;
@@ -229,6 +248,7 @@ const applyRuleAction = (
         }
 
         if (removedCount > 0) {
+            hasRemovals = true;
             if (removalsCount + 1 === MAX_STYLE_PROTECTION_COUNT) {
                 logger.error(`ExtendedCss: infinite loop protection for action '${statisticKey}'`);
             }
@@ -238,22 +258,26 @@ const applyRuleAction = (
             };
         }
     });
+
+    return hasRemovals;
 };
 
 /**
  * Applies action pseudo-class styles of all rules of the affected element.
  *
  * @param affectedElement Affected element.
+ *
+ * @returns True if an attribute or a class was removed from DOM.
  */
-const applyActionStyles = (affectedElement: AffectedElement): void => {
+const applyActionStyles = (affectedElement: AffectedElement): boolean => {
     // the `style` attribute should not be removed from protected elements:
     // otherwise the protection observer would re-add it, causing an endless loop
     const skipStyleAttribute = affectedElement.protectionObserver !== null;
+    let hasRemovals = false;
     affectedElement.rules.forEach((rule) => {
-        if (rule.style) {
-            applyRuleAction(affectedElement, rule, skipStyleAttribute);
-        }
+        hasRemovals = applyRuleAction(affectedElement, rule, skipStyleAttribute) || hasRemovals;
     });
+    return hasRemovals;
 };
 
 /**
@@ -262,14 +286,14 @@ const applyActionStyles = (affectedElement: AffectedElement): void => {
  * @param context ExtendedCss context.
  * @param rawAffectedElement Object containing DOM node and rule to be applied.
  *
+ * @returns True if the DOM was changed by an action.
  * @throws An error if affectedElement has no style to apply.
  */
-export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): void => {
+export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): boolean => {
     if (rawAffectedElement.isStyleApplied) {
-        // styles are already applied and protected by the observer,
+        // regular styles are already applied,
         // but action pseudo-classes should be re-applied on DOM mutations
-        applyActionStyles(rawAffectedElement);
-        return;
+        return applyActionStyles(rawAffectedElement);
     }
     let affectedElement: AffectedElement | IAffectedElement;
     if (context.beforeStyleApplied) {
@@ -294,22 +318,17 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
     }
 
     const { node, rules } = affectedElement;
-    for (let i = 0; i < rules.length; i += 1) {
-        const rule = rules[i];
-        const selector = rule?.selector;
-        const style = rule?.style;
-        const debug = rule?.debug;
+    let hasRemovals = false;
+    for (const rule of rules) {
+        const { selector, style, debug } = rule;
         // rule may not have style to apply
         // e.g. 'div:has(> a) { debug: true }' -> means no style to apply, and enable debug mode
         if (style) {
             if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
-                removeElement(context, affectedElement);
-                return;
+                return removeElement(context, affectedElement);
             }
 
-            if (rule) {
-                applyRuleAction(affectedElement, rule, false);
-            }
+            hasRemovals = applyRuleAction(affectedElement, rule, false) || hasRemovals;
             // action markers and 'content' are skipped by setStyleToElement,
             // so regular styles of other rules with the same selector are applied
             setStyleToElement(node, style);
@@ -319,7 +338,11 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
         }
     }
 
-    rawAffectedElement.isStyleApplied = true;
+    // action-only elements should not be considered as styled:
+    // they may receive regular styles of newly matched rules on later passes
+    rawAffectedElement.isStyleApplied = rules.some((rule) => hasRegularStyles(rule));
+
+    return hasRemovals;
 };
 
 /**
