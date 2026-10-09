@@ -9,8 +9,7 @@ import {
     combineRulesData,
     createRawResultsMap,
     hasActionPseudoStyles,
-    filterActionRuleStyles,
-    filterStyleBlockActionDeclarations,
+    filterStyleBlockDeclarations,
 } from './helpers';
 
 import { ExtCssDocument } from '../selector';
@@ -99,6 +98,7 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
                     selector: selectorData.selector.trim(),
                     ast: selectorData.ast,
                     rawStyles: selectorData.stylesOfSelector,
+                    hasActionPseudoClass: true,
                 };
             } else {
                 // not valid selector
@@ -137,9 +137,8 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
             // TODO: add cache for style block parsing
             const parsedStyles = parseStyleBlock(styleBlockBuffer);
             const hasActionStyles = hasActionPseudoStyles(rawRuleData.rawStyles ?? []);
-            const stylesToPush = hasActionStyles
-                ? filterActionRuleStyles(parsedStyles)
-                : filterStyleBlockActionDeclarations(parsedStyles);
+            rawRuleData.hasActionPseudoClass = hasActionStyles;
+            const stylesToPush = filterStyleBlockDeclarations(parsedStyles, hasActionStyles);
             if (stylesToPush.length === 0 && !hasActionStyles) {
                 // rule with only ignored action declarations has nothing to apply
                 throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE}: '${cssRule}'`);

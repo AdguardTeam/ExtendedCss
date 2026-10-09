@@ -611,8 +611,8 @@ target:remove-attr(attr)
 - `target` — required, standard or extended CSS selector; use the
     universal selector `*` to apply the action to any element
 - `attr` — required, an attribute name for exact match (can be quoted, e.g. `"onclick"`),
-    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A plain argument cannot contain whitespace,
-    parentheses, quotes, or commas
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A quoted or plain argument cannot contain
+    whitespace, parentheses, quotes, or commas
 
 <a name="extended-css-remove-attr-limitations"></a>
 
@@ -624,13 +624,17 @@ target:remove-attr(attr)
 > are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
 > Styles of other rules with the same target selector are still applied.
 
-> The [`remove` pseudo-property](#remove-pseudos) and `:remove()` pseudo-class declared in the same rule
-> still remove the element.
+> An action cannot be combined with another action: the [`remove`
+> pseudo-property](#remove-pseudos) declared in the same rule is ignored, and `:remove()` used
+> together with `:remove-attr()` makes the rule invalid.
 
 > Removed attributes are not restored by `dispose()`.
 
 > `:remove-attr(style)` conflicts with the style protection mechanism:
-> the `style` attribute is not removed from elements whose styles are protected by other rules.
+> the `style` attribute is not removed from elements whose styles are applied by other rules.
+
+> The action is applied to the same element at most 50 times:
+> if the page keeps re-adding the removed attribute, the action stops to avoid an endless loop.
 
 > `remove-attr` and `remove-class` properties are not supported in style blocks,
 > use the pseudo-classes instead.
@@ -659,8 +663,8 @@ target:remove-class(class)
 - `target` — required, standard or extended CSS selector; use the
     universal selector `*` to apply the action to any element
 - `class` — required, a class name for exact match (can be quoted, e.g. `"ads"`),
-    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A plain argument cannot contain whitespace,
-    parentheses, quotes, or commas
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A quoted or plain argument cannot contain
+    whitespace, parentheses, quotes, or commas
 
 <a name="extended-css-remove-class-limitations"></a>
 
@@ -672,10 +676,14 @@ target:remove-class(class)
 > are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
 > Styles of other rules with the same target selector are still applied.
 
-> The [`remove` pseudo-property](#remove-pseudos) and `:remove()` pseudo-class declared in the same rule
-> still remove the element.
+> An action cannot be combined with another action: the [`remove`
+> pseudo-property](#remove-pseudos) declared in the same rule is ignored, and `:remove()` used
+> together with `:remove-class()` makes the rule invalid.
 
 > Removed classes are not restored by `dispose()`.
+
+> The action is applied to the same element at most 50 times:
+> if the page keeps re-adding the removed class, the action stops to avoid an endless loop.
 
 #### Examples
 
@@ -1123,10 +1131,18 @@ type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
  * Its optional property 'content' may contain the applied rule text
  */
 interface IAffectedElement {
-  rules: { style: { content?: string }}[]
+  rules: {
+    style: { content?: string },
+    // action pseudo-classes (e.g. `:remove-attr()`) with their arguments;
+    // `actionStyles` is the only source of action data for callbacks
+    actionStyles?: { property: string, value: string }[],
+  }[]
   node: HTMLElement;
 }
 ```
+
+> Action pseudo-classes are not stored in `style`: callbacks should read and edit
+> `actionStyles` to change or cancel an action.
 
 #### <a name="extended-css-init"></a> Public method `init()`
 

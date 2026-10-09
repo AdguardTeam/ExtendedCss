@@ -68,6 +68,7 @@ import {
     CARRIAGE_RETURN,
     FORM_FEED,
     SUPPORTED_PSEUDO_CLASSES,
+    CONTAINS_PSEUDO_NAMES,
     XPATH_PSEUDO_CLASS_MARKER,
     HAS_PSEUDO_CLASS_MARKERS,
     REGULAR_PSEUDO_ELEMENTS,
@@ -82,6 +83,33 @@ import {
 const XPATH_PSEUDO_SELECTING_ROOT = 'body';
 
 const NO_WHITESPACE_ERROR_PREFIX = 'No white space is allowed before or after extended pseudo-class name in selector';
+
+/**
+ * Checks whether the parser is inside a `:contains()`-like argument.
+ *
+ * @param context Parser context.
+ *
+ * @returns True if the parser is inside a `:contains()`-like argument.
+ */
+const isInsideContainsArg = (context: Context): boolean => {
+    return context.extendedPseudoNamesStack.some((name) => CONTAINS_PSEUDO_NAMES.includes(name));
+};
+
+/**
+ * Normalizes a token value for quote opening checks:
+ * `=` is not a separate token, so it can be a part of a word
+ * (e.g. `data-x=`), and such a token should be treated as `=`.
+ *
+ * @param value Token value.
+ *
+ * @returns Normalized character or the token value as is.
+ */
+const normalizeQuoteChar = (value: string | undefined): string | undefined => {
+    if (value?.endsWith(EQUAL_SIGN)) {
+        return EQUAL_SIGN;
+    }
+    return value;
+};
 
 /**
  * Checks whether the token is escaped by an odd number of backslashes.
@@ -123,6 +151,10 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
         quoteCharacter: undefined,
         shouldOptimize: false,
     };
+
+    // the last non-whitespace token value, needed for quote opening checks
+    // e.g. '[data-x = ":remove-attr(title)"]'
+    let prevNonWhitespaceTokenValue: string | undefined;
 
     let i = 0;
     while (i < tokens.length) {
@@ -166,10 +198,12 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
             if (context.quoteCharacter === tokenValue) {
                 context.quoteCharacter = undefined;
             } else if (context.quoteCharacter === undefined
-                && (canOpenQuote(prevTokenValue)
-                    // attribute value quotes, e.g. '[data-x=":remove-attr(title)"]';
-                    // '=' is not a separate token, so it can be a part of a word
-                    || (prevTokenValue?.endsWith(EQUAL_SIGN) ?? false))) {
+                && canOpenQuote(
+                    normalizeQuoteChar(prevTokenValue),
+                    normalizeQuoteChar(prevNonWhitespaceTokenValue),
+                    context.isAttributeBracketsOpen,
+                    isInsideContainsArg(context),
+                )) {
                 context.quoteCharacter = tokenValue;
             }
         }
@@ -804,6 +838,10 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                 // so error for invalid Word will be thrown later while element selecting by parsed ast
             default:
                 throw new Error(`Unknown type of token: '${tokenValue}'`);
+        }
+
+        if (!isWhiteSpaceChar(tokenValue)) {
+            prevNonWhitespaceTokenValue = tokenValue;
         }
 
         i += 1;

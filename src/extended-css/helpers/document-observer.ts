@@ -1,7 +1,7 @@
 import { EventTracker } from './event-tracker';
 import { Context } from './types';
 import { natives } from '../../common/utils/natives';
-import { createActionArgMatcher } from '../../common/utils/action-arg';
+import { REGEXP_ACTION_ARG, createActionArgMatcher } from '../../common/utils/action-arg';
 
 import {
     CLASS_ATTRIBUTE,
@@ -10,43 +10,130 @@ import {
 } from '../../common/constants';
 
 /**
- * Creates a checker which decides whether a DOM mutation can affect the applied rules.
+ * Matches an attribute selector and captures the attribute name.
+ */
+const ATTRIBUTE_SELECTOR_REGEXP = /\[\s*([^\s\]~|^$*=]+)/g;
+
+/**
+ * Data needed to observe DOM mutations which can affect applied rules.
+ */
+type MutationObservationData = {
+    /**
+     * Attribute names which should be observed natively,
+     * or undefined if all attributes should be observed
+     * (e.g. there is a regexp `:remove-attr()` argument).
+     */
+    attributeFilter?: string[];
+
+    /**
+     * Matchers for `:remove-attr()` arguments.
+     */
+    attributeMatchers: Array<(name: string) => boolean>;
+
+    /**
+     * Attribute names used by rule selectors.
+     */
+    selectorAttributeNames: Set<string>;
+};
+
+/**
+ * Collects attribute names used in a selector, e.g. 'data-x' from '[data-x="1"]'.
  *
- * `id` and `class` attributes are always checked as they are used by selectors,
- * and `remove-attr()` arguments are checked with the corresponding matchers.
+ * The extraction is textual and covers plain attribute names:
+ * namespaced (e.g. `[xml|lang]`) or escaped names may be missed,
+ * and attribute-like text inside quoted values may be collected as a name.
+ *
+ * @param selector Selector text.
+ *
+ * @returns Attribute names found in the selector.
+ */
+const getSelectorAttributeNames = (selector: string): string[] => {
+    const names: string[] = [];
+    ATTRIBUTE_SELECTOR_REGEXP.lastIndex = 0;
+    let match = ATTRIBUTE_SELECTOR_REGEXP.exec(selector);
+    while (match !== null) {
+        if (match[1]) {
+            names.push(match[1]);
+        }
+        match = ATTRIBUTE_SELECTOR_REGEXP.exec(selector);
+    }
+    return names;
+};
+
+/**
+ * Collects data needed to observe mutations which can affect applied rules.
+ *
+ * `id` and `class` attributes are always observed as they are used by selectors,
+ * attributes used by rule selectors and plain `:remove-attr()` arguments
+ * are observed natively, and a regexp `:remove-attr()` argument
+ * makes the observer watch all attributes.
  *
  * @param context ExtendedCss context.
  *
+ * @returns Data for mutation observation.
+ */
+const createMutationObservationData = (context: Context): MutationObservationData => {
+    const attributeNames = new Set<string>([ID_ATTRIBUTE, CLASS_ATTRIBUTE]);
+    const attributeMatchers: Array<(name: string) => boolean> = [];
+    const selectorAttributeNames = new Set<string>();
+    let hasRegexpActionArg = false;
+
+    context.parsedRules.forEach((rule) => {
+        getSelectorAttributeNames(rule.selector).forEach((name) => {
+            selectorAttributeNames.add(name);
+            attributeNames.add(name);
+        });
+
+        rule.actionStyles?.forEach((actionStyle) => {
+            if (actionStyle.property !== REMOVE_ATTR_PSEUDO_MARKER) {
+                return;
+            }
+            if (REGEXP_ACTION_ARG.test(actionStyle.value)) {
+                // any attribute can match a regexp argument
+                hasRegexpActionArg = true;
+            } else {
+                attributeNames.add(actionStyle.value);
+            }
+            attributeMatchers.push(createActionArgMatcher(actionStyle.value));
+        });
+    });
+
+    return {
+        // if there is a regexp argument, all attributes should be observed,
+        // otherwise the native attribute filter can be used
+        attributeFilter: hasRegexpActionArg ? undefined : [...attributeNames],
+        attributeMatchers,
+        selectorAttributeNames,
+    };
+};
+
+/**
+ * Creates a checker which decides whether a DOM mutation can affect the applied rules.
+ *
+ * `id` and `class` attributes are always checked as they are used by selectors,
+ * attributes used by rule selectors are checked,
+ * and `remove-attr()` arguments are checked with the corresponding matchers.
+ *
+ * @param data Mutation observation data.
+ *
  * @returns Mutation relevance checker.
  */
-function createMutationRelevanceChecker(context: Context): (mutation: MutationRecord) => boolean {
-    const attributeMatchers: Array<(name: string) => boolean> = [];
-
-    for (const rule of context.parsedRules) {
-        if (!rule.actionStyles) {
-            continue;
-        }
-        for (const actionStyle of rule.actionStyles) {
-            if (actionStyle.property === REMOVE_ATTR_PSEUDO_MARKER) {
-                attributeMatchers.push(createActionArgMatcher(actionStyle.value));
-            }
-        }
+const createMutationRelevanceChecker = (data: MutationObservationData) => (mutation: MutationRecord): boolean => {
+    if (mutation.type !== 'attributes') {
+        return true;
     }
-
-    return (mutation: MutationRecord): boolean => {
-        if (mutation.type !== 'attributes') {
-            return true;
-        }
-        const attributeName = mutation.attributeName;
-        if (!attributeName) {
-            return true;
-        }
-        if (attributeName === ID_ATTRIBUTE || attributeName === CLASS_ATTRIBUTE) {
-            return true;
-        }
-        return attributeMatchers.some((isMatch) => isMatch(attributeName));
-    };
-}
+    const attributeName = mutation.attributeName;
+    if (!attributeName) {
+        return true;
+    }
+    if (attributeName === ID_ATTRIBUTE || attributeName === CLASS_ATTRIBUTE) {
+        return true;
+    }
+    if (data.selectorAttributeNames.has(attributeName)) {
+        return true;
+    }
+    return data.attributeMatchers.some((isMatch) => isMatch(attributeName));
+};
 
 /**
  * We are trying to limit the number of callback calls by not calling it on all kind of "hover" events.
@@ -74,7 +161,8 @@ export function observeDocument(context: Context): void {
     // enable dynamically added elements handling
     context.isDomObserved = true;
 
-    const isRelevantMutation = createMutationRelevanceChecker(context);
+    const observationData = createMutationObservationData(context);
+    const isRelevantMutation = createMutationRelevanceChecker(observationData);
 
     context.domMutationObserver = new natives.MutationObserver(((mutations) => {
         if (!mutations || mutations.length === 0) {
@@ -99,6 +187,9 @@ export function observeDocument(context: Context): void {
         childList: true,
         subtree: true,
         attributes: true,
+        ...(observationData.attributeFilter
+            ? { attributeFilter: observationData.attributeFilter }
+            : {}),
     });
 }
 

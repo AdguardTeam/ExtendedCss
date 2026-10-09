@@ -215,6 +215,22 @@ describe('absolute extended selectors', () => {
                 ],
             },
             {
+                // an apostrophe after a space in plain text should not open a quoted string
+                actual: "span:contains(the '90s)",
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: "the '90s" },
+                ],
+            },
+            {
+                // a lone double quote in plain text should not open a quoted string
+                actual: 'span:contains(say ")',
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: 'say "' },
+                ],
+            },
+            {
                 // a slash in plain text should not open a regexp literal
                 actual: 'span:contains(1 / 2)',
                 expected: [

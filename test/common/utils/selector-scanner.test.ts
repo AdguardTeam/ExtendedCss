@@ -4,6 +4,7 @@
 
 import {
     findClosingParenthesis,
+    findStyleBlockStart,
     findStyleBlockStarts,
     scanSelector,
 } from '../../../src/common/utils/selector-scanner';
@@ -45,8 +46,44 @@ describe('selector-scanner', () => {
             expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
         });
 
+        it('does not treat an apostrophe after a space as a quoted string', () => {
+            const input = "#t:contains(the '90s) { color: red }";
+            expect(findStyleBlockStarts(input)).toEqual([input.indexOf('{')]);
+        });
+
+        it('does not treat a lone double quote in plain text as a quoted string', () => {
+            const input = '#t:contains(say ") { color: red }';
+            expect(findStyleBlockStarts(input)).toEqual([input.indexOf('{')]);
+        });
+
         it('returns an empty array when there is no style block', () => {
             expect(findStyleBlockStarts('div:remove-attr(href)')).toEqual([]);
+        });
+    });
+
+    describe('findStyleBlockStart', () => {
+        it('returns the index of the first style block start', () => {
+            const input = 'a { color: red } b { color: blue }';
+            expect(findStyleBlockStart(input)).toBe(input.indexOf('{'));
+        });
+
+        it('skips braces inside quoted strings', () => {
+            const input = 'div[data-x="a{b"] { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('skips braces inside action arguments', () => {
+            const input = '#d:remove-class(ad{foo) { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('skips braces inside :xpath() arguments', () => {
+            const input = ':xpath(//div[contains(., "{")]) { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('returns -1 when there is no style block', () => {
+            expect(findStyleBlockStart('div:remove-attr(href)')).toBe(-1);
         });
     });
 

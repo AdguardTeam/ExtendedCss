@@ -12,13 +12,12 @@ import {
     RawCssRuleData,
     SelectorPartData,
     hasActionPseudoStyles,
-    filterActionRuleStyles,
-    filterStyleBlockActionDeclarations,
+    filterStyleBlockDeclarations,
 } from '../css-rule';
 
 import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
-import { findStyleBlockStarts } from '../common/utils/selector-scanner';
+import { findStyleBlockStart } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -272,8 +271,9 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
     while (context.cssToParse) {
         if (context.isSelector) {
             // find index of first opening curly bracket
-            // which may mean start of style part and end of selector one
-            context.nextIndex = findStyleBlockStarts(context.cssToParse)[0] ?? -1;
+            // which may mean start of style part and end of selector one;
+            // the scan stops at the first bracket to keep parsing linear
+            context.nextIndex = findStyleBlockStart(context.cssToParse);
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
@@ -295,6 +295,9 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
                 context.rawRuleData.selector = selectorData.selector.trim();
                 context.rawRuleData.ast = selectorData.ast;
                 context.rawRuleData.rawStyles = selectorData.stylesOfSelector;
+                context.rawRuleData.hasActionPseudoClass = hasActionPseudoStyles(
+                    selectorData.stylesOfSelector ?? [],
+                );
                 context.isSelector = false;
                 // save rule data if there is no style declaration
                 if (context.nextIndex === -1) {
@@ -319,12 +322,11 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
 
             // styles can be parsed from selector part if it has an action pseudo-class
             // e.g. '.banner:remove() { debug: true; }'
-            const stylesToPush = hasActionPseudoStyles(context.rawRuleData.rawStyles ?? [])
-                ? filterActionRuleStyles(parsedStyles)
-                : filterStyleBlockActionDeclarations(parsedStyles);
+            const hasActionStyles = !!context.rawRuleData.hasActionPseudoClass;
+            const stylesToPush = filterStyleBlockDeclarations(parsedStyles, hasActionStyles);
 
             // rule with only ignored action declarations has nothing to apply
-            if (stylesToPush.length > 0 || hasActionPseudoStyles(context.rawRuleData.rawStyles ?? [])) {
+            if (stylesToPush.length > 0 || hasActionStyles) {
                 context.rawRuleData.rawStyles?.push(...stylesToPush);
                 // save rule data to results
                 saveToRawResults(rawResults, context.rawRuleData);

@@ -2,6 +2,7 @@ import {
     ExtCssRuleData,
     ParsedSelectorData,
     RawCssRuleData,
+    RawStyleGroup,
     SelectorPartData,
     RawResults,
     RawResultValue,
@@ -232,7 +233,7 @@ export const createRawResultsMap = (): RawResults => {
  * @throws An error if there is no rawRuleData.styles or rawRuleData.ast.
  */
 export const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): void => {
-    const { selector, ast, rawStyles } = rawRuleData;
+    const { selector, ast, rawStyles, hasActionPseudoClass } = rawRuleData;
 
     if (!rawStyles) {
         throw new Error(`No style declaration for selector: '${selector}'`);
@@ -241,11 +242,16 @@ export const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRule
         throw new Error(`No ast parsed for selector: '${selector}'`);
     }
 
+    const styleGroup: RawStyleGroup = {
+        styles: rawStyles,
+        hasActionPseudoClass: !!hasActionPseudoClass,
+    };
+
     const storedRuleData = rawResults.get(selector);
     if (!storedRuleData) {
-        rawResults.set(selector, { ast, styles: rawStyles });
+        rawResults.set(selector, { ast, styleGroups: [styleGroup] });
     } else {
-        storedRuleData.styles.push(...rawStyles);
+        storedRuleData.styleGroups.push(styleGroup);
     }
 };
 
@@ -262,17 +268,6 @@ const isRemoveSetInStyles = (styles: StyleDeclaration[]): boolean => {
         return s.property === REMOVE_PSEUDO_MARKER
             && s.value === PSEUDO_PROPERTY_POSITIVE_VALUE;
     });
-};
-
-/**
- * Returns action styles (e.g. 'remove-attr') from the given styles.
- *
- * @param styles Array of styles.
- *
- * @returns Styles of action pseudo-classes.
- */
-const getActionStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
-    return styles.filter((s) => isActionStyleMarker(s.property));
 };
 
 /**
@@ -313,6 +308,27 @@ export const filterStyleBlockActionDeclarations = (styles: StyleDeclaration[]): 
 };
 
 /**
+ * Filters style-block declarations of a rule according to its selector:
+ * if the selector contains an action pseudo-class, styles declared in the block
+ * are ignored except `content` and `debug`;
+ * otherwise action declarations (`remove-attr` and `remove-class`)
+ * are removed as they are supported only as pseudo-classes.
+ *
+ * @param styles Parsed style-block declarations.
+ * @param hasActionStyles True if the selector contains an action pseudo-class.
+ *
+ * @returns Styles which should be kept for the rule.
+ */
+export const filterStyleBlockDeclarations = (
+    styles: StyleDeclaration[],
+    hasActionStyles: boolean,
+): StyleDeclaration[] => {
+    return hasActionStyles
+        ? filterActionRuleStyles(styles)
+        : filterStyleBlockActionDeclarations(styles);
+};
+
+/**
  * Returns 'debug' property value which is set in styles.
  *
  * @param styles Array of styles.
@@ -328,68 +344,115 @@ const getDebugStyleValue = (styles: StyleDeclaration[]): string | undefined => {
 };
 
 /**
+ * Data of rules with the same selector needed to prepare the final rule data.
+ */
+type RawMergedRuleData = {
+    /**
+     * String selector.
+     */
+    selector: string;
+
+    /**
+     * Parsed selector ast.
+     */
+    ast?: AnySelectorNodeInterface;
+
+    /**
+     * Raw styles of each parsed rule with the same selector.
+     */
+    styleGroups?: RawStyleGroup[];
+};
+
+/**
  * Prepares final RuleData.
- * Handles `debug` and action pseudo-classes in raw rule data styles.
+ * Handles `debug` and action pseudo-classes in raw rule data styles:
+ * action declarations are moved to `actionStyles`,
+ * regular styles of rules with the same selector are kept in `style`,
+ * and `content` of action rules is kept in `style` only for `beforeStyleApplied`.
  *
  * @param rawRuleData Raw data of selector css rule parsing.
  *
  * @returns Parsed ExtendedCss rule data.
- * @throws An error if rawRuleData.ast or rawRuleData.rawStyles not defined.
+ * @throws An error if rawRuleData.ast or rawRuleData.styleGroups not defined.
  */
-export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => {
-    const { selector, ast, rawStyles } = rawRuleData;
+export const prepareRuleData = (rawRuleData: RawMergedRuleData): ExtCssRuleData => {
+    const { selector, ast, styleGroups } = rawRuleData;
     if (!ast) {
         throw new Error(`AST should be parsed for selector: '${selector}'`);
     }
-    if (!rawStyles) {
+    if (!styleGroups) {
         throw new Error(`Styles should be parsed for selector: '${selector}'`);
     }
     const ruleData: ExtCssRuleData = { selector, ast };
 
-    const debugValue = getDebugStyleValue(rawStyles);
+    // split styles by their source:
+    // action pseudo-class declarations, styles of rules without action pseudo-classes,
+    // and internal styles of action rules (`content` and `debug` only)
+    const actionStyles: StyleDeclaration[] = [];
+    const regularStyles: StyleDeclaration[] = [];
+    const actionRuleStyles: StyleDeclaration[] = [];
+    const allRawStyles: StyleDeclaration[] = [];
 
-    const shouldRemove = isRemoveSetInStyles(rawStyles);
+    styleGroups.forEach((group) => {
+        allRawStyles.push(...group.styles);
+        group.styles.forEach((style) => {
+            if (style.property === DEBUG_PSEUDO_PROPERTY_KEY) {
+                // `debug` is handled as a separate property
+                return;
+            }
+            if (group.hasActionPseudoClass) {
+                if (isActionStyleMarker(style.property)) {
+                    actionStyles.push(style);
+                } else if (!isActionPseudoMarker(style.property)) {
+                    actionRuleStyles.push(style);
+                }
+                // the 'remove' pseudo-class declaration is handled via `shouldRemove`
+            } else {
+                regularStyles.push(style);
+            }
+        });
+    });
 
-    let styles = rawStyles;
-    if (debugValue) {
-        // get rid of 'debug' from styles
-        styles = rawStyles.filter((s) => s.property !== DEBUG_PSEUDO_PROPERTY_KEY);
-        // and set it as separate property only if its value is valid
-        // which is 'true' or 'global'
-        if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
-            || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
-            ruleData.debug = debugValue;
-        }
+    const debugValue = getDebugStyleValue(allRawStyles);
+    // set `debug` as separate property only if its value is valid
+    // which is 'true' or 'global'
+    if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
+        || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
+        ruleData.debug = debugValue;
     }
-    const actionStyles = getActionStyles(rawStyles);
+
+    const shouldRemove = isRemoveSetInStyles(allRawStyles);
 
     if (shouldRemove || actionStyles.length > 0) {
         const actionStyleMap: CssStyleMap = {};
 
         if (shouldRemove) {
             // the element is removed, so only 'content' is needed for internal usage
-            const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
+            const contentStyle = [...regularStyles, ...actionRuleStyles]
+                .find((s) => s.property === CONTENT_CSS_PROPERTY);
             if (contentStyle) {
                 actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
+                ruleData.hasInternalContent = true;
             }
             actionStyleMap[REMOVE_PSEUDO_MARKER] = PSEUDO_PROPERTY_POSITIVE_VALUE;
         } else {
             // keep styles of other rules with the same target selector
-            styles.forEach((style) => {
-                if (isActionPseudoMarker(style.property)) {
-                    return;
-                }
+            regularStyles.forEach((style) => {
                 actionStyleMap[style.property] = style.value;
             });
+            // keep 'content' of action rules only for `beforeStyleApplied` (e.g. CssHitsCounter);
+            // regular 'content' has priority and should be applied to the element
+            if (!(CONTENT_CSS_PROPERTY in actionStyleMap)) {
+                const contentStyle = actionRuleStyles.find((s) => s.property === CONTENT_CSS_PROPERTY);
+                if (contentStyle) {
+                    actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
+                    ruleData.hasInternalContent = true;
+                }
+            }
         }
 
-        actionStyles.forEach((actionStyle) => {
-            actionStyleMap[actionStyle.property] = actionStyle.value;
-        });
-
-        // preserve all action arguments to apply each of them:
-        // rules with the same target selector are merged by `style` property,
-        // so a single value per property would keep only the last argument
+        // action pseudo-classes are not stored in `style`:
+        // `actionStyles` is the only source of action arguments
         if (actionStyles.length > 0) {
             ruleData.actionStyles = actionStyles;
         }
@@ -398,8 +461,8 @@ export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => 
     } else {
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object
-        if (styles.length > 0) {
-            const stylesAsEntries: Array<[string, string]> = styles.map((style) => {
+        if (regularStyles.length > 0) {
+            const stylesAsEntries: Array<[string, string]> = regularStyles.map((style) => {
                 const { property, value } = style;
                 return [property, value];
             });
@@ -423,8 +486,8 @@ export const combineRulesData = (rawResults: RawResults): ExtCssRuleData[] => {
     const results: ExtCssRuleData[] = [];
     rawResults.forEach((value, key) => {
         const selector = key;
-        const { ast, styles: rawStyles } = value;
-        results.push(prepareRuleData({ selector, ast, rawStyles }));
+        const { ast, styleGroups } = value;
+        results.push(prepareRuleData({ selector, ast, styleGroups }));
     });
     return results;
 };

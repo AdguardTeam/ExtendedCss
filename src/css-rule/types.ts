@@ -53,11 +53,38 @@ export type RawCssRuleData = {
      * Array of previously collected styles which may contain 'remove' and 'debug'.
      */
     rawStyles?: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the selector contains an action pseudo-class,
+     * so its styles are action declarations.
+     */
+    hasActionPseudoClass?: boolean;
+};
+
+/**
+ * Styles of one parsed rule with the same selector.
+ */
+export type RawStyleGroup = {
+    /**
+     * Raw styles of the rule.
+     */
+    styles: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the rule selector contains an action pseudo-class.
+     */
+    hasActionPseudoClass: boolean;
 };
 
 export type RawResultValue = {
     ast: AnySelectorNodeInterface;
-    styles: StyleDeclaration[];
+    /**
+     * Raw styles of each parsed rule with the same selector.
+     * Rules are kept separately to preserve the source of styles:
+     * action pseudo-class declarations and styles of regular rules
+     * are merged differently.
+     */
+    styleGroups: RawStyleGroup[];
 };
 
 export type RawResults = Map<string, RawResultValue>;
@@ -83,10 +110,21 @@ export type ExtCssRuleData = {
 
     /**
      * Action pseudo-class styles (e.g. `:remove-attr()` or `:remove-class()`)
-     * with all their arguments preserved, unlike `style`
-     * where action styles are merged by property.
+     * with all their arguments preserved.
+     *
+     * This is the source of truth for action pseudo-classes:
+     * they are not stored in `style` and callbacks can edit them here,
+     * e.g. change an argument or remove an action.
      */
     actionStyles?: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the `content` style of the rule is declared
+     * by an action pseudo-class rule and is kept only for the
+     * `beforeStyleApplied` callback (e.g. CssHitsCounter).
+     * Such `content` should not be applied to matched elements.
+     */
+    hasInternalContent?: boolean;
 
     /**
      * Rule debugging mode value.

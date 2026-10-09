@@ -43,11 +43,6 @@ export interface AffectedElement extends AffectedElementProto {
      * so it should be style-protected and reverted.
      */
     hasRegularStyles?: boolean;
-    /**
-     * Statistic of action removals per action argument,
-     * needed to avoid an endless loop of removing re-added attributes or classes.
-     */
-    actionRemovalsStatistic?: RemovalsStatistic;
 }
 
 /**
@@ -106,6 +101,13 @@ export type Context = {
      * Info about element selectors and their removing counter.
      */
     removalsStatistic: RemovalsStatistic;
+
+    /**
+     * Statistic of action removals per action argument for each element,
+     * needed to avoid an endless loop of removing re-added attributes or classes.
+     * Keyed by DOM element, so it survives affected element re-creation.
+     */
+    actionRemovalsStatistic: WeakMap<HTMLElement, RemovalsStatistic>;
 
     /**
      * Array of parsed rules data needed for elements selecting and processing by ExtendedCss.

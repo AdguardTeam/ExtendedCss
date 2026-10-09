@@ -384,6 +384,14 @@ export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
 
 export const MAX_STYLE_PROTECTION_COUNT = 50;
 
+/**
+ * Maximum number of times an action (e.g. `:remove-attr()`) is applied
+ * to the same element with the same argument.
+ * Needed to avoid an endless loop if the page keeps re-adding
+ * the removed attribute or class.
+ */
+export const MAX_ACTION_REMOVALS_COUNT = 50;
+
 export const ID_ATTRIBUTE = 'id';
 export const CLASS_ATTRIBUTE = 'class';
 export const STYLE_ATTRIBUTE = 'style';

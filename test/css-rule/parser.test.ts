@@ -718,24 +718,24 @@ describe('parse array of css rules -- skip invalid rules', () => {
                 actual: ['div[class]:remove-attr(href) { display: none !important; }'],
                 expected: [{
                     selector: 'div[class]',
-                    style: { 'remove-attr': 'href' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 }],
             },
             {
                 actual: ['div[class]:remove-class(ads) { display: none !important; }'],
                 expected: [{
                     selector: 'div[class]',
-                    style: { 'remove-class': 'ads' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
                 }],
             },
             {
                 actual: ["div[class]:remove-attr(href) { content: 'test' !important; }"],
                 expected: [{
                     selector: 'div[class]',
-                    style: {
-                        'remove-attr': 'href',
-                        content: "'test' !important",
-                    },
+                    style: { content: "'test' !important" },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 }],
             },
             {
@@ -745,7 +745,8 @@ describe('parse array of css rules -- skip invalid rules', () => {
                 ],
                 expected: [{
                     selector: '#ad',
-                    style: { color: 'red', 'remove-attr': 'href' },
+                    style: { color: 'red' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 }],
             },
             {
@@ -755,10 +756,8 @@ describe('parse array of css rules -- skip invalid rules', () => {
                 ],
                 expected: [{
                     selector: '#ad',
-                    style: {
-                        remove: 'true',
-                        'remove-attr': 'href',
-                    },
+                    style: { remove: 'true' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 }],
             },
         ];

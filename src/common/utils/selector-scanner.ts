@@ -41,9 +41,19 @@ type SelectorScannerState = {
     inRegexpCharClass: boolean;
 
     /**
+     * Flag for scanning inside attribute brackets.
+     */
+    inAttributeBrackets: boolean;
+
+    /**
      * Character preceding the current one.
      */
     prevChar: string | undefined;
+
+    /**
+     * Last non-whitespace character preceding the current one.
+     */
+    prevNonWhitespaceChar: string | undefined;
 
     /**
      * Pseudo-class name waiting for its opening parenthesis.
@@ -65,6 +75,11 @@ export type SelectorScanHandlers = {
      * Called for `{` marks outside quoted strings and regexp literals.
      */
     onStyleBlockStart?: (index: number) => void;
+
+    /**
+     * Flag for stopping the scan after the first `{` mark.
+     */
+    stopAfterFirstStyleBlockStart?: boolean;
 };
 
 /**
@@ -78,22 +93,84 @@ const createSelectorScannerState = (): SelectorScannerState => {
         quote: undefined,
         inRegexp: false,
         inRegexpCharClass: false,
+        inAttributeBrackets: false,
         prevChar: undefined,
+        prevNonWhitespaceChar: undefined,
         pendingPseudo: undefined,
     };
 };
 
 /**
- * Checks whether a quoted string can start after the given character.
+ * Saves a processed character as the previous one.
  *
- * @param char Character preceding a quote.
- *
- * @returns True if a quoted string can start after the character.
+ * @param state Scanner state.
+ * @param char Processed character.
  */
-export const canOpenQuote = (char: string | undefined): boolean => {
-    return char === BRACKET.PARENTHESES.LEFT
-        || char === EQUAL_SIGN
-        || isWhiteSpaceChar(char);
+const setPrevChar = (state: SelectorScannerState, char: string | undefined): void => {
+    state.prevChar = char;
+    if (char && !isWhiteSpaceChar(char)) {
+        state.prevNonWhitespaceChar = char;
+    }
+};
+
+/**
+ * Checks whether the scanner is inside an `:xpath()` argument.
+ *
+ * @param state Scanner state.
+ *
+ * @returns True if the scanner is inside an `:xpath()` argument.
+ */
+const isInsideXPathArg = (state: SelectorScannerState): boolean => {
+    return state.pseudoStack.includes(XPATH_PSEUDO_CLASS_MARKER);
+};
+
+/**
+ * Checks whether the scanner is inside a `:contains()`-like argument.
+ *
+ * @param state Scanner state.
+ *
+ * @returns True if the scanner is inside a `:contains()`-like argument.
+ */
+const isInsideContainsArg = (state: SelectorScannerState): boolean => {
+    return state.pseudoStack.some((name) => CONTAINS_PSEUDO_NAMES.includes(name));
+};
+
+/**
+ * Checks whether a quoted string can start at the current scanner position.
+ *
+ * A quoted string can start only where a string is allowed:
+ * - at the beginning of a pseudo-class argument;
+ * - after `=` in attribute values and pseudo-class arguments;
+ * - after `=` (possibly followed by whitespace) inside attribute brackets.
+ *
+ * Plain text arguments of `:contains()`-like pseudo-classes
+ * (e.g. `:contains(the '90s)`) cannot contain quoted strings.
+ *
+ * @param prevChar Character preceding a quote.
+ * @param prevNonWhitespaceChar Last non-whitespace character preceding a quote.
+ * @param inAttributeBrackets True if scanning is inside attribute brackets.
+ * @param inContainsArg True if scanning is inside a `:contains()`-like argument.
+ *
+ * @returns True if a quoted string can start at the current position.
+ */
+export const canOpenQuote = (
+    prevChar: string | undefined,
+    prevNonWhitespaceChar: string | undefined,
+    inAttributeBrackets: boolean,
+    inContainsArg = false,
+): boolean => {
+    if (prevChar === BRACKET.PARENTHESES.LEFT) {
+        return true;
+    }
+    if (inContainsArg) {
+        return false;
+    }
+    if (prevChar === EQUAL_SIGN) {
+        return true;
+    }
+    return inAttributeBrackets
+        && isWhiteSpaceChar(prevChar)
+        && prevNonWhitespaceChar === EQUAL_SIGN;
 };
 
 /**
@@ -166,7 +243,7 @@ const updateSelectorScannerState = (
 
     if (state.inRegexp) {
         if (char === BACKSLASH) {
-            state.prevChar = char;
+            setPrevChar(state, char);
             return index + 1;
         }
         if (char === BRACKET.SQUARE.LEFT) {
@@ -176,45 +253,53 @@ const updateSelectorScannerState = (
         } else if (char === SLASH && !state.inRegexpCharClass) {
             state.inRegexp = false;
         }
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (state.quote) {
         if (char === BACKSLASH) {
-            state.prevChar = char;
+            setPrevChar(state, char);
             return index + 1;
         }
         if (char === state.quote) {
             state.quote = undefined;
         }
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (char === BACKSLASH) {
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index + 1;
     }
     if (char === SINGLE_QUOTE || char === DOUBLE_QUOTE) {
-        if (canOpenQuote(state.prevChar)) {
+        // quoted strings can start only where a string is allowed;
+        // inside `:xpath()` arguments strings can start anywhere
+        if (isInsideXPathArg(state)
+            || canOpenQuote(
+                state.prevChar,
+                state.prevNonWhitespaceChar,
+                state.inAttributeBrackets,
+                isInsideContainsArg(state),
+            )) {
             state.quote = char;
         }
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (char === SLASH && canOpenRegexp(state)) {
         state.inRegexp = true;
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (char === BRACKET.PARENTHESES.LEFT) {
         state.pseudoStack.push(state.pendingPseudo ?? '');
         state.pendingPseudo = undefined;
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (char === BRACKET.PARENTHESES.RIGHT) {
         state.pseudoStack.pop();
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
     if (char === COLON) {
@@ -222,10 +307,15 @@ const updateSelectorScannerState = (
         if (name && input[index + 1 + name.length] === BRACKET.PARENTHESES.LEFT) {
             state.pendingPseudo = name.toLowerCase();
         }
-        state.prevChar = char;
+        setPrevChar(state, char);
         return index;
     }
-    state.prevChar = char;
+    if (char === BRACKET.SQUARE.LEFT) {
+        state.inAttributeBrackets = true;
+    } else if (char === BRACKET.SQUARE.RIGHT) {
+        state.inAttributeBrackets = false;
+    }
+    setPrevChar(state, char);
     return index;
 };
 
@@ -250,10 +340,13 @@ export const scanSelector = (input: string, handlers: SelectorScanHandlers): voi
                 // the handler skipped a part of the input, e.g. an action argument
                 i = nextIndex;
                 state.pendingPseudo = undefined;
-                state.prevChar = input[i];
+                setPrevChar(state, input[i] ?? '');
             }
         } else if (input[i] === BRACKET.CURLY.LEFT && handlers.onStyleBlockStart) {
             handlers.onStyleBlockStart(i);
+            if (handlers.stopAfterFirstStyleBlockStart) {
+                break;
+            }
         }
     }
 };
@@ -312,6 +405,21 @@ const findActionArgumentEnd = (input: string, colonIndex: number): number | unde
 };
 
 /**
+ * Checks whether a string can be scanned with the fast path:
+ * without quotes, slashes, backslashes and action pseudo-classes
+ * no quoted string or regexp literal can start,
+ * and no `{` can be a part of an action argument.
+ *
+ * @param input Scanned string.
+ *
+ * @returns True if the fast path can be used.
+ */
+const canUseFastPath = (input: string): boolean => {
+    return !/['"\\/]/.test(input)
+        && !ACTION_PSEUDO_MARKERS.some((marker) => input.includes(marker));
+};
+
+/**
  * Finds indexes of `{` marks which may start a style block.
  *
  * Braces inside quoted strings, regexp literals and action pseudo-class
@@ -324,12 +432,7 @@ const findActionArgumentEnd = (input: string, colonIndex: number): number | unde
 export const findStyleBlockStarts = (input: string): number[] => {
     const indexes: number[] = [];
 
-    // fast path: without quotes, slashes, backslashes and action pseudo-classes
-    // no quoted string or regexp literal can start,
-    // and no `{` can be a part of an action argument
-    const canUseFastPath = !/['"\\/]/.test(input)
-        && !ACTION_PSEUDO_MARKERS.some((marker) => input.includes(marker));
-    if (canUseFastPath) {
+    if (canUseFastPath(input)) {
         let index = input.indexOf(BRACKET.CURLY.LEFT);
         while (index !== -1) {
             indexes.push(index);
@@ -348,4 +451,33 @@ export const findStyleBlockStarts = (input: string): number[] => {
     });
 
     return indexes;
+};
+
+/**
+ * Finds the index of the first `{` mark which may start a style block.
+ *
+ * Unlike `findStyleBlockStarts()`, the scan stops at the first `{` mark,
+ * so the call is linear for the scanned prefix.
+ *
+ * @param input Scanned string.
+ *
+ * @returns Index of the first left curly bracket or -1 if it is not found.
+ */
+export const findStyleBlockStart = (input: string): number => {
+    if (canUseFastPath(input)) {
+        return input.indexOf(BRACKET.CURLY.LEFT);
+    }
+
+    let foundIndex = -1;
+    scanSelector(input, {
+        onTopLevelColon: (index) => {
+            return findActionArgumentEnd(input, index);
+        },
+        onStyleBlockStart: (index) => {
+            foundIndex = index;
+        },
+        stopAfterFirstStyleBlockStart: true,
+    });
+
+    return foundIndex;
 };

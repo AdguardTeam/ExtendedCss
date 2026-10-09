@@ -28,6 +28,7 @@ const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     expect(parsed.length).toEqual(1);
     expect(parsed[0]?.selector).toEqual(expected.selector);
     expect(parsed[0]?.style).toEqual(expected.style);
+    expect(parsed[0]?.actionStyles).toEqual(expected.actionStyles);
     expect(parsed[0]?.debug).toEqual(expected.debug);
 };
 
@@ -503,14 +504,16 @@ describe('stylesheet parser', () => {
                 actual: '#x:remove-attr(href)',
                 expected: {
                     selector: '#x',
-                    style: { 'remove-attr': 'href' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 },
             },
             {
                 actual: '#x:remove-class(ads)',
                 expected: {
                     selector: '#x',
-                    style: { 'remove-class': 'ads' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
                 },
             },
             {
@@ -518,14 +521,16 @@ describe('stylesheet parser', () => {
                 actual: '#x:remove-attr(/^data-{1,2}ad$/)',
                 expected: {
                     selector: '#x',
-                    style: { 'remove-attr': '/^data-{1,2}ad$/' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: '/^data-{1,2}ad$/' }],
                 },
             },
             {
                 actual: '#x:remove-attr(/^data-{1,2}ad$/) { display: none }',
                 expected: {
                     selector: '#x',
-                    style: { 'remove-attr': '/^data-{1,2}ad$/' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: '/^data-{1,2}ad$/' }],
                 },
             },
             {
@@ -533,7 +538,8 @@ describe('stylesheet parser', () => {
                 actual: '#x:remove-class(ad{foo)',
                 expected: {
                     selector: '#x',
-                    style: { 'remove-class': 'ad{foo' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ad{foo' }],
                 },
             },
             {
@@ -541,7 +547,8 @@ describe('stylesheet parser', () => {
                 actual: 'div:contains(/[(]/):remove-class(ads)',
                 expected: {
                     selector: 'div:contains(/[(]/)',
-                    style: { 'remove-class': 'ads' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
                 },
             },
             {
@@ -549,7 +556,8 @@ describe('stylesheet parser', () => {
                 actual: 'div[data-label="O\'Reilly"]:remove-attr(title)',
                 expected: {
                     selector: 'div[data-label="O\'Reilly"]',
-                    style: { 'remove-attr': 'title' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'title' }],
                 },
             },
             {
@@ -570,6 +578,29 @@ describe('stylesheet parser', () => {
                 actual: "#t:contains(Don't) { display: none }",
                 expected: {
                     selector: "#t:contains(Don't)",
+                    style: { display: 'none' },
+                },
+            },
+            {
+                // an apostrophe after a space in plain text should not break the rule
+                actual: "#t:contains(the '90s) { display: none }",
+                expected: {
+                    selector: "#t:contains(the '90s)",
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: "#t:contains(the '90s):remove()",
+                expected: {
+                    selector: "#t:contains(the '90s)",
+                    style: { remove: 'true' },
+                },
+            },
+            {
+                // a lone double quote in plain text should not break the rule
+                actual: '#t:contains(say ") { display: none }',
+                expected: {
+                    selector: '#t:contains(say ")',
                     style: { display: 'none' },
                 },
             },
@@ -831,31 +862,32 @@ describe('stylesheet parser', () => {
                 actual: 'div[class]:remove-attr(href) { display: none !important; }',
                 expected: {
                     selector: 'div[class]',
-                    style: { 'remove-attr': 'href' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 },
             },
             {
                 actual: 'div[class]:remove-class(ads) { display: none !important; }',
                 expected: {
                     selector: 'div[class]',
-                    style: { 'remove-class': 'ads' },
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
                 },
             },
             {
                 actual: "div[class]:remove-attr(href) { content: 'test' !important; }",
                 expected: {
                     selector: 'div[class]',
-                    style: {
-                        'remove-attr': 'href',
-                        content: "'test' !important",
-                    },
+                    style: { content: "'test' !important" },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 },
             },
             {
                 actual: '#ad { color: red; } #ad:remove-attr(href) { display: none; }',
                 expected: {
                     selector: '#ad',
-                    style: { color: 'red', 'remove-attr': 'href' },
+                    style: { color: 'red' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 },
             },
         ];

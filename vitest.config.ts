@@ -30,6 +30,7 @@ export default defineConfig({
                         ...configDefaults.exclude,
                         'test/browserstack/**',
                         'test/performance-selector/**',
+                        'test/extended-css-playwright.test.ts',
                         'test/selector/query-playwright.test.ts',
                         'test/performance-xpath-evaluate.test.ts',
                     ],
@@ -41,6 +42,7 @@ export default defineConfig({
                     name: 'browser',
                     globals: true,
                     include: [
+                        'test/extended-css-playwright.test.ts',
                         'test/selector/query-playwright.test.ts',
                         'test/performance-xpath-evaluate.test.ts',
                     ],

@@ -6,8 +6,7 @@ export {
     saveToRawResults,
     combineRulesData,
     hasActionPseudoStyles,
-    filterActionRuleStyles,
-    filterStyleBlockActionDeclarations,
+    filterStyleBlockDeclarations,
 } from './helpers';
 
 export type {

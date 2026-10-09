@@ -114,15 +114,20 @@ const applyRulesPass = (context: Context): boolean => {
             ruleData.matchedElements = nodes;
         }
     });
+    // update the sticky regular-styles flag before applying styles:
+    // action rules check it to decide whether the `style` attribute
+    // of the element is protected by other rules
+    context.affectedElements.forEach((affectedElement) => {
+        // the flag is sticky: regular styles, once applied, should be
+        // protected and reverted even if their rule stops matching
+        affectedElement.hasRegularStyles = affectedElement.hasRegularStyles
+            || affectedElement.rules.some((rule) => hasRegularStyles(rule));
+    });
     // apply collected rules to each affected element once per pass
     context.affectedElements.forEach((affectedElement) => {
         if (!newSelectedElements.has(affectedElement.node)) {
             return;
         }
-        // the flag is sticky: regular styles, once applied, should be
-        // protected and reverted even if their rule stops matching
-        affectedElement.hasRegularStyles = affectedElement.hasRegularStyles
-            || affectedElement.rules.some((rule) => hasRegularStyles(rule));
         hasDomMutations = applyStyle(context, affectedElement) || hasDomMutations;
         // add style protection observer only for elements with regular styles
         if (!affectedElement.removed

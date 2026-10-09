@@ -128,6 +128,7 @@ export class ExtendedCss {
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
+            actionRemovalsStatistic: new WeakMap(),
             parsedRules: [],
             scheduler: new ThrottleWrapper(this.applyRulesCallbackListener),
         };
