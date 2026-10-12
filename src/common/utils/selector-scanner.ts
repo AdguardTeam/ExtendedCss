@@ -41,11 +41,6 @@ type SelectorScannerState = {
     inRegexpCharClass: boolean;
 
     /**
-     * Flag for scanning inside attribute brackets.
-     */
-    inAttributeBrackets: boolean;
-
-    /**
      * Character preceding the current one.
      */
     prevChar: string | undefined;
@@ -93,7 +88,6 @@ const createSelectorScannerState = (): SelectorScannerState => {
         quote: undefined,
         inRegexp: false,
         inRegexpCharClass: false,
-        inAttributeBrackets: false,
         prevChar: undefined,
         prevNonWhitespaceChar: undefined,
         pendingPseudo: undefined,
@@ -139,16 +133,16 @@ const isInsideContainsArg = (state: SelectorScannerState): boolean => {
  * Checks whether a quoted string can start at the current scanner position.
  *
  * A quoted string can start only where a string is allowed:
- * - at the beginning of a pseudo-class argument;
- * - after `=` in attribute values and pseudo-class arguments;
- * - after `=` (possibly followed by whitespace) inside attribute brackets.
+ * - at the beginning of a pseudo-class argument, e.g. `:remove-attr("title")`;
+ * - after `=` or `:`, e.g. `[data-x="1"]` or `:matches-css(content: "a)b")`;
+ * - after `=` or `:` (possibly followed by whitespace),
+ *   e.g. `[data-x = "1"]` or `:upward(div[title = ":remove-attr(x)"])`.
  *
  * Plain text arguments of `:contains()`-like pseudo-classes
  * (e.g. `:contains(the '90s)`) cannot contain quoted strings.
  *
  * @param prevChar Character preceding a quote.
  * @param prevNonWhitespaceChar Last non-whitespace character preceding a quote.
- * @param inAttributeBrackets True if scanning is inside attribute brackets.
  * @param inContainsArg True if scanning is inside a `:contains()`-like argument.
  *
  * @returns True if a quoted string can start at the current position.
@@ -156,21 +150,18 @@ const isInsideContainsArg = (state: SelectorScannerState): boolean => {
 export const canOpenQuote = (
     prevChar: string | undefined,
     prevNonWhitespaceChar: string | undefined,
-    inAttributeBrackets: boolean,
     inContainsArg = false,
 ): boolean => {
-    if (prevChar === BRACKET.PARENTHESES.LEFT) {
-        return true;
-    }
     if (inContainsArg) {
         return false;
     }
-    if (prevChar === EQUAL_SIGN) {
+    if (prevChar === BRACKET.PARENTHESES.LEFT
+        || prevChar === EQUAL_SIGN
+        || prevChar === COLON) {
         return true;
     }
-    return inAttributeBrackets
-        && isWhiteSpaceChar(prevChar)
-        && prevNonWhitespaceChar === EQUAL_SIGN;
+    return isWhiteSpaceChar(prevChar)
+        && (prevNonWhitespaceChar === EQUAL_SIGN || prevNonWhitespaceChar === COLON);
 };
 
 /**
@@ -278,7 +269,6 @@ const updateSelectorScannerState = (
             || canOpenQuote(
                 state.prevChar,
                 state.prevNonWhitespaceChar,
-                state.inAttributeBrackets,
                 isInsideContainsArg(state),
             )) {
             state.quote = char;
@@ -309,11 +299,6 @@ const updateSelectorScannerState = (
         }
         setPrevChar(state, char);
         return index;
-    }
-    if (char === BRACKET.SQUARE.LEFT) {
-        state.inAttributeBrackets = true;
-    } else if (char === BRACKET.SQUARE.RIGHT) {
-        state.inAttributeBrackets = false;
     }
     setPrevChar(state, char);
     return index;
@@ -405,18 +390,29 @@ const findActionArgumentEnd = (input: string, colonIndex: number): number | unde
 };
 
 /**
- * Checks whether a string can be scanned with the fast path:
- * without quotes, slashes, backslashes and action pseudo-classes
- * no quoted string or regexp literal can start,
- * and no `{` can be a part of an action argument.
+ * Regexp matching characters which can start a quoted string,
+ * a regexp literal or an escape sequence.
+ */
+const REGEXP_SPECIAL_CHARS = /['"\\/]/;
+
+/**
+ * Checks whether a prefix cannot contain an open quoted string,
+ * regexp literal or action pseudo-class argument:
+ * without quotes, slashes and backslashes no string or regexp literal can start,
+ * and action pseudo-classes are detected by their markers case-insensitively.
  *
  * @param input Scanned string.
+ * @param endIndex Index before which the input should be checked.
  *
- * @returns True if the fast path can be used.
+ * @returns True if the prefix contains no special characters.
  */
-const canUseFastPath = (input: string): boolean => {
-    return !/['"\\/]/.test(input)
-        && !ACTION_PSEUDO_MARKERS.some((marker) => input.includes(marker));
+const isSimplePrefix = (input: string, endIndex: number): boolean => {
+    const prefix = input.slice(0, endIndex);
+    if (REGEXP_SPECIAL_CHARS.test(prefix)) {
+        return false;
+    }
+    const lowerCasedPrefix = prefix.toLowerCase();
+    return !ACTION_PSEUDO_MARKERS.some((marker) => lowerCasedPrefix.includes(marker));
 };
 
 /**
@@ -432,7 +428,11 @@ const canUseFastPath = (input: string): boolean => {
 export const findStyleBlockStarts = (input: string): number[] => {
     const indexes: number[] = [];
 
-    if (canUseFastPath(input)) {
+    if (!input.includes(BRACKET.CURLY.LEFT)) {
+        return indexes;
+    }
+
+    if (isSimplePrefix(input, input.length)) {
         let index = input.indexOf(BRACKET.CURLY.LEFT);
         while (index !== -1) {
             indexes.push(index);
@@ -464,8 +464,16 @@ export const findStyleBlockStarts = (input: string): number[] => {
  * @returns Index of the first left curly bracket or -1 if it is not found.
  */
 export const findStyleBlockStart = (input: string): number => {
-    if (canUseFastPath(input)) {
-        return input.indexOf(BRACKET.CURLY.LEFT);
+    const braceIndex = input.indexOf(BRACKET.CURLY.LEFT);
+    // a `{` is required to start a style block
+    if (braceIndex === -1) {
+        return -1;
+    }
+    // if no quoted string, regexp literal or action argument can be open
+    // before the first `{`, it starts a style block;
+    // the check is limited by the first `{` to keep parsing linear
+    if (isSimplePrefix(input, braceIndex)) {
+        return braceIndex;
     }
 
     let foundIndex = -1;

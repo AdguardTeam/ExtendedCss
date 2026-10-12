@@ -56,6 +56,21 @@ describe('selector-scanner', () => {
             expect(findStyleBlockStarts(input)).toEqual([input.indexOf('{')]);
         });
 
+        it('does not treat a quote after the opening bracket of :contains() as a quoted string', () => {
+            const input = '#t:has-text("Sale) { color: red }';
+            expect(findStyleBlockStarts(input)).toEqual([input.indexOf('{')]);
+        });
+
+        it('skips braces inside quoted :matches-css() values', () => {
+            const input = 'div:matches-css(content: "a)b{c") { color: red }';
+            expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
+        });
+
+        it('detects action markers case-insensitively', () => {
+            const input = '#d:REMOVE-CLASS(ad{foo) { color: red }';
+            expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
+        });
+
         it('returns an empty array when there is no style block', () => {
             expect(findStyleBlockStarts('div:remove-attr(href)')).toEqual([]);
         });
@@ -79,6 +94,16 @@ describe('selector-scanner', () => {
 
         it('skips braces inside :xpath() arguments', () => {
             const input = ':xpath(//div[contains(., "{")]) { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('skips braces inside quoted :matches-css() values', () => {
+            const input = 'div:matches-css(content: "a)b{c") { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('detects action markers case-insensitively', () => {
+            const input = '#d:REMOVE-CLASS(ad{foo) { color: red }';
             expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
         });
 

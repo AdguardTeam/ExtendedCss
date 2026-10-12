@@ -525,6 +525,15 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '[data-x=":remove-attr(title)"]' },
                 ],
             },
+            {
+                // action-like text inside a quoted attribute value
+                // with a space after `=` is not a pseudo-class
+                actual: 'div:upward([data-x = ":remove-attr(title)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '[data-x = ":remove-attr(title)"]' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });

@@ -43,6 +43,12 @@ export interface AffectedElement extends AffectedElementProto {
      * so it should be style-protected and reverted.
      */
     hasRegularStyles?: boolean;
+    /**
+     * Flag indicating that actions of the element are applied
+     * (including actions added by the `beforeStyleApplied` callback),
+     * so the callback should be called again before actions are re-applied.
+     */
+    hasActionStyles?: boolean;
 }
 
 /**

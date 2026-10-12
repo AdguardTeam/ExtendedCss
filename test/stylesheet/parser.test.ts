@@ -605,6 +605,22 @@ describe('stylesheet parser', () => {
                 },
             },
             {
+                // a quote after the opening bracket is plain text of :has-text()
+                actual: '#t:has-text("Sale) { display: none }',
+                expected: {
+                    selector: '#t:has-text("Sale)',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                // a quoted :matches-css() value can contain braces
+                actual: 'div:matches-css(content: "a)b{c") { display: none }',
+                expected: {
+                    selector: 'div:matches-css(content: "a)b{c")',
+                    style: { display: 'none' },
+                },
+            },
+            {
                 actual: 'span:contains(1 / 2) { display: none }',
                 expected: {
                     selector: 'span:contains(1 / 2)',

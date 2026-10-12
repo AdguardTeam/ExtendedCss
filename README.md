@@ -1141,8 +1141,17 @@ interface IAffectedElement {
 }
 ```
 
-> Action pseudo-classes are not stored in `style`: callbacks should read and edit
-> `actionStyles` to change or cancel an action.
+> `actionStyles` holds action pseudo-classes (e.g. `:remove-attr()`) with their
+> arguments and is the only source of action data for callbacks: editing it changes
+> or cancels the action. It is set for `:remove-attr()` and `:remove-class()` rules
+> only — `:remove()` is stored as the `remove` entry of `style` and cannot be
+> cancelled via `actionStyles`.
+>
+> The callback is called before styles are applied to an element and again before
+> actions are re-applied, so edits to `actionStyles` take effect on every pass.
+> Rule objects are shared between all elements matched by a rule, so editing them
+> in place affects all such elements; return copies of the rules for per-element
+> changes.
 
 #### <a name="extended-css-init"></a> Public method `init()`
 

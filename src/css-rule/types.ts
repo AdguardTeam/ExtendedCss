@@ -119,10 +119,11 @@ export type ExtCssRuleData = {
     actionStyles?: StyleDeclaration[];
 
     /**
-     * Flag indicating that the `content` style of the rule is declared
-     * by an action pseudo-class rule and is kept only for the
-     * `beforeStyleApplied` callback (e.g. CssHitsCounter).
-     * Such `content` should not be applied to matched elements.
+     * Flag indicating that the `content` style of the rule is kept only for the
+     * `beforeStyleApplied` callback (e.g. CssHitsCounter)
+     * and should not be applied to matched elements:
+     * it is declared by an action rule or comes from a regular rule
+     * of an element removed by `remove: true`.
      */
     hasInternalContent?: boolean;
 

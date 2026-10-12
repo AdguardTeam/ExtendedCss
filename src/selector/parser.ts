@@ -201,7 +201,6 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                 && canOpenQuote(
                     normalizeQuoteChar(prevTokenValue),
                     normalizeQuoteChar(prevNonWhitespaceTokenValue),
-                    context.isAttributeBracketsOpen,
                     isInsideContainsArg(context),
                 )) {
                 context.quoteCharacter = tokenValue;

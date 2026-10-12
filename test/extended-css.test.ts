@@ -1026,6 +1026,159 @@ describe('extended css library', () => {
         observeSpy.mockRestore();
     });
 
+    it('does not observe selector attributes of regular rules', () => {
+        const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
+
+        const extendedCss = new ExtendedCss({ cssRules: ['div[data-x] { color: red }'] });
+        extendedCss.apply();
+
+        const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
+        expect(documentObserveCall).toBeDefined();
+        // selector attributes of regular rules should not widen the native filter
+        expect(documentObserveCall?.[1]?.attributeFilter).toContain('id');
+        expect(documentObserveCall?.[1]?.attributeFilter).toContain('class');
+        expect(documentObserveCall?.[1]?.attributeFilter).not.toContain('data-x');
+
+        extendedCss.dispose();
+        observeSpy.mockRestore();
+    });
+
+    it('observes attributes of :matches-attr() and :xpath() action rule selectors', () => {
+        const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
+
+        const extendedCss = new ExtendedCss({
+            cssRules: [
+                'div:matches-attr(data-x):remove-attr(onclick)',
+                ':xpath(//div[@data-on]):remove-attr(onclick)',
+                '[DATA-ENABLED]:remove-attr(onclick)',
+            ],
+        });
+        extendedCss.apply();
+
+        const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
+        expect(documentObserveCall).toBeDefined();
+        expect(documentObserveCall?.[1]?.attributeFilter).toEqual(
+            // selector attributes are observed in lower case
+            expect.arrayContaining(['id', 'class', 'data-x', 'data-on', 'data-enabled', 'onclick']),
+        );
+
+        extendedCss.dispose();
+        observeSpy.mockRestore();
+    });
+
+    it('observes all attributes when a :matches-attr() name is a regexp', () => {
+        const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
+
+        const extendedCss = new ExtendedCss({
+            cssRules: ['div:matches-attr(/^data-(x|y)$/):remove-attr(onclick)'],
+        });
+        extendedCss.apply();
+
+        const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
+        expect(documentObserveCall).toBeDefined();
+        // any attribute can match a regexp name, so there is no native filter
+        expect(documentObserveCall?.[1]?.attributeFilter).toBeUndefined();
+
+        extendedCss.dispose();
+        observeSpy.mockRestore();
+    });
+
+    it('removes attributes when a :matches-attr() wildcard name matches', () => {
+        const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
+
+        document.body.innerHTML = `
+            <div id="case-matches-attr-wildcard" onclick="alert(1)"></div>
+        `;
+        const extendedCss = new ExtendedCss({
+            cssRules: ['div:matches-attr(data-*):remove-attr(onclick)'],
+        });
+        extendedCss.apply();
+
+        const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
+        expect(documentObserveCall).toBeDefined();
+        // any attribute can match a wildcard name, so there is no native filter
+        expect(documentObserveCall?.[1]?.attributeFilter).toBeUndefined();
+
+        const element = document.getElementById('case-matches-attr-wildcard');
+        // the rule does not match yet
+        expect(element?.hasAttribute('onclick')).toBe(true);
+
+        element?.setAttribute('data-y', '');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    // the wildcard name matcher should make the mutation relevant
+                    expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    extendedCss.dispose();
+                    observeSpy.mockRestore();
+                }
+            }, 100);
+        });
+    });
+
+    it('removes attributes when a selector attribute in a different case is added', () => {
+        document.body.innerHTML = `
+            <div id="case-selector-attribute-case" onclick="alert(1)"></div>
+        `;
+        const extendedCss = new ExtendedCss({ cssRules: ['[DATA-ENABLED]:remove-attr(onclick)'] });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-selector-attribute-case');
+        // the rule does not match yet
+        expect(element?.hasAttribute('onclick')).toBe(true);
+
+        element?.setAttribute('data-enabled', '');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    // the selector attribute change should trigger a pass
+                    expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    extendedCss.dispose();
+                }
+            }, 100);
+        });
+    });
+
+    it('removes attributes when an :xpath() attribute is added', () => {
+        document.body.innerHTML = `
+            <div id="case-xpath-attribute" onclick="alert(1)"></div>
+        `;
+        const extendedCss = new ExtendedCss({
+            cssRules: [':xpath(//div[@data-on]):remove-attr(onclick)'],
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-xpath-attribute');
+        // the rule does not match yet
+        expect(element?.hasAttribute('onclick')).toBe(true);
+
+        element?.setAttribute('data-on', '');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    // the :xpath() attribute change should trigger a pass
+                    expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    extendedCss.dispose();
+                }
+            }, 100);
+        });
+    });
+
     it('limits action removals for self-unmatching rules', () => {
         document.body.innerHTML = '<div id="case-action-cap" class="ad"></div>';
         const extendedCss = new ExtendedCss({ cssRules: ['.ad:remove-class(ad)'] });
@@ -1053,6 +1206,33 @@ describe('extended css library', () => {
                 .filter((message) => message.includes('infinite loop protection for action'));
             expect(capMessages).toHaveLength(1);
             expect(capMessages[0]).toContain('.ad');
+        } finally {
+            loggerErrorSpy.mockRestore();
+            extendedCss.dispose();
+        }
+    });
+
+    it('resets the action removals cap after dispose', () => {
+        document.body.innerHTML = '<div id="case-dispose-cap" class="ad"></div>';
+        const extendedCss = new ExtendedCss({ cssRules: ['.ad:remove-class(ad)'] });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-dispose-cap');
+        expect(element?.classList.contains('ad')).toBe(false);
+
+        const loggerErrorSpy = vi.spyOn(logger, 'error');
+        try {
+            // re-add the class more times than the removal cap allows
+            for (let i = 0; i < 60; i += 1) {
+                element?.classList.add('ad');
+                extendedCss.apply();
+            }
+            expect(element?.classList.contains('ad')).toBe(true);
+
+            // the statistic is reset by dispose, so the action works again
+            extendedCss.dispose();
+            extendedCss.apply();
+            expect(element?.classList.contains('ad')).toBe(false);
         } finally {
             loggerErrorSpy.mockRestore();
             extendedCss.dispose();
@@ -1564,19 +1744,21 @@ describe('extended css library', () => {
         expectElementStyle('case14-hidden-no-content', { display: 'none', content: '' });
     });
 
-    it('allows beforeStyleApplied to edit actionStyles', () => {
+    it('allows beforeStyleApplied to edit actionStyles of returned rule copies', () => {
         document.body.innerHTML = `
             <a id="case-callback-action" href="link" title="ad"></a>
         `;
         const extendedCss = new ExtendedCss({
             cssRules: ['#case-callback-action:remove-attr(href)'],
             beforeStyleApplied: (el) => {
-                // replace the action argument via `actionStyles`
-                const rule = el.rules[0];
-                if (rule) {
-                    rule.actionStyles = [{ property: 'remove-attr', value: 'title' }];
-                }
-                return el;
+                // replace the action argument in returned rule copies
+                return {
+                    ...el,
+                    rules: el.rules.map((rule) => ({
+                        ...rule,
+                        actionStyles: [{ property: 'remove-attr', value: 'title' }],
+                    })),
+                };
             },
         });
         extendedCss.apply();
@@ -1585,6 +1767,80 @@ describe('extended css library', () => {
         // the edited action should be applied instead of the original one
         expect(element?.hasAttribute('href')).toBe(true);
         expect(element?.hasAttribute('title')).toBe(false);
+
+        // the edited action should be applied on the next passes too
+        element?.setAttribute('title', 'ad again');
+        extendedCss.apply();
+        expect(element?.hasAttribute('href')).toBe(true);
+        expect(element?.hasAttribute('title')).toBe(false);
+
+        extendedCss.dispose();
+    });
+
+    it('allows beforeStyleApplied to cancel an action with returned rule copies', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-cancel" title="ad"></div>
+        `;
+        let callbackCalls = 0;
+        const extendedCss = new ExtendedCss({
+            cssRules: [
+                '#case-callback-cancel { color: red; }',
+                '#case-callback-cancel:remove-attr(title)',
+            ],
+            beforeStyleApplied: (el) => {
+                callbackCalls += 1;
+                // cancel actions in returned rule copies
+                return {
+                    ...el,
+                    rules: el.rules.map((rule) => ({ ...rule, actionStyles: [] })),
+                };
+            },
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-callback-cancel');
+        // the cancelled action should not be applied on the first pass
+        expect(element?.hasAttribute('title')).toBe(true);
+        expect(callbackCalls).toBe(1);
+
+        // the cancellation should survive the next passes:
+        // the callback should be called again before actions are re-applied
+        extendedCss.apply();
+        expect(element?.hasAttribute('title')).toBe(true);
+        expect(callbackCalls).toBe(2);
+
+        extendedCss.dispose();
+    });
+
+    it('allows beforeStyleApplied to add an action with returned rule copies', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-add" title="ad"></div>
+        `;
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-callback-add { color: red; }'],
+            beforeStyleApplied: (el) => {
+                // add an action to returned rule copies
+                return {
+                    ...el,
+                    rules: el.rules.map((rule) => ({
+                        ...rule,
+                        actionStyles: [{ property: 'remove-attr', value: 'title' }],
+                    })),
+                };
+            },
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-callback-add');
+        // the added action should be applied
+        expect(element?.hasAttribute('title')).toBe(false);
+
+        // the added action should be applied on the next passes too
+        element?.setAttribute('title', 'ad again');
+        extendedCss.apply();
+        expect(element?.hasAttribute('title')).toBe(false);
+
+        extendedCss.dispose();
     });
 
     it('do fail on beforeStyleApplied as entity callback', () => {

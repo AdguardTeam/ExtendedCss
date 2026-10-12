@@ -226,6 +226,9 @@ export class ExtendedCss {
                 revertStyle(el);
             }
         });
+        // reset action removals statistic, so actions can be applied
+        // by `apply()` again after the instance was disposed
+        this.context.actionRemovalsStatistic = new WeakMap();
         document.removeEventListener(
             'DOMContentLoaded',
             this.applyRulesCallbackListener,

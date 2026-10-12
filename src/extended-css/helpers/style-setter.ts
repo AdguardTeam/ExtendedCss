@@ -217,10 +217,10 @@ const isAffectedElement = (
 };
 
 /**
- * Applies action pseudo-class styles of the rule to the affected element.
+ * Applies action pseudo-class styles of the rule to the specified DOM node.
  *
  * @param context ExtendedCss context.
- * @param affectedElement Affected element.
+ * @param node DOM node.
  * @param rule Rule data.
  * @param skipStyleAttribute True if the `style` attribute should not be removed.
  *
@@ -228,11 +228,10 @@ const isAffectedElement = (
  */
 const applyRuleAction = (
     context: Context,
-    affectedElement: AffectedElement,
+    node: HTMLElement,
     rule: ExtCssRuleData,
     skipStyleAttribute: boolean,
 ): boolean => {
-    const { node } = affectedElement;
     let hasRemovals = false;
 
     rule.actionStyles?.forEach((actionStyle) => {
@@ -274,20 +273,24 @@ const applyRuleAction = (
 };
 
 /**
- * Applies action pseudo-class styles of all rules of the affected element.
+ * Applies action pseudo-class styles of the given rules to the specified DOM node.
  *
  * @param context ExtendedCss context.
- * @param affectedElement Affected element.
+ * @param node DOM node.
+ * @param rules Rules data.
+ * @param skipStyleAttribute True if the `style` attribute should not be removed.
  *
  * @returns True if an attribute or a class was removed from DOM.
  */
-const applyActionStyles = (context: Context, affectedElement: AffectedElement): boolean => {
-    // the `style` attribute should not be removed from protected elements:
-    // otherwise the protection observer would re-add it, causing an endless loop
-    const skipStyleAttribute = !!affectedElement.hasRegularStyles;
+const applyRulesActions = (
+    context: Context,
+    node: HTMLElement,
+    rules: ExtCssRuleData[],
+    skipStyleAttribute: boolean,
+): boolean => {
     let hasRemovals = false;
-    affectedElement.rules.forEach((rule) => {
-        hasRemovals = applyRuleAction(context, affectedElement, rule, skipStyleAttribute) || hasRemovals;
+    rules.forEach((rule) => {
+        hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
     });
     return hasRemovals;
 };
@@ -302,11 +305,15 @@ const applyActionStyles = (context: Context, affectedElement: AffectedElement): 
  * @throws An error if affectedElement has no style to apply.
  */
 export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): boolean => {
-    if (rawAffectedElement.isStyleApplied) {
-        // regular styles are already applied,
-        // but action pseudo-classes should be re-applied on DOM mutations
-        return applyActionStyles(context, rawAffectedElement);
+    // action pseudo-classes are re-applied on DOM mutations,
+    // so the callback is called again to let it edit or cancel them;
+    // elements without actions have nothing to re-apply after the first pass
+    const hasActions = !!rawAffectedElement.hasActionStyles
+        || rawAffectedElement.rules.some((rule) => !!rule.actionStyles?.length);
+    if (rawAffectedElement.isStyleApplied && !hasActions) {
+        return false;
     }
+
     let affectedElement: AffectedElement | IAffectedElement;
     if (context.beforeStyleApplied) {
         if (!isIAffectedElement(rawAffectedElement)) {
@@ -325,17 +332,25 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
     }
 
     if (affectedElement !== rawAffectedElement) {
-        // keep rules returned by the callback for the next passes
+        // use rules returned by the callback for the current pass:
+        // they are needed for applying actions and for style protection
         rawAffectedElement.rules = affectedElement.rules;
     }
 
     const { node, rules } = affectedElement;
-    let hasRemovals = false;
     // the `style` attribute should not be removed from elements
     // with protected regular styles, including the first pass;
     // the flag is updated for every affected element before styles are applied
     // (see `applyRulesPass`), and there is at most one affected element per node
     const skipStyleAttribute = !!rawAffectedElement.hasRegularStyles;
+
+    if (rawAffectedElement.isStyleApplied) {
+        // regular styles are already applied, only actions should be re-applied
+        rawAffectedElement.hasActionStyles = rules.some((rule) => !!rule.actionStyles?.length);
+        return applyRulesActions(context, node, rules, skipStyleAttribute);
+    }
+
+    let hasRemovals = false;
     for (const rule of rules) {
         const { selector, style, debug } = rule;
         // rule may not have style to apply
@@ -345,7 +360,7 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
                 return removeElement(context, affectedElement);
             }
 
-            hasRemovals = applyRuleAction(context, affectedElement, rule, skipStyleAttribute) || hasRemovals;
+            hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
             // action markers and internal 'content' are skipped by setStyleToElement,
             // so regular styles of other rules with the same selector are applied
             setStyleToElement(node, style, !!rule.hasInternalContent);
@@ -358,6 +373,7 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
     // action-only elements should not be considered as styled:
     // they may receive regular styles of newly matched rules on later passes
     rawAffectedElement.isStyleApplied = rules.some((rule) => hasRegularStyles(rule));
+    rawAffectedElement.hasActionStyles = rules.some((rule) => !!rule.actionStyles?.length);
 
     return hasRemovals;
 };
