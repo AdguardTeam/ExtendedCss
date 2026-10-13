@@ -2,9 +2,10 @@ import { EventTracker } from './event-tracker';
 import { Context } from './types';
 import { natives } from '../../common/utils/natives';
 import { REGEXP_ACTION_ARG, createActionArgMatcher } from '../../common/utils/action-arg';
+import { getValidMatcherArg } from '../../selector';
+import type { ExtCssRuleData } from '../../css-rule';
 
 import {
-    ASTERISK,
     CLASS_ATTRIBUTE,
     DOUBLE_QUOTE,
     EQUAL_SIGN,
@@ -12,7 +13,6 @@ import {
     MATCHES_ATTR_PSEUDO_CLASS_MARKER,
     REMOVE_ATTR_PSEUDO_MARKER,
     SINGLE_QUOTE,
-    SLASH,
 } from '../../common/constants';
 
 /**
@@ -39,22 +39,31 @@ const MATCHES_ATTR_REGEXP = new RegExp(
  */
 type MutationObservationData = {
     /**
-     * Attribute names which should be observed natively,
-     * or undefined if all attributes should be observed
-     * (e.g. there is a regexp `:remove-attr()` argument).
+     * Attribute names which should be observed natively.
      */
-    attributeFilter?: string[];
+    attributeNames: Set<string>;
 
     /**
-     * Matchers for `:remove-attr()` arguments and regexp or wildcard
-     * `:matches-attr()` names.
+     * Matchers for regexp and wildcard `:remove-attr()` arguments
+     * and `:matches-attr()` name patterns.
      */
     attributeMatchers: Array<(name: string) => boolean>;
+
+    /**
+     * Arguments and name patterns already reflected in the data.
+     */
+    mergedArgs: Set<string>;
 
     /**
      * Attribute names used by action rule selectors.
      */
     selectorAttributeNames: Set<string>;
+
+    /**
+     * Flag for observing all attributes: set when a regexp or wildcard
+     * argument can match any attribute.
+     */
+    observeAllAttributes: boolean;
 };
 
 /**
@@ -126,22 +135,68 @@ const getMatchesAttrNames = (selector: string): string[] => {
 };
 
 /**
- * Creates a matcher for a regexp or wildcard `:matches-attr()` name.
+ * Adds a `:remove-attr()` argument to the observation data.
  *
- * @param pattern Name pattern: a regexp literal or a wildcard string.
+ * Plain arguments are observed natively by name,
+ * while a regexp argument can match any attribute,
+ * so the observer watches all attributes and checks them with a matcher.
  *
- * @returns Attribute name matcher.
+ * @param data Mutation observation data.
+ * @param arg `:remove-attr()` argument.
  */
-const createAttributeNameMatcher = (pattern: string): ((name: string) => boolean) => {
-    if (REGEXP_ACTION_ARG.test(pattern)) {
-        return createActionArgMatcher(pattern);
+const addActionArg = (data: MutationObservationData, arg: string): void => {
+    if (!arg || data.mergedArgs.has(arg)) {
+        return;
     }
-    // escape regexp special characters except `*`, then use `*` as a wildcard
-    const regexpSource = pattern
-        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/\*/g, '.*');
-    const regexp = new RegExp(`^${regexpSource}$`, 'i');
-    return (name: string) => regexp.test(name);
+    data.mergedArgs.add(arg);
+
+    if (REGEXP_ACTION_ARG.test(arg)) {
+        // any attribute can match a regexp argument
+        data.observeAllAttributes = true;
+        data.attributeMatchers.push(createActionArgMatcher(arg));
+        return;
+    }
+
+    const name = arg.toLowerCase();
+    data.attributeNames.add(name);
+    data.selectorAttributeNames.add(name);
+};
+
+/**
+ * Adds a `:matches-attr()` name argument to the observation data.
+ *
+ * The argument is converted with the same helper as in the selector engine,
+ * so the mutation relevance check matches the runtime behavior:
+ * plain names are observed natively by name, while regexp and wildcard
+ * patterns make the observer watch all attributes.
+ *
+ * @param data Mutation observation data.
+ * @param arg `:matches-attr()` name argument.
+ */
+const addSelectorNameArg = (data: MutationObservationData, arg: string): void => {
+    if (!arg || data.mergedArgs.has(arg)) {
+        return;
+    }
+    data.mergedArgs.add(arg);
+
+    let nameMatch: string | RegExp;
+    try {
+        nameMatch = getValidMatcherArg(arg);
+    } catch (e: unknown) {
+        // invalid arguments are rejected by the selector engine at query time
+        return;
+    }
+
+    if (typeof nameMatch === 'string') {
+        const name = nameMatch.toLowerCase();
+        data.attributeNames.add(name);
+        data.selectorAttributeNames.add(name);
+        return;
+    }
+
+    // a regexp or wildcard name can match any attribute
+    data.observeAllAttributes = true;
+    data.attributeMatchers.push((name: string) => nameMatch.test(name));
 };
 
 /**
@@ -157,10 +212,13 @@ const createAttributeNameMatcher = (pattern: string): ((name: string) => boolean
  * @returns Data for mutation observation.
  */
 const createMutationObservationData = (context: Context): MutationObservationData => {
-    const attributeNames = new Set<string>([ID_ATTRIBUTE, CLASS_ATTRIBUTE]);
-    const attributeMatchers: Array<(name: string) => boolean> = [];
-    const selectorAttributeNames = new Set<string>();
-    let observeAllAttributes = false;
+    const data: MutationObservationData = {
+        attributeNames: new Set<string>([ID_ATTRIBUTE, CLASS_ATTRIBUTE]),
+        attributeMatchers: [],
+        mergedArgs: new Set<string>(),
+        selectorAttributeNames: new Set<string>(),
+        observeAllAttributes: false,
+    };
 
     context.parsedRules.forEach((rule) => {
         // only action rules need to react to changes of attributes
@@ -171,43 +229,23 @@ const createMutationObservationData = (context: Context): MutationObservationDat
         }
 
         getSelectorAttributeNames(rule.selector).forEach((name) => {
-            selectorAttributeNames.add(name);
-            attributeNames.add(name);
+            data.selectorAttributeNames.add(name);
+            data.attributeNames.add(name);
         });
 
         getMatchesAttrNames(rule.selector).forEach((name) => {
-            if (name.startsWith(SLASH) || name.includes(ASTERISK)) {
-                // a regexp or wildcard name can match any attribute
-                observeAllAttributes = true;
-                attributeMatchers.push(createAttributeNameMatcher(name));
-            } else if (name) {
-                const lowerCasedName = name.toLowerCase();
-                selectorAttributeNames.add(lowerCasedName);
-                attributeNames.add(lowerCasedName);
-            }
+            addSelectorNameArg(data, name);
         });
 
         rule.actionStyles.forEach((actionStyle) => {
             if (actionStyle.property !== REMOVE_ATTR_PSEUDO_MARKER) {
                 return;
             }
-            if (REGEXP_ACTION_ARG.test(actionStyle.value)) {
-                // any attribute can match a regexp argument
-                observeAllAttributes = true;
-            } else {
-                attributeNames.add(actionStyle.value);
-            }
-            attributeMatchers.push(createActionArgMatcher(actionStyle.value));
+            addActionArg(data, actionStyle.value);
         });
     });
 
-    return {
-        // if there is a regexp or wildcard argument, all attributes should be observed,
-        // otherwise the native attribute filter can be used
-        attributeFilter: observeAllAttributes ? undefined : [...attributeNames],
-        attributeMatchers,
-        selectorAttributeNames,
-    };
+    return data;
 };
 
 /**
@@ -231,6 +269,31 @@ const getMutationObservationData = (context: Context): MutationObservationData =
         mutationObservationDataCache.set(context, data);
     }
     return data;
+};
+
+/**
+ * Adds attributes used by action styles of the given rules
+ * to the mutation observation data.
+ *
+ * Needed because the data is built from parsed rules, while the
+ * `beforeStyleApplied` callback can edit or add action arguments:
+ * without the merge, mutations of attributes from edited arguments
+ * would not be observed and actions would not be re-applied.
+ *
+ * @param context ExtendedCss context.
+ * @param rules Rules data to merge.
+ */
+export const addRulesToMutationObservation = (context: Context, rules: ExtCssRuleData[]): void => {
+    const data = getMutationObservationData(context);
+
+    rules.forEach((rule) => {
+        rule.actionStyles?.forEach((actionStyle) => {
+            if (actionStyle.property !== REMOVE_ATTR_PSEUDO_MARKER) {
+                return;
+            }
+            addActionArg(data, actionStyle.value);
+        });
+    });
 };
 
 /**
@@ -314,9 +377,11 @@ export function observeDocument(context: Context): void {
         childList: true,
         subtree: true,
         attributes: true,
-        ...(observationData.attributeFilter
-            ? { attributeFilter: observationData.attributeFilter }
-            : {}),
+        // if a regexp or wildcard argument can match any attribute,
+        // all attributes should be observed
+        ...(observationData.observeAllAttributes
+            ? {}
+            : { attributeFilter: [...observationData.attributeNames] }),
     });
 }
 

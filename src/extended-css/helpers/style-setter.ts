@@ -1,3 +1,4 @@
+import { addRulesToMutationObservation } from './document-observer';
 import {
     AffectedElement,
     Context,
@@ -273,107 +274,139 @@ const applyRuleAction = (
 };
 
 /**
- * Applies action pseudo-class styles of the given rules to the specified DOM node.
+ * Applies regular styles of the affected element's rules.
+ *
+ * Called for each matched rule while rules are being collected,
+ * so selectors which depend on styles applied by other rules
+ * can match during the same pass.
  *
  * @param context ExtendedCss context.
- * @param node DOM node.
- * @param rules Rules data.
- * @param skipStyleAttribute True if the `style` attribute should not be removed.
- *
- * @returns True if an attribute or a class was removed from DOM.
- */
-const applyRulesActions = (
-    context: Context,
-    node: HTMLElement,
-    rules: ExtCssRuleData[],
-    skipStyleAttribute: boolean,
-): boolean => {
-    let hasRemovals = false;
-    rules.forEach((rule) => {
-        hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
-    });
-    return hasRemovals;
-};
-
-/**
- * Applies style to the specified DOM node.
- *
- * @param context ExtendedCss context.
- * @param rawAffectedElement Object containing DOM node and rule to be applied.
- *
- * @returns True if the DOM was changed by an action.
+ * @param affectedElement Affected element.
  * @throws An error if affectedElement has no style to apply.
  */
-export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): boolean => {
-    // action pseudo-classes are re-applied on DOM mutations,
-    // so the callback is called again to let it edit or cancel them;
-    // elements without actions have nothing to re-apply after the first pass
-    const hasActions = !!rawAffectedElement.hasActionStyles
-        || rawAffectedElement.rules.some((rule) => !!rule.actionStyles?.length);
-    if (rawAffectedElement.isStyleApplied && !hasActions) {
-        return false;
+export const applyRuleStyles = (context: Context, affectedElement: AffectedElement): void => {
+    const appliedSelectors = affectedElement.appliedStyleSelectors ?? new Set<string>();
+    affectedElement.appliedStyleSelectors = appliedSelectors;
+
+    const hasUnappliedStyles = affectedElement.rules.some((rule) => {
+        return hasRegularStyles(rule) && !appliedSelectors.has(rule.selector);
+    });
+    // actions are re-applied on DOM mutations,
+    // so the callback is called again to let it edit or cancel them
+    const hasActions = !!affectedElement.hasActionStyles
+        || affectedElement.rules.some((rule) => !!rule.actionStyles?.length);
+    // nothing to do for elements with applied regular styles,
+    // without actions and without new regular styles
+    if (affectedElement.isStyleApplied && !hasActions && !hasUnappliedStyles) {
+        return;
     }
 
-    let affectedElement: AffectedElement | IAffectedElement;
-    if (context.beforeStyleApplied) {
-        if (!isIAffectedElement(rawAffectedElement)) {
+    const { beforeStyleApplied } = context;
+    let element: AffectedElement | IAffectedElement = affectedElement;
+    if (beforeStyleApplied) {
+        if (!isIAffectedElement(affectedElement)) {
             throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
         }
-        affectedElement = context.beforeStyleApplied(rawAffectedElement);
-        if (!affectedElement) {
+        const callbackResult = beforeStyleApplied(affectedElement);
+        if (!callbackResult) {
             throw new Error("Callback 'beforeStyleApplied' should return IAffectedElement");
         }
-    } else {
-        affectedElement = rawAffectedElement;
+        element = callbackResult;
     }
 
-    if (!isAffectedElement(affectedElement)) {
+    if (!isAffectedElement(element)) {
         throw new Error("Returned IAffectedElement should have 'node' and 'rules' properties");
     }
 
-    if (affectedElement !== rawAffectedElement) {
+    if (beforeStyleApplied) {
+        // keep the mutation observer in sync with action arguments
+        // which can be edited by the callback
+        addRulesToMutationObservation(context, element.rules);
+    }
+
+    if (element !== affectedElement) {
         // use rules returned by the callback for the current pass:
         // they are needed for applying actions and for style protection
-        rawAffectedElement.rules = affectedElement.rules;
+        affectedElement.rules = element.rules;
     }
 
-    const { node, rules } = affectedElement;
-    // the `style` attribute should not be removed from elements
-    // with protected regular styles, including the first pass;
-    // the flag is updated for every affected element before styles are applied
-    // (see `applyRulesPass`), and there is at most one affected element per node
-    const skipStyleAttribute = !!rawAffectedElement.hasRegularStyles;
-
-    if (rawAffectedElement.isStyleApplied) {
-        // regular styles are already applied, only actions should be re-applied
-        rawAffectedElement.hasActionStyles = rules.some((rule) => !!rule.actionStyles?.length);
-        return applyRulesActions(context, node, rules, skipStyleAttribute);
-    }
-
-    let hasRemovals = false;
+    const { node, rules } = element;
     for (const rule of rules) {
         const { selector, style, debug } = rule;
         // rule may not have style to apply
         // e.g. 'div:has(> a) { debug: true }' -> means no style to apply, and enable debug mode
-        if (style) {
-            if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
-                return removeElement(context, affectedElement);
+        if (!style) {
+            if (!debug) {
+                // but rule should not have both style and debug properties
+                throw new Error(`No style declaration in rule for selector: '${selector}'`);
             }
-
-            hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
+            continue;
+        }
+        // `:remove()` and action pseudo-classes are applied
+        // after all rules are queried (see `applyStyle`)
+        if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
+            continue;
+        }
+        if (hasRegularStyles(rule) && !appliedSelectors.has(rule.selector)) {
             // action markers and internal 'content' are skipped by setStyleToElement,
             // so regular styles of other rules with the same selector are applied
             setStyleToElement(node, style, !!rule.hasInternalContent);
-        } else if (!debug) {
-            // but rule should not have both style and debug properties
-            throw new Error(`No style declaration in rule for selector: '${selector}'`);
+            appliedSelectors.add(rule.selector);
         }
     }
 
-    // action-only elements should not be considered as styled:
-    // they may receive regular styles of newly matched rules on later passes
-    rawAffectedElement.isStyleApplied = rules.some((rule) => hasRegularStyles(rule));
-    rawAffectedElement.hasActionStyles = rules.some((rule) => !!rule.actionStyles?.length);
+    // flags are set from the rules which are actually applied,
+    // including rules returned by the callback:
+    // regular styles should be protected and reverted,
+    // and actions require the callback to be called before re-application
+    const hasAppliedRegularStyles = rules.some((rule) => hasRegularStyles(rule));
+    affectedElement.hasRegularStyles = !!affectedElement.hasRegularStyles || hasAppliedRegularStyles;
+    affectedElement.hasActionStyles = !!affectedElement.hasActionStyles
+        || rules.some((rule) => !!rule.actionStyles?.length);
+    affectedElement.isStyleApplied = !!affectedElement.isStyleApplied || hasAppliedRegularStyles;
+};
+
+/**
+ * Applies `:remove()` pseudo-class and actions of the affected element's rules.
+ *
+ * Regular styles are applied earlier, while rules are being collected
+ * (see `applyRuleStyles`), so selectors which depend on applied styles
+ * can match during the same pass.
+ *
+ * @param context ExtendedCss context.
+ * @param rawAffectedElement Object containing DOM node and rules to be applied.
+ *
+ * @returns True if the DOM was changed by a removal.
+ */
+export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): boolean => {
+    const { node, rules } = rawAffectedElement;
+    // only actions and `:remove()` rules require processing
+    // after regular styles are applied
+    const hasActions = rules.some((rule) => {
+        return !!rule.actionStyles?.length
+            || rule.style?.[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE;
+    });
+    if (!hasActions) {
+        return false;
+    }
+
+    // the `style` attribute should not be removed from elements
+    // with protected regular styles, including the first pass;
+    // the flag is set by `applyRuleStyles()` for every affected element
+    // before actions are applied, and there is at most one affected element per node
+    const skipStyleAttribute = !!rawAffectedElement.hasRegularStyles;
+    let hasRemovals = false;
+
+    for (const rule of rules) {
+        const { style } = rule;
+        if (!style) {
+            continue;
+        }
+        if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
+            return removeElement(context, rawAffectedElement);
+        }
+        hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
+    }
 
     return hasRemovals;
 };

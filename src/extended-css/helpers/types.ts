@@ -49,6 +49,12 @@ export interface AffectedElement extends AffectedElementProto {
      * so the callback should be called again before actions are re-applied.
      */
     hasActionStyles?: boolean;
+    /**
+     * Selectors of rules whose regular styles are already applied.
+     * Needed to apply styles of rules which start matching later,
+     * e.g. selectors depending on styles of other rules.
+     */
+    appliedStyleSelectors?: Set<string>;
 }
 
 /**

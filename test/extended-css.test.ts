@@ -1103,7 +1103,9 @@ describe('extended css library', () => {
         // the rule does not match yet
         expect(element?.hasAttribute('onclick')).toBe(true);
 
-        element?.setAttribute('data-y', '');
+        // the wildcard is not anchored, so `xdata-y` matches `data-*`
+        // both at selection and relevance check time
+        element?.setAttribute('xdata-y', '');
 
         return new Promise<void>((resolve, reject) => {
             rAF(() => {
@@ -1169,6 +1171,48 @@ describe('extended css library', () => {
                 try {
                     // the :xpath() attribute change should trigger a pass
                     expect(element?.hasAttribute('onclick')).toBe(false);
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    extendedCss.dispose();
+                }
+            }, 100);
+        });
+    });
+
+    it('observes attributes of action arguments edited by beforeStyleApplied', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-observe" href="link" title="ad"></div>
+        `;
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-callback-observe:remove-attr(href)'],
+            beforeStyleApplied: (el) => {
+                // replace the action argument in returned rule copies
+                return {
+                    ...el,
+                    rules: el.rules.map((rule) => ({
+                        ...rule,
+                        actionStyles: [{ property: 'remove-attr', value: 'title' }],
+                    })),
+                };
+            },
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-callback-observe');
+        // the edited action should be applied
+        expect(element?.hasAttribute('href')).toBe(true);
+        expect(element?.hasAttribute('title')).toBe(false);
+
+        // re-adding `title` should trigger a pass and remove it again
+        element?.setAttribute('title', 'ad again');
+
+        return new Promise<void>((resolve, reject) => {
+            rAF(() => {
+                try {
+                    // the observer should watch the attribute from the edited argument
+                    expect(element?.hasAttribute('title')).toBe(false);
                     resolve();
                 } catch (error) {
                     reject(error);
@@ -1279,6 +1323,42 @@ describe('extended css library', () => {
 
         // the style attribute should be kept, so the element stays hidden
         expectElementStyle('case-first-pass-style', { display: 'none' });
+    });
+
+    it('applies regular styles of rules matching later in the same pass', () => {
+        document.body.innerHTML = '<div id="case-style-dependent"></div>';
+        const extendedCss = new ExtendedCss({
+            cssRules: [
+                '#case-style-dependent { display: none !important; }',
+                '#case-style-dependent:matches-css(display: none) { color: red !important; }',
+            ],
+        });
+        extendedCss.apply();
+
+        // the second rule depends on the style applied by the first one
+        // and should match during the same pass
+        expectElementStyle('case-style-dependent', { display: 'none', color: 'red' });
+
+        extendedCss.dispose();
+    });
+
+    it('applies styles of rules which start matching on later passes', () => {
+        document.body.innerHTML = '<div id="case-later-rule"></div>';
+        const extendedCss = new ExtendedCss({
+            cssRules: [
+                '#case-later-rule { display: none !important; }',
+                '#case-later-rule.active { color: red !important; }',
+            ],
+        });
+        extendedCss.apply();
+        expectElementStyle('case-later-rule', { display: 'none' });
+
+        // the element starts matching the second rule
+        document.getElementById('case-later-rule')?.classList.add('active');
+        extendedCss.apply();
+        expectElementStyle('case-later-rule', { display: 'none', color: 'red' });
+
+        extendedCss.dispose();
     });
 
     it('removes attributes and classes from SVG elements', () => {
@@ -1839,6 +1919,35 @@ describe('extended css library', () => {
         element?.setAttribute('title', 'ad again');
         extendedCss.apply();
         expect(element?.hasAttribute('title')).toBe(false);
+
+        extendedCss.dispose();
+    });
+
+    it('protects and reverts regular styles added by beforeStyleApplied', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-style" href="link"></div>
+        `;
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-callback-style:remove-attr(href)'],
+            beforeStyleApplied: (el) => {
+                // add a style map to returned rule copies
+                return {
+                    ...el,
+                    rules: el.rules.map((rule) => ({ ...rule, style: { color: 'red' } })),
+                };
+            },
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-callback-style');
+        expect(element?.style.color).toBe('red');
+        // the element should be style-protected since its styles are applied
+        expect(extendedCss.getAffectedElements()[0]?.protectionObserver).toBeTruthy();
+
+        // the element stops matching, so the applied styles should be reverted
+        element?.setAttribute('id', 'case-callback-style-renamed');
+        extendedCss.apply();
+        expect(element?.style.color).toBe('');
 
         extendedCss.dispose();
     });

@@ -1,7 +1,7 @@
 import { disconnectDocument, observeDocument } from './document-observer';
 import {
+    applyRuleStyles,
     applyStyle,
-    hasRegularStyles,
     revertStyle,
 } from './style-setter';
 import { protectStyleAttribute } from './style-protector';
@@ -59,19 +59,26 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
     }
 
     nodes.forEach((node) => {
-        const affectedElement = findAffectedElement(context.affectedElements, node);
+        let affectedElement = findAffectedElement(context.affectedElements, node);
 
         if (affectedElement) {
             affectedElement.rules.push(ruleData);
         } else {
             // element is affected first time
-            context.affectedElements.push({
+            affectedElement = {
                 node,                       // affected DOM node
                 rules: [ruleData],          // rule to be applied
                 originalStyle: node.style.cssText, // original node style
                 protectionObserver: null,   // style attribute observer
-            });
+                appliedStyleSelectors: new Set(),
+            };
+            context.affectedElements.push(affectedElement);
         }
+
+        // apply regular styles of the rule right away,
+        // so selectors which depend on applied styles can match in the same pass;
+        // actions are applied after all rules are queried
+        applyRuleStyles(context, affectedElement);
     });
 
     if (isDebuggingMode && startTime) {
@@ -114,16 +121,9 @@ const applyRulesPass = (context: Context): boolean => {
             ruleData.matchedElements = nodes;
         }
     });
-    // update the sticky regular-styles flag before applying styles:
-    // action rules check it to decide whether the `style` attribute
-    // of the element is protected by other rules
-    context.affectedElements.forEach((affectedElement) => {
-        // the flag is sticky: regular styles, once applied, should be
-        // protected and reverted even if their rule stops matching
-        affectedElement.hasRegularStyles = affectedElement.hasRegularStyles
-            || affectedElement.rules.some((rule) => hasRegularStyles(rule));
-    });
-    // apply collected rules to each affected element once per pass
+    // apply collected actions to each affected element once per pass:
+    // regular styles and the sticky regular-styles flag
+    // are handled by `applyRuleStyles()` while rules are collected
     context.affectedElements.forEach((affectedElement) => {
         if (!newSelectedElements.has(affectedElement.node)) {
             return;
