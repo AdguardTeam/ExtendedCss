@@ -77,6 +77,25 @@ describe('extended css runtime in browser', () => {
         }
     });
 
+    it('removes a re-added mixed-case SVG attribute', async () => {
+        document.body.innerHTML = '<svg id="browser-svg" viewBox="0 0 10 10"></svg>';
+        const extendedCss = new ExtendedCss({ cssRules: ['#browser-svg:remove-attr(viewBox)'] });
+        extendedCss.apply();
+        try {
+            const element = document.getElementById('browser-svg');
+            // the initial mixed-case attribute should be removed
+            expect(element?.hasAttribute('viewBox')).toBe(false);
+
+            // the re-added attribute should be removed by the observer pass
+            element?.setAttribute('viewBox', '0 0 20 20');
+
+            await waitFor(() => !element?.hasAttribute('viewBox'));
+            expect(element?.hasAttribute('viewBox')).toBe(false);
+        } finally {
+            extendedCss.dispose();
+        }
+    });
+
     it('limits action removals for self-unmatching rules', () => {
         document.body.innerHTML = '<div id="browser-cap" class="ad"></div>';
         const extendedCss = new ExtendedCss({ cssRules: ['.ad:remove-class(ad)'] });

@@ -108,9 +108,13 @@ const stripQuotes = (value: string): string => {
  * and attribute-like text inside quoted values may be collected as a name.
  * False positives only widen the observation, so they are harmless.
  *
+ * Both the original and the lower-cased spelling are returned:
+ * HTML attribute names are lower-cased in mutation records,
+ * while SVG ones preserve their case.
+ *
  * @param selector Selector text.
  *
- * @returns Lower-cased attribute names found in the selector.
+ * @returns Attribute names found in the selector.
  */
 const getSelectorAttributeNames = (selector: string): string[] => {
     const names: string[] = [];
@@ -118,7 +122,16 @@ const getSelectorAttributeNames = (selector: string): string[] => {
     collectMatches(selector, ATTRIBUTE_SELECTOR_REGEXP, names);
     // attribute references inside :xpath() arguments, e.g. '@data-on'
     collectMatches(selector, XPATH_ATTRIBUTE_REGEXP, names);
-    return names.map((name) => name.toLowerCase());
+
+    const result: string[] = [];
+    names.forEach((name) => {
+        result.push(name);
+        const lowerCasedName = name.toLowerCase();
+        if (lowerCasedName !== name) {
+            result.push(lowerCasedName);
+        }
+    });
+    return result;
 };
 
 /**
@@ -137,9 +150,13 @@ const getMatchesAttrNames = (selector: string): string[] => {
 /**
  * Adds a `:remove-attr()` argument to the observation data.
  *
- * Plain arguments are observed natively by name,
- * while a regexp argument can match any attribute,
- * so the observer watches all attributes and checks them with a matcher.
+ * Plain arguments are observed natively by name, while a regexp argument
+ * can match any attribute, so the observer watches all attributes
+ * and checks them with a matcher.
+ *
+ * Both the original and the lower-cased spelling of a plain argument
+ * are observed: HTML attribute names are lower-cased in mutation records,
+ * while SVG ones preserve their case.
  *
  * @param data Mutation observation data.
  * @param arg `:remove-attr()` argument.
@@ -157,9 +174,13 @@ const addActionArg = (data: MutationObservationData, arg: string): void => {
         return;
     }
 
-    const name = arg.toLowerCase();
-    data.attributeNames.add(name);
-    data.selectorAttributeNames.add(name);
+    data.attributeNames.add(arg);
+    data.selectorAttributeNames.add(arg);
+    const lowerCasedArg = arg.toLowerCase();
+    if (lowerCasedArg !== arg) {
+        data.attributeNames.add(lowerCasedArg);
+        data.selectorAttributeNames.add(lowerCasedArg);
+    }
 };
 
 /**
@@ -188,9 +209,15 @@ const addSelectorNameArg = (data: MutationObservationData, arg: string): void =>
     }
 
     if (typeof nameMatch === 'string') {
-        const name = nameMatch.toLowerCase();
-        data.attributeNames.add(name);
-        data.selectorAttributeNames.add(name);
+        // both spellings are observed: HTML attribute names are lower-cased
+        // in mutation records, while SVG ones preserve their case
+        data.attributeNames.add(nameMatch);
+        data.selectorAttributeNames.add(nameMatch);
+        const lowerCasedName = nameMatch.toLowerCase();
+        if (lowerCasedName !== nameMatch) {
+            data.attributeNames.add(lowerCasedName);
+            data.selectorAttributeNames.add(lowerCasedName);
+        }
         return;
     }
 

@@ -2,7 +2,11 @@
  * @vitest-environment jsdom
  */
 
-import { createActionArgMatcher, normalizeActionArg } from '../../../src/common/utils/action-arg';
+import {
+    MAX_ACTION_ARG_MATCHERS_COUNT,
+    createActionArgMatcher,
+    normalizeActionArg,
+} from '../../../src/common/utils/action-arg';
 
 describe('normalizeActionArg', () => {
     test.each([
@@ -46,5 +50,15 @@ describe('createActionArgMatcher', () => {
 
         expect(isMatch('/+/')).toBe(false);
         expect(isMatch('href')).toBe(false);
+    });
+
+    it('should evict the least recently used matchers when the cache is full', () => {
+        const firstMatcher = createActionArgMatcher('cache-test-first');
+        for (let i = 0; i < MAX_ACTION_ARG_MATCHERS_COUNT; i += 1) {
+            createActionArgMatcher(`cache-test-${i}`);
+        }
+
+        // the first matcher should be evicted as the least recently used
+        expect(createActionArgMatcher('cache-test-first')).not.toBe(firstMatcher);
     });
 });

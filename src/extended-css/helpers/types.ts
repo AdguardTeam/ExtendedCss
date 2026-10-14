@@ -55,6 +55,12 @@ export interface AffectedElement extends AffectedElementProto {
      * e.g. selectors depending on styles of other rules.
      */
     appliedStyleSelectors?: Set<string>;
+    /**
+     * Node selected by the `beforeStyleApplied` callback for the current pass,
+     * if it differs from the matched node.
+     * Actions and removals are applied to it instead of the matched node.
+     */
+    callbackNode?: HTMLElement;
 }
 
 /**

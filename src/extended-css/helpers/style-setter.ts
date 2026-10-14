@@ -108,16 +108,15 @@ const removeClasses = (node: Node, arg: string): number => {
 };
 
 /**
- * Removes affectedElement.node from DOM.
+ * Removes the specified DOM node.
  *
  * @param context ExtendedCss context.
  * @param affectedElement Affected element.
+ * @param node Node to remove: the matched node or the one selected by the callback.
  *
  * @returns True if the node was removed from DOM.
  */
-const removeElement = (context: Context, affectedElement: AffectedElement): boolean => {
-    const { node } = affectedElement;
-
+const removeElement = (context: Context, affectedElement: AffectedElement, node: HTMLElement): boolean => {
     affectedElement.removed = true;
 
     const elementSelector = getElementSelectorPath(node);
@@ -329,6 +328,9 @@ export const applyRuleStyles = (context: Context, affectedElement: AffectedEleme
         // they are needed for applying actions and for style protection
         affectedElement.rules = element.rules;
     }
+    // keep the node selected by the callback:
+    // actions and removals are applied to it instead of the matched node
+    affectedElement.callbackNode = element.node;
 
     const { node, rules } = element;
     for (const rule of rules) {
@@ -379,7 +381,10 @@ export const applyRuleStyles = (context: Context, affectedElement: AffectedEleme
  * @returns True if the DOM was changed by a removal.
  */
 export const applyStyle = (context: Context, rawAffectedElement: AffectedElement): boolean => {
-    const { node, rules } = rawAffectedElement;
+    const { rules } = rawAffectedElement;
+    // actions and removals are applied to the node selected by the callback
+    // (it is the matched node if the callback did not replace it)
+    const node = rawAffectedElement.callbackNode ?? rawAffectedElement.node;
     // only actions and `:remove()` rules require processing
     // after regular styles are applied
     const hasActions = rules.some((rule) => {
@@ -403,7 +408,7 @@ export const applyStyle = (context: Context, rawAffectedElement: AffectedElement
             continue;
         }
         if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
-            return removeElement(context, rawAffectedElement);
+            return removeElement(context, rawAffectedElement, node);
         }
         hasRemovals = applyRuleAction(context, node, rule, skipStyleAttribute) || hasRemovals;
     }

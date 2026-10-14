@@ -1150,7 +1150,8 @@ interface IAffectedElement {
 > The callback is called before the element's styles are applied and again before
 > actions are applied, so edits to `actionStyles` take effect on every pass:
 > edited action arguments are also kept in sync with the DOM observer, so
-> re-added attributes trigger another pass.
+> re-added attributes trigger another pass. The returned `node` is used as the
+> target for applied styles, actions and removals.
 > Rule objects are shared between all elements matched by a rule, so editing them
 > in place affects all such elements; return copies of the rules for per-element
 > changes.

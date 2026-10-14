@@ -61,7 +61,15 @@ export const throwActionError = (
 };
 
 /**
+ * Maximum number of cached action argument matchers.
+ * The cache is bounded because the `beforeStyleApplied` callback
+ * can supply new arguments on every pass.
+ */
+export const MAX_ACTION_ARG_MATCHERS_COUNT = 100;
+
+/**
  * Cache of compiled action argument matchers.
+ * Entries are evicted in least-recently-used order when the cache is full.
  */
 const actionArgMatchers = new Map<string, (value: string) => boolean>();
 
@@ -125,6 +133,9 @@ export const normalizeActionArg = (rawArg: string): string => {
 export const createActionArgMatcher = (arg: string): ((value: string) => boolean) => {
     const cached = actionArgMatchers.get(arg);
     if (cached) {
+        // refresh the entry to keep the cache least-recently-used
+        actionArgMatchers.delete(arg);
+        actionArgMatchers.set(arg, cached);
         return cached;
     }
 
@@ -146,6 +157,14 @@ export const createActionArgMatcher = (arg: string): ((value: string) => boolean
         matcher = (value: string): boolean => {
             return value === arg;
         };
+    }
+
+    // evict the least recently used entry if the cache is full
+    if (actionArgMatchers.size >= MAX_ACTION_ARG_MATCHERS_COUNT) {
+        const oldestArg = actionArgMatchers.keys().next().value;
+        if (oldestArg !== undefined) {
+            actionArgMatchers.delete(oldestArg);
+        }
     }
 
     actionArgMatchers.set(arg, matcher);

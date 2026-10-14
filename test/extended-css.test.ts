@@ -1083,6 +1083,25 @@ describe('extended css library', () => {
         observeSpy.mockRestore();
     });
 
+    it('observes both spellings of mixed-case attribute names', () => {
+        const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
+
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-mixed-case:remove-attr(viewBox)'],
+        });
+        extendedCss.apply();
+
+        const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
+        expect(documentObserveCall).toBeDefined();
+        // SVG attribute names preserve their case, HTML ones are lower-cased
+        expect(documentObserveCall?.[1]?.attributeFilter).toEqual(
+            expect.arrayContaining(['viewBox', 'viewbox']),
+        );
+
+        extendedCss.dispose();
+        observeSpy.mockRestore();
+    });
+
     it('removes attributes when a :matches-attr() wildcard name matches', () => {
         const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
 
@@ -1948,6 +1967,50 @@ describe('extended css library', () => {
         element?.setAttribute('id', 'case-callback-style-renamed');
         extendedCss.apply();
         expect(element?.style.color).toBe('');
+
+        extendedCss.dispose();
+    });
+
+    it('removes the node returned by beforeStyleApplied', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-node-original"></div>
+            <div id="case-callback-node-replacement"></div>
+        `;
+        const replacement = document.getElementById('case-callback-node-replacement');
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-callback-node-original:remove()'],
+            beforeStyleApplied: (el) => {
+                // replace the target node in returned rule copies
+                return { ...el, node: replacement as HTMLElement };
+            },
+        });
+        extendedCss.apply();
+
+        // the callback-selected node should be removed instead of the matched one
+        expect(document.getElementById('case-callback-node-original')).not.toBeNull();
+        expect(document.getElementById('case-callback-node-replacement')).toBeNull();
+
+        extendedCss.dispose();
+    });
+
+    it('applies actions to the node returned by beforeStyleApplied', () => {
+        document.body.innerHTML = `
+            <div id="case-callback-action-original" title="ad"></div>
+            <div id="case-callback-action-replacement" title="ad"></div>
+        `;
+        const replacement = document.getElementById('case-callback-action-replacement');
+        const extendedCss = new ExtendedCss({
+            cssRules: ['#case-callback-action-original:remove-attr(title)'],
+            beforeStyleApplied: (el) => {
+                // replace the target node in returned rule copies
+                return { ...el, node: replacement as HTMLElement };
+            },
+        });
+        extendedCss.apply();
+
+        // the callback-selected node should lose the attribute instead of the matched one
+        expect(document.getElementById('case-callback-action-original')?.hasAttribute('title')).toBe(true);
+        expect(replacement?.hasAttribute('title')).toBe(false);
 
         extendedCss.dispose();
     });

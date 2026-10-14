@@ -104,9 +104,12 @@ const applyRulesPass = (context: Context): boolean => {
     const newSelectedElements = new Set<HTMLElement>();
     // reset rules collected during the previous pass:
     // only rules matching elements in the current pass should be applied,
-    // otherwise actions could be replayed for elements which no longer match
+    // otherwise actions could be replayed for elements which no longer match;
+    // the callback-selected node is also reset and set again
+    // if the callback is called during this pass
     context.affectedElements.forEach((affectedElement) => {
         affectedElement.rules = [];
+        affectedElement.callbackNode = undefined;
     });
     // some rules could make call - selector.querySelectorAll() temporarily to change node id attribute
     // this caused MutationObserver to call recursively
