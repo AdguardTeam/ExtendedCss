@@ -70,7 +70,7 @@ const applyRule = (context: Context, ruleData: ExtCssRuleData): HTMLElement[] =>
                 rules: [ruleData],          // rule to be applied
                 originalStyle: node.style.cssText, // original node style
                 protectionObserver: null,   // style attribute observer
-                appliedStyleSelectors: new Set(),
+                appliedRules: new WeakSet(),
             };
             context.affectedElements.push(affectedElement);
         }

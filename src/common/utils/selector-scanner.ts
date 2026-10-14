@@ -396,6 +396,12 @@ const findActionArgumentEnd = (input: string, colonIndex: number): number | unde
 const REGEXP_SPECIAL_CHARS = /['"\\/]/;
 
 /**
+ * Regexp matching an action pseudo-class marker followed by an opening bracket,
+ * e.g. `:remove(`, `:remove-attr(` or `:remove-class(`.
+ */
+const ACTION_MARKER_REGEXP = new RegExp(`:(?:${ACTION_PSEUDO_MARKERS.join('|')})\\(`, 'i');
+
+/**
  * Checks whether a prefix cannot contain an open quoted string,
  * regexp literal or action pseudo-class argument:
  * without quotes, slashes and backslashes no string or regexp literal can start,
@@ -408,11 +414,8 @@ const REGEXP_SPECIAL_CHARS = /['"\\/]/;
  */
 const isSimplePrefix = (input: string, endIndex: number): boolean => {
     const prefix = input.slice(0, endIndex);
-    if (REGEXP_SPECIAL_CHARS.test(prefix)) {
-        return false;
-    }
-    const lowerCasedPrefix = prefix.toLowerCase();
-    return !ACTION_PSEUDO_MARKERS.some((marker) => lowerCasedPrefix.includes(marker));
+    return !REGEXP_SPECIAL_CHARS.test(prefix)
+        && !ACTION_MARKER_REGEXP.test(prefix);
 };
 
 /**

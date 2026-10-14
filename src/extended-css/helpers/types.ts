@@ -50,11 +50,13 @@ export interface AffectedElement extends AffectedElementProto {
      */
     hasActionStyles?: boolean;
     /**
-     * Selectors of rules whose regular styles are already applied.
+     * Rules whose regular styles are already applied.
+     * Keyed by rule object identity, because `styleSheet` and `cssRules`
+     * can contain different rules with the same selector.
      * Needed to apply styles of rules which start matching later,
      * e.g. selectors depending on styles of other rules.
      */
-    appliedStyleSelectors?: Set<string>;
+    appliedRules?: WeakSet<ExtCssRuleData>;
     /**
      * Node selected by the `beforeStyleApplied` callback for the current pass,
      * if it differs from the matched node.

@@ -284,19 +284,24 @@ const applyRuleAction = (
  * @throws An error if affectedElement has no style to apply.
  */
 export const applyRuleStyles = (context: Context, affectedElement: AffectedElement): void => {
-    const appliedSelectors = affectedElement.appliedStyleSelectors ?? new Set<string>();
-    affectedElement.appliedStyleSelectors = appliedSelectors;
+    const appliedRules = affectedElement.appliedRules ?? new WeakSet<ExtCssRuleData>();
+    affectedElement.appliedRules = appliedRules;
 
     const hasUnappliedStyles = affectedElement.rules.some((rule) => {
-        return hasRegularStyles(rule) && !appliedSelectors.has(rule.selector);
+        return hasRegularStyles(rule) && !appliedRules.has(rule);
     });
     // actions are re-applied on DOM mutations,
     // so the callback is called again to let it edit or cancel them
     const hasActions = !!affectedElement.hasActionStyles
         || affectedElement.rules.some((rule) => !!rule.actionStyles?.length);
+    // `:remove()` rules should also reach the callback,
+    // so it can filter or cancel the removal
+    const hasRemovals = affectedElement.rules.some((rule) => {
+        return rule.style?.[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE;
+    });
     // nothing to do for elements with applied regular styles,
-    // without actions and without new regular styles
-    if (affectedElement.isStyleApplied && !hasActions && !hasUnappliedStyles) {
+    // without actions, removals and new regular styles
+    if (affectedElement.isStyleApplied && !hasActions && !hasRemovals && !hasUnappliedStyles) {
         return;
     }
 
@@ -349,11 +354,11 @@ export const applyRuleStyles = (context: Context, affectedElement: AffectedEleme
         if (style[REMOVE_PSEUDO_MARKER] === PSEUDO_PROPERTY_POSITIVE_VALUE) {
             continue;
         }
-        if (hasRegularStyles(rule) && !appliedSelectors.has(rule.selector)) {
+        if (hasRegularStyles(rule) && !appliedRules.has(rule)) {
             // action markers and internal 'content' are skipped by setStyleToElement,
             // so regular styles of other rules with the same selector are applied
             setStyleToElement(node, style, !!rule.hasInternalContent);
-            appliedSelectors.add(rule.selector);
+            appliedRules.add(rule);
         }
     }
 

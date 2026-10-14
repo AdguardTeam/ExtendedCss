@@ -120,6 +120,17 @@ QUnit.test('Modifier -ext-matches-css with pseudo-element', (assert) => {
     assertElementStyle('case7-blocked', { display: 'none' }, assert);
 });
 
+QUnit.test('Action -ext-remove-class', (assert) => {
+    const element = document.getElementById('case12');
+    assert.ok(element && !element.classList.contains('ads'), 'ads class should be removed');
+    assert.ok(element?.classList.contains('banner'), 'other classes should be kept');
+});
+
+QUnit.test('Action -ext-remove-attr', (assert) => {
+    const element = document.getElementById('case13');
+    assert.ok(element && !element.hasAttribute('onclick'), 'onclick attribute should be removed');
+});
+
 QUnit.test('Protection from recurring style fixes', (assert) => {
     const done = assert.async();
 

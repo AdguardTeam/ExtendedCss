@@ -1087,15 +1087,19 @@ describe('extended css library', () => {
         const observeSpy = vi.spyOn(MutationObserver.prototype, 'observe');
 
         const extendedCss = new ExtendedCss({
-            cssRules: ['#case-mixed-case:remove-attr(viewBox)'],
+            cssRules: [
+                '#case-mixed-case[viewBox]:remove-attr(onclick)',
+                '#case-mixed-case-action:remove-attr(viewBox)',
+            ],
         });
         extendedCss.apply();
 
         const documentObserveCall = observeSpy.mock.calls.find(([target]) => target === document);
         expect(documentObserveCall).toBeDefined();
-        // SVG attribute names preserve their case, HTML ones are lower-cased
+        // SVG attribute names preserve their case, HTML ones are lower-cased:
+        // both selector attributes and action arguments should be covered
         expect(documentObserveCall?.[1]?.attributeFilter).toEqual(
-            expect.arrayContaining(['viewBox', 'viewbox']),
+            expect.arrayContaining(['viewBox', 'viewbox', 'onclick']),
         );
 
         extendedCss.dispose();
@@ -1376,6 +1380,48 @@ describe('extended css library', () => {
         document.getElementById('case-later-rule')?.classList.add('active');
         extendedCss.apply();
         expectElementStyle('case-later-rule', { display: 'none', color: 'red' });
+
+        extendedCss.dispose();
+    });
+
+    it('applies rules with the same selector from styleSheet and cssRules', () => {
+        document.body.innerHTML = '<div id="case-two-sources"></div>';
+        const extendedCss = new ExtendedCss({
+            styleSheet: '#case-two-sources { color: red; }',
+            cssRules: ['#case-two-sources { display: none; }'],
+        });
+        extendedCss.apply();
+
+        // both sources should be applied even though the selectors are the same
+        expectElementStyle('case-two-sources', { color: 'red', display: 'none' });
+
+        extendedCss.dispose();
+    });
+
+    it('allows beforeStyleApplied to cancel a :remove() collected after another rule', () => {
+        document.body.innerHTML = '<div id="case-callback-remove"></div>';
+        const seenRules: number[] = [];
+        const extendedCss = new ExtendedCss({
+            // the rules are not merged because they come from different sources
+            styleSheet: '#case-callback-remove { color: red; }',
+            cssRules: ['#case-callback-remove:remove()'],
+            beforeStyleApplied: (el) => {
+                seenRules.push(el.rules.length);
+                // cancel the removal but keep the styles
+                return {
+                    ...el,
+                    rules: el.rules.filter((rule) => !rule.style?.remove),
+                };
+            },
+        });
+        extendedCss.apply();
+
+        const element = document.getElementById('case-callback-remove');
+        // the element should not be removed and the styles should be applied
+        expect(element).not.toBeNull();
+        expect(element?.style.color).toBe('red');
+        // the callback should see the `:remove()` rule
+        expect(seenRules).toContain(2);
 
         extendedCss.dispose();
     });

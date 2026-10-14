@@ -23,6 +23,8 @@
     #case6>div.banner[-ext-matches-css="opacity:0.9"] { display: none!important }
     #case7>div[-ext-matches-css-before="content: sponsored"] { display: none!important }
     #case11 { display: none; }
+    #case12:remove-class(ads) { color: red; }
+    #case13:remove-attr(onclick)
   </style>
 
   <style type="text/css">
@@ -82,6 +84,8 @@
       </div>
     </div>
     <div id="case11"></div>
+    <div id="case12" class="ads banner"></div>
+    <div id="case13" onclick="alert(1)"></div>
 
     <script src="qunit.js"></script>
     <!--    should export extended css from dist    -->
