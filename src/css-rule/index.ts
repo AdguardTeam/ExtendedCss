@@ -1,10 +1,12 @@
 export { parseRules, parseRule } from './parser';
 
 export {
-    parseRemoveSelector,
+    parseActionSelector,
     createRawResultsMap,
     saveToRawResults,
     combineRulesData,
+    hasActionPseudoStyles,
+    filterStyleBlockDeclarations,
 } from './helpers';
 
 export type {

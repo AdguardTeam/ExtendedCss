@@ -53,11 +53,38 @@ export type RawCssRuleData = {
      * Array of previously collected styles which may contain 'remove' and 'debug'.
      */
     rawStyles?: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the selector contains an action pseudo-class,
+     * so its styles are action declarations.
+     */
+    hasActionPseudoClass?: boolean;
+};
+
+/**
+ * Styles of one parsed rule with the same selector.
+ */
+export type RawStyleGroup = {
+    /**
+     * Raw styles of the rule.
+     */
+    styles: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the rule selector contains an action pseudo-class.
+     */
+    hasActionPseudoClass: boolean;
 };
 
 export type RawResultValue = {
     ast: AnySelectorNodeInterface;
-    styles: StyleDeclaration[];
+    /**
+     * Raw styles of each parsed rule with the same selector.
+     * Rules are kept separately to preserve the source of styles:
+     * action pseudo-class declarations and styles of regular rules
+     * are merged differently.
+     */
+    styleGroups: RawStyleGroup[];
 };
 
 export type RawResults = Map<string, RawResultValue>;
@@ -80,6 +107,25 @@ export type ExtCssRuleData = {
      * Styles to apply to matched dom elements.
      */
     style?: CssStyleMap;
+
+    /**
+     * Action pseudo-class styles (e.g. `:remove-attr()` or `:remove-class()`)
+     * with all their arguments preserved.
+     *
+     * This is the source of truth for action pseudo-classes:
+     * they are not stored in `style` and callbacks can edit them here,
+     * e.g. change an argument or remove an action.
+     */
+    actionStyles?: StyleDeclaration[];
+
+    /**
+     * Flag indicating that the `content` style of the rule is kept only for the
+     * `beforeStyleApplied` callback (e.g. CssHitsCounter)
+     * and should not be applied to matched elements:
+     * it is declared by an action rule or comes from a regular rule
+     * of an element removed by `remove: true`.
+     */
+    hasInternalContent?: boolean;
 
     /**
      * Rule debugging mode value.

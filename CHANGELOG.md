@@ -12,6 +12,9 @@ and this project adheres to
 
 ### Added
 
+- Support for uBlock Origin action operators `:remove-attr()` and
+  `:remove-class()` [#153].
+
 ### Changed
 
 ### Deprecated
@@ -42,6 +45,7 @@ and this project adheres to
 [2.2.1-beta.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1-beta.0
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
 [#189]: https://github.com/AdguardTeam/ExtendedCss/issues/189
+[#153]: https://github.com/AdguardTeam/ExtendedCss/issues/153
 
 ## [2.1.1] - 2024-12-19
 

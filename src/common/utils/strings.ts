@@ -1,4 +1,15 @@
-import { SLASH } from '../constants';
+import { SLASH, WHITE_SPACE_CHARACTERS } from '../constants';
+
+/**
+ * Checks whether the character is a whitespace character.
+ *
+ * @param char Character to check.
+ *
+ * @returns True if the character is a whitespace character.
+ */
+export const isWhiteSpaceChar = (char: string | undefined): boolean => {
+    return char !== undefined && WHITE_SPACE_CHARACTERS.includes(char);
+};
 
 /**
  * Returns string without suffix.

@@ -19,6 +19,8 @@ styles with non-standard CSS properties.
     - [Pseudo-class `:nth-ancestor()`](#extended-css-nth-ancestor)
     - [Pseudo-class `:upward()`](#extended-css-upward)
     - [Pseudo-class `:remove()` and pseudo-property `remove`](#remove-pseudos)
+    - [Pseudo-class `:remove-attr()`](#extended-css-remove-attr)
+    - [Pseudo-class `:remove-class()`](#extended-css-remove-class)
     - [Pseudo-class `:is()`](#extended-css-is)
     - [Pseudo-class `:not()`](#extended-css-not)
     - [Pseudo-class `:empty-trimmed`](#extended-css-empty-trimmed)
@@ -59,8 +61,9 @@ styles with non-standard CSS properties.
 
 [`:has()`](#extended-css-has-limitations), [`:xpath()`](#extended-css-xpath-limitations),
 [`:nth-ancestor()`](#extended-css-nth-ancestor-limitations), [`:upward()`](#extended-css-upward-limitations),
-[`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations), and
-[`:remove()`](#extended-css-remove-limitations).
+[`:is()`](#extended-css-is-limitations), [`:not()`](#extended-css-not-limitations),
+[`:remove()`](#extended-css-remove-limitations), [`:remove-attr()`](#extended-css-remove-attr-limitations), and
+[`:remove-class()`](#extended-css-remove-class-limitations).
 
 ### <a name="extended-css-has"></a> Pseudo-class `:has()`
 
@@ -426,7 +429,9 @@ The `:xpath()` pseudo-class allows to select an element by evaluating an XPath e
 > Extended selectors with defined `target` as *any* selector — `*:xpath(expression)` — can still be used but it is not
 > recommended, so `target` should be specified instead.
 
-> Works properly only at the end of selector, except for [pseudo-class :remove()](#remove-pseudos).
+> Works properly only at the end of selector, except for [action pseudo-classes](#remove-pseudos):
+> [`:remove()`](#remove-pseudos), [`:remove-attr()`](#extended-css-remove-attr), and
+> [`:remove-class()`](#extended-css-remove-class).
 
 #### Examples
 
@@ -590,6 +595,103 @@ div[class]:has(> a > img) { remove: true; }
 > Both `:remove()` pseudo-class and `remove` pseudo-property works the same, but we recommend to use the
 > pseudo-property as it is related to an action which should be applied to element, since pseudo-classes is more about
 > elements matching.
+
+### <a name="extended-css-remove-attr"></a> Pseudo-class `:remove-attr()`
+
+The `:remove-attr()` pseudo-class removes attributes from matching elements instead of hiding them. It is compatible
+with the [`remove-attr`][ubo] action
+operator of uBlock Origin.
+
+#### Syntax
+
+```css
+target:remove-attr(attr)
+```
+
+- `target` — required, standard or extended CSS selector; use the
+    universal selector `*` to apply the action to any element
+- `attr` — required, an attribute name for exact match (can be quoted, e.g. `"onclick"`),
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A quoted or plain argument cannot contain
+    whitespace, parentheses, quotes, or commas
+
+<a name="extended-css-remove-attr-limitations"></a>
+
+#### Limitations
+
+> The `:remove-attr()` pseudo-class is limited to work properly only at the end of selector.
+
+> If the `:remove-attr()` pseudo-class is used, style properties declared in the same rule
+> are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
+> Styles of other rules with the same target selector are still applied.
+
+> An action cannot be combined with another action: the [`remove`
+> pseudo-property](#remove-pseudos) declared in the same rule is ignored, and `:remove()` used
+> together with `:remove-attr()` makes the rule invalid.
+
+> Removed attributes are not restored by `dispose()`.
+
+> `:remove-attr(style)` conflicts with the style protection mechanism:
+> the `style` attribute is not removed from elements whose styles are applied by other rules.
+
+> The action is applied to the same element at most 50 times:
+> if the page keeps re-adding the removed attribute, the action stops to avoid an endless loop.
+
+> `remove-attr` and `remove-class` properties are not supported in style blocks,
+> use the pseudo-classes instead.
+
+#### Examples
+
+```css
+a:remove-attr(href)
+*:remove-attr(onclick)
+div:remove-attr(/^on[a-z]+/)
+div:remove-attr(/^data-(foo|bar)$/i)
+```
+
+### <a name="extended-css-remove-class"></a> Pseudo-class `:remove-class()`
+
+The `:remove-class()` pseudo-class removes classes from matching elements instead of hiding them. It is compatible
+with the [`remove-class`][ubo] action
+operator of uBlock Origin.
+
+#### Syntax
+
+```css
+target:remove-class(class)
+```
+
+- `target` — required, standard or extended CSS selector; use the
+    universal selector `*` to apply the action to any element
+- `class` — required, a class name for exact match (can be quoted, e.g. `"ads"`),
+    or a regexp literal `/.../` with optional `i`, `m`, `u` flags. A quoted or plain argument cannot contain
+    whitespace, parentheses, quotes, or commas
+
+<a name="extended-css-remove-class-limitations"></a>
+
+#### Limitations
+
+> The `:remove-class()` pseudo-class is limited to work properly only at the end of selector.
+
+> If the `:remove-class()` pseudo-class is used, style properties declared in the same rule
+> are ignored except for the [`debug` pseudo-property](#selectors-debug-mode).
+> Styles of other rules with the same target selector are still applied.
+
+> An action cannot be combined with another action: the [`remove`
+> pseudo-property](#remove-pseudos) declared in the same rule is ignored, and `:remove()` used
+> together with `:remove-class()` makes the rule invalid.
+
+> Removed classes are not restored by `dispose()`.
+
+> The action is applied to the same element at most 50 times:
+> if the page keeps re-adding the removed class, the action stops to avoid an endless loop.
+
+#### Examples
+
+```css
+div:remove-class(ads)
+*:remove-class(ads)
+div:remove-class(/^ad-/)
+```
 
 ### <a name="extended-css-is"></a> Pseudo-class `:is()`
 
@@ -1029,10 +1131,30 @@ type BeforeStyleAppliedCallback = (x:IAffectedElement) => IAffectedElement;
  * Its optional property 'content' may contain the applied rule text
  */
 interface IAffectedElement {
-  rules: { style: { content?: string }}[]
+  rules: {
+    style: { content?: string },
+    // action pseudo-classes (e.g. `:remove-attr()`) with their arguments;
+    // `actionStyles` is the only source of action data for callbacks
+    actionStyles?: { property: string, value: string }[],
+  }[]
   node: HTMLElement;
 }
 ```
+
+> `actionStyles` holds action pseudo-classes (e.g. `:remove-attr()`) with their
+> arguments and is the only source of action data for callbacks: editing it changes
+> or cancels the action. It is set for `:remove-attr()` and `:remove-class()` rules
+> only — `:remove()` is stored as the `remove` entry of `style` and cannot be
+> cancelled via `actionStyles`.
+>
+> The callback is called before the element's styles are applied and again before
+> actions are applied, so edits to `actionStyles` take effect on every pass:
+> edited action arguments are also kept in sync with the DOM observer, so
+> re-added attributes trigger another pass. The returned `node` is used as the
+> target for applied styles, actions and removals.
+> Rule objects are shared between all elements matched by a rule, so editing them
+> in place affects all such elements; return copies of the rules for per-element
+> changes.
 
 #### <a name="extended-css-init"></a> Public method `init()`
 
@@ -1167,6 +1289,8 @@ ExtendedCss.query(selector);
 
 [install-size-badge]: https://packagephobia.com/badge?p=@adguard/extended-css
 [install-size-url]: https://packagephobia.com/result?p=@adguard/extended-css
+
+[ubo]: https://github.com/gorhill/uBlock/wiki/Static-filter-syntax#subjectremove-attrarg-subjectremove-classarg
 
 [license-badge]: https://img.shields.io/github/license/AdGuardTeam/ExtendedCss
 [license-url]: https://github.com/AdguardTeam/ExtendedCss/blob/master/LICENSE

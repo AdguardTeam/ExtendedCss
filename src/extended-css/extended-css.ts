@@ -1,6 +1,6 @@
 import { extCssDocument } from '../selector';
 import { parseStylesheet } from '../stylesheet';
-import { parseRemoveSelector, parseRules } from '../css-rule';
+import { parseActionSelector, parseRules } from '../css-rule';
 
 import { ThrottleWrapper } from './helpers/throttle-wrapper';
 import { applyRules } from './helpers/rules-applier';
@@ -50,7 +50,7 @@ export interface ExtCssConfiguration {
     // TODO: deprecate `styleSheet` after the release of version with `cssRules`
     /**
      * Standard CSS stylesheet — a set of CSS rules
-     * which generally consists of selector and style (except `:remove()` pseudo-class).
+     * which generally consists of selector and style (except action pseudo-classes).
      *
      * ExtendedCss is able to parse and apply almost any CSS stylesheet, not just extended selectors
      * but there are some limitations - for example, CSS comments and at-rules are not supported;
@@ -128,6 +128,7 @@ export class ExtendedCss {
             affectedElements: [],
             isDomObserved: false,
             removalsStatistic: {},
+            actionRemovalsStatistic: new WeakMap(),
             parsedRules: [],
             scheduler: new ThrottleWrapper(this.applyRulesCallbackListener),
         };
@@ -220,8 +221,14 @@ export class ExtendedCss {
     dispose(): void {
         disconnectDocument(this.context);
         this.context.affectedElements.forEach((el) => {
-            revertStyle(el);
+            // action-only elements were not modified by us, so they should not be reverted
+            if (el.hasRegularStyles) {
+                revertStyle(el);
+            }
         });
+        // reset action removals statistic, so actions can be applied
+        // by `apply()` again after the instance was disposed
+        this.context.actionRemovalsStatistic = new WeakMap();
         document.removeEventListener(
             'DOMContentLoaded',
             this.applyRulesCallbackListener,
@@ -274,10 +281,10 @@ export class ExtendedCss {
      */
     public static validate(inputSelector: string): SelectorValidationResult {
         try {
-            // ExtendedCss in general supports :remove() in selector
-            // but ExtendedCss.query() does not support it as it should be parsed by stylesheet parser.
-            // so for validation we have to handle selectors with `:remove()` in it
-            const { selector } = parseRemoveSelector(inputSelector);
+            // ExtendedCss in general supports action pseudo-classes in a selector
+            // but ExtendedCss.query() does not support them as they should be parsed by stylesheet parser.
+            // so for validation we have to handle selectors with action pseudo-classes in them
+            const { selector } = parseActionSelector(inputSelector);
             ExtendedCss.query(selector);
             return { ok: true, error: null };
         } catch (e: unknown) {

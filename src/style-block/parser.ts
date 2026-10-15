@@ -15,6 +15,7 @@ import {
     FORM_FEED,
     WHITE_SPACE_CHARACTERS,
     STYLE_ERROR_PREFIX,
+    QuoteMark,
 } from '../common/constants';
 
 /**
@@ -33,8 +34,6 @@ type DeclarationPart = typeof DECLARATION_PART[keyof typeof DECLARATION_PART];
 export type StyleDeclaration = {
     [key in DeclarationPart]: string;
 };
-
-type QuoteMark = '"' | "'";
 
 /**
  * Interface for style declaration parser context.

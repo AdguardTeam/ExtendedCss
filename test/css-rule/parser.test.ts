@@ -4,7 +4,11 @@
 
 import { parseRules, parseRule } from '../../src/css-rule';
 import { ExtCssDocument } from '../../src/selector';
-import { REMOVE_ERROR_PREFIX } from '../../src/common/constants';
+import {
+    REMOVE_ERROR_PREFIX,
+    REMOVE_ATTR_ERROR_PREFIX,
+    REMOVE_CLASS_ERROR_PREFIX,
+} from '../../src/common/constants';
 
 import { TestCssRuleData, expectSameParsedRules } from '../helpers/common';
 
@@ -621,6 +625,27 @@ describe('parse array of css rules -- skip invalid rules', () => {
             test.each(invalidRules)('%s', (selector) => expectNoRuleParsed(selector));
         });
 
+        describe('invalid action pseudo-classes', () => {
+            const invalidRules = [
+                ':remove-attr(href)',
+                'div:remove-attr(href) > a',
+                'div:remove-attr(href):remove-class(ads)',
+                'div:remove-attr()',
+                'div:remove-attr(href',
+                'div:remove-class(ads):upward(1)',
+                'div:remove-attr(/+/)',
+                'div:remove-attr(/[/)',
+                'div:remove-attr(/x/ii)',
+                'div:has(:remove-attr(href))',
+                'div:not(:remove-class(ads))',
+                'div:has(:remove())',
+                'div:upward(:remove-attr(x))',
+                'div:upward(:has(:remove-attr(x)))',
+                'div:upward(:remove-class(x))',
+            ];
+            test.each(invalidRules)('%s', (selector) => expectNoRuleParsed(selector));
+        });
+
         describe('invalid style declaration', () => {
             const invalidRules = [
                 'div { }',
@@ -687,6 +712,52 @@ describe('parse array of css rules -- skip invalid rules', () => {
                         color: 'pink',
                         content: "'adguard4;example.org#$?#h1 { color: pink}'!important",
                     },
+                }],
+            },
+            {
+                actual: ['div[class]:remove-attr(href) { display: none !important; }'],
+                expected: [{
+                    selector: 'div[class]',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                }],
+            },
+            {
+                actual: ['div[class]:remove-class(ads) { display: none !important; }'],
+                expected: [{
+                    selector: 'div[class]',
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
+                }],
+            },
+            {
+                actual: ["div[class]:remove-attr(href) { content: 'test' !important; }"],
+                expected: [{
+                    selector: 'div[class]',
+                    style: { content: "'test' !important" },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                }],
+            },
+            {
+                actual: [
+                    '#ad { color: red; }',
+                    '#ad:remove-attr(href) { display: none; }',
+                ],
+                expected: [{
+                    selector: '#ad',
+                    style: { color: 'red' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                }],
+            },
+            {
+                actual: [
+                    '#ad:remove() { display: none; }',
+                    '#ad:remove-attr(href) { display: none; }',
+                ],
+                expected: [{
+                    selector: '#ad',
+                    style: { remove: 'true' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 }],
             },
         ];
@@ -837,16 +908,34 @@ describe('parse array of css rules -- skip invalid rules', () => {
 describe('parse single rule -- throws error on invalid rule', () => {
     describe('invalid remove pseudo-class', () => {
         const invalidRules = [
-            ':remove()',
-            '.block:remove() > .banner:remove()',
-            '.block:remove():upward(2)',
-            'div:remove():contains(/test-content/)',
-            '.banner:has(> div[class]):remove():upward()',
-            'div:remove(0)',
-            'div:not([class]):remove(invalid)',
+            { rule: ':remove()', error: REMOVE_ERROR_PREFIX.NO_TARGET_SELECTOR },
+            { rule: '.block:remove() > .banner:remove()', error: REMOVE_ERROR_PREFIX.MULTIPLE_USAGE },
+            { rule: '.block:remove():upward(2)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+            { rule: 'div:remove():contains(/test-content/)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+            { rule: '.banner:has(> div[class]):remove():upward()', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+            { rule: 'div:remove(0)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:not([class]):remove(invalid)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
         ];
-        const error = REMOVE_ERROR_PREFIX.INVALID_REMOVE;
-        test.each(invalidRules)('$rule', (rule) => expectToThrowOnRuleParse({ rule, error }));
+        test.each(invalidRules)('$rule', ({ rule, error }) => expectToThrowOnRuleParse({ rule, error }));
+    });
+
+    describe('invalid action pseudo-classes', () => {
+        const invalidRules = [
+            { rule: ':remove-attr(href)', error: REMOVE_ATTR_ERROR_PREFIX.NO_TARGET_SELECTOR },
+            { rule: 'div:remove-attr(href) > a', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_POSITION },
+            { rule: 'div:remove-attr(href):remove-class(ads)', error: REMOVE_ATTR_ERROR_PREFIX.MULTIPLE_USAGE },
+            { rule: 'div:remove-attr()', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-attr(href', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ACTION },
+            { rule: 'div:remove-attr(/+/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-attr(/[/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-attr(/x/ii)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-attr(/foo', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+            { rule: ':remove-class(ads)', error: REMOVE_CLASS_ERROR_PREFIX.NO_TARGET_SELECTOR },
+            { rule: 'div:remove-class(/foo', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
+            { rule: 'div:remove-class(ads):upward(1)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_POSITION },
+            { rule: 'div:remove-class(/+/)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
+        ];
+        test.each(invalidRules)('$rule', ({ rule, error }) => expectToThrowOnRuleParse({ rule, error }));
     });
 
     describe('various invalid css rules', () => {
@@ -857,11 +946,11 @@ describe('parse single rule -- throws error on invalid rule', () => {
             },
             {
                 rule: '[-ext-matches-css-before=\'content:  /^[A-Z][a-z]{2}\\s/  \']',
-                error: 'Selector in not valid',
+                error: 'Style should be declared or action pseudo-class should be used',
             },
             {
                 rule: '.banner',
-                error: 'Style should be declared or :remove() pseudo-class should used',
+                error: 'Style should be declared or action pseudo-class should be used',
             },
             {
                 rule: '.block > span:contains({background: #410e13)',

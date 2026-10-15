@@ -3,7 +3,7 @@ import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
 import { StyleDeclaration } from '../style-block';
 
 import {
-    parseRemoveSelector,
+    parseActionSelector,
     createRawResultsMap,
     saveToRawResults,
     combineRulesData,
@@ -11,10 +11,13 @@ import {
     ParsedSelectorData,
     RawCssRuleData,
     SelectorPartData,
+    hasActionPseudoStyles,
+    filterStyleBlockDeclarations,
 } from '../css-rule';
 
 import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
+import { findStyleBlockStart } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -23,7 +26,6 @@ import {
     ASTERISK,
     AT_RULE_MARKER,
     STYLE_ERROR_PREFIX,
-    REMOVE_ERROR_PREFIX,
     NO_AT_RULE_ERROR_PREFIX,
 } from '../common/constants';
 
@@ -87,18 +89,18 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
         throw new Error(`${NO_AT_RULE_ERROR_PREFIX}: '${selector}'.`);
     }
 
-    let removeSelectorData: ParsedSelectorData;
+    let actionSelectorData: ParsedSelectorData;
     try {
-        removeSelectorData = parseRemoveSelector(selector);
+        actionSelectorData = parseActionSelector(selector);
     } catch (e: unknown) {
         logger.error(getErrorMessage(e));
-        throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+        throw e;
     }
 
     if (context.nextIndex === -1) {
-        if (selector === removeSelectorData.selector) {
-            // rule should have style or pseudo-class :remove()
-            throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE}: '${context.cssToParse}'`);
+        if (selector === actionSelectorData.selector) {
+            // rule should have style or action pseudo-class
+            throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION}: '${context.cssToParse}'`);
         }
         // stop parsing as there is no style declaration and selector parsed fine
         context.cssToParse = '';
@@ -109,8 +111,8 @@ const parseSelectorPart = (context: Context, extCssDoc: ExtCssDocument): Selecto
     let ast: AnySelectorNodeInterface | undefined;
 
     try {
-        selector = removeSelectorData.selector;
-        stylesOfSelector = removeSelectorData.stylesOfSelector;
+        selector = actionSelectorData.selector;
+        stylesOfSelector = actionSelectorData.stylesOfSelector;
         // validate found selector by parsing it to ast
         // so if it is invalid error will be thrown
         ast = extCssDoc.getSelectorAst(selector);
@@ -269,8 +271,9 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
     while (context.cssToParse) {
         if (context.isSelector) {
             // find index of first opening curly bracket
-            // which may mean start of style part and end of selector one
-            context.nextIndex = context.cssToParse.indexOf(BRACKET.CURLY.LEFT);
+            // which may mean start of style part and end of selector one;
+            // the scan stops at the first bracket to keep parsing linear
+            context.nextIndex = findStyleBlockStart(context.cssToParse);
             // rule should not start with style, selector is required
             // e.g. '{ display: none; }'
             if (context.selectorBuffer.length === 0 && context.nextIndex === 0) {
@@ -278,7 +281,7 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
             }
             if (context.nextIndex === -1) {
                 // no style declaration in rule
-                // but rule still may contain :remove() pseudo-class
+                // but rule still may contain action pseudo-class
                 context.selectorBuffer = context.cssToParse;
             } else {
                 // collect string parts before opening curly bracket
@@ -292,6 +295,9 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
                 context.rawRuleData.selector = selectorData.selector.trim();
                 context.rawRuleData.ast = selectorData.ast;
                 context.rawRuleData.rawStyles = selectorData.stylesOfSelector;
+                context.rawRuleData.hasActionPseudoClass = hasActionPseudoStyles(
+                    selectorData.stylesOfSelector ?? [],
+                );
                 context.isSelector = false;
                 // save rule data if there is no style declaration
                 if (context.nextIndex === -1) {
@@ -314,12 +320,17 @@ export const parseStylesheet = (rawStylesheet: string, extCssDoc: ExtCssDocument
             // style declaration should be parsed
             const parsedStyles = parseNextStyle(context);
 
-            // styles can be parsed from selector part if it has :remove() pseudo-class
+            // styles can be parsed from selector part if it has an action pseudo-class
             // e.g. '.banner:remove() { debug: true; }'
-            context.rawRuleData.rawStyles?.push(...parsedStyles);
+            const hasActionStyles = !!context.rawRuleData.hasActionPseudoClass;
+            const stylesToPush = filterStyleBlockDeclarations(parsedStyles, hasActionStyles);
 
-            // save rule data to results
-            saveToRawResults(rawResults, context.rawRuleData);
+            // rule with only ignored action declarations has nothing to apply
+            if (stylesToPush.length > 0 || hasActionStyles) {
+                context.rawRuleData.rawStyles?.push(...stylesToPush);
+                // save rule data to results
+                saveToRawResults(rawResults, context.rawRuleData);
+            }
 
             context.nextIndex = 0;
 

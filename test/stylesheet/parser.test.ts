@@ -5,7 +5,12 @@
 import { parseStylesheet } from '../../src/stylesheet';
 import { ExtCssDocument } from '../../src/selector';
 
-import { REMOVE_ERROR_PREFIX, STYLE_ERROR_PREFIX } from '../../src/common/constants';
+import {
+    REMOVE_ERROR_PREFIX,
+    REMOVE_ATTR_ERROR_PREFIX,
+    REMOVE_CLASS_ERROR_PREFIX,
+    STYLE_ERROR_PREFIX,
+} from '../../src/common/constants';
 
 import { TestCssRuleData, expectSameParsedRules } from '../helpers/common';
 
@@ -23,6 +28,7 @@ const expectSingleRuleParsed = (input: SingleRuleInput): void => {
     expect(parsed.length).toEqual(1);
     expect(parsed[0]?.selector).toEqual(expected.selector);
     expect(parsed[0]?.style).toEqual(expected.style);
+    expect(parsed[0]?.actionStyles).toEqual(expected.actionStyles);
     expect(parsed[0]?.debug).toEqual(expected.debug);
 };
 
@@ -492,6 +498,146 @@ describe('stylesheet parser', () => {
         });
     });
 
+    describe('action pseudo-classes', () => {
+        const testsInputs = [
+            {
+                actual: '#x:remove-attr(href)',
+                expected: {
+                    selector: '#x',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                },
+            },
+            {
+                actual: '#x:remove-class(ads)',
+                expected: {
+                    selector: '#x',
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                // braces inside a regexp argument should not be treated as style block start
+                actual: '#x:remove-attr(/^data-{1,2}ad$/)',
+                expected: {
+                    selector: '#x',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: '/^data-{1,2}ad$/' }],
+                },
+            },
+            {
+                actual: '#x:remove-attr(/^data-{1,2}ad$/) { display: none }',
+                expected: {
+                    selector: '#x',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: '/^data-{1,2}ad$/' }],
+                },
+            },
+            {
+                // braces inside a plain action argument should not be treated as style block start
+                actual: '#x:remove-class(ad{foo)',
+                expected: {
+                    selector: '#x',
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ad{foo' }],
+                },
+            },
+            {
+                // parentheses inside a regexp argument of the target selector
+                actual: 'div:contains(/[(]/):remove-class(ads)',
+                expected: {
+                    selector: 'div:contains(/[(]/)',
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                // apostrophe inside a double-quoted attribute value
+                actual: 'div[data-label="O\'Reilly"]:remove-attr(title)',
+                expected: {
+                    selector: 'div[data-label="O\'Reilly"]',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'title' }],
+                },
+            },
+            {
+                // apostrophe in plain text of an extended pseudo-class arg
+                actual: "#t:contains(Don't):remove()",
+                expected: {
+                    selector: "#t:contains(Don't)",
+                    style: { remove: 'true' },
+                },
+            },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
+    });
+
+    describe('quotes and slashes in selector args', () => {
+        const testsInputs = [
+            {
+                actual: "#t:contains(Don't) { display: none }",
+                expected: {
+                    selector: "#t:contains(Don't)",
+                    style: { display: 'none' },
+                },
+            },
+            {
+                // an apostrophe after a space in plain text should not break the rule
+                actual: "#t:contains(the '90s) { display: none }",
+                expected: {
+                    selector: "#t:contains(the '90s)",
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: "#t:contains(the '90s):remove()",
+                expected: {
+                    selector: "#t:contains(the '90s)",
+                    style: { remove: 'true' },
+                },
+            },
+            {
+                // a lone double quote in plain text should not break the rule
+                actual: '#t:contains(say ") { display: none }',
+                expected: {
+                    selector: '#t:contains(say ")',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                // a quote after the opening bracket is plain text of :has-text()
+                actual: '#t:has-text("Sale) { display: none }',
+                expected: {
+                    selector: '#t:has-text("Sale)',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                // a quoted :matches-css() value can contain braces
+                actual: 'div:matches-css(content: "a)b{c") { display: none }',
+                expected: {
+                    selector: 'div:matches-css(content: "a)b{c")',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: 'span:contains(1 / 2) { display: none }',
+                expected: {
+                    selector: 'span:contains(1 / 2)',
+                    style: { display: 'none' },
+                },
+            },
+            {
+                actual: '#a:xpath(../..) { display: none }',
+                expected: {
+                    selector: '#a:xpath(../..)',
+                    style: { display: 'none' },
+                },
+            },
+        ];
+        test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
+    });
+
     describe('debug pseudo-property', () => {
         const testsInputs = [
             // 'true' value
@@ -571,7 +717,7 @@ describe('stylesheet parser', () => {
 
     describe('invalid stylesheets', () => {
         describe('selector with no style declaration', () => {
-            const error = STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE;
+            const error = STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION;
             const invalidSelectors = [
                 '.banner',
                 '.block > span:contains({background: #410e13})',
@@ -590,17 +736,70 @@ describe('stylesheet parser', () => {
         });
 
         describe('invalid remove pseudo-class', () => {
-            const error = REMOVE_ERROR_PREFIX.INVALID_REMOVE;
             const invalidSelectors = [
-                ':remove()',
-                '.block:remove() > .banner:remove()',
-                '.block:remove():upward(2)',
-                'div:remove():contains(/test-content/)',
-                '.banner:has(> div[class]):remove():upward()',
-                'div:remove(0)',
-                'div:not([class]):remove(invalid)',
+                { selector: ':remove()', error: REMOVE_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: '.block:remove() > .banner:remove()', error: REMOVE_ERROR_PREFIX.MULTIPLE_USAGE },
+                { selector: '.block:remove():upward(2)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove():contains(/test-content/)', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                // eslint-disable-next-line max-len
+                { selector: '.banner:has(> div[class]):remove():upward()', error: REMOVE_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove(0)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:not([class]):remove(invalid)', error: REMOVE_ERROR_PREFIX.INVALID_ARG },
             ];
-            test.each(invalidSelectors)('%s', (selector) => expectToThrowOnSelector({ selector, error }));
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
+        });
+
+        describe('nested action pseudo-classes', () => {
+            // the stylesheet parser skips the invalid selector part and then
+            // fails on the leftover style block
+            const invalidSelectors = [
+                {
+                    selector: 'div:has(:remove-attr(href)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
+                },
+                {
+                    selector: 'div:not(:remove-class(ads)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
+                },
+                {
+                    selector: 'div:has(:remove()) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
+                },
+                {
+                    selector: 'div:upward(:remove-attr(x)) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
+                },
+                {
+                    selector: 'div:upward(:has(:remove-attr(x))) { display: none; }',
+                    error: STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION,
+                },
+            ];
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
+        });
+
+        describe('invalid action pseudo-classes', () => {
+            const invalidSelectors = [
+                { selector: ':remove-attr(href)', error: REMOVE_ATTR_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: 'div:remove-attr(href) > a', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove-attr(href):remove-class(ads)', error: REMOVE_ATTR_ERROR_PREFIX.MULTIPLE_USAGE },
+                { selector: 'div:remove-attr()', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(href', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ACTION },
+                { selector: 'div:remove-attr(/+/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/[/)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/x/ii)', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-attr(/foo', error: REMOVE_ATTR_ERROR_PREFIX.INVALID_ARG },
+                { selector: ':remove-class(ads)', error: REMOVE_CLASS_ERROR_PREFIX.NO_TARGET_SELECTOR },
+                { selector: 'div:remove-class(/foo', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
+                { selector: 'div:remove-class(ads):upward(1)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_POSITION },
+                { selector: 'div:remove-class(/+/)', error: REMOVE_CLASS_ERROR_PREFIX.INVALID_ARG },
+            ];
+            test.each(invalidSelectors)('$selector', ({ selector, error }) => {
+                expectToThrowOnSelector({ selector, error });
+            });
         });
 
         describe('invalid style declaration', () => {
@@ -673,6 +872,38 @@ describe('stylesheet parser', () => {
                         remove: 'true',
                         content: "'testContentRuleText' !important",
                     },
+                },
+            },
+            {
+                actual: 'div[class]:remove-attr(href) { display: none !important; }',
+                expected: {
+                    selector: 'div[class]',
+                    style: {},
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                },
+            },
+            {
+                actual: 'div[class]:remove-class(ads) { display: none !important; }',
+                expected: {
+                    selector: 'div[class]',
+                    style: {},
+                    actionStyles: [{ property: 'remove-class', value: 'ads' }],
+                },
+            },
+            {
+                actual: "div[class]:remove-attr(href) { content: 'test' !important; }",
+                expected: {
+                    selector: 'div[class]',
+                    style: { content: "'test' !important" },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
+                },
+            },
+            {
+                actual: '#ad { color: red; } #ad:remove-attr(href) { display: none; }',
+                expected: {
+                    selector: '#ad',
+                    style: { color: 'red' },
+                    actionStyles: [{ property: 'remove-attr', value: 'href' }],
                 },
             },
         ];

@@ -8,6 +8,8 @@ import {
     saveToRawResults,
     combineRulesData,
     createRawResultsMap,
+    hasActionPseudoStyles,
+    filterStyleBlockDeclarations,
 } from './helpers';
 
 import { ExtCssDocument } from '../selector';
@@ -16,6 +18,7 @@ import { parseStyleBlock } from '../style-block';
 import { getFirst } from '../common/utils/arrays';
 import { getErrorMessage } from '../common/utils/error';
 import { logger } from '../common/utils/logger';
+import { findStyleBlockStarts } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -24,23 +27,6 @@ import {
     STYLE_ERROR_PREFIX,
     NO_SELECTOR_ERROR_PREFIX,
 } from '../common/constants';
-
-/**
- * Returns array of positions of `{` in `cssRule`.
- *
- * @param cssRule CSS rule.
- *
- * @returns Array of left curly bracket indexes.
- */
-const getLeftCurlyBracketIndexes = (cssRule: string): number[] => {
-    const indexes: number[] = [];
-    for (let i = 0; i < cssRule.length; i += 1) {
-        if (cssRule[i] === BRACKET.CURLY.LEFT) {
-            indexes.push(i);
-        }
-    }
-    return indexes;
-};
 
 // TODO: use `extCssDoc` for caching of style block parser results
 /**
@@ -69,7 +55,8 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
         throw new Error(STYLE_ERROR_PREFIX.NO_COMMENT);
     }
 
-    const leftCurlyBracketIndexes = getLeftCurlyBracketIndexes(cssRule);
+    // braces inside quoted strings, regexp literals and action arguments are skipped
+    const leftCurlyBracketIndexes = findStyleBlockStarts(cssRule);
 
     // rule with style block but no selector
     // e.g. '{ display: none; }'
@@ -95,22 +82,23 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
     ) {
         try {
             // the whole css rule considered as "selector part"
-            // which may contain :remove() pseudo-class
+            // which may contain an action pseudo-class
             selectorData = parseSelectorRulePart(cssRule, extCssDoc);
             if (selectorData.success) {
-                // rule with no style block has valid :remove() pseudo-class
+                // rule with no style block has a valid action pseudo-class
                 // which is parsed into "styles"
                 // e.g. 'div:remove()'
                 // but also it can be just selector with no styles
                 // e.g. 'div'
                 // which should not be considered as valid css rule
                 if (selectorData.stylesOfSelector?.length === 0) {
-                    throw new Error(STYLE_ERROR_PREFIX.NO_STYLE_OR_REMOVE);
+                    throw new Error(STYLE_ERROR_PREFIX.NO_STYLE_OR_ACTION);
                 }
                 return {
                     selector: selectorData.selector.trim(),
                     ast: selectorData.ast,
                     rawStyles: selectorData.stylesOfSelector,
+                    hasActionPseudoClass: true,
                 };
             } else {
                 // not valid selector
@@ -148,7 +136,14 @@ export const parseRule = (rawCssRule: string, extCssDoc: ExtCssDocument): RawCss
             // style block should be parsed
             // TODO: add cache for style block parsing
             const parsedStyles = parseStyleBlock(styleBlockBuffer);
-            rawRuleData.rawStyles?.push(...parsedStyles);
+            const hasActionStyles = hasActionPseudoStyles(rawRuleData.rawStyles ?? []);
+            rawRuleData.hasActionPseudoClass = hasActionStyles;
+            const stylesToPush = filterStyleBlockDeclarations(parsedStyles, hasActionStyles);
+            if (stylesToPush.length === 0 && !hasActionStyles) {
+                // rule with only ignored action declarations has nothing to apply
+                throw new Error(`${STYLE_ERROR_PREFIX.NO_STYLE}: '${cssRule}'`);
+            }
+            rawRuleData.rawStyles?.push(...stylesToPush);
             // stop rule parsing
             break;
         } else {

@@ -1,4 +1,5 @@
 import { ExtCssRuleData } from '../../src/css-rule';
+import { StyleDeclaration } from '../../src/style-block';
 
 /**
  * CSS rule data object for testing.
@@ -9,6 +10,7 @@ import { ExtCssRuleData } from '../../src/css-rule';
 export type TestCssRuleData = {
     selector: string,
     style?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    actionStyles?: StyleDeclaration[],
     debug?: string,
 };
 
@@ -26,6 +28,7 @@ export const expectSameParsedRules = (actual: ExtCssRuleData[], expected: TestCs
     actual.forEach((parsed, i) => {
         expect(parsed.selector).toEqual(expected[i]?.selector);
         expect(parsed.style).toEqual(expected[i]?.style);
+        expect(parsed.actionStyles).toEqual(expected[i]?.actionStyles);
         expect(parsed.debug).toEqual(expected[i]?.debug);
     });
 };

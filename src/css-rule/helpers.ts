@@ -2,9 +2,11 @@ import {
     ExtCssRuleData,
     ParsedSelectorData,
     RawCssRuleData,
+    RawStyleGroup,
     SelectorPartData,
     RawResults,
     RawResultValue,
+    CssStyleMap,
 } from './types';
 
 import { AnySelectorNodeInterface, ExtCssDocument } from '../selector';
@@ -13,12 +15,19 @@ import { StyleDeclaration } from '../style-block';
 import { getErrorMessage } from '../common/utils/error';
 import { getObjectFromEntries } from '../common/utils/objects';
 import { logger } from '../common/utils/logger';
+import {
+    isActionPseudoMarker,
+    isActionStyleMarker,
+    normalizeActionArg,
+    throwActionError,
+} from '../common/utils/action-arg';
 
 import {
-    COLON,
     BRACKET,
+    SLASH,
     REMOVE_PSEUDO_MARKER,
-    REMOVE_ERROR_PREFIX,
+    ACTION_PSEUDO_MARKERS,
+    ActionPseudoMarker,
     CONTENT_CSS_PROPERTY,
     PSEUDO_PROPERTY_POSITIVE_VALUE,
     DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE,
@@ -26,64 +35,141 @@ import {
     NO_AT_RULE_ERROR_PREFIX,
 } from '../common/constants';
 
+import { findClosingParenthesis, scanSelector } from '../common/utils/selector-scanner';
+
 
 const DEBUG_PSEUDO_PROPERTY_KEY = 'debug';
 
 /**
- * Checks the presence of :remove() pseudo-class and validates it while parsing the selector part of css rule.
+ * Info about an action pseudo-class found in a selector.
+ */
+type ActionSelectorData = {
+    /**
+     * Action pseudo-class marker, e.g. 'remove-attr'.
+     */
+    marker: ActionPseudoMarker;
+
+    /**
+     * Index of the action pseudo-class colon in the raw selector.
+     */
+    startIndex: number;
+
+    /**
+     * Raw argument of the action pseudo-class.
+     */
+    arg: string;
+
+    /**
+     * Index after the closing parenthesis,
+     * or -1 if the closing parenthesis is missing.
+     */
+    endIndex: number;
+};
+
+/**
+ * Finds top-level action pseudo-classes in the raw selector.
  *
- * @param rawSelector Selector which may contain :remove() pseudo-class.
+ * Action pseudo-classes nested in other pseudo-classes are ignored here
+ * and rejected later by the selector parser.
+ *
+ * @param rawSelector Raw selector text.
+ *
+ * @returns Found action pseudo-classes in the order of appearance.
+ */
+const findActionSelectors = (rawSelector: string): ActionSelectorData[] => {
+    const found: ActionSelectorData[] = [];
+
+    scanSelector(rawSelector, {
+        onTopLevelColon: (index) => {
+            const marker = ACTION_PSEUDO_MARKERS.find((name) => {
+                const markerText = `${name}${BRACKET.PARENTHESES.LEFT}`;
+                const candidate = rawSelector.substring(index + 1, index + 1 + markerText.length);
+                return candidate.toLowerCase() === markerText;
+            });
+            if (!marker) {
+                return;
+            }
+
+            const argStartIndex = index + marker.length + 2;
+            const closingIndex = findClosingParenthesis(rawSelector, argStartIndex, marker);
+
+            found.push({
+                marker,
+                startIndex: index,
+                arg: closingIndex === -1
+                    ? rawSelector.substring(argStartIndex)
+                    : rawSelector.substring(argStartIndex, closingIndex),
+                endIndex: closingIndex === -1 ? -1 : closingIndex + 1,
+            });
+
+            if (closingIndex !== -1) {
+                return closingIndex;
+            }
+        },
+    });
+
+    return found;
+};
+
+/**
+ * Checks the presence of action pseudo-classes and validates them
+ * while parsing the selector part of a CSS rule.
+ *
+ * Action pseudo-classes are not about element selecting but about actions
+ * with elements, so they are stripped from the selector and returned
+ * as synthetic style declarations.
+ *
+ * @param rawSelector Selector which may contain an action pseudo-class.
  *
  * @returns Parsed selector data with selector and styles.
- * @throws An error on invalid :remove() position.
+ * @throws An error on invalid action pseudo-class usage.
  */
-export const parseRemoveSelector = (rawSelector: string): ParsedSelectorData => {
-    /**
-     * No error will be thrown on invalid selector as it will be validated later
-     * so it's better to explicitly specify 'any' selector for :remove() pseudo-class by '*',
-     * e.g. '.banner > *:remove()' instead of '.banner > :remove()'.
-     */
+export const parseActionSelector = (rawSelector: string): ParsedSelectorData => {
+    const actions = findActionSelectors(rawSelector);
 
-    // ':remove()'
-    // eslint-disable-next-line max-len
-    const VALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKET.PARENTHESES.LEFT}${BRACKET.PARENTHESES.RIGHT}`;
-    // ':remove(' - needed for validation rules like 'div:remove(2)'
-    const INVALID_REMOVE_MARKER = `${COLON}${REMOVE_PSEUDO_MARKER}${BRACKET.PARENTHESES.LEFT}`;
-
-    let selector: string;
-    let shouldRemove = false;
-    const firstIndex = rawSelector.indexOf(VALID_REMOVE_MARKER);
-    if (firstIndex === 0) {
-        // e.g. ':remove()'
-        throw new Error(`${REMOVE_ERROR_PREFIX.NO_TARGET_SELECTOR}: '${rawSelector}'`);
-    } else if (firstIndex > 0) {
-        if (firstIndex !== rawSelector.lastIndexOf(VALID_REMOVE_MARKER)) {
-            // rule with more than one :remove() pseudo-class is invalid
-            // e.g. '.block:remove() > .banner:remove()'
-            throw new Error(`${REMOVE_ERROR_PREFIX.MULTIPLE_USAGE}: '${rawSelector}'`);
-        } else if (firstIndex + VALID_REMOVE_MARKER.length < rawSelector.length) {
-            // remove pseudo-class should be last in the rule
-            // e.g. '.block:remove():upward(2)'
-            throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_POSITION}: '${rawSelector}'`);
-        } else {
-            // valid :remove() pseudo-class position
-            selector = rawSelector.substring(0, firstIndex);
-            shouldRemove = true;
-        }
-    } else if (rawSelector.includes(INVALID_REMOVE_MARKER)) {
-        // it is not valid if ':remove()' is absent in rule but just ':remove(' is present
-        // e.g. 'div:remove(0)'
-        throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${rawSelector}'`);
-    } else {
-        // there is no :remove() pseudo-class in rule
-        selector = rawSelector;
+    if (actions.length === 0) {
+        return { selector: rawSelector, stylesOfSelector: [] };
     }
 
-    const stylesOfSelector = shouldRemove
-        ? [{ property: REMOVE_PSEUDO_MARKER, value: PSEUDO_PROPERTY_POSITIVE_VALUE }]
-        : [];
+    const action = actions[0] as ActionSelectorData;
 
-    return { selector, stylesOfSelector };
+    if (actions.length > 1) {
+        throwActionError(action.marker, 'MULTIPLE_USAGE', rawSelector);
+    }
+    if (action.endIndex === -1) {
+        // an unclosed regexp literal is an argument error,
+        // while any other unclosed argument is an action error
+        const messageKey = action.arg.trim().startsWith(SLASH) ? 'INVALID_ARG' : 'INVALID_ACTION';
+        throwActionError(action.marker, messageKey, rawSelector);
+    }
+    if (action.startIndex === 0) {
+        throwActionError(action.marker, 'NO_TARGET_SELECTOR', rawSelector);
+    }
+    if (action.endIndex < rawSelector.length) {
+        throwActionError(action.marker, 'INVALID_POSITION', rawSelector);
+    }
+
+    const selector = rawSelector.substring(0, action.startIndex);
+
+    if (action.marker === REMOVE_PSEUDO_MARKER) {
+        if (action.arg !== '') {
+            throwActionError(action.marker, 'INVALID_ARG', rawSelector);
+        }
+        return {
+            selector,
+            stylesOfSelector: [{ property: REMOVE_PSEUDO_MARKER, value: PSEUDO_PROPERTY_POSITIVE_VALUE }],
+        };
+    }
+
+    const arg = normalizeActionArg(action.arg);
+    if (!arg) {
+        throwActionError(action.marker, 'INVALID_ARG', rawSelector);
+    }
+
+    return {
+        selector,
+        stylesOfSelector: [{ property: action.marker, value: arg }],
+    };
 };
 
 /**
@@ -101,12 +187,12 @@ export const parseSelectorRulePart = (selectorBuffer: string, extCssDoc: ExtCssD
         throw new Error(`${NO_AT_RULE_ERROR_PREFIX}: '${selector}'.`);
     }
 
-    let removeSelectorData: ParsedSelectorData;
+    let actionSelectorData: ParsedSelectorData;
     try {
-        removeSelectorData = parseRemoveSelector(selector);
+        actionSelectorData = parseActionSelector(selector);
     } catch (e: unknown) {
         logger.error(getErrorMessage(e));
-        throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+        throw e;
     }
 
     let stylesOfSelector: StyleDeclaration[] = [];
@@ -114,8 +200,8 @@ export const parseSelectorRulePart = (selectorBuffer: string, extCssDoc: ExtCssD
     let ast: AnySelectorNodeInterface | undefined;
 
     try {
-        selector = removeSelectorData.selector;
-        stylesOfSelector = removeSelectorData.stylesOfSelector;
+        selector = actionSelectorData.selector;
+        stylesOfSelector = actionSelectorData.stylesOfSelector;
         // validate found selector by parsing it to ast
         // so if it is invalid error will be thrown
         ast = extCssDoc.getSelectorAst(selector);
@@ -147,7 +233,7 @@ export const createRawResultsMap = (): RawResults => {
  * @throws An error if there is no rawRuleData.styles or rawRuleData.ast.
  */
 export const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRuleData): void => {
-    const { selector, ast, rawStyles } = rawRuleData;
+    const { selector, ast, rawStyles, hasActionPseudoClass } = rawRuleData;
 
     if (!rawStyles) {
         throw new Error(`No style declaration for selector: '${selector}'`);
@@ -156,11 +242,16 @@ export const saveToRawResults = (rawResults: RawResults, rawRuleData: RawCssRule
         throw new Error(`No ast parsed for selector: '${selector}'`);
     }
 
+    const styleGroup: RawStyleGroup = {
+        styles: rawStyles,
+        hasActionPseudoClass: !!hasActionPseudoClass,
+    };
+
     const storedRuleData = rawResults.get(selector);
     if (!storedRuleData) {
-        rawResults.set(selector, { ast, styles: rawStyles });
+        rawResults.set(selector, { ast, styleGroups: [styleGroup] });
     } else {
-        storedRuleData.styles.push(...rawStyles);
+        storedRuleData.styleGroups.push(styleGroup);
     }
 };
 
@@ -180,6 +271,64 @@ const isRemoveSetInStyles = (styles: StyleDeclaration[]): boolean => {
 };
 
 /**
+ * Checks whether styles contain action pseudo-class declarations.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns True if styles contain action pseudo-class declarations.
+ */
+export const hasActionPseudoStyles = (styles: StyleDeclaration[]): boolean => {
+    return styles.some((s) => isActionPseudoMarker(s.property));
+};
+
+/**
+ * Filters styles declared together with an action pseudo-class:
+ * such styles are ignored except `content` and `debug` needed for internal usage.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns Styles which should be kept.
+ */
+export const filterActionRuleStyles = (styles: StyleDeclaration[]): StyleDeclaration[] => {
+    return styles.filter((s) => {
+        return s.property === CONTENT_CSS_PROPERTY || s.property === DEBUG_PSEUDO_PROPERTY_KEY;
+    });
+};
+
+/**
+ * Removes action pseudo-class declarations from style block styles:
+ * `remove-attr` and `remove-class` are supported only as pseudo-classes.
+ *
+ * @param styles Array of styles.
+ *
+ * @returns Styles without action pseudo-class declarations.
+ */
+export const filterStyleBlockActionDeclarations = (styles: StyleDeclaration[]): StyleDeclaration[] => {
+    return styles.filter((s) => !isActionStyleMarker(s.property));
+};
+
+/**
+ * Filters style-block declarations of a rule according to its selector:
+ * if the selector contains an action pseudo-class, styles declared in the block
+ * are ignored except `content` and `debug`;
+ * otherwise action declarations (`remove-attr` and `remove-class`)
+ * are removed as they are supported only as pseudo-classes.
+ *
+ * @param styles Parsed style-block declarations.
+ * @param hasActionStyles True if the selector contains an action pseudo-class.
+ *
+ * @returns Styles which should be kept for the rule.
+ */
+export const filterStyleBlockDeclarations = (
+    styles: StyleDeclaration[],
+    hasActionStyles: boolean,
+): StyleDeclaration[] => {
+    return hasActionStyles
+        ? filterActionRuleStyles(styles)
+        : filterStyleBlockActionDeclarations(styles);
+};
+
+/**
  * Returns 'debug' property value which is set in styles.
  *
  * @param styles Array of styles.
@@ -195,59 +344,125 @@ const getDebugStyleValue = (styles: StyleDeclaration[]): string | undefined => {
 };
 
 /**
+ * Data of rules with the same selector needed to prepare the final rule data.
+ */
+type RawMergedRuleData = {
+    /**
+     * String selector.
+     */
+    selector: string;
+
+    /**
+     * Parsed selector ast.
+     */
+    ast?: AnySelectorNodeInterface;
+
+    /**
+     * Raw styles of each parsed rule with the same selector.
+     */
+    styleGroups?: RawStyleGroup[];
+};
+
+/**
  * Prepares final RuleData.
- * Handles `debug` and `remove` in raw rule data styles.
+ * Handles `debug` and action pseudo-classes in raw rule data styles:
+ * action declarations are moved to `actionStyles`,
+ * regular styles of rules with the same selector are kept in `style`,
+ * and `content` of action rules is kept in `style` only for `beforeStyleApplied`.
  *
  * @param rawRuleData Raw data of selector css rule parsing.
  *
  * @returns Parsed ExtendedCss rule data.
- * @throws An error if rawRuleData.ast or rawRuleData.rawStyles not defined.
+ * @throws An error if rawRuleData.ast or rawRuleData.styleGroups not defined.
  */
-export const prepareRuleData = (rawRuleData: RawCssRuleData): ExtCssRuleData => {
-    const { selector, ast, rawStyles } = rawRuleData;
+export const prepareRuleData = (rawRuleData: RawMergedRuleData): ExtCssRuleData => {
+    const { selector, ast, styleGroups } = rawRuleData;
     if (!ast) {
         throw new Error(`AST should be parsed for selector: '${selector}'`);
     }
-    if (!rawStyles) {
+    if (!styleGroups) {
         throw new Error(`Styles should be parsed for selector: '${selector}'`);
     }
     const ruleData: ExtCssRuleData = { selector, ast };
 
-    const debugValue = getDebugStyleValue(rawStyles);
+    // split styles by their source:
+    // action pseudo-class declarations, styles of rules without action pseudo-classes,
+    // and internal styles of action rules (`content` and `debug` only)
+    const actionStyles: StyleDeclaration[] = [];
+    const regularStyles: StyleDeclaration[] = [];
+    const actionRuleStyles: StyleDeclaration[] = [];
+    const allRawStyles: StyleDeclaration[] = [];
 
-    const shouldRemove = isRemoveSetInStyles(rawStyles);
+    styleGroups.forEach((group) => {
+        allRawStyles.push(...group.styles);
+        group.styles.forEach((style) => {
+            if (style.property === DEBUG_PSEUDO_PROPERTY_KEY) {
+                // `debug` is handled as a separate property
+                return;
+            }
+            if (group.hasActionPseudoClass) {
+                if (isActionStyleMarker(style.property)) {
+                    actionStyles.push(style);
+                } else if (!isActionPseudoMarker(style.property)) {
+                    actionRuleStyles.push(style);
+                }
+                // the 'remove' pseudo-class declaration is handled via `shouldRemove`
+            } else {
+                regularStyles.push(style);
+            }
+        });
+    });
 
-    let styles = rawStyles;
-    if (debugValue) {
-        // get rid of 'debug' from styles
-        styles = rawStyles.filter((s) => s.property !== DEBUG_PSEUDO_PROPERTY_KEY);
-        // and set it as separate property only if its value is valid
-        // which is 'true' or 'global'
-        if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
-            || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
-            ruleData.debug = debugValue;
-        }
+    const debugValue = getDebugStyleValue(allRawStyles);
+    // set `debug` as separate property only if its value is valid
+    // which is 'true' or 'global'
+    if (debugValue === PSEUDO_PROPERTY_POSITIVE_VALUE
+        || debugValue === DEBUG_PSEUDO_PROPERTY_GLOBAL_VALUE) {
+        ruleData.debug = debugValue;
     }
-    if (shouldRemove) {
-        // no other styles are needed to apply if 'remove' is set
-        ruleData.style = {
-            [REMOVE_PSEUDO_MARKER]: PSEUDO_PROPERTY_POSITIVE_VALUE,
-        };
 
-        /**
-         * 'content' property is needed for ExtCssConfiguration.beforeStyleApplied().
-         *
-         * Search `BeforeStyleAppliedCallback` for more details.
-         */
-        const contentStyle = styles.find((s) => s.property === CONTENT_CSS_PROPERTY);
-        if (contentStyle) {
-            ruleData.style[CONTENT_CSS_PROPERTY] = contentStyle.value;
+    const shouldRemove = isRemoveSetInStyles(allRawStyles);
+
+    if (shouldRemove || actionStyles.length > 0) {
+        const actionStyleMap: CssStyleMap = {};
+
+        if (shouldRemove) {
+            // the element is removed, so only 'content' is needed for internal usage
+            const contentStyle = [...regularStyles, ...actionRuleStyles]
+                .find((s) => s.property === CONTENT_CSS_PROPERTY);
+            if (contentStyle) {
+                actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
+                ruleData.hasInternalContent = true;
+            }
+            actionStyleMap[REMOVE_PSEUDO_MARKER] = PSEUDO_PROPERTY_POSITIVE_VALUE;
+        } else {
+            // keep styles of other rules with the same target selector
+            regularStyles.forEach((style) => {
+                actionStyleMap[style.property] = style.value;
+            });
+            // keep 'content' of action rules only for `beforeStyleApplied` (e.g. CssHitsCounter);
+            // regular 'content' has priority and should be applied to the element
+            if (!(CONTENT_CSS_PROPERTY in actionStyleMap)) {
+                const contentStyle = actionRuleStyles.find((s) => s.property === CONTENT_CSS_PROPERTY);
+                if (contentStyle) {
+                    actionStyleMap[CONTENT_CSS_PROPERTY] = contentStyle.value;
+                    ruleData.hasInternalContent = true;
+                }
+            }
         }
+
+        // action pseudo-classes are not stored in `style`:
+        // `actionStyles` is the only source of action arguments
+        if (actionStyles.length > 0) {
+            ruleData.actionStyles = actionStyles;
+        }
+
+        ruleData.style = actionStyleMap;
     } else {
         // otherwise all styles should be applied.
         // every style property will be unique because of their converting into object
-        if (styles.length > 0) {
-            const stylesAsEntries: Array<[string, string]> = styles.map((style) => {
+        if (regularStyles.length > 0) {
+            const stylesAsEntries: Array<[string, string]> = regularStyles.map((style) => {
                 const { property, value } = style;
                 return [property, value];
             });
@@ -271,8 +486,8 @@ export const combineRulesData = (rawResults: RawResults): ExtCssRuleData[] => {
     const results: ExtCssRuleData[] = [];
     rawResults.forEach((value, key) => {
         const selector = key;
-        const { ast, styles: rawStyles } = value;
-        results.push(prepareRuleData({ selector, ast, rawStyles }));
+        const { ast, styleGroups } = value;
+        results.push(prepareRuleData({ selector, ast, styleGroups }));
     });
     return results;
 };

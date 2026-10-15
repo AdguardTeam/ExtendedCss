@@ -207,6 +207,46 @@ describe('absolute extended selectors', () => {
                 ],
             },
             {
+                // an apostrophe in plain text should not open a quoted string
+                actual: "span:contains(Don't)",
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: "Don't" },
+                ],
+            },
+            {
+                // an apostrophe after a space in plain text should not open a quoted string
+                actual: "span:contains(the '90s)",
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: "the '90s" },
+                ],
+            },
+            {
+                // a lone double quote in plain text should not open a quoted string
+                actual: 'span:contains(say ")',
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: 'say "' },
+                ],
+            },
+            {
+                // a slash in plain text should not open a regexp literal
+                actual: 'span:contains(1 / 2)',
+                expected: [
+                    { isRegular: true, value: 'span' },
+                    { isAbsolute: true, name, value: '1 / 2' },
+                ],
+            },
+            {
+                // a quote after an escaped backslash should close the quoted string
+                actual: 'div[data-x="a\\\\"]:contains(hello)',
+                expected: [
+                    { isRegular: true, value: 'div[data-x="a\\\\"]' },
+                    { isAbsolute: true, name, value: 'hello' },
+                ],
+            },
+            {
                 actual: 'div[id] > .row > span:contains(/^Advertising$/)',
                 expected: [
                     { isRegular: true, value: 'div[id] > .row > span' },
@@ -385,6 +425,14 @@ describe('absolute extended selectors', () => {
                 ],
             },
             {
+                // slashes inside :xpath() should not open a regexp literal
+                actual: '#a:xpath(../..)',
+                expected: [
+                    { isRegular: true, value: '#a' },
+                    { isAbsolute: true, name, value: '../..' },
+                ],
+            },
+            {
                 actual: ':xpath(//div[@data-st-area=\'Advert\'][count(*)=2][not(header)])',
                 expected: [
                     { isRegular: true, value: 'body' },
@@ -469,6 +517,23 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '[id][class]' },
                 ],
             },
+            {
+                // action-like text inside a quoted attribute value is not a pseudo-class
+                actual: 'div:upward([data-x=":remove-attr(title)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '[data-x=":remove-attr(title)"]' },
+                ],
+            },
+            {
+                // action-like text inside a quoted attribute value
+                // with a space after `=` is not a pseudo-class
+                actual: 'div:upward([data-x = ":remove-attr(title)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '[data-x = ":remove-attr(title)"]' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
@@ -483,6 +548,14 @@ describe('relative extended selectors', () => {
                 expected: [
                     { isRegular: true, value: 'div' },
                     { isRelative: true, name, value: 'span' },
+                ],
+            },
+            {
+                // action-like text inside a quoted attribute value is not a pseudo-class
+                actual: 'div:has([data-x=":remove-attr(y)"])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isRelative: true, name, value: '[data-x=":remove-attr(y)"]' },
                 ],
             },
             {
@@ -2860,6 +2933,57 @@ describe('remove pseudo-class is invalid for selector parser', () => {
         },
     ];
     test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+});
+
+describe('action pseudo-classes are invalid for selector parser', () => {
+    const toThrowInputs = [
+        {
+            selector: 'div:remove-attr(href)',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:remove-class(ads)',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:remove-attr(/^on[a-z]+/)',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:has(:remove-attr(href))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:not(:remove-class(ads))',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:has(:remove())',
+            error: 'Invalid :remove() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove-attr(x))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:has(:remove-attr(x)))',
+            error: 'Invalid :remove-attr() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove-class(x))',
+            error: 'Invalid :remove-class() pseudo-class in selector:',
+        },
+        {
+            selector: 'div:upward(:remove())',
+            error: 'Invalid :remove() pseudo-class in selector:',
+        },
+    ];
+    test.each(toThrowInputs)('%s', (input) => expectToThrowInput(input));
+
+    it('should allow standard pseudo-classes inside :upward()', () => {
+        expect(() => parse('div:upward(:hover)')).not.toThrow();
+        expect(() => parse('div:upward(div:not(.a))')).not.toThrow();
+    });
 });
 
 describe('fail on white space which is before or after extended pseudo-class name', () => {

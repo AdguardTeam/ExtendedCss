@@ -103,6 +103,37 @@ export const SUPPORTED_SELECTOR_MARKS = [
     FORM_FEED,
 ];
 
+/**
+ * Limited list of available symbols before slash `/`
+ * to check whether it is valid regexp pattern opening.
+ */
+export const POSSIBLE_MARKS_BEFORE_REGEXP = {
+    COMMON: [
+        // e.g. ':matches-attr(/data-/)'
+        LEFT_PARENTHESIS,
+        // e.g. `:matches-attr('/data-/')`
+        SINGLE_QUOTE,
+        // e.g. ':matches-attr("/data-/")'
+        DOUBLE_QUOTE,
+        // e.g. ':matches-attr(check=/data-v-/)'
+        EQUAL_SIGN,
+        // e.g. ':matches-property(inner./_test/=null)'
+        DOT,
+        // e.g. ':matches-css(height:/20px/)'
+        COLON,
+        // ':matches-css-after( content  :   /(\\d+\\s)*me/  )'
+        SPACE,
+    ],
+    CONTAINS: [
+        // e.g. ':contains(/text/)'
+        LEFT_PARENTHESIS,
+        // e.g. `:contains('/text/')`
+        SINGLE_QUOTE,
+        // e.g. ':contains("/text/")'
+        DOUBLE_QUOTE,
+    ],
+};
+
 export const SUPPORTED_STYLE_DECLARATION_MARKS = [
     // divider between property and value in declaration
     COLON,
@@ -156,6 +187,40 @@ export const UPWARD_PSEUDO_CLASS_MARKER = 'upward';
  * and both are handled by stylesheet parser.
  */
 export const REMOVE_PSEUDO_MARKER = 'remove';
+
+/**
+ * Pseudo-classes `:remove-attr()` and `:remove-class()` are action operators:
+ * they remove matching attributes or classes instead of selecting elements.
+ *
+ * Selector text should not contain these pseudo-classes,
+ * so the selector parser considers them invalid,
+ * and they are handled by the stylesheet parser.
+ */
+export const REMOVE_ATTR_PSEUDO_MARKER = 'remove-attr';
+export const REMOVE_CLASS_PSEUDO_MARKER = 'remove-class';
+
+/**
+ * Action pseudo-class markers which are handled by the stylesheet parser
+ * and should never reach the selector parser.
+ */
+export const ACTION_PSEUDO_MARKERS = [
+    REMOVE_PSEUDO_MARKER,
+    REMOVE_ATTR_PSEUDO_MARKER,
+    REMOVE_CLASS_PSEUDO_MARKER,
+] as const;
+
+export type ActionPseudoMarker = typeof ACTION_PSEUDO_MARKERS[number];
+
+/**
+ * Action pseudo-class markers which are stored in rule styles
+ * and are not CSS properties.
+ */
+export const ACTION_STYLE_MARKERS = [
+    REMOVE_ATTR_PSEUDO_MARKER,
+    REMOVE_CLASS_PSEUDO_MARKER,
+] as const satisfies readonly ActionPseudoMarker[];
+
+export type ActionStyleMarker = typeof ACTION_STYLE_MARKERS[number];
 
 // relative:
 export const HAS_PSEUDO_CLASS_MARKER = 'has';
@@ -261,19 +326,72 @@ export const STYLE_ERROR_PREFIX = {
     UNCLOSED_STYLE: 'Unclosed style declaration',
     NO_PROPERTY: 'Missing style property in declaration',
     NO_VALUE: 'Missing style value in declaration',
-    NO_STYLE_OR_REMOVE: 'Style should be declared or :remove() pseudo-class should used',
+    NO_STYLE_OR_ACTION: 'Style should be declared or action pseudo-class should be used',
     NO_COMMENT: 'Comments are not supported',
 };
 
 export const NO_AT_RULE_ERROR_PREFIX = 'At-rules are not supported';
 
-export const REMOVE_ERROR_PREFIX = {
-    INVALID_REMOVE: 'Invalid :remove() pseudo-class in selector',
-    NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :remove() pseudo-class`,
-    MULTIPLE_USAGE: 'Pseudo-class :remove() appears more than once in selector',
-    INVALID_POSITION: 'Pseudo-class :remove() should be at the end of selector',
+/**
+ * Error message shape shared by all action pseudo-classes.
+ */
+export type ActionErrorPrefix = {
+    INVALID_ACTION: string;
+    NO_TARGET_SELECTOR: string;
+    MULTIPLE_USAGE: string;
+    INVALID_POSITION: string;
+    INVALID_ARG: string;
 };
+
+/**
+ * Creates error messages for an action pseudo-class.
+ *
+ * @param marker Action pseudo-class marker, e.g. 'remove-attr'.
+ *
+ * @returns Error messages of the action pseudo-class.
+ */
+const createActionErrorPrefix = (marker: ActionPseudoMarker): ActionErrorPrefix => {
+    return {
+        INVALID_ACTION: `Invalid :${marker}() pseudo-class in selector`,
+        NO_TARGET_SELECTOR: `${NO_SELECTOR_ERROR_PREFIX} before :${marker}() pseudo-class`,
+        MULTIPLE_USAGE: `Pseudo-class :${marker}() appears more than once in selector`,
+        INVALID_POSITION: `Pseudo-class :${marker}() should be at the end of selector`,
+        INVALID_ARG: `Invalid argument of :${marker}() pseudo-class`,
+    };
+};
+
+export const REMOVE_ERROR_PREFIX: ActionErrorPrefix = createActionErrorPrefix(REMOVE_PSEUDO_MARKER);
+
+export const REMOVE_ATTR_ERROR_PREFIX: ActionErrorPrefix = createActionErrorPrefix(REMOVE_ATTR_PSEUDO_MARKER);
+
+export const REMOVE_CLASS_ERROR_PREFIX: ActionErrorPrefix = createActionErrorPrefix(REMOVE_CLASS_PSEUDO_MARKER);
+
+/**
+ * Maps an action pseudo-class marker to its error messages.
+ */
+export const ACTION_ERROR_PREFIXES: Record<ActionPseudoMarker, ActionErrorPrefix> = {
+    [REMOVE_PSEUDO_MARKER]: REMOVE_ERROR_PREFIX,
+    [REMOVE_ATTR_PSEUDO_MARKER]: REMOVE_ATTR_ERROR_PREFIX,
+    [REMOVE_CLASS_PSEUDO_MARKER]: REMOVE_CLASS_ERROR_PREFIX,
+};
+
+/**
+ * Quote mark of a quoted string.
+ */
+export type QuoteMark = '"' | "'";
 
 export const MATCHING_ELEMENT_ERROR_PREFIX = 'Error while matching element';
 
 export const MAX_STYLE_PROTECTION_COUNT = 50;
+
+/**
+ * Maximum number of times an action (e.g. `:remove-attr()`) is applied
+ * to the same element with the same argument.
+ * Needed to avoid an endless loop if the page keeps re-adding
+ * the removed attribute or class.
+ */
+export const MAX_ACTION_REMOVALS_COUNT = 50;
+
+export const ID_ATTRIBUTE = 'id';
+export const CLASS_ATTRIBUTE = 'class';
+export const STYLE_ATTRIBUTE = 'style';

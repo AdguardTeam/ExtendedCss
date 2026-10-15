@@ -62,7 +62,7 @@ by AdGuard products and other ad-blocking tools.
 │   ├── common/                 # Shared constants, tokenizer, utilities
 │   │   ├── constants.ts        # Pseudo-class names, brackets, operators
 │   │   ├── tokenizer.ts        # Generic string tokenizer
-│   │   └── utils/              # Helper functions (8 modules)
+│   │   └── utils/              # Helper functions
 │   ├── extended-css/           # Main ExtendedCss class and DOM helpers
 │   │   ├── extended-css.ts     # Core orchestrator class
 │   │   └── helpers/            # DOM observation, style setting, throttling

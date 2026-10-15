@@ -11,6 +11,8 @@ import {
 import { isSupportedPseudoClass } from './parser-predicates';
 import { isAbsolutePseudoClass, isRelativePseudoClass } from './common-predicates';
 
+import { isActionPseudoMarker, throwActionError } from '../../common/utils/action-arg';
+
 import {
     NODE,
     AnySelectorNode,
@@ -26,12 +28,7 @@ import {
     getLast,
     getPrevToLast,
 } from '../../common/utils/arrays';
-import {
-    BRACKET,
-    HAS_PSEUDO_CLASS_MARKERS,
-    REMOVE_PSEUDO_MARKER,
-    REMOVE_ERROR_PREFIX,
-} from '../../common/constants';
+import { BRACKET, HAS_PSEUDO_CLASS_MARKERS } from '../../common/constants';
 
 /**
  * Returns the node which is being collected
@@ -282,7 +279,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
  * Checks values of few next tokens on colon token `:` and:
  *  - updates buffer node for following standard pseudo-class;
  *  - adds extended selector ast node for following extended pseudo-class;
- *  - validates some cases of `:remove()` and `:has()` usage.
+ *  - validates some cases of action pseudo-classes and `:has()` usage.
  *
  * @param context Selector parser context.
  * @param selector Selector.
@@ -290,7 +287,7 @@ export const getUpdatedBufferNode = (context: Context): AnySelectorNodeInterface
  * @param nextTokenValue Value of token next to current one.
  * @param nextToNextTokenValue Value of token next to next to current one.
  *
- * @throws An error on :remove() pseudo-class in selector
+ * @throws An error on action pseudo-class in selector
  * or :has() inside regular pseudo limitation.
  */
 export const handleNextTokenOnColon = (
@@ -300,15 +297,22 @@ export const handleNextTokenOnColon = (
     nextTokenValue: string | undefined,
     nextToNextTokenValue: string | undefined,
 ) => {
+    if (context.quoteCharacter) {
+        // the colon is inside a quoted value and is not a pseudo-class start,
+        // e.g. ':upward([data-x=":remove-attr(title)"])'
+        updateBufferNode(context, tokenValue);
+        return;
+    }
     if (!nextTokenValue) {
         throw new Error(`Invalid colon ':' at the end of selector: '${selector}'`);
     }
     if (!isSupportedPseudoClass(nextTokenValue.toLowerCase())) {
-        if (nextTokenValue.toLowerCase() === REMOVE_PSEUDO_MARKER) {
-            // :remove() pseudo-class should be handled before
-            // as it is not about element selecting but actions with elements
+        const actionMarker = nextTokenValue.toLowerCase();
+        if (isActionPseudoMarker(actionMarker)) {
+            // Action pseudo-classes should be handled before
+            // as they are not about element selecting but actions with elements
             // e.g. 'body > div:empty:remove()'
-            throw new Error(`${REMOVE_ERROR_PREFIX.INVALID_REMOVE}: '${selector}'`);
+            throwActionError(actionMarker, 'INVALID_ACTION', selector);
         }
         // if following token is not an extended pseudo
         // the colon should be collected to value of RegularSelector
