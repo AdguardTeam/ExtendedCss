@@ -12,9 +12,6 @@ and this project adheres to
 
 ### Added
 
-- Support for uBlock Origin action operators `:remove-attr()` and
-  `:remove-class()` [#153].
-
 ### Changed
 
 ### Deprecated
@@ -24,6 +21,13 @@ and this project adheres to
 ### Fixed
 
 ### Security
+
+## [2.3.0] - 2026-10-15
+
+### Added
+
+- Support for uBlock Origin action operators `:remove-attr()` and
+  `:remove-class()` [#153].
 
 ## [2.2.1] - 2026-08-05
 
@@ -40,7 +44,8 @@ and this project adheres to
 - Support for standalone (no-argument) extended pseudo-classes
   in the selector parser, query engine, and AST optimizer.
 
-[Unreleased]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1
 [2.2.1-beta.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1-beta.0
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
