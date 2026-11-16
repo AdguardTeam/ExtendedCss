@@ -62,6 +62,11 @@ describe('getElementSelectorDesc', () => {
             expected: 'svg[*|xlink="http://www.w3.org/1999/xlink"][*|space="preserve"]',
         },
         {
+            name: 'colon in tag name',
+            html: '<o:p class="note"></o:p>',
+            expected: 'o\\:p[class="note"]',
+        },
+        {
             name: 'valid identifier as attribute name',
             html: '<div data-a_b="a" -data="b" _ngcontent-c1="c"></div>',
             expected: 'div[data-a_b="a"][-data="b"][_ngcontent-c1="c"]',

@@ -385,6 +385,37 @@ describe('playwright required tests', () => {
             });
         });
 
+        describe('tag name which is not a valid identifier', () => {
+            const bodyInnerHtml = `
+                <o:p id="other"></o:p>
+                <o:p id="target">text</o:p>
+                <span id="next"></span>
+            `;
+
+            // native :has() is supported by the browser, so the result should be the same
+            const sameAsNativeSelectors = [
+                'body > [id]:has(+ span)',
+                'body > [id]:has(~ span)',
+            ];
+            it.each(sameAsNativeSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                const selectedIds = await getIdsByExtended(selector);
+                expect(selectedIds.length).toBeGreaterThan(0);
+                expect(selectedIds).toEqual(await getIdsByRegular(selector));
+            });
+
+            const afterExtendedSelectors = [
+                'body > [id]:contains(text) + span',
+                'body > [id]:contains(text) ~ span',
+            ];
+            it.each(afterExtendedSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                expect(await getIdsByExtended(selector)).toEqual(['next']);
+            });
+        });
+
         describe('name with namespace', () => {
             const bodyInnerHtml = `
                 <svg>

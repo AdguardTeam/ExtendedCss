@@ -89,7 +89,7 @@ const escapeCssStringValue = (value: string): string => {
 /**
  * Escapes `value` so it can be used as a CSS identifier, the same way as `CSS.escape()` does.
  *
- * @param value Raw identifier, e.g. Attribute name.
+ * @param value Raw identifier, e.g. Tag name or attribute name.
  *
  * @returns Escaped identifier.
  */
@@ -127,7 +127,7 @@ const getAttrSelectorName = (attr: Attr): string => {
  * @returns String representation of `element`.
  */
 export const getElementSelectorDesc = (element: Element): string => {
-    let selectorText = element.tagName.toLowerCase();
+    let selectorText = escapeCssIdentifier(element.tagName.toLowerCase());
     selectorText += Array.from(element.attributes)
         .map((attr) => {
             return `[${getAttrSelectorName(attr)}="${escapeCssStringValue(attr.value)}"]`;

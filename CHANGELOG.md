@@ -22,8 +22,8 @@ and this project adheres to
 
 - Fixed `:has(+ ...)`, `:has(~ ...)` and the `+` and `~` combinators
   after an extended selector failing on elements with `"`, `\` or a line
-  break in attribute values, or with attribute names which are not valid
-  CSS identifiers, e.g. `@click` or `xlink:href` [#192].
+  break in attribute values, or with tag or attribute names which are
+  not valid CSS identifiers, e.g. `o:p`, `@click` or `xlink:href` [#192].
 
 ### Security
 

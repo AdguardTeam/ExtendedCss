@@ -2082,6 +2082,24 @@ describe('sibling combinators - special characters in attributes', () => {
         test.each(testInputs)('%s', (input) => expectSuccessInput(input));
     });
 
+    describe('tag name which is not a valid identifier', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <o:p id="other"></o:p>
+                <o:p id="target">text</o:p>
+                <span id="next"></span>
+            `;
+        });
+
+        const testInputs = [
+            { actual: '[id]:has(+ span)', expected: '#target' },
+            { actual: '[id]:has(~ span)', expected: '#other, #target' },
+            { actual: '[id]:contains(text) + span', expected: 'span#next' },
+            { actual: '[id]:contains(text) ~ span', expected: 'span#next' },
+        ];
+        test.each(testInputs)('%s', (input) => expectSuccessInput(input));
+    });
+
     describe('name with namespace', () => {
         beforeEach(() => {
             document.body.innerHTML = `
