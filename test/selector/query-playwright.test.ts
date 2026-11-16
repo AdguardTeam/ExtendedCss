@@ -308,4 +308,145 @@ describe('playwright required tests', () => {
             expect(selectedIds).toEqual(['emptyScriptChild', 'emptyStyleChild', 'emptyDiv']);
         });
     });
+
+    describe('sibling combinators - special characters in attributes', () => {
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        const fixtures = [
+            {
+                name: 'double quote in value',
+                bodyInnerHtml: `
+                    <div id="other" data-config='{"slot":1}'></div>
+                    <div id="target" data-config='{"slot":2}'>text</div>
+                    <span id="next"></span>
+                `,
+            },
+            {
+                name: 'backslash in value',
+                bodyInnerHtml: `
+                    <div id="other" data-path="a\\b"></div>
+                    <div id="target" data-path="c\\d">text</div>
+                    <span id="next"></span>
+                `,
+            },
+            {
+                name: 'line feed in value',
+                bodyInnerHtml: `
+                    <div id="other" class="banner
+                        top"></div>
+                    <div id="target" class="banner
+                        bottom">text</div>
+                    <span id="next"></span>
+                `,
+            },
+            {
+                name: 'carriage return and form feed in value',
+                // character references are used as HTML parser replaces a raw carriage return with a line feed
+                bodyInnerHtml: `
+                    <div id="other" data-text="a&#13;b&#12;c"></div>
+                    <div id="target" data-text="d&#13;e&#12;f">text</div>
+                    <span id="next"></span>
+                `,
+            },
+            {
+                name: 'name which is not a valid identifier',
+                bodyInnerHtml: `
+                    <div id="other" x-on:click="a" @click.prevent="b" :class="c" 1data="d"></div>
+                    <div id="target" x-on:click="e" @click.prevent="f" :class="g" 1data="h">text</div>
+                    <span id="next"></span>
+                `,
+            },
+        ];
+
+        describe.each(fixtures)('$name', ({ bodyInnerHtml }) => {
+            // native :has() is supported by the browser, so the result should be the same
+            const sameAsNativeSelectors = [
+                'div:has(+ span)',
+                'div:has(~ span)',
+            ];
+            it.each(sameAsNativeSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                const selectedIds = await getIdsByExtended(selector);
+                expect(selectedIds.length).toBeGreaterThan(0);
+                expect(selectedIds).toEqual(await getIdsByRegular(selector));
+            });
+
+            const afterExtendedSelectors = [
+                'div:contains(text) + span',
+                'div:contains(text) ~ span',
+            ];
+            it.each(afterExtendedSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                expect(await getIdsByExtended(selector)).toEqual(['next']);
+            });
+        });
+
+        describe('tag name which is not a valid identifier', () => {
+            const bodyInnerHtml = `
+                <o:p id="other"></o:p>
+                <o:p id="target">text</o:p>
+                <span id="next"></span>
+            `;
+
+            // native :has() is supported by the browser, so the result should be the same
+            const sameAsNativeSelectors = [
+                'body > [id]:has(+ span)',
+                'body > [id]:has(~ span)',
+            ];
+            it.each(sameAsNativeSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                const selectedIds = await getIdsByExtended(selector);
+                expect(selectedIds.length).toBeGreaterThan(0);
+                expect(selectedIds).toEqual(await getIdsByRegular(selector));
+            });
+
+            const afterExtendedSelectors = [
+                'body > [id]:contains(text) + span',
+                'body > [id]:contains(text) ~ span',
+            ];
+            it.each(afterExtendedSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                expect(await getIdsByExtended(selector)).toEqual(['next']);
+            });
+        });
+
+        describe('name with namespace', () => {
+            const bodyInnerHtml = `
+                <svg>
+                    <use id="other" class="icon" xlink:href="#a"></use>
+                    <use id="target" class="icon" xlink:href="#b"></use>
+                    <g id="next"></g>
+                </svg>
+            `;
+
+            // native :has() is supported by the browser, so the result should be the same
+            const sameAsNativeSelectors = [
+                'use:has(+ g)',
+                'use:has(~ g)',
+            ];
+            it.each(sameAsNativeSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                const selectedIds = await getIdsByExtended(selector);
+                expect(selectedIds.length).toBeGreaterThan(0);
+                expect(selectedIds).toEqual(await getIdsByRegular(selector));
+            });
+
+            const afterExtendedSelectors = [
+                'use:matches-attr(class=icon) + g',
+                'use:matches-attr(class=icon) ~ g',
+            ];
+            it.each(afterExtendedSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                expect(await getIdsByExtended(selector)).toEqual(['next']);
+            });
+        });
+    });
 });

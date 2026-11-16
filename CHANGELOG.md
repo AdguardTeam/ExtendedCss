@@ -20,6 +20,11 @@ and this project adheres to
 
 ### Fixed
 
+- Fixed `:has(+ ...)`, `:has(~ ...)` and the `+` and `~` combinators
+  after an extended selector failing on elements with `"`, `\` or a line
+  break in attribute values, or with tag or attribute names which are
+  not valid CSS identifiers, e.g. `o:p`, `@click` or `xlink:href` [#192].
+
 ### Security
 
 ## [2.3.0] - 2026-10-15
@@ -49,6 +54,7 @@ and this project adheres to
 [2.2.1]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1
 [2.2.1-beta.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.2.0...v2.2.1-beta.0
 [2.2.0]: https://github.com/AdguardTeam/ExtendedCss/compare/v2.1.1...v2.2.0
+[#192]: https://github.com/AdguardTeam/ExtendedCss/issues/192
 [#189]: https://github.com/AdguardTeam/ExtendedCss/issues/189
 [#153]: https://github.com/AdguardTeam/ExtendedCss/issues/153
 
