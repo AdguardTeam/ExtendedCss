@@ -308,4 +308,54 @@ describe('playwright required tests', () => {
             expect(selectedIds).toEqual(['emptyScriptChild', 'emptyStyleChild', 'emptyDiv']);
         });
     });
+
+    describe('sibling combinators - special characters in attribute values', () => {
+        afterEach(() => {
+            document.body.innerHTML = '';
+        });
+
+        const fixtures = [
+            {
+                name: 'double quote',
+                bodyInnerHtml: `
+                    <div id="other" data-config='{"slot":1}'></div>
+                    <div id="target" data-config='{"slot":2}'>text</div>
+                    <span id="next"></span>
+                `,
+            },
+            {
+                name: 'backslash',
+                bodyInnerHtml: `
+                    <div id="other" data-path="a\\b"></div>
+                    <div id="target" data-path="c\\d">text</div>
+                    <span id="next"></span>
+                `,
+            },
+        ];
+
+        describe.each(fixtures)('$name', ({ bodyInnerHtml }) => {
+            // native :has() is supported by the browser, so the result should be the same
+            const sameAsNativeSelectors = [
+                'div:has(+ span)',
+                'div:has(~ span)',
+            ];
+            it.each(sameAsNativeSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                const selectedIds = await getIdsByExtended(selector);
+                expect(selectedIds.length).toBeGreaterThan(0);
+                expect(selectedIds).toEqual(await getIdsByRegular(selector));
+            });
+
+            const afterExtendedSelectors = [
+                'div:contains(text) + span',
+                'div:contains(text) ~ span',
+            ];
+            it.each(afterExtendedSelectors)('%s', async (selector) => {
+                await setBodyInnerHtml(bodyInnerHtml);
+
+                expect(await getIdsByExtended(selector)).toEqual(['next']);
+            });
+        });
+    });
 });

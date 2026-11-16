@@ -17,6 +17,23 @@ export const getNodeTextContent = (domElement: Node): string => {
 };
 
 /**
+ * Matches characters which end or escape a double-quoted CSS string.
+ */
+const CSS_STRING_SPECIAL_CHARS_REGEXP = /["\\]/g;
+
+/**
+ * Escapes double quotes and backslashes in `value`
+ * so it can be used inside a double-quoted CSS string.
+ *
+ * @param value Raw string value.
+ *
+ * @returns Escaped string value.
+ */
+const escapeCssStringValue = (value: string): string => {
+    return value.replace(CSS_STRING_SPECIAL_CHARS_REGEXP, '\\$&');
+};
+
+/**
  * Returns element selector text based on it's tagName and attributes.
  *
  * @param element DOM element.
@@ -27,7 +44,7 @@ export const getElementSelectorDesc = (element: Element): string => {
     let selectorText = element.tagName.toLowerCase();
     selectorText += Array.from(element.attributes)
         .map((attr) => {
-            return `[${attr.name}="${element.getAttribute(attr.name)}"]`;
+            return `[${attr.name}="${escapeCssStringValue(attr.value)}"]`;
         })
         .join('');
     return selectorText;

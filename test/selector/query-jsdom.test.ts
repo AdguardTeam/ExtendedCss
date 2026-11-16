@@ -2017,6 +2017,43 @@ describe('check valid regular selectors', () => {
     });
 });
 
+describe('sibling combinators - special characters in attribute values', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    const testInputs = [
+        { actual: 'div:has(+ span)', expected: 'div#target' },
+        { actual: 'div:has(~ span)', expected: 'div#other, div#target' },
+        { actual: 'div:contains(text) + span', expected: 'span#next' },
+        { actual: 'div:contains(text) ~ span', expected: 'span#next' },
+    ];
+
+    describe('double quote', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="other" data-config='{"slot":1}'></div>
+                <div id="target" data-config='{"slot":2}'>text</div>
+                <span id="next"></span>
+            `;
+        });
+
+        test.each(testInputs)('%s', (input) => expectSuccessInput(input));
+    });
+
+    describe('backslash', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="other" data-path="a\\b"></div>
+                <div id="target" data-path="c\\d">text</div>
+                <span id="next"></span>
+            `;
+        });
+
+        test.each(testInputs)('%s', (input) => expectSuccessInput(input));
+    });
+});
+
 describe('case-insensitivity for pseudo-class names', () => {
     document.body.innerHTML = `
         <div id="root" level="0">
