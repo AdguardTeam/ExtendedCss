@@ -2017,39 +2017,88 @@ describe('check valid regular selectors', () => {
     });
 });
 
-describe('sibling combinators - special characters in attribute values', () => {
+describe('sibling combinators - special characters in attributes', () => {
     afterEach(() => {
         document.body.innerHTML = '';
     });
 
-    const testInputs = [
-        { actual: 'div:has(+ span)', expected: 'div#target' },
-        { actual: 'div:has(~ span)', expected: 'div#other, div#target' },
-        { actual: 'div:contains(text) + span', expected: 'span#next' },
-        { actual: 'div:contains(text) ~ span', expected: 'span#next' },
-    ];
-
-    describe('double quote', () => {
-        beforeEach(() => {
-            document.body.innerHTML = `
+    const fixtures = [
+        {
+            name: 'double quote in value',
+            bodyInnerHtml: `
                 <div id="other" data-config='{"slot":1}'></div>
                 <div id="target" data-config='{"slot":2}'>text</div>
                 <span id="next"></span>
-            `;
-        });
-
-        test.each(testInputs)('%s', (input) => expectSuccessInput(input));
-    });
-
-    describe('backslash', () => {
-        beforeEach(() => {
-            document.body.innerHTML = `
+            `,
+        },
+        {
+            name: 'backslash in value',
+            bodyInnerHtml: `
                 <div id="other" data-path="a\\b"></div>
                 <div id="target" data-path="c\\d">text</div>
                 <span id="next"></span>
+            `,
+        },
+        {
+            name: 'line feed in value',
+            bodyInnerHtml: `
+                <div id="other" class="banner
+                    top"></div>
+                <div id="target" class="banner
+                    bottom">text</div>
+                <span id="next"></span>
+            `,
+        },
+        {
+            name: 'carriage return and form feed in value',
+            // character references are used as HTML parser replaces a raw carriage return with a line feed
+            bodyInnerHtml: `
+                <div id="other" data-text="a&#13;b&#12;c"></div>
+                <div id="target" data-text="d&#13;e&#12;f">text</div>
+                <span id="next"></span>
+            `,
+        },
+        {
+            name: 'name which is not a valid identifier',
+            bodyInnerHtml: `
+                <div id="other" @click.prevent="a" :class="b" 1data="c"></div>
+                <div id="target" @click.prevent="d" :class="e" 1data="f">text</div>
+                <span id="next"></span>
+            `,
+        },
+    ];
+
+    describe.each(fixtures)('$name', ({ bodyInnerHtml }) => {
+        beforeEach(() => {
+            document.body.innerHTML = bodyInnerHtml;
+        });
+
+        const testInputs = [
+            { actual: 'div:has(+ span)', expected: 'div#target' },
+            { actual: 'div:has(~ span)', expected: 'div#other, div#target' },
+            { actual: 'div:contains(text) + span', expected: 'span#next' },
+            { actual: 'div:contains(text) ~ span', expected: 'span#next' },
+        ];
+        test.each(testInputs)('%s', (input) => expectSuccessInput(input));
+    });
+
+    describe('name with namespace', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <svg>
+                    <use id="other" class="icon" xlink:href="#a"></use>
+                    <use id="target" class="icon" xlink:href="#b"></use>
+                    <g id="next"></g>
+                </svg>
             `;
         });
 
+        const testInputs = [
+            { actual: 'use:has(+ g)', expected: 'use#target' },
+            { actual: 'use:has(~ g)', expected: 'use#other, use#target' },
+            { actual: 'use:not(#other) + g', expected: 'g#next' },
+            { actual: 'use:not(#target) ~ g', expected: 'g#next' },
+        ];
         test.each(testInputs)('%s', (input) => expectSuccessInput(input));
     });
 });

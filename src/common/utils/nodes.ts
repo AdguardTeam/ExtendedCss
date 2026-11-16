@@ -17,20 +17,106 @@ export const getNodeTextContent = (domElement: Node): string => {
 };
 
 /**
- * Matches characters which end or escape a double-quoted CSS string.
+ * Matches characters which end or escape a double-quoted CSS string:
+ * double quote, backslash, line feed, carriage return and form feed.
  */
-const CSS_STRING_SPECIAL_CHARS_REGEXP = /["\\]/g;
+const CSS_STRING_SPECIAL_CHARS_REGEXP = /["\\\n\r\f]/g;
 
 /**
- * Escapes double quotes and backslashes in `value`
- * so it can be used inside a double-quoted CSS string.
+ * Matches ASCII characters which cannot be used in a CSS identifier as is.
+ */
+const CSS_IDENTIFIER_SPECIAL_CHARS_REGEXP = /[^\w\-\u0080-\uffff]/g;
+
+/**
+ * Matches a digit at the start of a CSS identifier, optionally preceded by a hyphen.
+ */
+const CSS_IDENTIFIER_LEADING_DIGIT_REGEXP = /^(-?)(\d)/;
+
+/**
+ * Namespace prefix of an attribute selector which matches an attribute in any namespace.
+ */
+const ANY_NAMESPACE_PREFIX = '*|';
+
+/**
+ * Code of the first character which is not a C0 control character.
+ */
+const SPACE_CHAR_CODE = 0x20;
+
+/**
+ * Code of the DELETE control character.
+ */
+const DELETE_CHAR_CODE = 0x7f;
+
+/**
+ * Returns CSS code point escape for `char`, e.g. `\a ` for a line feed.
+ * The trailing space ends the escape, so the next character is not read as a part of it.
+ *
+ * @param char Single character.
+ *
+ * @returns Escaped character.
+ */
+const getCssCodePointEscape = (char: string): string => {
+    return `\\${char.charCodeAt(0).toString(16)} `;
+};
+
+/**
+ * Escapes `char` so it loses its special meaning in CSS.
+ *
+ * @param char Single character.
+ *
+ * @returns Escaped character.
+ */
+const escapeCssChar = (char: string): string => {
+    const charCode = char.charCodeAt(0);
+    // a backslash before a line break does not escape it,
+    // so control characters are escaped by their code points
+    return charCode < SPACE_CHAR_CODE || charCode === DELETE_CHAR_CODE
+        ? getCssCodePointEscape(char)
+        : `\\${char}`;
+};
+
+/**
+ * Escapes `value` so it can be used inside a double-quoted CSS string.
  *
  * @param value Raw string value.
  *
  * @returns Escaped string value.
  */
 const escapeCssStringValue = (value: string): string => {
-    return value.replace(CSS_STRING_SPECIAL_CHARS_REGEXP, '\\$&');
+    return value.replace(CSS_STRING_SPECIAL_CHARS_REGEXP, escapeCssChar);
+};
+
+/**
+ * Escapes `value` so it can be used as a CSS identifier, the same way as `CSS.escape()` does.
+ *
+ * @param value Raw identifier, e.g. Attribute name.
+ *
+ * @returns Escaped identifier.
+ */
+const escapeCssIdentifier = (value: string): string => {
+    if (value === '-') {
+        return '\\-';
+    }
+    return value
+        .replace(CSS_IDENTIFIER_SPECIAL_CHARS_REGEXP, escapeCssChar)
+        .replace(CSS_IDENTIFIER_LEADING_DIGIT_REGEXP, (match, hyphen: string, digit: string) => {
+            return `${hyphen}${getCssCodePointEscape(digit)}`;
+        });
+};
+
+/**
+ * Returns the name of `attr` as it should be specified in an attribute selector.
+ *
+ * @param attr Element attribute.
+ *
+ * @returns Escaped attribute name.
+ */
+const getAttrSelectorName = (attr: Attr): string => {
+    // a selector with no namespace specified matches only attributes with no namespace,
+    // so an attribute with a namespace, e.g. `xlink:href` in inline SVG, is described by its local name
+    return attr.namespaceURI
+        ? `${ANY_NAMESPACE_PREFIX}${escapeCssIdentifier(attr.localName)}`
+        : escapeCssIdentifier(attr.name);
 };
 
 /**
@@ -44,7 +130,7 @@ export const getElementSelectorDesc = (element: Element): string => {
     let selectorText = element.tagName.toLowerCase();
     selectorText += Array.from(element.attributes)
         .map((attr) => {
-            return `[${attr.name}="${escapeCssStringValue(attr.value)}"]`;
+            return `[${getAttrSelectorName(attr)}="${escapeCssStringValue(attr.value)}"]`;
         })
         .join('');
     return selectorText;
