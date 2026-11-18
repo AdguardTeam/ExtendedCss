@@ -253,7 +253,8 @@ is derived from git tags and `CHANGELOG.md` — there is no
    automatically (it moves `[Unreleased]` entries into the
    new version section and rewrites the compare links).
 2. Trigger the `prepare-release` workflow with the desired
-   tag (e.g. `v2.3.0`).
+   tag (e.g. `v2.3.0`). The Actions run list shows the
+   requested tag in the run name, e.g. `Prepare release v2.3.0`.
 3. Review and merge the release PR.
 4. `publish-release` automatically tags, builds, publishes
    to npm, mirrors to the public repo, and notifies Slack.
