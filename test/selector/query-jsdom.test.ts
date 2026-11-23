@@ -790,6 +790,11 @@ describe('extended pseudo-classes', () => {
                 { actual: ':xpath(//*[@class="base"]/..)', expected: 'div#parent' },
                 { actual: ':xpath(//div[contains(text(),"test-xpath-content")])', expected: 'div#inner' },
                 { actual: '*:xpath(//div[contains(text(),"test-xpath-content")])', expected: 'div#inner' },
+                {
+                    // a parenthesis inside an :xpath() literal should not end the argument
+                    actual: ':xpath(//div[contains(@class,"baseInner")][contains(")", ")")])',
+                    expected: 'div#inner',
+                },
             ];
             test.each(successInputs)('%s', (input) => expectSuccessInput(input));
         });

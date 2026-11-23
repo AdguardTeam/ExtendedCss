@@ -481,6 +481,32 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: '//div[@class="user-content"]/div[@class="snippet-clear"]/following-sibling::text()[contains(.,"Advertisement")]' },
                 ],
             },
+            {
+                // a parenthesis inside a single-quoted :xpath() literal
+                // should not end the argument
+                actual: "div:xpath(//div[contains(text(),')')])",
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: "//div[contains(text(),')')]" },
+                ],
+            },
+            {
+                // a parenthesis inside a double-quoted :xpath() literal
+                // should not end the argument
+                actual: 'div:xpath(//div[contains(text(),")")])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '//div[contains(text(),")")]' },
+                ],
+            },
+            {
+                // a quote of the other kind inside an :xpath() literal is plain text
+                actual: 'div:xpath(//div[@a=\'x"y\'])',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: '//div[@a=\'x"y\']' },
+                ],
+            },
         ];
         /* eslint-enable max-len */
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));

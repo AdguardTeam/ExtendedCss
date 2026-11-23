@@ -634,6 +634,32 @@ describe('stylesheet parser', () => {
                     style: { display: 'none' },
                 },
             },
+            {
+                // a parenthesis inside a single-quoted :xpath() literal
+                // should not end the argument
+                actual: "div:xpath(//div[contains(text(),')')]) { color: red }",
+                expected: {
+                    selector: "div:xpath(//div[contains(text(),')')])",
+                    style: { color: 'red' },
+                },
+            },
+            {
+                // a parenthesis inside a double-quoted :xpath() literal
+                // should not end the argument
+                actual: 'div:xpath(//div[contains(text(),")")]) { color: red }',
+                expected: {
+                    selector: 'div:xpath(//div[contains(text(),")")])',
+                    style: { color: 'red' },
+                },
+            },
+            {
+                // a quote of the other kind inside an :xpath() literal is plain text
+                actual: 'div:xpath(//div[@a=\'x"y\']) { color: red }',
+                expected: {
+                    selector: 'div:xpath(//div[@a=\'x"y\'])',
+                    style: { color: 'red' },
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });
