@@ -429,10 +429,7 @@ describe('extended css library', () => {
             '#main div[id*="_containerWrap_"]:has(img[src$="Banner/ad.jpg"]):remove()',
             'div[class*=" "]:matches-css(background-image: /^url\\(data:image/png;base64,iVBOR/)',
             'div[class*=" "]:matches-css(background-image: /^url\\(https:\\/\\/example\\.org\\//)',
-            // should be valid but there is an issue with `nwsapi` which is used in `jsdom`
-            // https://github.com/dperini/nwsapi/issues/34
-            // TODO: check later is it fixed
-            // 'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
+            'a[href^="/watch?v="][onclick^="return test.onEvent(arguments[0]||window.event,\'"]',
             // escaped colon in attribute name
             'div[\\:data-service-slot][data-ac]',
             '#main-container > div[\\:class^="$test.ad.RenderedDesktop"]',
@@ -448,8 +445,8 @@ describe('extended css library', () => {
 
         // These selectors contain pseudo-classes unknown to both ExtendedCss
         // and the CSS spec (e.g. :invalidpseudo, :others, :watch-attr).
-        // They should be invalid, but @asamuzakjp/dom-selector (used by
-        // jsdom 29) silently accepts unknown pseudo-classes instead of
+        // They should be invalid, but @asamuzakjp/dom-selector 7.1.1 (used by
+        // jsdom 29.1.1) silently accepts unknown pseudo-classes instead of
         // throwing, so ExtendedCss.validate() cannot detect them as invalid.
         // In real browsers querySelectorAll would throw on these.
         const jsdomFalsePositives = [
