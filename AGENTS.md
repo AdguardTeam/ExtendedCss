@@ -77,6 +77,7 @@ by AdGuard products and other ad-blocking tools.
 │   └── stylesheet/             # Full stylesheet string parsing
 ├── test/                       # Tests (Vitest, Playwright, BrowserStack)
 │   ├── helpers/                # Shared test utilities
+│   ├── consumers/              # Tests of the packed package as a consumer
 │   ├── selector/               # Selector parser and query tests
 │   ├── css-rule/               # CSS rule parser tests
 │   ├── style-block/            # Style block tests
@@ -100,12 +101,13 @@ by AdGuard products and other ad-blocking tools.
 
 ## Build And Test Commands
 
-| Command             | Purpose                                    |
-| ------------------- | ------------------------------------------ |
-| `pnpm build`        | Build all output formats to `dist/`        |
-| `pnpm lint`         | Run ESLint and TypeScript type checking    |
-| `pnpm test local`   | Run local tests (Vitest + browser mode)    |
-| `pnpm build:types`  | Emit `.d.ts` type declarations only        |
+| Command               | Purpose                                       |
+| --------------------- | --------------------------------------------- |
+| `pnpm build`          | Build all output formats to `dist/`           |
+| `pnpm lint`           | Run ESLint and TypeScript type checking       |
+| `pnpm test local`     | Run local tests (Vitest + browser mode)       |
+| `pnpm test consumers` | Run consumer tests against the packed package |
+| `pnpm build:types`    | Emit `.d.ts` type declarations only           |
 
 **Notes:**
 
@@ -114,6 +116,9 @@ by AdGuard products and other ad-blocking tools.
     - `pnpm test local` — local tests only (Vitest unit + browser projects).
     - `pnpm test browserstack` — BrowserStack only (needs creds).
     - `pnpm test performance` — Vitest performance selector benchmarks.
+    - `pnpm test consumers` — tests the built package through TypeScript,
+      webpack, Rollup, Node.js, and Playwright fixtures. Run
+      `pnpm build` first.
     - `pnpm test` (no subcommand) — runs local + BrowserStack.
   Use `pnpm test local` for day-to-day development.
 - `pnpm build` runs `ts-node tools/build` which uses Rollup to
@@ -314,6 +319,11 @@ Raw CSS string
 - **BrowserStack tests**: Located in `test/browserstack/` and
   require environment variables (`BROWSERSTACK_USER`,
   `BROWSERSTACK_KEY`). Not included in default `pnpm test`.
+- **Consumer tests**: Located in `test/consumers/`. Each fixture packs
+  the built package with `npm pack`, installs the tarball, and uses a
+  real consumer toolchain (TypeScript, webpack, Rollup, or Playwright).
+  The fixtures never import from `src/`. Run `pnpm build` before
+  `pnpm test consumers`.
 
 ### Dependency Management
 

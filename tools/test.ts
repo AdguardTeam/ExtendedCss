@@ -9,6 +9,7 @@ import { rollupRunner } from './rollup-runner';
 import { commonPlugins, libOutputBanner } from './rollup-commons';
 
 import { runBrowserstack } from '../test/browserstack';
+import { runConsumerTests } from '../test/consumers';
 
 import {
     LIB_FILE_NAME,
@@ -134,6 +135,14 @@ program
     .description('only performance selector tests run')
     .action(async () => {
         await runSelectorPerformanceTests();
+    });
+
+// run tests against the packed package as a consumer
+program
+    .command('consumers')
+    .description('only consumer tests against the packed package run')
+    .action(async () => {
+        await runConsumerTests();
     });
 
 program.parse(process.argv);

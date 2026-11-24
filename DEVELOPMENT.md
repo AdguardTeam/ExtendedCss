@@ -11,6 +11,7 @@
     - [Linting and Type Checking](#linting-and-type-checking)
     - [Testing](#testing)
         - [Local Tests](#local-tests)
+        - [Consumer Tests](#consumer-tests)
         - [BrowserStack Tests](#browserstack-tests)
         - [Performance Tests](#performance-tests)
     - [Pre-commit Hook](#pre-commit-hook)
@@ -91,15 +92,16 @@ local builds, linting, or local tests.
 
 ### Available Commands
 
-| Command                    | Purpose                                     |
-| -------------------------- | ------------------------------------------- |
-| `pnpm build`               | Build all output formats to `dist/`         |
-| `pnpm build:types`         | Emit `.d.ts` declarations only              |
-| `pnpm lint`                | Run ESLint + TypeScript type checking       |
-| `pnpm test local`          | Run local tests (Vitest + browser mode)     |
-| `pnpm test browserstack`   | Run BrowserStack tests (needs creds)        |
-| `pnpm test performance`    | Run Vitest performance benchmarks           |
-| `pnpm test`                | Run local + BrowserStack tests              |
+| Command                  | Purpose                                       |
+| ------------------------ | --------------------------------------------- |
+| `pnpm build`             | Build all output formats to `dist/`           |
+| `pnpm build:types`       | Emit `.d.ts` declarations only                |
+| `pnpm lint`              | Run ESLint + TypeScript type checking         |
+| `pnpm test local`        | Run local tests (Vitest + browser mode)       |
+| `pnpm test consumers`    | Run consumer tests against the packed package |
+| `pnpm test browserstack` | Run BrowserStack tests (needs creds)          |
+| `pnpm test performance`  | Run Vitest performance benchmarks             |
+| `pnpm test`              | Run local + BrowserStack tests                |
 
 ### Building
 
@@ -178,6 +180,32 @@ example, `src/selector/parser.ts` is tested by
 Most unit test files run through the jsdom project.
 Browser-specific tests run through Vitest browser mode
 with Chromium.
+
+#### Consumer Tests
+
+```bash
+pnpm build
+pnpm test consumers
+```
+
+This command tests the built package as a consumer uses it. It
+packs the repository with `npm pack` and installs the tarball
+into temporary fixtures. The fixtures never import from `src/`.
+
+The suite covers these entry points:
+
+- TypeScript declarations with `bundler` and `node16` module
+  resolution, including the `/version` subpath.
+- The ESM entry point through webpack and Rollup bundles.
+- The UMD entry point through webpack and a CommonJS `require`.
+- Both IIFE files through an HTML script tag in Playwright.
+- The `/version` subpath through `import` and `require`.
+
+Each bundle runs in jsdom. The test applies an extended selector
+and checks the resulting style.
+
+Run `pnpm build` first. The command fails when `dist/` is missing
+or an entry point is absent.
 
 #### BrowserStack Tests
 

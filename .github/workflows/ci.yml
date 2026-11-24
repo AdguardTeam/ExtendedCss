@@ -43,6 +43,10 @@ jobs:
         # local`). BrowserStack cross-browser tests run in the next step.
         run: DOCKER_BUILDKIT=1 docker build --progress plain --target local-test-output .
 
+      - name: Consumer test via Docker
+        # Builds and packs the package, then runs the consumer fixtures.
+        run: DOCKER_BUILDKIT=1 docker build --progress plain --target consumers-output .
+
       - name: BrowserStack test via Docker
         if: ${{ env.HAS_BROWSERSTACK == 'true' }}
         env:

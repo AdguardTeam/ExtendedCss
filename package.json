@@ -9,14 +9,14 @@
     ],
     "exports": {
         ".": {
-            "require": "./dist/extended-css.umd.js",
+            "types": "./dist/types/src/index.d.ts",
             "import": "./dist/extended-css.esm.js",
-            "types": "./dist/types/src/index.d.ts"
+            "require": "./dist/extended-css.umd.js"
         },
         "./version": {
-            "require": "./dist/version.cjs.js",
+            "types": "./dist/types/src/version.d.ts",
             "import": "./dist/version.esm.mjs",
-            "types": "./dist/types/src/version.d.ts"
+            "require": "./dist/version.cjs.js"
         }
     },
     "engines": {
@@ -97,6 +97,7 @@
         "typescript": "6.0.3",
         "user-agent-data-types": "^0.3.0",
         "vite": "8.0.11",
-        "vitest": "4.1.5"
+        "vitest": "4.1.5",
+        "webpack": "5.112.2"
     }
 }

@@ -58,6 +58,17 @@ RUN pnpm test local && \
 FROM scratch AS local-test-output
 COPY --from=test-local /out/ /
 
+# Consumer tests: build the package, pack it with `npm pack`, install the
+# tarball into temporary fixtures, and run the fixtures with TypeScript,
+# webpack, Rollup, and Playwright. These tests use the built package exactly
+# as a consumer does, so they run after `pnpm build`.
+FROM test-src AS test-consumers
+RUN pnpm build && pnpm test consumers && \
+    mkdir -p /out && touch /out/consumers.txt
+
+FROM scratch AS consumers-output
+COPY --from=test-consumers /out/ /
+
 # BrowserStack cross-browser tests. Only built when credentials are present;
 # the workflow guards this with `HAS_BROWSERSTACK`, so the stage is not
 # evaluated at all when the secrets are absent.

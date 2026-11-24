@@ -1064,21 +1064,45 @@ pnpm test performance
 
 ## Usage
 
-You can import, require or copy IIFE module with ExtendedCss into your code, e.g.
+ExtendedCss is a browser library. It reads `window.MutationObserver`
+when the module loads. Run it in a browser or in a DOM environment
+such as jsdom.
 
-```css
-import ExtendedCss from 'extended-css';
+Import the named exports from the npm package:
+
+```js
+import { ExtendedCss } from '@adguard/extended-css';
+```
+
+The package also has a CommonJS entry point:
+
+```js
+const { ExtendedCss } = require('@adguard/extended-css');
+```
+
+The package does not provide a default export. Use the named exports
+shown above.
+
+To read the version, use the `/version` subpath:
+
+```js
+import { EXTENDED_CSS_VERSION } from '@adguard/extended-css/version';
 ```
 
 or
 
-```css
-const ExtendedCss = require('extended-css');
+```js
+const { EXTENDED_CSS_VERSION } = require('@adguard/extended-css/version');
 ```
 
-IIFE module can be found by the following path `./dist/extended-css.js`
+The IIFE bundle creates the global `ExtendedCss` variable. Load the
+file with an HTML script tag, for example:
 
-After that you can use ExtendedCss as you wish.
+```html
+<script src="./dist/extended-css.js"></script>
+```
+
+After that you can use `ExtendedCss` as a global variable.
 
 ### <a name="extended-css-api"></a> API description
 
