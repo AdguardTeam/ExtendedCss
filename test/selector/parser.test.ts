@@ -373,6 +373,14 @@ describe('absolute extended selectors', () => {
                     { isAbsolute: true, name, value: 'background-image: /^url\\(https:\\/\\/example\\.org\\//' },
                 ],
             },
+            {
+                // a parenthesis inside a quoted value should not end the argument
+                actual: 'div:matches-css(content: "a)b")',
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: 'content: "a)b"' },
+                ],
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleSelectorAstWithAnyChildren(input));
     });
@@ -505,6 +513,46 @@ describe('absolute extended selectors', () => {
                 expected: [
                     { isRegular: true, value: 'div' },
                     { isAbsolute: true, name, value: '//div[@a=\'x"y\']' },
+                ],
+            },
+            {
+                // a slash inside a quoted :xpath() literal should not open a regexp
+                actual: "div:xpath(//a[starts-with(@href,'/')])",
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: "//a[starts-with(@href,'/')]" },
+                ],
+            },
+            {
+                // a slash with a preceding space inside a quoted :xpath() literal
+                actual: "div:xpath(//a[starts-with(@href, '/')])",
+                expected: [
+                    { isRegular: true, value: 'div' },
+                    { isAbsolute: true, name, value: "//a[starts-with(@href, '/')]" },
+                ],
+            },
+            {
+                // a slash before other characters inside a quoted :xpath() literal
+                actual: ":xpath(//a[contains(@href,'/en')])",
+                expected: [
+                    { isRegular: true, value: 'body' },
+                    { isAbsolute: true, name, value: "//a[contains(@href,'/en')]" },
+                ],
+            },
+            {
+                // a slash as the whole quoted :xpath() literal
+                actual: ":xpath(//div[@data-url='/'])",
+                expected: [
+                    { isRegular: true, value: 'body' },
+                    { isAbsolute: true, name, value: "//div[@data-url='/']" },
+                ],
+            },
+            {
+                // a backslash inside an :xpath() literal is not an escape
+                actual: ":xpath(//div[@a='\\'])",
+                expected: [
+                    { isRegular: true, value: 'body' },
+                    { isAbsolute: true, name, value: "//div[@a='\\']" },
                 ],
             },
         ];

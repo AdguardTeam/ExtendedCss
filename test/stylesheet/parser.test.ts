@@ -660,6 +660,30 @@ describe('stylesheet parser', () => {
                     style: { color: 'red' },
                 },
             },
+            {
+                // a slash inside a quoted :xpath() literal should not end the rule
+                actual: "div:xpath(//a[starts-with(@href,'/')]) { color: red }",
+                expected: {
+                    selector: "div:xpath(//a[starts-with(@href,'/')])",
+                    style: { color: 'red' },
+                },
+            },
+            {
+                // a backslash inside an :xpath() literal is not an escape
+                actual: "div:xpath(//div[@a='\\']) { color: red }",
+                expected: {
+                    selector: "div:xpath(//div[@a='\\'])",
+                    style: { color: 'red' },
+                },
+            },
+            {
+                // a parenthesis inside a quoted :matches-css() value
+                actual: 'div:matches-css(content: "a)b") { color: red }',
+                expected: {
+                    selector: 'div:matches-css(content: "a)b")',
+                    style: { color: 'red' },
+                },
+            },
         ];
         test.each(testsInputs)('%s', (input) => expectSingleRuleParsed(input));
     });

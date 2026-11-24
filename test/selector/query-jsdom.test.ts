@@ -554,7 +554,7 @@ describe('extended pseudo-classes', () => {
                 { selector: 'div:matches-attr("//"="/./")', error: INVALID_REGEXP_ERROR_TEXT },
                 { selector: 'div:matches-attr(*)', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
-                { selector: 'div:matches-attr(")', error: matchAttrErrorText },
+                { selector: 'div:matches-attr(")', error: 'Unbalanced brackets for extended pseudo-class' },
                 { selector: 'div:matches-attr(> [track="true"])', error: matchAttrErrorText },
                 { selector: 'div:matches-attr(".?"="/^[0-9]*$/")', error: matchAttrErrorText },
             ];
@@ -770,8 +770,9 @@ describe('extended pseudo-classes', () => {
                 <div id="root" level="0">
                     <div id="parent" level="1">
                         <div id="child" class="base" level="2">
-                            <div id="inner" class="baseInner" level="3">
+                            <div id="inner" class="baseInner" level="3" data-url="/">
                                 test-xpath-content
+                                <a id="link" href="/en">link</a>
                             </div>
                         </div>
                     </div>
@@ -793,6 +794,16 @@ describe('extended pseudo-classes', () => {
                 {
                     // a parenthesis inside an :xpath() literal should not end the argument
                     actual: ':xpath(//div[contains(@class,"baseInner")][contains(")", ")")])',
+                    expected: 'div#inner',
+                },
+                {
+                    // a slash inside a quoted :xpath() literal should not open a regexp
+                    actual: ":xpath(//a[starts-with(@href,'/')])",
+                    expected: 'a#link',
+                },
+                {
+                    // a slash as the whole quoted :xpath() literal
+                    actual: ":xpath(//div[@data-url='/'])",
                     expected: 'div#inner',
                 },
             ];

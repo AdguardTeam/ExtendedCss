@@ -40,7 +40,7 @@ import { TOKEN_TYPE, Token } from '../common/tokenizer';
 
 import { getLast } from '../common/utils/arrays';
 import { isActionPseudoMarker, throwActionError } from '../common/utils/action-arg';
-import { canOpenQuote } from '../common/utils/selector-scanner';
+import { canOpenQuote, isInsideXPathPseudoStack } from '../common/utils/selector-scanner';
 
 import {
     BRACKET,
@@ -96,25 +96,14 @@ const isInsideContainsArg = (context: Context): boolean => {
 };
 
 /**
- * Checks whether the parser is inside an `:xpath()` argument.
+ * Checks whether the parser is inside a quoted absolute pseudo-class argument.
  *
  * @param context Parser context.
  *
- * @returns True if the parser is inside an `:xpath()` argument.
+ * @returns True if the parser is inside a quoted absolute pseudo-class argument.
  */
-const isInsideXPathArg = (context: Context): boolean => {
-    return context.extendedPseudoNamesStack.includes(XPATH_PSEUDO_CLASS_MARKER);
-};
-
-/**
- * Checks whether the parser is inside a quoted `:xpath()` argument.
- *
- * @param context Parser context.
- *
- * @returns True if the parser is inside a quoted `:xpath()` argument.
- */
-const isInsideQuotedXPathArg = (context: Context): boolean => {
-    return context.quoteCharacter !== undefined && isInsideXPathArg(context);
+const isInsideQuotedAbsolutePseudoArg = (context: Context): boolean => {
+    return context.quoteCharacter !== undefined;
 };
 
 /**
@@ -213,14 +202,17 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
 
         // track quoted strings to not treat their contents as selector syntax,
         // e.g. ':upward([data-x=":remove-attr(title)"])';
-        // quotes in plain text, e.g. ':contains(Don't)', should not open a string
+        // quotes in plain text, e.g. ':contains(Don't)', should not open a string;
+        // inside `:xpath()` a quoted string may start anywhere and backslashes
+        // are not escape characters
+        const isInsideXPath = isInsideXPathPseudoStack(context.extendedPseudoNamesStack);
         if ((tokenValue === SINGLE_QUOTE || tokenValue === DOUBLE_QUOTE)
-            && !isEscapedToken(tokens, i)
-            && !context.isRegexpOpen) {
+            && !context.isRegexpOpen
+            && (isInsideXPath || !isEscapedToken(tokens, i))) {
             if (context.quoteCharacter === tokenValue) {
                 context.quoteCharacter = undefined;
             } else if (context.quoteCharacter === undefined
-                && (isInsideXPathArg(context)
+                && (isInsideXPath
                     || canOpenQuote(
                         normalizeQuoteChar(prevTokenValue),
                         normalizeQuoteChar(prevNonWhitespaceTokenValue),
@@ -448,6 +440,7 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                             updateBufferNode(context, tokenValue);
                             // 'isRegexpOpen' flag is needed for brackets balancing inside extended pseudo-class arg
                             if (tokenValue === SLASH
+                                && !isInsideXPath
                                 && context.extendedPseudoNamesStack.length > 0) {
                                 if (prevTokenValue === SLASH
                                     && prevToPrevTokenValue === BACKSLASH) {
@@ -684,9 +677,9 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         }
                         break;
                     case BRACKET.PARENTHESES.LEFT:
-                        // inside a quoted :xpath() argument parentheses are plain text,
-                        // so they should not affect the bracket stack
-                        if (isInsideQuotedXPathArg(context) && isAbsolutePseudoClassNode(bufferNode)) {
+                        // inside a quoted absolute pseudo-class argument parentheses
+                        // are plain text, so they should not affect the bracket stack
+                        if (isInsideQuotedAbsolutePseudoArg(context) && isAbsolutePseudoClassNode(bufferNode)) {
                             updateBufferNode(context, tokenValue);
                             break;
                         }
@@ -731,9 +724,9 @@ export const parse = (selector: string): AnySelectorNodeInterface => {
                         }
                         break;
                     case BRACKET.PARENTHESES.RIGHT:
-                        // inside a quoted :xpath() argument parentheses are plain text,
-                        // so they should not affect the bracket stack
-                        if (isInsideQuotedXPathArg(context) && isAbsolutePseudoClassNode(bufferNode)) {
+                        // inside a quoted absolute pseudo-class argument parentheses
+                        // are plain text, so they should not affect the bracket stack
+                        if (isInsideQuotedAbsolutePseudoArg(context) && isAbsolutePseudoClassNode(bufferNode)) {
                             updateBufferNode(context, tokenValue);
                             break;
                         }

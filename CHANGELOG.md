@@ -24,6 +24,10 @@ and this project adheres to
   after an extended selector failing on elements with `"`, `\` or a line
   break in attribute values, or with tag or attribute names which are
   not valid CSS identifiers, e.g. `o:p`, `@click` or `xlink:href` [#192].
+- Fixed parsing of extended pseudo-class arguments containing
+  parentheses inside quoted strings, e.g.
+  `:xpath(//div[contains(text(),')')])` and
+  `:matches-css(content: "a)b")`.
 
 ### Security
 

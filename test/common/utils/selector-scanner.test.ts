@@ -41,6 +41,11 @@ describe('selector-scanner', () => {
             expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
         });
 
+        it('skips braces after a backslash inside a quoted :xpath() literal', () => {
+            const input = ":xpath(//div[@a='\\']) { color: red }";
+            expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
+        });
+
         it('treats a quote after an escaped backslash as a closing quote', () => {
             const input = 'div[data-x="a\\\\"] { color: red }';
             expect(findStyleBlockStarts(input)).toEqual([input.lastIndexOf('{')]);
@@ -94,6 +99,11 @@ describe('selector-scanner', () => {
 
         it('skips braces inside :xpath() arguments', () => {
             const input = ':xpath(//div[contains(., "{")]) { color: red }';
+            expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
+        });
+
+        it('skips braces after a backslash inside a quoted :xpath() literal', () => {
+            const input = ":xpath(//div[@a='\\']) { color: red }";
             expect(findStyleBlockStart(input)).toBe(input.lastIndexOf('{'));
         });
 

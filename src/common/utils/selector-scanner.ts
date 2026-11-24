@@ -108,6 +108,17 @@ const setPrevChar = (state: SelectorScannerState, char: string | undefined): voi
 };
 
 /**
+ * Checks whether a pseudo-class name stack contains `:xpath()`.
+ *
+ * @param pseudoStack Names of pseudo-classes whose arguments are open.
+ *
+ * @returns True if the stack contains `:xpath()`.
+ */
+export const isInsideXPathPseudoStack = (pseudoStack: readonly string[]): boolean => {
+    return pseudoStack.includes(XPATH_PSEUDO_CLASS_MARKER);
+};
+
+/**
  * Checks whether the scanner is inside an `:xpath()` argument.
  *
  * @param state Scanner state.
@@ -115,7 +126,7 @@ const setPrevChar = (state: SelectorScannerState, char: string | undefined): voi
  * @returns True if the scanner is inside an `:xpath()` argument.
  */
 const isInsideXPathArg = (state: SelectorScannerState): boolean => {
-    return state.pseudoStack.includes(XPATH_PSEUDO_CLASS_MARKER);
+    return isInsideXPathPseudoStack(state.pseudoStack);
 };
 
 /**
@@ -248,7 +259,8 @@ const updateSelectorScannerState = (
         return index;
     }
     if (state.quote) {
-        if (char === BACKSLASH) {
+        // inside `:xpath()` a backslash is a plain character, not an escape
+        if (char === BACKSLASH && !isInsideXPathArg(state)) {
             setPrevChar(state, char);
             return index + 1;
         }
@@ -258,7 +270,7 @@ const updateSelectorScannerState = (
         setPrevChar(state, char);
         return index;
     }
-    if (char === BACKSLASH) {
+    if (char === BACKSLASH && !isInsideXPathArg(state)) {
         setPrevChar(state, char);
         return index + 1;
     }
