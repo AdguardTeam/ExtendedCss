@@ -446,16 +446,22 @@ describe('extended css library', () => {
         // These selectors contain pseudo-classes unknown to both ExtendedCss
         // and the CSS spec (e.g. :invalidpseudo, :others, :watch-attr).
         // They should be invalid, but @asamuzakjp/dom-selector 7.1.1 (used by
-        // jsdom 29.1.1) silently accepts unknown pseudo-classes instead of
-        // throwing, so ExtendedCss.validate() cannot detect them as invalid.
+        // jsdom 29.1.1) only throws when an element actually reaches the
+        // unknown pseudo-class. The fixture below makes each selector reach
+        // its pseudo-class, so ExtendedCss.validate() reports it as invalid.
         // In real browsers querySelectorAll would throw on these.
+        // See https://github.com/asamuzaK/domSelector
         const jsdomFalsePositives = [
             '#banner:invalidpseudo(div)',
             '.text-left:has-text(/share/):others()',
             '.modals.dimmer > .gdpr.visible:upward(1):watch-attr([class])',
         ];
-        // TODO: unskip when jsdom's selector engine throws on unknown pseudo-classes
-        test.skip.each(jsdomFalsePositives)('%s', (selector) => {
+        const unknownPseudoFixture = `
+            <div id="banner" class="text-left"></div>
+            <div class="modals dimmer"><div class="gdpr visible"></div></div>
+        `;
+        test.each(jsdomFalsePositives)('%s', (selector) => {
+            document.body.innerHTML = unknownPseudoFixture;
             expect(ExtendedCss.validate(selector).ok).toBeFalsy();
         });
 

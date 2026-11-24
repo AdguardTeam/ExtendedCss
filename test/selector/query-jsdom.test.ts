@@ -1092,18 +1092,22 @@ describe('extended pseudo-classes', () => {
         describe('is - invalid selector — no fail, just skip', () => {
             const invalidSelectors = [
                 '#parent > :is(div:has(..banner))',
-                // Fixed in @asamuzakjp/nwsapi 2.3.9 — empty :is() no longer throws
+                // Empty :is() is accepted by jsdom 29.1.1: nwsapi's fast path
+                // still throws for it, so @asamuzakjp/dom-selector 7.1.1
+                // falls back to its own parser, which treats it as a forgiving
+                // selector list and returns no matches.
                 '#test-is :is() > .test-inner',
-                // Still broken in @asamuzakjp/nwsapi 2.3.9 (bundled with
-                // jsdom 29.1.1 via @asamuzakjp/dom-selector 7.1.1): invalid
-                // arguments inside :is() are not treated as a forgiving
-                // selector list. Observed with jsdom 29.1.1:
-                // `SyntaxError: Invalid selector #parent > :is(id="123") > .test-inner)`
-                // instead of no match. https://github.com/dperini/nwsapi/issues/70
-                // was fixed in nwsapi 2.2.3 only for empty :is(); this fork
-                // still rejects invalid arguments, and no upstream issue is
-                // filed yet on https://github.com/asamuzaK/domSelector
-                // TODO: uncomment when fixed in @asamuzakjp/nwsapi
+                // Invalid arguments inside :is() are still not treated as a
+                // forgiving selector list on the pinned stack. The throw comes
+                // from @asamuzakjp/dom-selector 7.1.1 (jsdom 29.1.1), not from
+                // nwsapi: `SyntaxError: Invalid selector #parent >
+                // :is(id="123") > .test-inner)`. Driving
+                // @asamuzakjp/nwsapi 2.3.9 directly also throws
+                // `'<selector>' is not a valid selector` (same in 2.2.3).
+                // https://github.com/dperini/nwsapi/issues/70 is closed, but
+                // these invalid-argument cases still throw. No upstream issue
+                // is filed yet: https://github.com/asamuzaK/domSelector
+                // TODO: uncomment when fixed in @asamuzakjp/dom-selector
                 // '#parent > :is(id="123") > .test-inner',
                 // '#parent > :is(..banner) > .test-inner',
             ];
