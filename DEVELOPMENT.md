@@ -26,13 +26,13 @@
 
 | Tool    | Version           | Notes                            |
 | ------- | ----------------- | -------------------------------- |
-| Node.js | >= 22             | Required by development tooling  |
+| Node.js | >= 22.23.5        | Required by development tooling  |
 | pnpm    | >=10.33.4 and <11 | Installed via corepack or npm    |
 
 Verify your setup:
 
 ```bash
-node --version   # must be 22 or higher
+node --version   # must be 22.23.5 or higher
 pnpm --version   # must be >=10.33.4 and <11
 ```
 
@@ -275,7 +275,7 @@ ls dist/
 
 ### `pnpm install` fails with Node.js version error
 
-Development tooling requires Node.js >= 22. Check your
+Development tooling requires Node.js >= 22.23.5. Check your
 version with `node --version` and upgrade if needed.
 
 ### Tests fail with "Cannot find module 'playwright'"

@@ -1,5 +1,5 @@
 # Base for build plan (node-ssh)
-FROM adguard/node-ssh:22.22--0 AS base
+FROM adguard/node-ssh:22.23--0 AS base
 WORKDIR /workdir
 ENV PNPM_STORE_DIR=/pnpm-store
 

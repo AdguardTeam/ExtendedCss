@@ -30,7 +30,7 @@ by AdGuard products and other ad-blocking tools.
 | -------------------- | -------------------------------------------------------------------------- |
 | Language             | TypeScript (compiled to ES5)                                               |
 | Runtime              | Browser DOM (no Node.js runtime)                                           |
-| Node.js (build)      | >= 22                                                                      |
+| Node.js (build)      | >= 22.23.5                                                                 |
 | Package manager      | pnpm >=10.33.4 and <11                                                     |
 | Bundler              | Rollup v2 (custom build in `tools/build.ts`)                               |
 | Testing              | Vitest 4, jsdom, Vitest browser mode with Playwright, QUnit (BrowserStack) |
